@@ -25,6 +25,8 @@ import {
 import { useUserProfile } from '@/components/user/UserContext';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
 
+import { motion } from 'framer-motion';
+
 const CAREER_JOURNEY = [
   {
     step: '01',
@@ -158,14 +160,19 @@ function LoginForm() {
   return (
     <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10">
       {/* LEFT COLUMN: Premium Brand Experience & Product Visual (Desktop only ~58%) */}
-      <div className="hidden lg:flex lg:col-span-7 flex-col justify-between space-y-7">
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="hidden lg:flex lg:col-span-7 flex-col justify-between space-y-7"
+      >
         {/* Brand Header */}
         <div className="space-y-4">
           <Link
             href="/"
             className="inline-flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] rounded-xl"
           >
-            <div className="w-10 h-10 rounded-lg bg-[var(--accent)] flex items-center justify-center text-white group-hover:scale-105 transition-transform duration-200">
+            <div className="w-10 h-10 rounded-xl bg-[var(--accent)] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(79,143,247,0.35)] group-hover:scale-105 transition-transform duration-200">
               <Sparkles className="w-5 h-5" />
             </div>
             <div className="flex flex-col leading-tight">
@@ -179,7 +186,7 @@ function LoginForm() {
           </Link>
 
           <div className="pt-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs font-semibold bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)] mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs font-semibold bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-secondary)] mb-3 shadow-[var(--shadow-glass)] backdrop-blur-md">
               <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
               <span>CAREER INTELLIGENCE PLATFORM</span>
             </div>
@@ -197,34 +204,35 @@ function LoginForm() {
         </div>
 
         {/* Product Visual Mockup Card */}
-        <div className="p-4 sm:p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/70 backdrop-blur-md shadow-sm space-y-3.5 max-w-xl">
-          <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
-            <div className="flex items-center gap-2.5">
-              <div className="w-8 h-8 rounded-lg bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 flex items-center justify-center font-bold text-xs">
+        <div className="p-5 sm:p-6 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-[var(--shadow-glass)] space-y-4 max-w-xl relative overflow-hidden group hover:border-[var(--glass-border-hover)] transition-all">
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/30 to-transparent" />
+          <div className="flex items-center justify-between pb-3.5 border-b border-[var(--glass-border)]">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 flex items-center justify-center font-bold text-sm shadow-[0_0_12px_rgba(16,185,129,0.15)]">
                 92
               </div>
               <div>
-                <p className="text-xs font-bold text-[var(--text-primary)]">
+                <p className="text-sm font-bold text-[var(--text-primary)]">
                   Senior Full-Stack Engineer
                 </p>
-                <p className="text-[10px] text-[var(--text-secondary)]">
+                <p className="text-[11px] text-[var(--text-secondary)]">
                   ATS Match Score: High Compatibility
                 </p>
               </div>
             </div>
-            <span className="px-2 py-0.5 rounded-md text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
+            <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
               Verified Skills Active
             </span>
           </div>
 
-          <div className="flex flex-wrap gap-1.5 pt-0.5">
+          <div className="flex flex-wrap gap-2 pt-1">
             {['TypeScript', 'Next.js', 'React 19', 'System Design', 'Cloud APIs', 'PostgreSQL'].map(
               (skill) => (
                 <span
                   key={skill}
-                  className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg text-[11px] font-medium bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-primary)]"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] text-[var(--text-primary)] shadow-xs"
                 >
-                  <CheckCircle2 className="w-3 h-3 text-[var(--accent)]" />
+                  <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent)]" />
                   {skill}
                 </span>
               )
@@ -238,15 +246,15 @@ function LoginForm() {
             Platform Workflow
           </span>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 max-w-xl">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 max-w-xl">
             {CAREER_JOURNEY.slice(0, 4).map((item) => {
               const Icon = item.icon;
               return (
                 <div
                   key={item.title}
-                  className="flex items-center gap-2.5 p-2.5 rounded-xl border border-[var(--border-color)]/70 bg-[var(--bg-secondary)]/40 hover:border-[var(--accent)]/40 transition-colors"
+                  className="flex items-center gap-2.5 p-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--accent)]/40 hover:bg-[var(--glass-bg-elevated)] backdrop-blur-md shadow-xs transition-all duration-200"
                 >
-                  <div className="w-7 h-7 rounded-lg bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 flex items-center justify-center shrink-0">
+                  <div className="w-7 h-7 rounded-lg bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20 flex items-center justify-center shrink-0">
                     <Icon className="w-3.5 h-3.5" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -254,11 +262,11 @@ function LoginForm() {
                       <span className="text-[9px] font-mono font-bold text-[var(--accent)]">
                         {item.step}
                       </span>
-                      <span className="text-[11px] font-bold tracking-wider text-[var(--text-primary)]">
+                      <span className="text-xs font-bold tracking-wider text-[var(--text-primary)]">
                         {item.title}
                       </span>
                     </div>
-                    <p className="text-[10px] text-[var(--text-secondary)] truncate">
+                    <p className="text-[11px] text-[var(--text-secondary)] truncate">
                       {item.desc}
                     </p>
                   </div>
@@ -267,14 +275,21 @@ function LoginForm() {
             })}
           </div>
         </div>
-      </div>
+      </motion.div>
 
-      {/* RIGHT COLUMN: Elevated Login Card (~42%) */}
-      <div className="lg:col-span-5 w-full max-w-md mx-auto">
-        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-7 sm:p-9 shadow-sm relative overflow-hidden transition-colors duration-200">
+      {/* RIGHT COLUMN: Elevated Glass Login Card (~42%) */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        className="lg:col-span-5 w-full max-w-md mx-auto"
+      >
+        <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg-elevated)] backdrop-blur-2xl p-7 sm:p-9 shadow-[var(--shadow-glass)] relative overflow-hidden transition-all duration-300">
+          {/* Top highlight gradient edge */}
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent" />
 
           {/* Mobile brand header (shown only when left hero is stacked) */}
-          <div className="lg:hidden flex items-center justify-center gap-2.5 mb-6 pb-4 border-b border-[var(--border-color)]">
+          <div className="lg:hidden flex items-center justify-center gap-2.5 mb-6 pb-4 border-b border-[var(--glass-border)]">
             <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-white shadow-sm">
               <Sparkles className="w-4 h-4" />
             </div>
@@ -301,7 +316,7 @@ function LoginForm() {
           {/* Error Banner */}
           {error && (
             <div
-              className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/25 text-red-500 dark:text-red-400 text-xs flex items-start gap-2.5"
+              className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/25 text-red-500 dark:text-red-400 text-xs flex items-start gap-2.5 backdrop-blur-xs"
               role="alert"
               id="auth-error"
             >
@@ -341,7 +356,7 @@ function LoginForm() {
                   placeholder="name@example.com"
                   aria-invalid={Boolean(error)}
                   aria-describedby={error ? 'auth-error' : undefined}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 shadow-xs transition-all"
                 />
               </div>
             </div>
@@ -381,7 +396,7 @@ function LoginForm() {
                   placeholder="••••••••••••"
                   aria-invalid={Boolean(error)}
                   aria-describedby={error ? 'auth-error' : undefined}
-                  className="w-full pl-10 pr-11 py-2.5 rounded-lg bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all"
+                  className="w-full pl-10 pr-11 py-2.5 rounded-xl bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 shadow-xs transition-all"
                 />
                 <button
                   type="button"
@@ -404,7 +419,7 @@ function LoginForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 h-[44px] px-4 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium text-sm transition-all duration-150 flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full mt-2 h-[44px] px-4 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-semibold text-sm shadow-[0_4px_16px_rgba(79,143,247,0.3)] hover:shadow-[0_6px_20px_rgba(79,143,247,0.4)] transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isLoading ? (
                 <>
@@ -423,9 +438,9 @@ function LoginForm() {
           {/* Divider */}
           <div className="relative my-6 text-center">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[var(--border-color)]" />
+              <div className="w-full border-t border-[var(--glass-border)]" />
             </div>
-            <span className="relative px-3 bg-[var(--bg-card)] text-[11px] uppercase tracking-wider text-[var(--text-secondary)] font-medium">
+            <span className="relative px-3 bg-[var(--glass-bg-elevated)] text-[11px] uppercase tracking-wider text-[var(--text-secondary)] font-medium">
               New to Smart Resume AI?
             </span>
           </div>
@@ -433,13 +448,13 @@ function LoginForm() {
           {/* Create Account Link */}
           <Link
             href={`/register${safeFrom !== '/dashboard' ? `?from=${encodeURIComponent(safeFrom)}` : ''}`}
-            className="w-full py-2.5 px-4 rounded-lg border border-[var(--border-color)] hover:border-[var(--accent)] text-[var(--text-primary)] font-medium text-sm transition-all flex items-center justify-center gap-2 hover:bg-[var(--bg-secondary)] cursor-pointer"
+            className="w-full py-2.5 px-4 rounded-xl border border-[var(--glass-border)] hover:border-[var(--accent)] text-[var(--text-primary)] font-medium text-sm transition-all flex items-center justify-center gap-2 bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] shadow-xs cursor-pointer"
           >
             <span>Create an account →</span>
           </Link>
 
           {/* Admin Footnote */}
-          <div className="text-center mt-5 pt-4 border-t border-[var(--border-color)]/60">
+          <div className="text-center mt-5 pt-4 border-t border-[var(--glass-border)]">
             <p className="text-[11px] text-[var(--text-secondary)]">
               Need administrative access?{' '}
               <Link
@@ -451,7 +466,7 @@ function LoginForm() {
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
 
       {/* Forgot Password Information Modal */}
       {showForgotModal && (
@@ -459,10 +474,14 @@ function LoginForm() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="forgot-password-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
         >
-          <div className="w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-2xl space-y-4">
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
+          <motion.div
+            initial={{ opacity: 0, scale: 0.95 }}
+            animate={{ opacity: 1, scale: 1 }}
+            className="w-full max-w-md rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg-elevated)] backdrop-blur-2xl p-6 shadow-2xl space-y-4"
+          >
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--glass-border)]">
               <div className="flex items-center gap-2 text-[var(--accent)]">
                 <HelpCircle className="w-5 h-5" />
                 <h3 id="forgot-password-title" className="font-bold text-base text-[var(--text-primary)]">
@@ -472,7 +491,7 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowForgotModal(false)}
-                className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] cursor-pointer"
+                className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] cursor-pointer transition-colors"
                 aria-label="Close dialog"
               >
                 <X className="w-5 h-5" />
@@ -486,7 +505,7 @@ function LoginForm() {
               <p>
                 If you have forgotten your password, an administrator can update your account credentials from the Admin Users portal, or you can register with a new address.
               </p>
-              <p className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)]">
+              <p className="p-3 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] text-xs text-[var(--text-primary)]">
                 <strong>Tip:</strong> If you are already logged in on another device or remember your current password, you can change it anytime in your dashboard profile.
               </p>
             </div>
@@ -495,12 +514,12 @@ function LoginForm() {
               <button
                 type="button"
                 onClick={() => setShowForgotModal(false)}
-                className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] transition-all cursor-pointer"
+                className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] transition-all cursor-pointer shadow-sm"
               >
                 Understood
               </button>
             </div>
-          </div>
+          </motion.div>
         </div>
       )}
     </div>
@@ -510,6 +529,10 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 py-10 bg-[var(--bg-primary)] text-[var(--text-primary)] relative overflow-hidden">
+      {/* Ambient background glows for glassmorphism */}
+      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[var(--accent)]/10 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
+
       {/* Top Bar with Theme Toggle */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30 flex items-center gap-2">
         <div className="sm:hidden">

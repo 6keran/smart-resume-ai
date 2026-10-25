@@ -32,13 +32,13 @@ export async function POST(req: Request) {
       );
     }
 
-    await recordAdminLogin(admin.id);
-
     const token = createSessionToken({
       id: admin.id,
       email: admin.email,
       role: admin.role,
     });
+
+    await recordAdminLogin(admin.id, token);
 
     const response = NextResponse.json({
       success: true,

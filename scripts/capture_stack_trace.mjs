@@ -35,19 +35,24 @@ async function captureStackTrace() {
 
     ws.on('message', d => {
       const m = JSON.parse(d.toString());
-      if (m.method === 'Runtime.consoleAPICalled' && m.params.type === 'error') {
-        console.log('[ERROR MESSAGE]:', m.params.args.map(a => a.value || a.description).join(' '));
-        console.log('[STACK TRACE]:', JSON.stringify(m.params.stackTrace, null, 2));
+      if (m.method === 'Runtime.consoleAPICalled') {
+        const text = m.params.args.map(a => a.value || a.description).join(' ');
+        if (text.includes('script tag') || text.includes('Script') || m.params.type === 'error' || m.params.type === 'warning') {
+          console.log(`[${m.params.type.toUpperCase()}]:`, text);
+          if (m.params.stackTrace) {
+            console.log('[STACK TRACE]:', JSON.stringify(m.params.stackTrace, null, 2));
+          }
+        }
       }
     });
 
     await send('Page.enable');
     await send('Runtime.enable');
 
-    console.log('Navigating to http://localhost:3000/register...');
-    await send('Page.navigate', { url: 'http://localhost:3000/register' });
+    console.log('Navigating to http://localhost:3000...');
+    await send('Page.navigate', { url: 'http://localhost:3000' });
 
-    await wait(22000);
+    await wait(4000);
     ws.close();
   } finally {
     proc.kill();

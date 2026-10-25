@@ -3,7 +3,7 @@ import { loginUser } from '@/lib/db';
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const { email, password } = body;
 
     if (!email || !password) {
@@ -42,10 +42,23 @@ export async function POST(req: Request) {
 
     return response;
   } catch (err: any) {
-    console.log('[Auth Login Error]:', err?.message || String(err));
+    const errorMsg = err?.message || String(err);
+    console.error('[Auth Login Error]:', errorMsg);
+
+    if (errorMsg === 'Please enter both email and password.') {
+      return NextResponse.json({ message: errorMsg }, { status: 400 });
+    }
+    if (errorMsg.includes('deactivated')) {
+      return NextResponse.json({ message: errorMsg }, { status: 403 });
+    }
+    if (errorMsg === 'Invalid email or password.') {
+      return NextResponse.json({ message: 'Invalid email or password.' }, { status: 401 });
+    }
+
+    // Unhandled or database errors: fail safely without leaking internal details
     return NextResponse.json(
-      { message: err?.message || 'Invalid email or password.' },
-      { status: 401 }
+      { message: 'Authentication service temporarily unavailable. Please try again later.' },
+      { status: 500 }
     );
   }
 }

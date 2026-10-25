@@ -60,6 +60,7 @@ const TABLE_SCHEMAS = [
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL,
         last_login_at TEXT,
+        session_token TEXT,
         is_active INTEGER DEFAULT 1
       );
     `,
@@ -512,6 +513,7 @@ async function initSchema() {
       'ALTER TABLE resume_versions ADD COLUMN IF NOT EXISTS version_number INTEGER DEFAULT 1',
       'ALTER TABLE resume_versions ADD COLUMN IF NOT EXISTS resume_data TEXT',
       'ALTER TABLE resume_versions ADD COLUMN IF NOT EXISTS change_summary TEXT',
+      'ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS session_token TEXT',
       'CREATE INDEX IF NOT EXISTS idx_users_lower_email ON users(LOWER(email))',
       'CREATE INDEX IF NOT EXISTS idx_improvements_resume ON resume_improvements(resume_id)',
       'CREATE INDEX IF NOT EXISTS idx_improvements_user_created ON resume_improvements(user_id, created_at DESC)',

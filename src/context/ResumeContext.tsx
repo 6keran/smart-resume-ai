@@ -7,6 +7,7 @@ import {
   ImprovementItem,
   ResumeTemplateId,
   TargetJobContext,
+  isClientDraftResumeId,
 } from '@/types/resume';
 import { INITIAL_RESUME_DATA } from '@/lib/initialData';
 
@@ -67,7 +68,7 @@ interface ResumeContextType {
   // Improvement Engine
   improvements: ImprovementItem[];
   setImprovements: React.Dispatch<React.SetStateAction<ImprovementItem[]>>;
-  acceptImprovement: (id: string) => Promise<boolean>;
+  acceptImprovement: (id: string, overrideItem?: ImprovementItem) => Promise<boolean>;
   editImprovement: (id: string, updatedContent: string) => void;
   rejectImprovement: (id: string) => void;
   applyAllApprovedImprovements: () => Promise<boolean>;
@@ -77,8 +78,6 @@ interface ResumeContextType {
     company?: string,
     jobDescription?: string
   ) => Promise<void>;
-  resetToSampleResume: () => void;
-  loadFresherSample: () => void;
 }
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
@@ -119,7 +118,9 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
       setSaveError(null);
 
       try {
-        const targetResumeId = activeResumeId || (target.id && target.id !== 'res_default' && !target.id.startsWith('res_fresher') ? target.id : null);
+        const targetResumeId = (activeResumeId && !isClientDraftResumeId(activeResumeId))
+          ? activeResumeId
+          : (target.id && !isClientDraftResumeId(target.id) ? target.id : null);
 
         const payload = {
           resumeId: targetResumeId,
@@ -239,8 +240,10 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
             parsed.personalInfo?.email !== 'candidate@email.com'
           ) {
             setResumeData(parsed);
-            if (parsed.id && parsed.id !== 'res_default') {
+            if (parsed.id && !isClientDraftResumeId(parsed.id)) {
               setActiveResumeId(parsed.id);
+            } else {
+              setActiveResumeId(null);
             }
           }
         }
@@ -541,11 +544,13 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
 
   // Accepts an improvement, applies changes to resumeData clone, and persists to server database.
   // Returns true only after database write succeeds. Avoids reporting success if write fails.
-  const acceptImprovement = async (id: string): Promise<boolean> => {
-    const item = improvements.find((imp) => imp.id === id);
+  const acceptImprovement = async (id: string, overrideItem?: ImprovementItem): Promise<boolean> => {
+    const item = overrideItem || improvements.find((imp) => imp.id === id);
     if (!item) return false;
 
-    const contentToApply = item.improvedContent;
+    const contentToApply = (item.improvedContent || '').trim();
+    if (!contentToApply) return false;
+
     let applied = false;
     let newResume: ResumeData = { ...resumeData };
 
@@ -602,32 +607,68 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
       }
     } else if (item.section === 'experience') {
       if (newResume.experience.length > 0) {
-        const newExp = [...newResume.experience];
+        const newExp = newResume.experience.map((e) => ({
+          ...e,
+          bulletPoints: [...e.bulletPoints],
+        }));
         let replaced = false;
 
-        for (let i = 0; i < newExp.length; i++) {
-          for (let b = 0; b < newExp[i].bulletPoints.length; b++) {
-            const currentBullet = newExp[i].bulletPoints[b];
-            if (
-              item.originalContent &&
-              (currentBullet.includes(item.originalContent.slice(0, 30)) ||
-                item.originalContent.includes(currentBullet.slice(0, 30)))
-            ) {
-              newExp[i].bulletPoints[b] = contentToApply;
-              replaced = true;
-              break;
-            }
+        // 1. Direct index and bullet index targeting if specified
+        if (
+          typeof item.targetIndex === 'number' &&
+          item.targetIndex >= 0 &&
+          item.targetIndex < newExp.length
+        ) {
+          const targetExp = newExp[item.targetIndex];
+          if (
+            typeof item.targetBulletIndex === 'number' &&
+            item.targetBulletIndex >= 0 &&
+            item.targetBulletIndex < targetExp.bulletPoints.length
+          ) {
+            targetExp.bulletPoints[item.targetBulletIndex] = contentToApply;
+            replaced = true;
+          } else if (targetExp.bulletPoints.length > 0) {
+            targetExp.bulletPoints[0] = contentToApply;
+            replaced = true;
+          } else {
+            targetExp.bulletPoints.push(contentToApply);
+            replaced = true;
           }
-          if (replaced) break;
         }
 
-        if (!replaced) {
-          if (newExp[0].bulletPoints.length > 0) {
-            newExp[0].bulletPoints[0] = contentToApply;
-          } else {
-            newExp[0].bulletPoints.push(contentToApply);
+        // 2. Fuzzy content matching across all experience entries
+        if (!replaced && item.originalContent) {
+          const origSnippet = item.originalContent.slice(0, 30).toLowerCase();
+          for (let i = 0; i < newExp.length; i++) {
+            for (let b = 0; b < newExp[i].bulletPoints.length; b++) {
+              const currentBullet = newExp[i].bulletPoints[b];
+              const bulletLower = currentBullet.toLowerCase();
+              if (
+                bulletLower.includes(origSnippet) ||
+                origSnippet.includes(bulletLower.slice(0, 30))
+              ) {
+                newExp[i].bulletPoints[b] = contentToApply;
+                replaced = true;
+                break;
+              }
+            }
+            if (replaced) break;
           }
         }
+
+        // 3. Fallback to targetIndex or experience 0
+        if (!replaced) {
+          const fallbackIdx =
+            typeof item.targetIndex === 'number' && item.targetIndex < newExp.length
+              ? item.targetIndex
+              : 0;
+          if (newExp[fallbackIdx].bulletPoints.length > 0) {
+            newExp[fallbackIdx].bulletPoints[0] = contentToApply;
+          } else {
+            newExp[fallbackIdx].bulletPoints.push(contentToApply);
+          }
+        }
+
         newResume = {
           ...newResume,
           experience: newExp,
@@ -655,12 +696,84 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
       }
     } else if (item.section === 'projects') {
       if (newResume.projects.length > 0) {
-        const newProj = [...newResume.projects];
-        if (newProj[0].bullets && newProj[0].bullets.length > 0) {
-          newProj[0].bullets[0] = contentToApply;
-        } else {
-          newProj[0].description = contentToApply;
+        const newProj = newResume.projects.map((p) => ({
+          ...p,
+          bullets: p.bullets ? [...p.bullets] : [],
+          technologies: p.technologies ? [...p.technologies] : [],
+        }));
+        let replaced = false;
+
+        // 1. Direct index targeting if specified
+        if (
+          typeof item.targetIndex === 'number' &&
+          item.targetIndex >= 0 &&
+          item.targetIndex < newProj.length
+        ) {
+          const proj = newProj[item.targetIndex];
+          if (
+            typeof item.targetBulletIndex === 'number' &&
+            item.targetBulletIndex >= 0 &&
+            proj.bullets &&
+            item.targetBulletIndex < proj.bullets.length
+          ) {
+            proj.bullets[item.targetBulletIndex] = contentToApply;
+            replaced = true;
+          } else if (proj.bullets && proj.bullets.length > 0) {
+            proj.bullets[0] = contentToApply;
+            replaced = true;
+          } else {
+            proj.description = contentToApply;
+            replaced = true;
+          }
         }
+
+        // 2. Fuzzy content matching across all projects
+        if (!replaced && item.originalContent) {
+          const origSnippet = item.originalContent.slice(0, 30).toLowerCase();
+          for (let p = 0; p < newProj.length; p++) {
+            const proj = newProj[p];
+            if (proj.bullets && proj.bullets.length > 0) {
+              for (let b = 0; b < proj.bullets.length; b++) {
+                const bulletLower = proj.bullets[b].toLowerCase();
+                if (
+                  bulletLower.includes(origSnippet) ||
+                  origSnippet.includes(bulletLower.slice(0, 30))
+                ) {
+                  proj.bullets[b] = contentToApply;
+                  replaced = true;
+                  break;
+                }
+              }
+            }
+            if (replaced) break;
+
+            if (proj.description) {
+              const descLower = proj.description.toLowerCase();
+              if (
+                descLower.includes(origSnippet) ||
+                origSnippet.includes(descLower.slice(0, 30))
+              ) {
+                proj.description = contentToApply;
+                replaced = true;
+                break;
+              }
+            }
+          }
+        }
+
+        // 3. Fallback to targetIndex or project 0
+        if (!replaced) {
+          const fallbackIdx =
+            typeof item.targetIndex === 'number' && item.targetIndex < newProj.length
+              ? item.targetIndex
+              : 0;
+          if (newProj[fallbackIdx].bullets && newProj[fallbackIdx].bullets.length > 0) {
+            newProj[fallbackIdx].bullets[0] = contentToApply;
+          } else {
+            newProj[fallbackIdx].description = contentToApply;
+          }
+        }
+
         newResume = {
           ...newResume,
           projects: newProj,
@@ -686,10 +799,14 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
       }
     } else if (item.section === 'education') {
       if (newResume.education.length > 0) {
-        const newEdu = [...newResume.education];
-        newEdu[0] = {
-          ...newEdu[0],
-          degree: contentToApply.length > 50 ? contentToApply.slice(0, 50) : contentToApply,
+        const newEdu = newResume.education.map((e) => ({ ...e }));
+        const targetEduIdx =
+          typeof item.targetIndex === 'number' && item.targetIndex < newEdu.length
+            ? item.targetIndex
+            : 0;
+        newEdu[targetEduIdx] = {
+          ...newEdu[targetEduIdx],
+          degree: contentToApply.length > 100 ? contentToApply.slice(0, 100) : contentToApply,
         };
         newResume = {
           ...newResume,
@@ -704,7 +821,7 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
             {
               id: `edu_${Date.now()}`,
               institution: 'University / Institution',
-              degree: contentToApply.length > 50 ? contentToApply.slice(0, 50) : contentToApply,
+              degree: contentToApply.length > 100 ? contentToApply.slice(0, 100) : contentToApply,
               graduationYear: new Date().getFullYear().toString(),
             },
           ],
@@ -727,9 +844,13 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
     if (saveRes.success) {
       hasUserEditedRef.current = true;
       setResumeData(newResume);
-      setImprovements((prev) =>
-        prev.map((imp) => (imp.id === id ? { ...imp, status: 'accepted' } : imp))
-      );
+      setImprovements((prev) => {
+        const exists = prev.some((imp) => imp.id === id);
+        if (exists) {
+          return prev.map((imp) => (imp.id === id ? { ...imp, status: 'accepted' } : imp));
+        }
+        return [{ ...item, status: 'accepted' }, ...prev];
+      });
       return true;
     }
 
@@ -768,7 +889,8 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
     const acceptedIds: string[] = [];
 
     for (const item of actionable) {
-      const contentToApply = item.improvedContent;
+      const contentToApply = (item.improvedContent || '').trim();
+      if (!contentToApply) continue;
       let applied = false;
 
       if (item.section === 'summary') {
@@ -798,50 +920,164 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
         }
       } else if (item.section === 'experience') {
         if (currentResume.experience.length > 0) {
-          const newExp = [...currentResume.experience];
+          const newExp = currentResume.experience.map((e) => ({
+            ...e,
+            bulletPoints: [...e.bulletPoints],
+          }));
           let replaced = false;
-          for (let i = 0; i < newExp.length; i++) {
-            for (let b = 0; b < newExp[i].bulletPoints.length; b++) {
-              const currentBullet = newExp[i].bulletPoints[b];
-              if (
-                item.originalContent &&
-                (currentBullet.includes(item.originalContent.slice(0, 30)) ||
-                  item.originalContent.includes(currentBullet.slice(0, 30)))
-              ) {
-                newExp[i].bulletPoints[b] = contentToApply;
-                replaced = true;
-                break;
-              }
-            }
-            if (replaced) break;
-          }
-          if (!replaced) {
-            if (newExp[0].bulletPoints.length > 0) {
-              newExp[0].bulletPoints[0] = contentToApply;
+
+          // 1. Direct index targeting
+          if (
+            typeof item.targetIndex === 'number' &&
+            item.targetIndex >= 0 &&
+            item.targetIndex < newExp.length
+          ) {
+            const targetExp = newExp[item.targetIndex];
+            if (
+              typeof item.targetBulletIndex === 'number' &&
+              item.targetBulletIndex >= 0 &&
+              item.targetBulletIndex < targetExp.bulletPoints.length
+            ) {
+              targetExp.bulletPoints[item.targetBulletIndex] = contentToApply;
+              replaced = true;
+            } else if (targetExp.bulletPoints.length > 0) {
+              targetExp.bulletPoints[0] = contentToApply;
+              replaced = true;
             } else {
-              newExp[0].bulletPoints.push(contentToApply);
+              targetExp.bulletPoints.push(contentToApply);
+              replaced = true;
             }
           }
+
+          // 2. Fuzzy content matching
+          if (!replaced && item.originalContent) {
+            const origSnippet = item.originalContent.slice(0, 30).toLowerCase();
+            for (let i = 0; i < newExp.length; i++) {
+              for (let b = 0; b < newExp[i].bulletPoints.length; b++) {
+                const currentBullet = newExp[i].bulletPoints[b];
+                const bulletLower = currentBullet.toLowerCase();
+                if (
+                  bulletLower.includes(origSnippet) ||
+                  origSnippet.includes(bulletLower.slice(0, 30))
+                ) {
+                  newExp[i].bulletPoints[b] = contentToApply;
+                  replaced = true;
+                  break;
+                }
+              }
+              if (replaced) break;
+            }
+          }
+
+          // 3. Fallback
+          if (!replaced) {
+            const fallbackIdx =
+              typeof item.targetIndex === 'number' && item.targetIndex < newExp.length
+                ? item.targetIndex
+                : 0;
+            if (newExp[fallbackIdx].bulletPoints.length > 0) {
+              newExp[fallbackIdx].bulletPoints[0] = contentToApply;
+            } else {
+              newExp[fallbackIdx].bulletPoints.push(contentToApply);
+            }
+          }
+
           currentResume = { ...currentResume, experience: newExp };
           applied = true;
         }
       } else if (item.section === 'projects') {
         if (currentResume.projects.length > 0) {
-          const newProj = [...currentResume.projects];
-          if (newProj[0].bullets && newProj[0].bullets.length > 0) {
-            newProj[0].bullets[0] = contentToApply;
-          } else {
-            newProj[0].description = contentToApply;
+          const newProj = currentResume.projects.map((p) => ({
+            ...p,
+            bullets: p.bullets ? [...p.bullets] : [],
+            technologies: p.technologies ? [...p.technologies] : [],
+          }));
+          let replaced = false;
+
+          // 1. Direct index targeting
+          if (
+            typeof item.targetIndex === 'number' &&
+            item.targetIndex >= 0 &&
+            item.targetIndex < newProj.length
+          ) {
+            const proj = newProj[item.targetIndex];
+            if (
+              typeof item.targetBulletIndex === 'number' &&
+              item.targetBulletIndex >= 0 &&
+              proj.bullets &&
+              item.targetBulletIndex < proj.bullets.length
+            ) {
+              proj.bullets[item.targetBulletIndex] = contentToApply;
+              replaced = true;
+            } else if (proj.bullets && proj.bullets.length > 0) {
+              proj.bullets[0] = contentToApply;
+              replaced = true;
+            } else {
+              proj.description = contentToApply;
+              replaced = true;
+            }
           }
+
+          // 2. Fuzzy content matching
+          if (!replaced && item.originalContent) {
+            const origSnippet = item.originalContent.slice(0, 30).toLowerCase();
+            for (let p = 0; p < newProj.length; p++) {
+              const proj = newProj[p];
+              if (proj.bullets && proj.bullets.length > 0) {
+                for (let b = 0; b < proj.bullets.length; b++) {
+                  const bulletLower = proj.bullets[b].toLowerCase();
+                  if (
+                    bulletLower.includes(origSnippet) ||
+                    origSnippet.includes(bulletLower.slice(0, 30))
+                  ) {
+                    proj.bullets[b] = contentToApply;
+                    replaced = true;
+                    break;
+                  }
+                }
+              }
+              if (replaced) break;
+
+              if (proj.description) {
+                const descLower = proj.description.toLowerCase();
+                if (
+                  descLower.includes(origSnippet) ||
+                  origSnippet.includes(descLower.slice(0, 30))
+                ) {
+                  proj.description = contentToApply;
+                  replaced = true;
+                  break;
+                }
+              }
+            }
+          }
+
+          // 3. Fallback
+          if (!replaced) {
+            const fallbackIdx =
+              typeof item.targetIndex === 'number' && item.targetIndex < newProj.length
+                ? item.targetIndex
+                : 0;
+            if (newProj[fallbackIdx].bullets && newProj[fallbackIdx].bullets.length > 0) {
+              newProj[fallbackIdx].bullets[0] = contentToApply;
+            } else {
+              newProj[fallbackIdx].description = contentToApply;
+            }
+          }
+
           currentResume = { ...currentResume, projects: newProj };
           applied = true;
         }
       } else if (item.section === 'education') {
         if (currentResume.education.length > 0) {
-          const newEdu = [...currentResume.education];
-          newEdu[0] = {
-            ...newEdu[0],
-            degree: contentToApply.length > 50 ? contentToApply.slice(0, 50) : contentToApply,
+          const newEdu = currentResume.education.map((e) => ({ ...e }));
+          const targetEduIdx =
+            typeof item.targetIndex === 'number' && item.targetIndex < newEdu.length
+              ? item.targetIndex
+              : 0;
+          newEdu[targetEduIdx] = {
+            ...newEdu[targetEduIdx],
+            degree: contentToApply.length > 100 ? contentToApply.slice(0, 100) : contentToApply,
           };
           currentResume = { ...currentResume, education: newEdu };
           applied = true;
@@ -1019,93 +1255,6 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const resetToSampleResume = async () => {
-    try {
-      const { SAMPLE_EXPERIENCED_RESUME } = await import('@/lib/sampleResume');
-      setResumeData(SAMPLE_EXPERIENCED_RESUME);
-    } catch {
-      setResumeData(INITIAL_RESUME_DATA);
-    }
-    setAnalysisResult(null);
-    setImprovements([]);
-  };
-
-  const loadFresherSample = () => {
-    const fresherData: ResumeData = {
-      id: 'res_fresher_02',
-      title: 'Junior Software & Data Engineer',
-      candidateType: 'fresher',
-      personalInfo: {
-        fullName: 'Maya Chen',
-        email: 'maya.chen@email.com',
-        phone: '+1 (555) 789-0123',
-        location: 'Austin, TX',
-        headline: 'Computer Science Graduate & Junior Software Engineer',
-        linkedin: 'linkedin.com/in/mayachen-cs',
-        github: 'github.com/mayachen-dev',
-        portfolio: 'mayachen.io',
-      },
-      summary:
-        'Motivated Computer Science graduate with hands-on expertise in Python, SQL, React, and data analytics pipelines. Developed multiple end-to-end full stack web platforms and machine learning forecasting models during university capstones. Quick learner passionate about scalable distributed systems.',
-      skills: {
-        technical: ['Python', 'SQL', 'React', 'JavaScript', 'Git', 'Data Analysis', 'Docker'],
-        soft: ['Rapid Prototyping', 'Problem Solving', 'Effective Communication', 'Agile Teamwork'],
-        tools: ['VS Code', 'GitHub', 'Postman', 'Tableau', 'Jupyter Notebook'],
-      },
-      experience: [],
-      education: [
-        {
-          id: 'edu_fresher',
-          degree: 'B.S. in Computer Science & Applied Statistics',
-          institution: 'University of Texas at Austin',
-          location: 'Austin, TX',
-          graduationYear: '2024',
-          gpa: '3.91',
-          honors: 'Dean’s Honor List, Outstanding Capstone Project Award',
-        },
-      ],
-      projects: [
-        {
-          id: 'proj_f1',
-          title: 'Algorithmic Trading & Portfolio Simulator',
-          description:
-            'Engineered event-driven backtesting platform in Python using Pandas and NumPy, simulating momentum strategies over 10 years of S&P 500 tick data.',
-          technologies: ['Python', 'Pandas', 'NumPy', 'Flask', 'Chart.js'],
-          link: 'github.com/mayachen-dev/algo-simulator',
-          bullets: [
-            'Implemented risk metrics calculation including Sharpe Ratio, Sortino Ratio, and Maximum Drawdown with sub-200ms compute time.',
-            'Built responsive React dashboard displaying real-time simulation equity curves and portfolio rebalancing triggers.',
-          ],
-        },
-        {
-          id: 'proj_f2',
-          title: 'Campus Resource Exchange Platform',
-          description:
-            'Full stack web application allowing 12,000+ university students to exchange textbooks, lab gear, and tutoring notes with verified student SSO.',
-          technologies: ['React', 'TypeScript', 'Node.js', 'PostgreSQL', 'Tailwind CSS'],
-          link: 'github.com/mayachen-dev/campus-hub',
-          bullets: [
-            'Designed normalized relational schema in PostgreSQL supporting fast full-text search across 5,000+ item listings.',
-            'Integrated JWT authentication and automated email notification queue using Redis.',
-          ],
-        },
-      ],
-      certifications: [
-        {
-          id: 'cert_f1',
-          name: 'Meta Certified Front-End Developer',
-          issuer: 'Meta',
-          date: '2024',
-          credentialId: 'META-FED-9921',
-        },
-      ],
-      templateId: 'graduate-fresher',
-      lastUpdated: new Date().toISOString(),
-    };
-    hasUserEditedRef.current = true;
-    setResumeData(fresherData);
-  };
-
   return (
     <ResumeContext.Provider
       value={{
@@ -1145,8 +1294,6 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
         applyAllApprovedImprovements,
         regenerateImprovement,
         tailorResumeToJob,
-        resetToSampleResume,
-        loadFresherSample,
       }}
     >
       {children}

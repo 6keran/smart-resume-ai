@@ -10,6 +10,7 @@ import {
   getAdminAssessments,
   getAdminJobSearches,
   getAdminJobMatches,
+  getAdminJobApplications,
   getAdminFeedback,
   getVisitorActivity,
   deleteUserAndData,
@@ -52,6 +53,9 @@ export async function GET(req: Request) {
         return NextResponse.json({ data: await getAdminJobSearches(limit) });
       case 'matches':
         return NextResponse.json({ data: await getAdminJobMatches(limit) });
+      case 'applications':
+      case 'job_applications':
+        return NextResponse.json({ data: await getAdminJobApplications(limit) });
       case 'feedback':
         return NextResponse.json({ data: await getAdminFeedback(limit, filter) });
       default:

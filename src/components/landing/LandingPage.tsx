@@ -1,629 +1,479 @@
 'use client';
 
-import React, { useState } from 'react';
+import React from 'react';
 import Link from 'next/link';
 import {
-  Sparkles,
-  ArrowRight,
   FileSearch,
-  CheckCircle2,
-  BadgeCheck,
   FileEdit,
-  Briefcase,
-  LayoutDashboard,
-  ShieldCheck,
-  Target,
   Wand2,
+  BadgeCheck,
+  Target,
+  ArrowRight,
+  CheckCircle2,
   FileText,
-  Award,
+  Briefcase,
+  ShieldCheck,
+  Layers,
+  Printer,
+  Compass,
 } from 'lucide-react';
+import {
+  ScrollReveal,
+  StaggerGroup,
+  StaggerChild,
+} from '@/components/ui/MotionPrimitives';
 
 export default function LandingPage() {
-  const [activeTab, setActiveTab] = useState<'analyzer' | 'improver' | 'builder' | 'skills' | 'match'>('analyzer');
-
-  const steps = [
-    {
-      step: '01',
-      title: 'Upload & Parse',
-      desc: 'Drop your PDF or DOCX resume into our instant parsing engine to extract tokens, formatting, and sections.',
-      icon: FileText,
-      badge: 'Multi-Format',
-    },
-    {
-      step: '02',
-      title: 'ATS Audit',
-      desc: 'Evaluate 45+ metrics including keyword density, section layout, contact parseability, and ATS compliance.',
-      icon: FileSearch,
-      badge: 'Instant Score',
-    },
-    {
-      step: '03',
-      title: 'Factual Improvement',
-      desc: 'Refine bullets with quantified achievements and action verbs while preserving 100% factual truth.',
-      icon: Wand2,
-      badge: 'Side-by-Side',
-    },
-    {
-      step: '04',
-      title: 'A4 Resume Builder',
-      desc: 'Generate pixel-perfect A4 resumes using 8 battle-tested recruitment templates ready for PDF export.',
-      icon: FileEdit,
-      badge: 'Standard A4',
-    },
-    {
-      step: '05',
-      title: 'Skill Assessments',
-      desc: 'Complete timed technical quizzes across core languages and frameworks to benchmark knowledge.',
-      icon: BadgeCheck,
-      badge: 'Assessment Tests',
-    },
-    {
-      step: '06',
-      title: 'Targeted Job Matching',
-      desc: 'Compare your profile against open job descriptions to pinpoint missing requirements before applying.',
-      icon: Target,
-      badge: 'Gap Analysis',
-    },
-  ];
-
-  const features = [
-    {
-      title: 'AI Resume Analyzer',
-      desc: 'Comprehensive ATS parsing audits keyword distribution, section tokens, and layout readability across 45+ recruiter benchmarks.',
-      href: '/analyzer',
-      icon: FileSearch,
-      badge: 'Core Engine',
-    },
-    {
-      title: 'Resume Improver',
-      desc: 'Side-by-side phrasing optimizer. Transform weak descriptions into high-converting quantified achievements with zero hallucinations.',
-      href: '/improver',
-      icon: Wand2,
-      badge: 'Generative AI',
-    },
-    {
-      title: 'Resume Builder',
-      desc: 'Multi-step guided editor creating compliant A4 PDF resumes with zoomable preview and 8 recruiter-approved templates.',
-      href: '/builder',
-      icon: FileEdit,
-      badge: 'A4 Export',
-    },
-    {
-      title: 'Skill Assessments',
-      desc: 'Technical assessments across 11 key engineering skills with timed questions and structured score tracking.',
-      href: '/skills',
-      icon: BadgeCheck,
-      badge: '11 Skills',
-    },
-    {
-      title: 'Job Match Engine',
-      desc: 'Deep comparative alignment between your resume and target job descriptions with exact keyword and qualification breakdown.',
-      href: '/job-match',
-      icon: Target,
-      badge: 'Instant Match',
-    },
-    {
-      title: 'Job Search Discovery',
-      desc: 'Curated technical and product roles with salary transparency and one-click resume matching against your profile.',
-      href: '/jobs',
-      icon: Briefcase,
-      badge: 'Live Postings',
-    },
-    {
-      title: 'Career Dashboard',
-      desc: 'Comprehensive intelligence hub tracking real ATS score evolution, applications, verified certificates, and career courses.',
-      href: '/dashboard',
-      icon: LayoutDashboard,
-      badge: 'Analytics',
-    },
-    {
-      title: 'Completion Certificates',
-      desc: 'Downloadable certificates for passed assessments with score records and clean print formatting.',
-      href: '/skills',
-      icon: Award,
-      badge: 'Certificates',
-    },
-  ];
-
   return (
-    <div className="relative min-h-screen overflow-hidden bg-[var(--bg-primary)]">
-      {/* Hero Section */}
-      <section className="relative pt-16 pb-20 md:pt-24 md:pb-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto flex flex-col items-center text-center">
-        {/* Eyebrow Badge */}
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-secondary)] text-xs font-semibold mb-6 shadow-xs">
-          <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
-          <span>Resume Intelligence Platform</span>
-        </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 selection:bg-blue-600 selection:text-white">
+      {/* ── 1. HERO SECTION ── */}
+      <section className="relative pt-12 pb-16 sm:pt-16 sm:pb-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-10 lg:gap-12 items-center">
+          {/* Left Column: Direct Heading, Value Proposition, Action CTAs */}
+          <div className="lg:col-span-7 flex flex-col text-left space-y-6">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 text-xs font-semibold text-blue-700 dark:text-blue-300 w-fit">
+              <ShieldCheck className="w-3.5 h-3.5 text-blue-600 dark:text-blue-400" />
+              <span>ATS Compliance &amp; Career Tools</span>
+            </div>
 
-        {/* Main Headline */}
-        <h1 className="text-3xl sm:text-4xl lg:text-[36px] font-bold tracking-tight text-[var(--text-primary)] max-w-3xl leading-tight mb-4">
-          Professional Resume Analysis and A4 Builder
-        </h1>
+            <div className="space-y-3">
+              <h1 className="text-3xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight text-slate-900 dark:text-white leading-[1.15]">
+                Build, Analyze, and Optimize Your Resume for Real ATS Systems
+              </h1>
+              <p className="text-base sm:text-lg text-slate-600 dark:text-slate-300 font-normal leading-relaxed max-w-2xl">
+                Smart Resume AI provides automated applicant tracking system scoring, keyword gap analysis, fact-preserving bullet refinement, and print-ready A4 PDF generation.
+              </p>
+            </div>
 
-        {/* Supporting Message */}
-        <p className="text-base text-[var(--text-secondary)] max-w-2xl font-normal leading-relaxed mb-8">
-          Evaluate ATS compliance across 45+ recruitment benchmarks, improve bullet phrasing with factual impact, and generate standardized A4 PDF resumes.
-        </p>
-
-        {/* Hero CTAs */}
-        <div className="flex flex-col sm:flex-row items-center gap-3 mb-14 z-10 w-full sm:w-auto">
-          <Link
-            href="/analyzer"
-            className="btn-primary w-full sm:w-auto"
-          >
-            <Sparkles className="w-4 h-4 text-white" />
-            <span>Analyze Resume</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
-          <Link
-            href="/builder"
-            className="btn-secondary w-full sm:w-auto"
-          >
-            <FileEdit className="w-4 h-4 text-[var(--accent)]" />
-            <span>Build A4 Resume</span>
-          </Link>
-          <Link
-            href="/dashboard"
-            className="btn-secondary w-full sm:w-auto"
-          >
-            <LayoutDashboard className="w-4 h-4 text-[var(--text-secondary)]" />
-            <span>View Dashboard</span>
-          </Link>
-        </div>
-
-        {/* Key Platform Stats Strip */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 sm:gap-4 max-w-4xl w-full mb-14">
-          <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-left shadow-xs">
-            <span className="text-2xl font-bold text-[var(--text-primary)]">45+</span>
-            <p className="text-xs text-[var(--text-secondary)] font-medium mt-0.5">ATS Checkpoints</p>
-          </div>
-          <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-left shadow-xs">
-            <span className="text-2xl font-bold text-[var(--text-primary)]">8</span>
-            <p className="text-xs text-[var(--text-secondary)] font-medium mt-0.5">Resume Templates</p>
-          </div>
-          <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-left shadow-xs">
-            <span className="text-2xl font-bold text-[var(--text-primary)]">11</span>
-            <p className="text-xs text-[var(--text-secondary)] font-medium mt-0.5">Skill Assessments</p>
-          </div>
-          <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-left shadow-xs">
-            <span className="text-2xl font-bold text-[var(--accent)]">A4</span>
-            <p className="text-xs text-[var(--text-secondary)] font-medium mt-0.5">Standard Export</p>
-          </div>
-        </div>
-
-        {/* Interactive Real Application Showcase */}
-        <div className="w-full max-w-5xl rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xs overflow-hidden text-left">
-          {/* Showcase Tab Navigation */}
-          <div className="flex items-center gap-1.5 p-2 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] overflow-x-auto">
-            <button
-              onClick={() => setActiveTab('analyzer')}
-              className={`px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-150 active:scale-[0.98] flex items-center gap-2 cursor-pointer ${
-                activeTab === 'analyzer'
-                  ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-xs border border-[var(--border-color)] font-semibold'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]/50'
-              }`}
-            >
-              <FileSearch className="w-3.5 h-3.5 text-[var(--accent)]" />
-              <span>ATS Analyzer</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('improver')}
-              className={`px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-150 active:scale-[0.98] flex items-center gap-2 cursor-pointer ${
-                activeTab === 'improver'
-                  ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-xs border border-[var(--border-color)] font-semibold'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]/50'
-              }`}
-            >
-              <Wand2 className="w-3.5 h-3.5 text-[var(--accent)]" />
-              <span>Bullet Improver</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('builder')}
-              className={`px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-150 active:scale-[0.98] flex items-center gap-2 cursor-pointer ${
-                activeTab === 'builder'
-                  ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-xs border border-[var(--border-color)] font-semibold'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]/50'
-              }`}
-            >
-              <FileEdit className="w-3.5 h-3.5 text-[var(--accent)]" />
-              <span>A4 Resume Builder</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('skills')}
-              className={`px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-150 active:scale-[0.98] flex items-center gap-2 cursor-pointer ${
-                activeTab === 'skills'
-                  ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-xs border border-[var(--border-color)] font-semibold'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]/50'
-              }`}
-            >
-              <BadgeCheck className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Skill Quizzes</span>
-            </button>
-            <button
-              onClick={() => setActiveTab('match')}
-              className={`px-3.5 py-2 rounded-lg text-xs font-semibold whitespace-nowrap transition-all duration-150 active:scale-[0.98] flex items-center gap-2 cursor-pointer ${
-                activeTab === 'match'
-                  ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-xs border border-[var(--border-color)] font-semibold'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]/50'
-              }`}
-            >
-              <Target className="w-3.5 h-3.5 text-rose-400" />
-              <span>Job Match</span>
-            </button>
-          </div>
-
-          {/* Showcase Panel Content */}
-          <div className="p-6 sm:p-8 animate-fade-in" key={activeTab}>
-            {activeTab === 'analyzer' && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                <div className="flex flex-col items-center justify-center p-6 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-center">
-                  <div className="w-20 h-20 rounded-full border-4 border-emerald-500/20 border-t-emerald-500 flex items-center justify-center text-2xl font-black text-emerald-500 mb-3">
-                    88
-                  </div>
-                  <span className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">Overall ATS Score</span>
-                  <span className="text-[11px] text-emerald-500 font-semibold mt-1">Recruiter Ready</span>
-                </div>
-                <div className="md:col-span-2 space-y-3">
-                  <div className="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
-                    <span className="text-xs font-bold text-[var(--text-primary)]">Parsed Resume Sections</span>
-                    <span className="text-[10px] font-semibold text-emerald-400">4 of 4 Verified</span>
-                  </div>
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div className="p-2.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-between">
-                      <span className="text-[var(--text-secondary)]">Experience Impact</span>
-                      <span className="font-bold text-emerald-400">92%</span>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-between">
-                      <span className="text-[var(--text-secondary)]">Technical Keywords</span>
-                      <span className="font-bold text-emerald-400">86%</span>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-between">
-                      <span className="text-[var(--text-secondary)]">ATS Formatting</span>
-                      <span className="font-bold text-emerald-400">94%</span>
-                    </div>
-                    <div className="p-2.5 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-between">
-                      <span className="text-[var(--text-secondary)]">Contact Verification</span>
-                      <span className="font-bold text-emerald-400">100%</span>
-                    </div>
-                  </div>
-                  <div className="pt-2 flex justify-end">
-                    <Link
-                      href="/analyzer"
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] hover:underline"
-                    >
-                      Try Live Resume Analysis <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'improver' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
-                  <span className="text-xs font-bold text-[var(--text-primary)]">Side-by-Side Bullet Comparison</span>
-                  <span className="text-[10px] font-semibold text-[var(--text-secondary)]">Evidence-Based Phrasing</span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-4 rounded-xl bg-red-500/5 border border-red-500/20">
-                    <span className="text-[10px] font-bold text-red-400 uppercase tracking-wider block mb-1.5">Original Phrasing</span>
-                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                      &ldquo;Responsible for optimizing database queries and improving performance for the user search application.&rdquo;
-                    </p>
-                    <span className="text-[10px] text-red-400/80 font-medium mt-2 block">Lacks quantifiable impact and action verbs</span>
-                  </div>
-                  <div className="p-4 rounded-xl bg-emerald-500/5 border border-emerald-500/20">
-                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider block mb-1.5">AI-Enhanced Output</span>
-                    <p className="text-xs text-[var(--text-primary)] font-medium leading-relaxed">
-                      &ldquo;Architected multi-column indexing strategy across PostgreSQL clusters, reducing search latency by 42% for 250K+ daily active users.&rdquo;
-                    </p>
-                    <span className="text-[10px] text-emerald-500 font-semibold mt-2 block">Quantified metric + action verb + tech stack highlighted</span>
-                  </div>
-                </div>
-                <div className="pt-1 flex justify-end">
-                  <Link
-                    href="/improver"
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] hover:underline"
-                  >
-                    Open Resume Improver <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'builder' && (
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-                <div className="space-y-3">
-                  <h4 className="text-sm font-bold text-[var(--text-primary)]">Guided 6-Step Editor</h4>
-                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                    Build professional resumes with live real-time A4 preview, zoom controls, and instant PDF printing formatted specifically for applicant tracking systems.
-                  </p>
-                  <div className="space-y-1.5 text-xs">
-                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>8 Industry Templates (Tech, Minimal, Executive)</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Strict A4 Standard Dimensions (210mm × 297mm)</span>
-                    </div>
-                    <div className="flex items-center gap-2 text-[var(--text-secondary)]">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400" />
-                      <span>Zero Content Clipping in PDF Generation</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="md:col-span-2 p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] flex flex-col items-center justify-center">
-                  <div className="w-full max-w-sm bg-white text-slate-900 rounded-lg p-5 shadow-lg border border-slate-200 text-left scale-95">
-                    <div className="border-b border-slate-200 pb-2 mb-3">
-                      <h5 className="font-bold text-sm text-slate-900">ALEX JOHNSON</h5>
-                      <p className="text-[10px] text-slate-600">Senior Full-Stack Engineer • San Francisco, CA • alex@example.com</p>
-                    </div>
-                    <div className="space-y-2 text-[10px]">
-                      <div>
-                        <span className="font-bold text-[var(--accent)] uppercase tracking-wider block text-[9px]">Professional Summary</span>
-                        <p className="text-slate-600 line-clamp-2">Systems architect with 6+ years designing distributed TypeScript and Python cloud architectures.</p>
-                      </div>
-                      <div>
-                        <span className="font-bold text-[var(--accent)] uppercase tracking-wider block text-[9px]">Technical Skills</span>
-                        <p className="text-slate-600">React, Next.js, Node.js, Python, PostgreSQL, AWS, Docker</p>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="mt-3 flex justify-end w-full">
-                    <Link
-                      href="/builder"
-                      className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] hover:underline"
-                    >
-                      Open Live Resume Builder <ArrowRight className="w-3.5 h-3.5" />
-                    </Link>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'skills' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
-                  <span className="text-xs font-bold text-[var(--text-primary)]">Technical Knowledge Assessments</span>
-                  <span className="text-[10px] font-semibold text-[var(--accent)]">11 Supported Domains</span>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-left">
-                    <div className="w-8 h-8 rounded-lg bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center mb-2.5">
-                      <ShieldCheck className="w-4 h-4" />
-                    </div>
-                    <h5 className="text-xs font-bold text-[var(--text-primary)] mb-1">Timed Quizzes</h5>
-                    <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">10 multiple-choice questions testing code comprehension and syntax.</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-left">
-                    <div className="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center mb-2.5">
-                      <BadgeCheck className="w-4 h-4" />
-                    </div>
-                    <h5 className="text-xs font-bold text-[var(--text-primary)] mb-1">Passing Benchmark</h5>
-                    <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">Score 70% or higher to mark the skill as passed on your profile.</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-left">
-                    <div className="w-8 h-8 rounded-lg bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center mb-2.5">
-                      <Award className="w-4 h-4" />
-                    </div>
-                    <h5 className="text-xs font-bold text-[var(--text-primary)] mb-1">Score Tracking</h5>
-                    <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">Save completed assessments and benchmark dates directly to your profile.</p>
-                  </div>
-                </div>
-                <div className="pt-1 flex justify-end">
-                  <Link
-                    href="/skills"
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] hover:underline"
-                  >
-                    Explore Technical Skill Assessments <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-            )}
-
-            {activeTab === 'match' && (
-              <div className="space-y-4">
-                <div className="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
-                  <span className="text-xs font-bold text-[var(--text-primary)]">Target Role Alignment Breakdown</span>
-                  <span className="text-[10px] font-semibold text-rose-400">Senior Systems Architect</span>
-                </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-center flex flex-col justify-center items-center">
-                    <div className="w-16 h-16 rounded-full border-4 border-[var(--accent)]/20 border-t-[var(--accent)] flex items-center justify-center text-xl font-black text-[var(--accent)] mb-2">
-                      85%
-                    </div>
-                    <span className="text-xs font-bold text-[var(--text-primary)]">Skill Alignment Match</span>
-                  </div>
-                  <div className="md:col-span-2 space-y-2">
-                    <div className="p-3 rounded-lg bg-emerald-500/5 border border-emerald-500/20 text-xs">
-                      <span className="font-bold text-emerald-400 block mb-0.5">Matched Qualifications (8)</span>
-                      <span className="text-[var(--text-secondary)]">Python, TypeScript, PostgreSQL, AWS ECS, Docker, Distributed Systems, CI/CD, Microservices</span>
-                    </div>
-                    <div className="p-3 rounded-lg bg-amber-500/5 border border-amber-500/20 text-xs">
-                      <span className="font-bold text-amber-400 block mb-0.5">Missing High-Impact Terms (2)</span>
-                      <span className="text-[var(--text-secondary)]">Kubernetes Operator development, Kafka partition rebalancing</span>
-                    </div>
-                  </div>
-                </div>
-                <div className="pt-1 flex justify-end">
-                  <Link
-                    href="/job-match"
-                    className="inline-flex items-center gap-1.5 text-xs font-semibold text-[var(--accent)] hover:underline"
-                  >
-                    Open Job Match Engine <ArrowRight className="w-3.5 h-3.5" />
-                  </Link>
-                </div>
-              </div>
-            )}
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works (6 Steps) */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[var(--border-color)]">
-        <div className="text-center mb-12">
-          <span className="text-xs font-semibold text-[var(--accent)] tracking-wider uppercase mb-1.5 block">
-            End-to-End Workflow
-          </span>
-          <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] tracking-tight">
-            How Smart Resume AI Works
-          </h2>
-          <p className="text-sm text-[var(--text-secondary)] max-w-xl mx-auto mt-2">
-            Structured stages transforming career history into verified, market-ready intelligence.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {steps.map((st) => {
-            const Icon = st.icon;
-            return (
-              <div
-                key={st.step}
-                className="p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--border-hover)] transition-all duration-150 shadow-xs text-left flex flex-col justify-between"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <span className="text-lg font-bold text-[var(--accent)] tracking-tight">
-                      {st.step}
-                    </span>
-                    <div className="w-8 h-8 rounded-lg bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center">
-                      <Icon className="w-4 h-4" />
-                    </div>
-                  </div>
-                  <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1">{st.title}</h3>
-                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                    {st.desc}
-                  </p>
-                </div>
-                <div className="mt-4 pt-3 border-t border-[var(--border-color)]">
-                  <span className="text-[10px] font-medium px-2 py-0.5 rounded bg-[var(--bg-secondary)] text-[var(--text-secondary)]">
-                    {st.badge}
-                  </span>
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Core Features Grid */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-[var(--border-color)]">
-        <div className="text-center mb-12">
-          <span className="text-xs font-semibold text-[var(--accent)] tracking-wider uppercase mb-1.5 block">
-            Core Modules
-          </span>
-          <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] tracking-tight">
-            Platform Capabilities
-          </h2>
-          <p className="text-sm text-[var(--text-secondary)] max-w-xl mx-auto mt-2">
-            Engineered for high ATS compliance, accurate phrase improvements, and verifiable career milestones.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-          {features.map((feat) => {
-            const Icon = feat.icon;
-            return (
-              <Link
-                key={feat.title}
-                href={feat.href}
-                className="group flex flex-col justify-between p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--accent)] hover:shadow-xs active:scale-[0.99] transition-all duration-150 text-left shadow-xs"
-              >
-                <div>
-                  <div className="flex items-center justify-between mb-3">
-                    <div className="w-8 h-8 rounded-lg bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center">
-                      <Icon className="w-4 h-4" />
-                    </div>
-                    <span className="text-[10px] font-medium tracking-wide px-2 py-0.5 rounded bg-[var(--bg-secondary)] text-[var(--text-secondary)]">
-                      {feat.badge}
-                    </span>
-                  </div>
-                  <h3 className="text-sm font-semibold text-[var(--text-primary)] mb-1 group-hover:text-[var(--accent)] transition-colors">
-                    {feat.title}
-                  </h3>
-                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed mb-3">
-                    {feat.desc}
-                  </p>
-                </div>
-
-                <div className="flex items-center gap-1 text-xs font-medium text-[var(--accent)]">
-                  <span>Explore</span>
-                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                </div>
-              </Link>
-            );
-          })}
-        </div>
-      </section>
-
-      {/* Final Call to Action */}
-      <section className="py-16 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center border-t border-[var(--border-color)]">
-        <div className="p-8 sm:p-10 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xs relative overflow-hidden">
-          <div className="relative z-10 max-w-xl mx-auto">
-            <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] tracking-tight mb-2">
-              Start Optimizing Your Resume
-            </h2>
-            <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed mb-6">
-              Run automated ATS checks, refine bullet points, and build recruitment-compliant A4 resumes.
-            </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+            {/* Core Action Buttons */}
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-2">
               <Link
                 href="/analyzer"
-                className="btn-primary w-full sm:w-auto"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-xs hover:shadow-md transition-all active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Analyze Resume</span>
+                <FileSearch className="w-4 h-4" />
+                <span>Analyze Resume Free</span>
+                <ArrowRight className="w-4 h-4" />
               </Link>
               <Link
                 href="/builder"
-                className="btn-secondary w-full sm:w-auto"
+                className="inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg bg-white dark:bg-slate-900 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-sm font-semibold transition-all active:scale-[0.99] focus:outline-none focus:ring-2 focus:ring-slate-400 focus:ring-offset-2"
               >
+                <FileEdit className="w-4 h-4 text-blue-600 dark:text-blue-400" />
                 <span>Build A4 Resume</span>
               </Link>
+            </div>
+
+            {/* Key Standards Badges */}
+            <div className="pt-2 grid grid-cols-2 sm:grid-cols-3 gap-3 text-xs text-slate-600 dark:text-slate-400">
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span>Standard A4 PDF Export</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span>Keyword Gap Audit</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle2 className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />
+                <span>Fact-Preserving Phrasing</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Right Column: Clean Structural Document Schematic (No Fake People, No Fake Scores) */}
+          <div className="lg:col-span-5 relative">
+            <div className="rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md p-6 text-left">
+              <div className="flex items-center justify-between pb-3.5 mb-4 border-b border-slate-200 dark:border-slate-800">
+                <div className="flex items-center gap-2">
+                  <FileText className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+                  <span className="text-xs font-bold uppercase tracking-wider text-slate-700 dark:text-slate-300">
+                    A4 Structural Specification
+                  </span>
+                </div>
+                <span className="text-[11px] font-mono font-medium px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 border border-slate-200 dark:border-slate-700">
+                  210 × 297 mm
+                </span>
+              </div>
+
+              {/* Schematic Sections */}
+              <div className="space-y-3.5 text-xs">
+                {/* Header Block */}
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">Contact &amp; Header Structure</span>
+                    <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400">Single Column</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                    Full name, target title, email, phone, location, and verified links parsed cleanly by ATS scanners.
+                  </p>
+                </div>
+
+                {/* Professional Summary */}
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">Professional Summary</span>
+                    <span className="text-[10px] font-medium text-emerald-600 dark:text-emerald-400">Keywords Aligned</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                    Target competencies and experience overview matched against job description requirements.
+                  </p>
+                </div>
+
+                {/* Experience & Achievements */}
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">Work Experience Bullets</span>
+                    <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400">Action Verbs</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                    Factual achievements structured with action verbs and specific tools, preserving original data truth.
+                  </p>
+                </div>
+
+                {/* Technical Skills & Education */}
+                <div className="p-3 rounded-lg bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-slate-900 dark:text-slate-100">Skills &amp; Education Taxonomy</span>
+                    <span className="text-[10px] font-medium text-blue-600 dark:text-blue-400">Standard Headers</span>
+                  </div>
+                  <p className="text-[11px] text-slate-500 dark:text-slate-400 leading-snug">
+                    Categorized competencies, certifications, and educational credentials with standard machine-readable labels.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-4 pt-3.5 border-t border-slate-200 dark:border-slate-800 flex items-center justify-between text-xs">
+                <span className="text-slate-500 dark:text-slate-400">12 Verified Templates</span>
+                <Link
+                  href="/builder"
+                  className="font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                >
+                  <span>Explore Templates</span>
+                  <ArrowRight className="w-3 h-3" />
+                </Link>
+              </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Footer */}
-      <footer className="border-t border-[var(--border-color)] bg-[var(--bg-secondary)]/50 py-12 px-4 sm:px-6 lg:px-8">
+      {/* ── 2. CORE FEATURES SECTION (Only Genuinely Operational Features) ── */}
+      <section id="features" className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200 dark:border-slate-800">
+        <ScrollReveal className="text-center mb-12">
+          <span className="text-xs font-bold text-blue-600 dark:text-blue-400 tracking-wider uppercase mb-1.5 block">
+            Functional Architecture
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            Comprehensive Resume &amp; Career Capabilities
+          </h2>
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-2xl mx-auto mt-2 leading-relaxed">
+            Every feature is built directly into the application and ready for commercial use without mocked data or artificial claims.
+          </p>
+        </ScrollReveal>
+
+        <StaggerGroup className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {/* 1. Resume Builder */}
+          <StaggerChild>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 flex flex-col justify-between h-full shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left">
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <FileEdit className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                  A4 Resume Builder
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Design professional resumes with exact 210 × 297mm A4 dimensions across 12 templates. Includes live zoom controls, single and two-column layouts, and zero clipping in print and PDF downloads.
+                </p>
+              </div>
+              <div className="pt-5 mt-5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <Link
+                  href="/builder"
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                >
+                  <span>Open Builder</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">12 Templates</span>
+              </div>
+            </div>
+          </StaggerChild>
+
+          {/* 2. Resume Analyzer */}
+          <StaggerChild>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 flex flex-col justify-between h-full shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left">
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <FileSearch className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                  Resume Analyzer &amp; ATS Audit
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Audit your existing resume against established recruitment guidelines. Checks structural parseability, section completeness, contact discoverability, and keyword density from uploaded PDF, DOCX, or text files.
+                </p>
+              </div>
+              <div className="pt-5 mt-5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <Link
+                  href="/analyzer"
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                >
+                  <span>Run Analysis</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Multi-Format</span>
+              </div>
+            </div>
+          </StaggerChild>
+
+          {/* 3. Resume Improver */}
+          <StaggerChild>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 flex flex-col justify-between h-full shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left">
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <Wand2 className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                  Fact-Preserving Bullet Improver
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Refine resume experience bullets using strong action verbs, professional grammar, and technical clarity while strictly preserving original metrics, dates, tools, and factual context without hallucination.
+                </p>
+              </div>
+              <div className="pt-5 mt-5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <Link
+                  href="/improver"
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                >
+                  <span>Open Improver</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">100% Factual</span>
+              </div>
+            </div>
+          </StaggerChild>
+
+          {/* 4. Job Match & Tailoring */}
+          <StaggerChild>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 flex flex-col justify-between h-full shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left">
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <Target className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                  Job Match &amp; Keyword Alignment
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Compare your resume against any target job description. Identify missing technical keywords, skill gaps, and qualification requirements to tailor your resume accurately for specific postings.
+                </p>
+              </div>
+              <div className="pt-5 mt-5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <Link
+                  href="/job-match"
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                >
+                  <span>Check Alignment</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Gap Analysis</span>
+              </div>
+            </div>
+          </StaggerChild>
+
+          {/* 5. Technical Skill Assessments */}
+          <StaggerChild>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 flex flex-col justify-between h-full shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left">
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <BadgeCheck className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                  Skill Assessment Quizzes
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Take timed technical multiple-choice assessments across 11 programming languages and frameworks. Pass verified benchmarks to document validated proficiencies on your profile.
+                </p>
+              </div>
+              <div className="pt-5 mt-5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <Link
+                  href="/skills"
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                >
+                  <span>View Quizzes</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">11 Domains</span>
+              </div>
+            </div>
+          </StaggerChild>
+
+          {/* 6. Job Search Integration */}
+          <StaggerChild>
+            <div className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 flex flex-col justify-between h-full shadow-xs hover:border-slate-300 dark:hover:border-slate-700 transition-all text-left">
+              <div className="space-y-3">
+                <div className="w-10 h-10 rounded-lg bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900 text-blue-600 dark:text-blue-400 flex items-center justify-center">
+                  <Briefcase className="w-5 h-5" />
+                </div>
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                  Job Search &amp; Application Tracking
+                </h3>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+                  Search active software and engineering job openings, review compensation and role requirements, and log application statuses directly to your candidate dashboard.
+                </p>
+              </div>
+              <div className="pt-5 mt-5 border-t border-slate-100 dark:border-slate-800 flex items-center justify-between">
+                <Link
+                  href="/jobs"
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline inline-flex items-center gap-1"
+                >
+                  <span>Search Jobs</span>
+                  <ArrowRight className="w-3.5 h-3.5" />
+                </Link>
+                <span className="text-[11px] text-slate-400 dark:text-slate-500 font-mono">Live Search</span>
+              </div>
+            </div>
+          </StaggerChild>
+        </StaggerGroup>
+      </section>
+
+      {/* ── 3. WORKFLOW TIMELINE SECTION ── */}
+      <section id="workflow" className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto border-t border-slate-200 dark:border-slate-800">
+        <ScrollReveal className="text-center mb-12">
+          <span className="text-xs font-bold text-blue-600 dark:text-blue-400 tracking-wider uppercase mb-1.5 block">
+            Process
+          </span>
+          <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+            How Smart Resume AI Works
+          </h2>
+          <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 max-w-xl mx-auto mt-2 leading-relaxed">
+            Three disciplined steps from raw career history to an ATS-ready executive resume.
+          </p>
+        </ScrollReveal>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 text-left">
+          {/* Step 1 */}
+          <div className="p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900">
+                01
+              </span>
+              <FileSearch className="w-4 h-4 text-slate-400" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              Import or Build Resume
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              Upload an existing resume in PDF or DOCX format, or input your work history directly into the structured 6-step builder.
+            </p>
+          </div>
+
+          {/* Step 2 */}
+          <div className="p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900">
+                02
+              </span>
+              <Wand2 className="w-4 h-4 text-slate-400" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              Audit ATS &amp; Refine Phrasing
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              Identify missing keywords, verify section parseability, and refine bullet phrasing using active action verbs and technical terminology.
+            </p>
+          </div>
+
+          {/* Step 3 */}
+          <div className="p-6 rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-3">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-mono font-bold text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/60 border border-blue-200 dark:border-blue-900">
+                03
+              </span>
+              <Printer className="w-4 h-4 text-slate-400" />
+            </div>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              Export Compliant A4 PDF
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-400 leading-relaxed">
+              Generate standard 210 × 297mm documents formatted to render cleanly across modern applicant tracking systems and print dialogs.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 4. PRODUCTION CTA BANNER ── */}
+      <section className="py-16 sm:py-20 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto text-center border-t border-slate-200 dark:border-slate-800">
+        <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-8 sm:p-12 shadow-sm space-y-5">
+          <div className="space-y-2 max-w-xl mx-auto">
+            <h2 className="text-2xl sm:text-3xl font-extrabold text-slate-900 dark:text-white tracking-tight">
+              Ready to Optimize Your Resume?
+            </h2>
+            <p className="text-sm sm:text-base text-slate-600 dark:text-slate-400 leading-relaxed">
+              Scan your existing resume for ATS compliance or create an A4-standard document from scratch.
+            </p>
+          </div>
+
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-2">
+            <Link
+              href="/analyzer"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold shadow-xs hover:shadow-md transition-all active:scale-[0.99]"
+            >
+              <FileSearch className="w-4 h-4" />
+              <span>Analyze Resume Free</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+            <Link
+              href="/builder"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 text-slate-800 dark:text-slate-200 border border-slate-300 dark:border-slate-700 text-sm font-semibold transition-all active:scale-[0.99]"
+            >
+              <FileEdit className="w-4 h-4 text-blue-600 dark:text-blue-400" />
+              <span>Create A4 Resume</span>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 5. MINIMAL PRODUCTION FOOTER ── */}
+      <footer className="border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 py-10 px-4 sm:px-6 lg:px-8 text-xs text-slate-600 dark:text-slate-400">
         <div className="max-w-7xl mx-auto flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
           <div className="flex items-center gap-2.5">
-            <span className="font-bold text-sm tracking-tight text-[var(--text-primary)]">
+            <div className="w-6 h-6 rounded-md bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+              SR
+            </div>
+            <span className="font-bold text-sm text-slate-900 dark:text-white tracking-tight">
               Smart Resume AI
             </span>
-            <span className="text-[10px] text-[var(--text-muted)] font-medium uppercase tracking-wider border-l border-[var(--border-color)] pl-2.5">
-              Career Platform
-            </span>
           </div>
-          <p className="text-xs text-[var(--text-secondary)]">
-            © <span suppressHydrationWarning>{new Date().getFullYear()}</span> Smart Resume AI. Built for commercial career intelligence.
+
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            &copy; <span suppressHydrationWarning>{new Date().getFullYear()}</span> Smart Resume AI. All rights reserved.
           </p>
-          <div className="flex items-center gap-5 text-xs text-[var(--text-secondary)]">
-            <Link href="/analyzer" className="hover:text-[var(--text-primary)] transition-colors">
+
+          <div className="flex flex-wrap items-center justify-center gap-5 text-xs">
+            <Link href="/ats-score" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              ATS Score
+            </Link>
+            <Link href="/analyzer" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               Analyzer
             </Link>
-            <Link href="/builder" className="hover:text-[var(--text-primary)] transition-colors">
+            <Link href="/builder" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               Builder
             </Link>
-            <Link href="/improver" className="hover:text-[var(--text-primary)] transition-colors">
+            <Link href="/improver" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               Improver
             </Link>
-            <Link href="/skills" className="hover:text-[var(--text-primary)] transition-colors">
-              Verification
+            <Link href="/skills" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              Skill Quizzes
             </Link>
-            <Link href="/jobs" className="hover:text-[var(--text-primary)] transition-colors">
+            <Link href="/jobs" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
               Job Search
             </Link>
-            <Link href="/feedback" className="hover:text-[var(--text-primary)] transition-colors">
-              Feedback
+            <Link href="/privacy" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              Privacy Policy
             </Link>
-            <Link href="/privacy" className="hover:text-[var(--text-primary)] transition-colors">
-              Privacy
-            </Link>
-            <Link href="/terms" className="hover:text-[var(--text-primary)] transition-colors">
-              Terms
+            <Link href="/terms" className="hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
+              Terms &amp; Conditions
             </Link>
           </div>
         </div>

@@ -6,11 +6,16 @@ import {
   AnalysisWeakness,
   AnalysisRecommendation,
 } from '@/types/resume';
-import { JobMatchResult } from '@/types/jobs';
+import { JobMatchResult, SkillMatchDetail } from '@/types/jobs';
 
 // Safe server-side accessor for Gemini API key
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
-const PRIMARY_GEMINI_MODEL = 'gemini-3.5-flash';
+export const PRIMARY_GEMINI_MODEL = 'gemini-3.5-flash';
+export const CANDIDATE_GEMINI_MODELS = [
+  'gemini-3.5-flash',
+  'gemini-3.5-flash-lite',
+  'gemini-flash-latest',
+] as const;
 
 let aiClient: GoogleGenAI | null = null;
 if (GEMINI_API_KEY) {
@@ -22,7 +27,7 @@ if (GEMINI_API_KEY) {
 } else {
   // Helpful developer guidance in local terminal (never exposed to client)
   console.info(
-    '[Smart Resume AI] GEMINI_API_KEY is not configured in .env.local. The platform is using its built-in high-precision deterministic ATS analysis engine. Add GEMINI_API_KEY to enable live Gemini 2.5 Flash analysis.'
+    '[Smart Resume AI] GEMINI_API_KEY is not configured in .env.local. The platform is using its built-in high-precision deterministic ATS analysis engine. Add GEMINI_API_KEY to enable live Gemini 3.5 Flash analysis.'
   );
 }
 
@@ -59,40 +64,59 @@ function safeJsonParse<T>(raw: string): T | null {
 }
 
 /**
- * Execute Gemini call with exponential backoff retry.
- * Handles 401, 403, 429, 500, 502, 503, timeouts, and network failures.
+ * Execute Gemini call with multi-model cascade, timeout, and exponential backoff retry.
+ * Handles 401, 403, 404, 429, 500, 502, 503, timeouts, and network failures.
  */
 async function callGeminiWithRetry<T>(
-  operation: (client: GoogleGenAI) => Promise<T>,
-  maxRetries = 2
+  operation: (client: GoogleGenAI, model: string) => Promise<T>,
+  maxRetries = 1,
+  timeoutMs = 12000
 ): Promise<T | null> {
   if (!aiClient) return null;
 
-  let attempt = 0;
-  while (attempt <= maxRetries) {
-    try {
-      return await operation(aiClient);
-    } catch (err: unknown) {
-      attempt++;
-      const errorStr = String(err);
-      console.warn(`[Gemini Attempt ${attempt}/${maxRetries + 1}] Error: ${errorStr.slice(0, 150)}`);
+  for (const model of CANDIDATE_GEMINI_MODELS) {
+    let attempt = 0;
+    while (attempt <= maxRetries) {
+      try {
+        const timeoutPromise = new Promise<never>((_, reject) =>
+          setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms on ${model}`)), timeoutMs)
+        );
+        return await Promise.race([operation(aiClient, model), timeoutPromise]);
+      } catch (err: unknown) {
+        attempt++;
+        const errorStr = String(err);
+        console.warn(`[Gemini Attempt ${attempt}/${maxRetries + 1} with ${model}] Error: ${errorStr.slice(0, 150)}`);
 
-      // If authentication error (401, 403), retrying will not help
-      if (errorStr.includes('401') || errorStr.includes('403') || errorStr.includes('API_KEY_INVALID')) {
-        console.error('[Gemini] Authentication error or invalid API key. Falling back to local engine.');
-        return null;
+        // If authentication error or quota limit (401, 403, 429, RESOURCE_EXHAUSTED, quota), retrying will not help
+        if (
+          errorStr.includes('401') ||
+          errorStr.includes('403') ||
+          errorStr.includes('API_KEY_INVALID') ||
+          errorStr.includes('429') ||
+          errorStr.includes('RESOURCE_EXHAUSTED') ||
+          errorStr.includes('quota')
+        ) {
+          console.warn('[Gemini] Authentication error or API quota limit reached. Falling back immediately to high-precision local deterministic engine.');
+          return null;
+        }
+
+        // If model not found (404), immediately try next candidate model
+        if (errorStr.includes('404') || errorStr.includes('NOT_FOUND')) {
+          break;
+        }
+
+        if (attempt > maxRetries) {
+          break;
+        }
+
+        // Brief exponential backoff
+        const delay = Math.pow(2, attempt) * 300 + Math.random() * 150;
+        await new Promise((resolve) => setTimeout(resolve, delay));
       }
-
-      if (attempt > maxRetries) {
-        console.warn(`[Gemini] All ${maxRetries + 1} attempts exhausted. Falling back to local ATS engine.`);
-        return null;
-      }
-
-      // Exponential backoff: 500ms, 1500ms, etc.
-      const delay = Math.pow(2, attempt) * 500 + Math.random() * 200;
-      await new Promise((resolve) => setTimeout(resolve, delay));
     }
   }
+
+  console.warn('[Gemini] All models and retries exhausted. Falling back to local deterministic ATS engine.');
   return null;
 }
 
@@ -263,9 +287,9 @@ CRITICAL RULES:
   "summaryFeedback": string
 }`;
 
-    const rawResponse = await callGeminiWithRetry(async (client) => {
+    const rawResponse = await callGeminiWithRetry(async (client, model) => {
       const response = await client.models.generateContent({
-        model: PRIMARY_GEMINI_MODEL,
+        model,
         contents: prompt,
         config: {
           responseMimeType: 'application/json',
@@ -304,12 +328,28 @@ CRITICAL RULES:
           extractedText: sug.extractedText,
         }));
 
+        // Compute detected and missing standard sections
+        const lowerRes = resumeText.toLowerCase();
+        const detectedSections: string[] = [
+          /experience|work history|employment|career/i.test(lowerRes) ? 'Work Experience' : null,
+          /education|academic|university|degree|bachelor|master/i.test(lowerRes) ? 'Education' : null,
+          /skills|technical skills|competencies|technologies/i.test(lowerRes) ? 'Skills' : null,
+          /projects|portfolio|open source/i.test(lowerRes) ? 'Projects' : null,
+          /summary|profile|about me|objective/i.test(lowerRes) ? 'Professional Summary' : null,
+          /@|linkedin|github|phone|\+?\d{3}/i.test(lowerRes) ? 'Contact Information' : null,
+        ].filter(Boolean) as string[];
+
+        const allStandardSections = ['Work Experience', 'Education', 'Skills', 'Projects', 'Professional Summary', 'Contact Information'];
+        const missingSections: string[] = allStandardSections.filter((s) => !detectedSections.includes(s));
+
         return {
           ...parsed,
           isJobSpecific: jdProvided,
           jobTitle: targetRole,
           company: targetCompany,
           bulletStrengthScore: typeof parsed.bulletStrengthScore === 'number' ? parsed.bulletStrengthScore : 82,
+          missingSections: Array.isArray(parsed.missingSections) && parsed.missingSections.length > 0 ? parsed.missingSections : missingSections,
+          detectedSections: Array.isArray(parsed.detectedSections) && parsed.detectedSections.length > 0 ? parsed.detectedSections : detectedSections,
           topSuggestions,
           weaknesses,
           recommendations,
@@ -328,7 +368,339 @@ CRITICAL RULES:
 
 /**
  * Improves wording for a resume section without inventing false facts.
- * Contextualizes phrasing to target role and job description if supplied.
+/**
+ * Prohibited technologies and buzzwords that should NEVER be injected into improved content
+ * unless they were explicitly mentioned in the original user input.
+ */
+const BUZZWORDS_REQUIRING_EXPLICIT_MENTION = [
+  'kubernetes',
+  'k8s',
+  'docker',
+  'aws',
+  'amazon web services',
+  'azure',
+  'gcp',
+  'google cloud',
+  'microservices',
+  'distributed systems',
+  'ci/cd',
+  'redis',
+  'kafka',
+  'terraform',
+  'graphql',
+  'blockchain',
+  'machine learning',
+  'deep learning',
+  'tensorflow',
+  'pytorch',
+  'hadoop',
+  'spark',
+  'elasticsearch',
+  'snowflake',
+  'bigquery',
+  'dynamodb',
+  'ansible',
+  'jenkins',
+];
+
+/**
+ * Validates that improved resume content preserves all original facts,
+ * does not invent unsupported technologies, and does not fabricate metrics or dates.
+ */
+export function validateContentPreservation(
+  originalContent: string,
+  improvedContent: string
+): { isValid: boolean; reason?: string } {
+  if (!improvedContent || typeof improvedContent !== 'string' || !improvedContent.trim()) {
+    return { isValid: false, reason: 'Improved content is empty or invalid.' };
+  }
+
+  const origLower = originalContent.toLowerCase();
+  const impLower = improvedContent.toLowerCase();
+
+  // 1. Prohibit injecting advanced unmentioned technologies/architectures
+  for (const tech of BUZZWORDS_REQUIRING_EXPLICIT_MENTION) {
+    const escaped = tech.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+    if (regex.test(impLower) && !regex.test(origLower)) {
+      return {
+        isValid: false,
+        reason: `Introduced unsupported technology or architectural buzzword: "${tech}"`,
+      };
+    }
+  }
+
+  // 2. Prohibit inventing percentage metrics (e.g., "by 40%", "increased by 25%")
+  const origPercentages: string[] = originalContent.match(/\b\d+(?:\.\d+)?%/g) || [];
+  const impPercentages: string[] = improvedContent.match(/\b\d+(?:\.\d+)?%/g) || [];
+  for (const pct of impPercentages) {
+    if (!origPercentages.includes(pct)) {
+      return {
+        isValid: false,
+        reason: `Introduced fabricated percentage metric: "${pct}"`,
+      };
+    }
+  }
+  for (const pct of origPercentages) {
+    if (!impPercentages.includes(pct)) {
+      return {
+        isValid: false,
+        reason: `Omitted original percentage metric: "${pct}"`,
+      };
+    }
+  }
+
+  // 3. Prohibit inventing multiplier metrics (e.g., "5x", "10x")
+  const origMultipliers: string[] = originalContent.match(/\b\d+(?:\.\d+)?[xX]\b/g) || [];
+  const impMultipliers: string[] = improvedContent.match(/\b\d+(?:\.\d+)?[xX]\b/g) || [];
+  for (const mult of impMultipliers) {
+    if (!origMultipliers.some((m) => m.toLowerCase() === mult.toLowerCase())) {
+      return {
+        isValid: false,
+        reason: `Introduced fabricated multiplier metric: "${mult}"`,
+      };
+    }
+  }
+  for (const mult of origMultipliers) {
+    if (!impMultipliers.some((m) => m.toLowerCase() === mult.toLowerCase())) {
+      return {
+        isValid: false,
+        reason: `Omitted original multiplier metric: "${mult}"`,
+      };
+    }
+  }
+
+  // 4. Prohibit inventing dollar figures (e.g., "$100k", "$50,000")
+  const origDollars: string[] = originalContent.match(/\$\s*[\d,]+(?:\.\d+)?(?:\s*[kKmMbB])?/g) || [];
+  const impDollars: string[] = improvedContent.match(/\$\s*[\d,]+(?:\.\d+)?(?:\s*[kKmMbB])?/g) || [];
+  for (const dol of impDollars) {
+    const cleanDol = dol.replace(/\s+/g, '');
+    if (!origDollars.some((d) => d.replace(/\s+/g, '') === cleanDol)) {
+      return {
+        isValid: false,
+        reason: `Introduced fabricated financial metric: "${dol}"`,
+      };
+    }
+  }
+  for (const dol of origDollars) {
+    const cleanDol = dol.replace(/\s+/g, '');
+    if (!impDollars.some((d) => d.replace(/\s+/g, '') === cleanDol)) {
+      return {
+        isValid: false,
+        reason: `Omitted original financial metric: "${dol}"`,
+      };
+    }
+  }
+
+  // 5. Prohibit inventing unmentioned numerical metrics/quantities
+  const cleanOrigForNumbers = originalContent.replace(/^[•\-\*\d]+[\.\)]\s*/gm, '');
+  const cleanImpForNumbers = improvedContent.replace(/^[•\-\*\d]+[\.\)]\s*/gm, '');
+  const origNumbers = (cleanOrigForNumbers.match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || []).map((n) => n.replace(/,/g, ''));
+  const impNumbers = (cleanImpForNumbers.match(/\b\d+(?:,\d+)*(?:\.\d+)?\b/g) || []).map((n) => n.replace(/,/g, ''));
+
+  const wordNumberMap: Record<string, string> = {
+    one: '1', two: '2', three: '3', four: '4', five: '5',
+    six: '6', seven: '7', eight: '8', nine: '9', ten: '10'
+  };
+  for (const [w, n] of Object.entries(wordNumberMap)) {
+    if (new RegExp(`\\b${w}\\b`, 'i').test(cleanOrigForNumbers)) {
+      origNumbers.push(n);
+    }
+  }
+
+  for (const num of impNumbers) {
+    if (!origNumbers.includes(num)) {
+      return {
+        isValid: false,
+        reason: `Introduced fabricated numerical metric: "${num}"`,
+      };
+    }
+  }
+
+  // 5b. Prohibit omitting original years / date ranges (e.g., 2021, 2023)
+  const origYears: string[] = originalContent.match(/\b(19|20)\d{2}\b/g) || [];
+  const impYears: string[] = improvedContent.match(/\b(19|20)\d{2}\b/g) || [];
+  for (const year of origYears) {
+    if (!impYears.includes(year)) {
+      return {
+        isValid: false,
+        reason: `Omitted original date/year: "${year}"`,
+      };
+    }
+  }
+  for (const year of impYears) {
+    if (!origYears.includes(year)) {
+      return {
+        isValid: false,
+        reason: `Introduced fabricated date/year: "${year}"`,
+      };
+    }
+  }
+
+  // 6. Check preservation of explicitly mentioned core technologies
+  const techNamesToCheck = [
+    'python', 'django', 'flask', 'fastapi',
+    'javascript', 'typescript', 'react', 'next.js', 'vue', 'angular',
+    'node.js', 'express', 'html', 'css', 'tailwind',
+    'sql', 'postgresql', 'postgres', 'mysql', 'mongodb', 'sqlite',
+    'java', 'spring', 'c++', 'c#', '.net', 'rust', 'go', 'golang', 'ruby', 'rails',
+    'php', 'laravel', 'git', 'github', 'gitlab', 'linux', 'bash'
+  ];
+
+  for (const tech of techNamesToCheck) {
+    const escaped = tech.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const regex = new RegExp(`\\b${escaped}\\b`, 'i');
+    if (regex.test(origLower) && !regex.test(impLower)) {
+      return {
+        isValid: false,
+        reason: `Omitted original candidate technology: "${tech}"`,
+      };
+    }
+  }
+
+  // 7. Prohibit extreme text length explosion (e.g., single bullet expanded into an essay)
+  const origWords = originalContent.split(/\s+/).filter(Boolean).length;
+  const impWords = improvedContent.split(/\s+/).filter(Boolean).length;
+  if (origWords <= 15 && impWords > 80) {
+    return {
+      isValid: false,
+      reason: 'Output is disproportionately longer than original input.',
+    };
+  }
+
+  return { isValid: true };
+}
+
+/**
+ * Improves a single line or bullet point with professional terminology and strong action verbs
+ * while strictly preserving original factual information, technologies, metrics, and dates.
+ */
+function improveSingleTextLine(rawLine: string): string {
+  const line = rawLine.trim();
+  if (!line) return '';
+
+  // Extract leading bullet marker if present (e.g., "• ", "- ", "* ", "1. ")
+  const bulletMatch = line.match(/^([•\-\*]|\d+[\.\)])\s+/);
+  const bulletPrefix = bulletMatch ? bulletMatch[0] : '';
+  let content = bulletMatch ? line.slice(bulletPrefix.length).trim() : line;
+
+  // 1. Remove weak leading first-person pronouns and transform passive responsibility phrasing
+  content = content.replace(/^(?:I|We)\s+(?:have\s+|was\s+|were\s+)?/i, '');
+  content = content.replace(/^My role (?:was|involved)\s+(?:to\s+)?/i, '');
+  content = content.replace(/^(?:Was\s+)?responsible for (?:the\s+)?development of\s+/i, 'Engineered ');
+  content = content.replace(/^(?:Was\s+)?responsible for building\s+/i, 'Engineered ');
+  content = content.replace(/^(?:Was\s+)?responsible for creating\s+/i, 'Developed ');
+  content = content.replace(/^(?:Was\s+)?responsible for designing\s+/i, 'Designed ');
+  content = content.replace(/^(?:Was\s+)?responsible for managing\s+/i, 'Managed ');
+  content = content.replace(/^(?:Was\s+)?responsible for leading\s+/i, 'Led ');
+  content = content.replace(/^(?:Was\s+)?responsible for implementing\s+/i, 'Implemented ');
+  content = content.replace(/^(?:Was\s+)?responsible for\s+/i, 'Spearheaded execution of ');
+
+  // 2. Exact phrase & technical terminology mappings (case-insensitive with careful boundaries)
+  // "working on databases" -> "managing database architectures and data persistence"
+  content = content.replace(/\bworking\s+on\s+databases\b/gi, 'managing database architectures and data persistence');
+  content = content.replace(/\bworking\s+on\s+database\b/gi, 'managing database architecture and data persistence');
+
+  // "made a website" / "built a website" -> "developed a web application"
+  content = content.replace(/\b(?:made|built|created)\s+(?:a\s+)?website\b/gi, 'developed a web application');
+  content = content.replace(/\b(?:make|build|create)\s+(?:a\s+)?website\b/gi, 'develop a web application');
+  content = content.replace(/\b(?:made|built|created)\s+(?:a\s+)?site\b/gi, 'developed a web platform');
+
+  // "where users can register and login" -> ", implementing user registration and authentication functionality"
+  content = content.replace(/\bwhere\s+users\s+can\s+register\s+and\s+log\s*in\b/gi, ', implementing user registration and authentication functionality');
+  content = content.replace(/\busers\s+can\s+register\s+and\s+log\s*in\b/gi, 'implementing user registration and authentication functionality');
+  content = content.replace(/\bwhere\s+users\s+can\s+log\s*in\b/gi, ', implementing user authentication functionality');
+  content = content.replace(/\busers\s+can\s+log\s*in\b/gi, 'implementing user authentication functionality');
+
+  // "stored information in a database" / "stored data in a database" -> "implemented database persistence"
+  content = content.replace(/\bstor(?:ed|ing)\s+(?:information|data)\s+in\s+a\s+database\b/gi, 'implemented database persistence');
+  content = content.replace(/\bstor(?:es)\s+(?:information|data)\s+in\s+a\s+database\b/gi, 'implementing database persistence');
+
+  // "found and fixed errors" / "found and fixed bugs" / "fixed errors" / "fixed bugs" -> "identified and resolved software defects"
+  content = content.replace(/\bfound\s+and\s+fixed\s+(?:errors|bugs|defects|issues)\b/gi, 'identified and resolved software defects');
+  content = content.replace(/\bfix(?:ed)?\s+(?:errors|bugs|defects|issues)\b/gi, 'resolved software defects');
+
+  // "the page works on mobile" / "works on mobile" -> "implemented responsive user interface behavior"
+  content = content.replace(/\b(?:the\s+)?page\s+works\s+on\s+mobile(?:\s+devices)?\b/gi, 'implemented responsive user interface behavior');
+  content = content.replace(/\bworks\s+on\s+mobile(?:\s+devices)?\b/gi, 'implemented responsive user interface behavior');
+  content = content.replace(/\bworks\s+on\s+all\s+devices\b/gi, 'ensured cross-device responsive UI compatibility');
+
+  // "connected the frontend to the backend" -> "integrated frontend components with backend APIs"
+  content = content.replace(/\bconnect(?:ed|ing)?\s+(?:the\s+)?front-?end\s+to\s+(?:the\s+)?back-?end\b/gi, 'integrated frontend components with backend APIs');
+
+  // "talked to customers / clients" -> "collaborated directly with key stakeholders"
+  content = content.replace(/\btalk(?:ed)?\s+(?:to|with)\s+(?:customers|clients|users)\b/gi, 'collaborated directly with key stakeholders');
+
+  // "helped the team with" -> "collaborated with cross-functional engineering team to"
+  content = content.replace(/\bhelp(?:ed)?\s+(?:the\s+)?team\s+(?:with|to)\b/gi, 'collaborated with cross-functional engineering team to');
+
+  // "did testing on" / "did testing for" -> "executed testing protocols for"
+  content = content.replace(/\bdid\s+testing\s+(?:on|for)\b/gi, 'executed testing protocols for');
+
+  // "set up" -> "configured and established"
+  content = content.replace(/\bset\s+up\b/gi, 'configured and established');
+  content = content.replace(/\bsetting\s+up\b/gi, 'configuring and establishing');
+
+  // 3. Improve opening weak verbs if present at the very beginning of content
+  content = content.replace(/^(?:contributed to|worked on)\s+/i, 'Contributed to ');
+  content = content.replace(/^(?:helped with|assisted with)\s+/i, 'Assisted in delivering ');
+  content = content.replace(/^(?:made|built|created)\s+/i, 'Developed ');
+  content = content.replace(/^(?:used|leveraged)\s+/i, 'Utilized ');
+
+  // 4. Clean up any redundant commas or double spaces created by substitutions
+  content = content.replace(/,\s*,/g, ',');
+  content = content.replace(/\s{2,}/g, ' ').trim();
+
+  // 5. Capitalize first letter of the improved content
+  if (content.length > 0) {
+    content = content.charAt(0).toUpperCase() + content.slice(1);
+  }
+
+  // 6. Ensure proper sentence ending (period) if it didn't end with one and is a complete thought
+  if (content.length > 0 && !/[.!?]$/.test(content)) {
+    content += '.';
+  }
+
+  return bulletPrefix + content;
+}
+
+/**
+ * Deterministically improves resume content line-by-line while strictly preserving
+ * every technology, date, number, metric, and factual claim.
+ */
+export function deterministicImproveContent(
+  originalContent: string,
+  sectionName?: string
+): { improvedContent: string; reasoning: string; metricImpact: string } {
+  const trimmed = (originalContent || '').trim();
+  if (!trimmed) {
+    return {
+      improvedContent: '',
+      reasoning: 'No content was provided to improve.',
+      metricImpact: 'Preserved Content',
+    };
+  }
+
+  const lines = originalContent.split(/\r?\n/);
+  const improvedLines = lines.map((line) => {
+    if (!line.trim()) return line;
+    return improveSingleTextLine(line);
+  });
+  const improvedContent = improvedLines.join('\n');
+
+  return {
+    improvedContent,
+    reasoning:
+      'Refined phrasing using precise technical terminology and strong action verbs while strictly preserving all original technologies, dates, metrics, and project scope.',
+    metricImpact: 'Technical Terminology & Action Verbs',
+  };
+}
+
+/**
+ * Improves wording for a resume section or bullet point as a professional editor.
+ * Refines phrasing using appropriate technical terminology, industry keywords,
+ * stronger action verbs, and professional language while strictly preserving
+ * original meaning, factual details, technologies, tools, and metrics.
  */
 export async function improveResumeSection(
   sectionName: string,
@@ -336,64 +708,103 @@ export async function improveResumeSection(
   jobDescription?: string,
   jobTitle?: string
 ): Promise<{ improvedContent: string; reasoning: string; metricImpact: string }> {
+  const trimmed = (originalContent || '').trim();
+  if (!trimmed) {
+    return {
+      improvedContent: '',
+      reasoning: 'Empty content provided.',
+      metricImpact: 'Preserved Content',
+    };
+  }
+
   const hasJd = Boolean(jobDescription && jobDescription.trim().length > 20);
 
-  if (aiClient && originalContent.trim().length > 10) {
-    const prompt = `You are an elite career intelligence engine. Improve the phrasing of this ${sectionName} content for professional clarity, action-oriented impact, and recruiter readability${
-      hasJd ? ` tailored to the target role "${jobTitle || 'Target Role'}" and job requirements` : ''
-    }.
-CRITICAL CONSTRAINT: You must NEVER invent achievements, skills, companies, dates, or metrics not implied in the original text. Preserve factual integrity. Never provide fake numeric point gains or unverified ranking promises.
-${hasJd ? `Target Job Description:\n${jobDescription?.slice(0, 500)}\n` : ''}
-Return ONLY valid JSON:
+  if (aiClient && trimmed.length >= 5) {
+    const prompt = `You are a professional resume editor. Your task is to edit and refine the user's resume content to make it sound professional, clear, and impactful, while STRICTLY PRESERVING ALL FACTS.
+
+CONTENT TYPE / SECTION: ${sectionName}
+${hasJd ? `TARGET ROLE CONTEXT (Use ONLY for tone and standard terminology; NEVER import unverified qualifications, tools, or metrics from this job description into the candidate's experience):\nRole: ${jobTitle || 'Target Role'}\nJob Description Excerpt: ${jobDescription?.slice(0, 300)}` : ''}
+
+INPUT TEXT TO EDIT:
+"""
+${trimmed}
+"""
+
+STRICT EDITING RULES:
+1. TREAT THE USER'S INPUT AS THE ABSOLUTE SOURCE OF TRUTH.
+2. PRESERVE THE ORIGINAL MEANING, SCOPE, AND INTENT:
+   - Retain the exact same project, job role, experience, responsibilities, and achievements.
+   - Retain all factual details, including dates, numbers, technologies, tools, and metrics.
+3. IMPROVE PHRASING AND TECHNICAL ACCURACY:
+   - Improve grammar, readability, and sentence structure.
+   - Replace weak or informal phrasing with precise, professional terminology only when it directly describes the user's work:
+     * "Made a website" -> "Developed a web application"
+     * "Users can register and login" -> "Implemented user registration and authentication functionality"
+     * "Stored information in a database" -> "Implemented database persistence"
+     * "Found and fixed errors" -> "Identified and resolved software defects"
+     * "The page works on mobile" -> "Implemented responsive user interface behavior"
+     * "Connected frontend to backend" -> "Integrated frontend components with backend APIs"
+4. ABSOLUTELY FORBIDDEN:
+   - DO NOT invent technologies, frameworks, or tools the user did not mention (e.g., do NOT add Kubernetes, Docker, Redis, AWS, Microservices, CI/CD unless already in the input).
+   - DO NOT invent performance metrics, percentages (e.g., "by 40%"), dollar amounts, or numbers not in the input.
+   - DO NOT invent certifications, awards, or job titles.
+   - DO NOT change the user's project into an unrelated project or platform.
+   - DO NOT append generic boilerplate slogans (e.g., "driving delivery velocity and reliability").
+5. PRESERVE STRUCTURE:
+   - If the input is a single bullet point or line, return a single improved bullet point or line.
+   - If the input has multiple lines or bullet points, preserve the corresponding line breaks and bullet points.
+
+Return ONLY a valid JSON object:
 {
   "improvedContent": string,
   "reasoning": string,
   "metricImpact": string
-}
-(Note: 'metricImpact' must be a concise descriptive category such as "Keyword Alignment", "Action-Oriented Phrasing", "Clarity & Conciseness", or "Quantified Impact" - never a numeric score or point claim.)
+}`;
 
-Original Content:
-${originalContent}`;
-
-    const rawResponse = await callGeminiWithRetry(async (client) => {
-      const response = await client.models.generateContent({
-        model: PRIMARY_GEMINI_MODEL,
-        contents: prompt,
-        config: {
-          responseMimeType: 'application/json',
-          temperature: 0.3,
-        },
+    try {
+      const rawResponse = await callGeminiWithRetry(async (client, model) => {
+        const response = await client.models.generateContent({
+          model,
+          contents: prompt,
+          config: {
+            responseMimeType: 'application/json',
+            temperature: 0.2,
+          },
+        });
+        return response.text;
       });
-      return response.text;
-    });
 
-    if (rawResponse) {
-      const parsed = safeJsonParse<{
-        improvedContent: string;
-        reasoning: string;
-        metricImpact: string;
-      }>(rawResponse);
-      if (parsed?.improvedContent) {
-        return parsed;
+      if (rawResponse) {
+        const parsed = safeJsonParse<{
+          improvedContent?: string;
+          reasoning?: string;
+          metricImpact?: string;
+        }>(rawResponse);
+
+        if (parsed?.improvedContent && typeof parsed.improvedContent === 'string' && parsed.improvedContent.trim()) {
+          const validation = validateContentPreservation(trimmed, parsed.improvedContent.trim());
+          if (validation.isValid) {
+            return {
+              improvedContent: parsed.improvedContent.trim(),
+              reasoning:
+                parsed.reasoning ||
+                'Refined phrasing using precise technical terminology and active verbs while strictly preserving facts.',
+              metricImpact: parsed.metricImpact || 'Technical Terminology & Action Verbs',
+            };
+          } else {
+            console.warn(
+              `[Gemini] Improvement output failed content-preservation validation (${validation.reason}). Using safe deterministic rewrite.`
+            );
+          }
+        }
       }
+    } catch (err) {
+      console.warn('[Gemini] improveResumeSection API call failed, falling back to deterministic rewrite:', err);
     }
   }
 
-  // High quality deterministic improvement based on section and target context
-  let improved = originalContent.trim();
-  if (!improved.endsWith('.')) improved += '.';
-
-  const tailoredSuffix = hasJd
-    ? ` Spearheaded critical engineering initiatives aligned with target technical requirements, driving delivery velocity and reliability.`
-    : ` Spearheaded key workflow execution, boosting delivery velocity and technical reliability.`;
-
-  return {
-    improvedContent: `${improved}${tailoredSuffix}`,
-    reasoning: hasJd
-      ? `Tailored phrasing with authoritative action verbs aligned to target role requirements while strictly preserving verified experience.`
-      : 'Enhanced with strong action verbs and structural clarity to elevate recruiter clarity while strictly preserving factual experience.',
-    metricImpact: hasJd ? 'Role Keyword Alignment' : 'Action-Oriented Phrasing',
-  };
+  // Safe, fact-preserving deterministic rewrite
+  return deterministicImproveContent(trimmed, sectionName);
 }
 
 /**
@@ -414,7 +825,9 @@ ${jobDescription}
 Resume:
 ${resumeText}
 
-Analyze alignment accurately. NEVER invent candidate experience.
+Analyze alignment accurately. NEVER invent candidate experience or qualifications.
+Distinguish between required skills and preferred/bonus skills mentioned in the job description.
+Scores should be realistic advisory percentages (0-100) reflecting actual evidence, not hardcoded.
 Return ONLY valid JSON:
 {
   "jobTitle": "${jobTitle}",
@@ -425,17 +838,17 @@ Return ONLY valid JSON:
   "educationMatchScore": number (0-100),
   "keywordMatchScore": number (0-100),
   "projectRelevanceScore": number (0-100),
-  "matchedSkills": [{"skill": string, "status": "matched", "context": string}],
-  "partialSkills": [{"skill": string, "status": "partial", "context": string}],
-  "missingSkills": [{"skill": string, "status": "missing", "context": string}],
+  "matchedSkills": [{"skill": string, "status": "matched", "importance": "required"|"preferred", "context": string}],
+  "partialSkills": [{"skill": string, "status": "partial", "importance": "required"|"preferred", "context": string}],
+  "missingSkills": [{"skill": string, "status": "missing", "importance": "required"|"preferred", "context": string}],
   "keyStrengths": [string],
   "gapsToAddress": [string],
   "recommendationSummary": string
 }`;
 
-    const rawResponse = await callGeminiWithRetry(async (client) => {
+    const rawResponse = await callGeminiWithRetry(async (client, model) => {
       const response = await client.models.generateContent({
-        model: PRIMARY_GEMINI_MODEL,
+        model,
         contents: prompt,
         config: {
           responseMimeType: 'application/json',
@@ -463,20 +876,27 @@ Return ONLY valid JSON:
 /**
  * Comprehensive industry skill taxonomy for accurate ATS matching
  */
+/**
+ * Comprehensive industry skill taxonomy for accurate ATS matching
+ */
 const INDUSTRY_SKILLS = [
-  'Python', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Node.js', 'Express',
-  'HTML5', 'CSS3', 'Tailwind', 'SQL', 'PostgreSQL', 'MySQL', 'MongoDB', 'Redis',
-  'AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'CI/CD', 'Git', 'GitHub',
-  'REST API', 'GraphQL', 'Microservices', 'System Design', 'Agile', 'Scrum',
-  'Unit Testing', 'Jest', 'PyTest', 'C++', 'Java', 'Spring Boot', 'Linux',
-  'Data Structures', 'Algorithms', 'Machine Learning', 'TensorFlow', 'PyTorch',
-  'Pandas', 'NumPy', 'Data Analysis', 'Kafka', 'Terraform', 'DevOps'
+  'Python', 'JavaScript', 'TypeScript', 'React', 'Next.js', 'Vue.js', 'Angular', 'Svelte',
+  'Node.js', 'Express', 'Django', 'Flask', 'FastAPI', 'Spring Boot', 'Ruby on Rails',
+  'HTML5', 'CSS3', 'Tailwind', 'Sass', 'Bootstrap',
+  'SQL', 'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'SQLite', 'DynamoDB', 'Cassandra',
+  'AWS', 'Azure', 'GCP', 'Docker', 'Kubernetes', 'CI/CD', 'Git', 'GitHub', 'GitLab',
+  'REST API', 'GraphQL', 'Microservices', 'System Design', 'Agile', 'Scrum', 'Jira',
+  'Unit Testing', 'Jest', 'PyTest', 'Cypress', 'Playwright', 'Selenium',
+  'C++', 'Java', 'C#', '.NET', 'Rust', 'Go', 'Golang', 'Linux', 'Bash',
+  'Data Structures', 'Algorithms', 'Machine Learning', 'Deep Learning', 'TensorFlow', 'PyTorch',
+  'Pandas', 'NumPy', 'Data Analysis', 'Kafka', 'Terraform', 'DevOps', 'Snowflake', 'BigQuery',
+  'Elasticsearch', 'Jenkins', 'Figma'
 ];
 
 /**
  * Deterministic algorithmic ATS analysis calculated accurately from actual resume content.
  */
-function generateDeterministicAtsAnalysis(
+export function generateDeterministicAtsAnalysis(
   text: string,
   jobDescription?: string,
   jobTitle?: string,
@@ -511,6 +931,8 @@ function generateDeterministicAtsAnalysis(
 
   if (jdProvided && jobDescription) {
     const lowerJd = jobDescription.toLowerCase();
+
+    // Check static industry skills requested in JD
     for (const skill of INDUSTRY_SKILLS) {
       const inJd = lowerJd.includes(skill.toLowerCase());
       const inResume = lower.includes(skill.toLowerCase());
@@ -530,6 +952,42 @@ function generateDeterministicAtsAnalysis(
         });
       }
     }
+
+    // Also extract dynamic technical words from the JD (custom requirements not in default list)
+    const dynamicJdCandidates = jobDescription.match(/\b[A-Z][a-zA-Z0-9.+/#-]{2,35}\b/g) || [];
+    const nonTechWords = new Set([
+      'The', 'And', 'For', 'With', 'You', 'Will', 'Our', 'Are', 'This', 'That', 'Have',
+      'Work', 'Team', 'Role', 'About', 'Job', 'Requirements', 'Preferred', 'Qualifications',
+      'Experience', 'Responsibilities', 'Company', 'Years', 'Candidate', 'Join', 'Opportunity',
+      'Workplace', 'Equal', 'Status', 'Strong', 'Ability', 'Hands', 'Must', 'Plus', 'Skills',
+      'Degree', 'Bachelor', 'Master', 'Location', 'Salary', 'Benefits', 'Apply', 'Full', 'Time'
+    ]);
+
+    for (const rawWord of dynamicJdCandidates) {
+      if (
+        !nonTechWords.has(rawWord) &&
+        !INDUSTRY_SKILLS.some((s) => s.toLowerCase() === rawWord.toLowerCase()) &&
+        !matchedSkills.some((s) => s.skill.toLowerCase() === rawWord.toLowerCase()) &&
+        !missingJobSkills.some((s) => s.toLowerCase() === rawWord.toLowerCase())
+      ) {
+        const inResume = new RegExp(`\\b${rawWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(text);
+        if (inResume) {
+          matchedSkills.push({
+            skill: rawWord,
+            status: 'matched',
+            context: `Matches explicit requirement in ${targetRole || 'job'} description.`,
+          });
+        } else {
+          missingJobSkills.push(rawWord);
+          matchedSkills.push({
+            skill: rawWord,
+            status: 'missing',
+            context: `Mentioned in ${targetRole || 'job'} description, but not identified on resume.`,
+          });
+        }
+      }
+    }
+
     // If no specific matched skills found, include standard core competency
     if (matchedSkills.filter((s) => s.status === 'matched').length === 0 && detected.length > 0) {
       matchedSkills.push({
@@ -540,15 +998,36 @@ function generateDeterministicAtsAnalysis(
     }
   }
 
-  // 2. Section detection
+  // 2. Section detection & Structured Identification
   const hasExperience = /experience|work history|employment|career/i.test(lower);
   const hasEducation = /education|academic|university|degree|bachelor|master/i.test(lower);
-  const hasSkills = /skills|technical skills|competencies|technologies/i.test(lower);
+  const hasSkills = /skills|technical skills|competencies|technologies/i.test(lower) || detected.length >= 3;
   const hasProjects = /projects|portfolio|open source/i.test(lower);
   const hasSummary = /summary|profile|about me|objective/i.test(lower);
   const hasContact = /@|linkedin|github|phone|\+?\d{3}/i.test(lower);
 
-  const sectionsDetectedCount = [hasExperience, hasEducation, hasSkills, hasProjects, hasSummary, hasContact].filter(Boolean).length;
+  const detectedSections: string[] = [];
+  const missingSections: string[] = [];
+
+  if (hasExperience) detectedSections.push('Work Experience');
+  else missingSections.push('Work Experience');
+
+  if (hasEducation) detectedSections.push('Education');
+  else missingSections.push('Education');
+
+  if (hasSkills) detectedSections.push('Skills');
+  else missingSections.push('Skills');
+
+  if (hasProjects) detectedSections.push('Projects');
+  else missingSections.push('Projects');
+
+  if (hasSummary) detectedSections.push('Professional Summary');
+  else missingSections.push('Professional Summary');
+
+  if (hasContact) detectedSections.push('Contact Information');
+  else missingSections.push('Contact Information');
+
+  const sectionsDetectedCount = detectedSections.length;
 
   // 3. Metric & quantification detection (e.g. 20%, $100k, 5x, reduced by, increased by)
   const metricMatches = text.match(/\b\d+(\.\d+)?%|\$\d+[km]?|\b\d+[xX]\b|\b\d{2,}\b/g) || [];
@@ -560,33 +1039,52 @@ function generateDeterministicAtsAnalysis(
 
   // 5. Bullet Strength & Readability scores
   const bulletStrengthScore = Math.min(
-    Math.max(48 + Math.min(actionVerbCount * 4, 25) + Math.min(metricCount * 5, 25), 45),
+    Math.max(35 + Math.min(actionVerbCount * 5, 30) + Math.min(metricCount * 6, 30), 30),
     96
   );
   const readabilityScore = Math.min(
-    Math.max(70 + (wordCount >= 250 && wordCount <= 800 ? 15 : 5) + (sectionsDetectedCount >= 4 ? 8 : 0), 60),
-    94
+    Math.max(50 + (wordCount >= 200 && wordCount <= 850 ? 25 : 10) + (sectionsDetectedCount >= 4 ? 15 : 5), 40),
+    95
   );
 
   // 6. Compute realistic scores based on detected evidence and job alignment
-  let keywordScore = Math.min(Math.max(45 + detected.length * 3, 50), 96);
+  let keywordScore: number;
   if (jdProvided && (matchedSkills.length > 0 || missingJobSkills.length > 0)) {
     const matchedCount = matchedSkills.filter((s) => s.status === 'matched').length;
     const totalJobSkills = matchedCount + missingJobSkills.length;
     if (totalJobSkills > 0) {
-      keywordScore = Math.round((matchedCount / totalJobSkills) * 50 + 45);
-      keywordScore = Math.min(Math.max(keywordScore, 40), 95);
+      const matchRatio = matchedCount / totalJobSkills;
+      keywordScore = Math.round(matchRatio * 65 + (detected.length > 0 ? 30 : 10));
+      keywordScore = Math.min(Math.max(keywordScore, 15), 98);
+    } else {
+      keywordScore = Math.min(detected.length * 8 + 20, 95);
+    }
+  } else {
+    if (detected.length === 0) {
+      keywordScore = 20;
+    } else {
+      keywordScore = Math.min(25 + detected.length * 7, 95);
     }
   }
 
-  const formattingScore = Math.min(
-    Math.max(50 + sectionsDetectedCount * 8 + (wordCount >= 250 && wordCount <= 900 ? 10 : 0), 55),
-    95
-  );
-  const contentScore = Math.min(
-    Math.max(48 + Math.min(metricCount * 4, 25) + (wordCount >= 300 ? 15 : 5), 52),
-    94
-  );
+  let formattingScore: number;
+  if (sectionsDetectedCount === 0) {
+    formattingScore = 20;
+  } else {
+    formattingScore = Math.round((sectionsDetectedCount / 6) * 60 + (wordCount >= 200 && wordCount <= 900 ? 35 : 15));
+    formattingScore = Math.min(Math.max(formattingScore, 20), 96);
+  }
+
+  let contentScore: number;
+  if (wordCount < 40) {
+    contentScore = 15;
+  } else {
+    contentScore = Math.min(
+      Math.max(25 + Math.min(metricCount * 7, 35) + Math.min(actionVerbCount * 5, 25) + (wordCount >= 250 ? 15 : 0), 20),
+      95
+    );
+  }
+
   const sectionScore = Math.round((sectionsDetectedCount / 6) * 100);
   const overallAtsScore = Math.round(
     keywordScore * 0.35 + formattingScore * 0.25 + contentScore * 0.25 + sectionScore * 0.15
@@ -645,12 +1143,78 @@ function generateDeterministicAtsAnalysis(
     });
   }
 
-  // B. Quantified Impact & Measurable Achievements
+  // B. Missing Work Experience Section
+  if (!hasExperience) {
+    candidateSuggestions.push({
+      priority: 'High',
+      section: 'Work Experience',
+      whatNeedsImprovement: 'No Work Experience or Employment History section detected.',
+      whyItMatters: 'Applicant tracking systems and recruiters evaluate professional trajectory, domain depth, and project impact primarily through work experience.',
+      howToImprove: 'Add an Experience section detailing your past roles, companies, dates, and accomplishment bullets.',
+      extractedText: '(No work experience section detected in current resume)',
+      example: 'Software Engineer — Company Name (2022 – Present)\n• Engineered full-stack web applications using React and Node.js.',
+    });
+  }
+
+  // C. Missing Technical Skills Section
+  if (!hasSkills || detected.length === 0) {
+    candidateSuggestions.push({
+      priority: 'High',
+      section: 'Technical Skills',
+      whatNeedsImprovement: 'No dedicated Technical Skills section detected.',
+      whyItMatters: 'ATS search filters parse technical skills to index candidate competency. Without a skills section, keyword extraction is significantly impaired.',
+      howToImprove: 'Add a dedicated Skills section categorizing programming languages, frameworks, developer tools, and databases.',
+      extractedText: '(No technical skills section detected)',
+      example: 'Technical Skills: Python, TypeScript, React, Node.js, PostgreSQL, Docker, Git',
+    });
+  }
+
+  // D. Missing Education Section
+  if (!hasEducation) {
+    candidateSuggestions.push({
+      priority: 'High',
+      section: 'Education & Credentials',
+      whatNeedsImprovement: 'No distinct Education section detected.',
+      whyItMatters: 'Many enterprise ATS workflows require a recognized degree or accreditation credential for automated application compliance.',
+      howToImprove: 'Add an Education section specifying your degree, university or program, and graduation year.',
+      extractedText: '(No education section detected in current resume)',
+      example: 'B.S. in Computer Science — University / College (Graduation Year)',
+    });
+  }
+
+  // E. Missing Contact Information Section
+  if (!hasContact) {
+    candidateSuggestions.push({
+      priority: 'High',
+      section: 'Contact Information',
+      whatNeedsImprovement: 'No contact information (email address, phone number, or professional profile) detected.',
+      whyItMatters: 'Recruiters and ATS platforms must extract a valid email and phone number to create your candidate profile and schedule interviews.',
+      howToImprove: 'Include your full name, professional email, phone number, location, and LinkedIn/GitHub profile links at the top of the resume.',
+      extractedText: '(No contact details detected in current resume)',
+      example: 'jane.doe@email.com | (555) 123-4567 | San Francisco, CA | linkedin.com/in/janedoe',
+    });
+  }
+
+  // F. Missing Professional Summary
+  if (!hasSummary) {
+    const summaryCandidate = words.length > 0 ? text.slice(0, 100) : '';
+    candidateSuggestions.push({
+      priority: 'Medium',
+      section: 'Professional Summary',
+      whatNeedsImprovement: 'Missing a focused professional summary statement at the beginning of the resume.',
+      whyItMatters: 'A professional summary gives recruiters an immediate value proposition within 6 seconds, framing your seniority, core domain, and top technical proficiencies.',
+      howToImprove: 'Add a 2–3 sentence executive summary tailored to your target role, highlighting your primary technical stack, years of experience, and architectural scope.',
+      extractedText: summaryCandidate ? summaryCandidate.slice(0, 120) : '(No summary section detected in current resume)',
+      example: `${detected.length >= 2 ? detected.slice(0, 3).join(', ') : 'Software'} Engineer with demonstrated experience designing and delivering reliable distributed applications and modern user experiences.`,
+    });
+  }
+
+  // G. Quantified Impact & Measurable Achievements
   const lines = text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 20);
   const foundBullet = lines.find((l) => /^(?:[•\-*]|\d+\.|\b(?:Built|Developed|Led|Engineered|Created|Architected|Designed|Implemented|Managed|Spearheaded)\b)/i.test(l)) || lines[1] || '';
   const cleanBullet = foundBullet.replace(/^[•\-*\d.]+\s*/, '').trim();
 
-  if (metricCount < 3) {
+  if (metricCount < 3 && hasExperience) {
     candidateSuggestions.push({
       priority: 'High',
       section: 'Work Experience & Impact',
@@ -664,7 +1228,7 @@ function generateDeterministicAtsAnalysis(
     });
   }
 
-  // C. Weak or Vague Action Verbs
+  // H. Weak or Vague Action Verbs
   const passiveMatch = text.match(/\b(responsible for|assisted with|worked on|helped to|tasked with|involved in)\b/i);
   if (passiveMatch) {
     const matchedLine = lines.find((l) => new RegExp(`\\b${passiveMatch[0]}\\b`, 'i').test(l)) || passiveMatch[0];
@@ -683,21 +1247,7 @@ function generateDeterministicAtsAnalysis(
     });
   }
 
-  // D. Professional Summary
-  if (!hasSummary) {
-    const summaryCandidate = lines.find((l) => /summary|profile|about/i.test(l));
-    candidateSuggestions.push({
-      priority: 'Medium',
-      section: 'Professional Summary',
-      whatNeedsImprovement: 'Missing a focused professional summary statement at the beginning of the resume.',
-      whyItMatters: 'A professional summary gives recruiters an immediate value proposition within 6 seconds, framing your seniority, core domain, and top technical proficiencies.',
-      howToImprove: 'Add a 2–3 sentence executive summary tailored to your target role, highlighting your primary technical stack, years of experience, and architectural scope.',
-      extractedText: summaryCandidate ? summaryCandidate.slice(0, 120) : '(No summary section detected in current resume)',
-      example: `${detected.length >= 2 ? detected.slice(0, 3).join(', ') : 'Software'} Engineer with demonstrated experience designing and delivering reliable distributed applications and modern user experiences.`,
-    });
-  }
-
-  // E. Technical Keyword Coverage (if no JD was provided or if additional skills missing)
+  // I. Technical Keyword Coverage (if no JD was provided or if additional skills missing)
   if (topMissing.length > 0 && candidateSuggestions.length < 3) {
     candidateSuggestions.push({
       priority: 'Medium',
@@ -710,8 +1260,8 @@ function generateDeterministicAtsAnalysis(
     });
   }
 
-  // F. Resume Depth / Missing Core Sections
-  if (wordCount < 200) {
+  // J. Resume Depth / Under-detailed
+  if (wordCount < 150 && !missingSections.includes('Work Experience')) {
     candidateSuggestions.push({
       priority: 'High',
       section: 'Resume Depth & Completeness',
@@ -720,18 +1270,6 @@ function generateDeterministicAtsAnalysis(
       howToImprove: 'Expand work experience and academic or open-source projects with detailed technical responsibilities, architecture decisions, and outcomes.',
       extractedText: lines.slice(0, 2).join(' ').slice(0, 140),
       example: 'Engineered full-stack features using React and Node.js, collaborating with cross-functional teams to deliver production releases.',
-    });
-  }
-
-  if (!hasEducation) {
-    candidateSuggestions.push({
-      priority: 'High',
-      section: 'Education & Credentials',
-      whatNeedsImprovement: 'No distinct Education section detected.',
-      whyItMatters: 'Many enterprise ATS workflows require a recognized degree or accreditation credential for automated application compliance.',
-      howToImprove: 'Add an Education section specifying your degree, university or program, and graduation year.',
-      extractedText: '(No education section detected in current resume)',
-      example: 'B.S. in Computer Science — University / College (Graduation Year)',
     });
   }
 
@@ -760,7 +1298,7 @@ function generateDeterministicAtsAnalysis(
   }));
 
   const summaryFeedback = jdProvided
-    ? `Targeted analysis for ${targetRole || 'selected role'} at ${targetCompany || 'target company'} completed. Detected ${detected.length} technical skills with ${matchedSkills.filter((s) => s.status === 'matched').length} direct matches to job requirements. ATS compatibility is rated at ${overallAtsScore}%.`
+    ? `Targeted analysis for ${targetRole || 'selected role'} at ${targetCompany || 'target company'} completed. Detected ${detected.length} technical skills with ${matchedSkills.filter((s) => s.status === 'matched').length} direct matches to job requirements across ${sectionsDetectedCount} standard sections. ATS compatibility is rated at ${overallAtsScore}%.`
     : `Resume analysis completed. Detected ${detected.length} core technical keywords across ${sectionsDetectedCount} standard sections. Overall ATS compatibility is rated at ${overallAtsScore}%.`;
 
   return {
@@ -773,7 +1311,9 @@ function generateDeterministicAtsAnalysis(
     readabilityScore,
     bulletStrengthScore,
     detectedKeywords: detected,
-    missingKeywords: topMissing,
+    missingKeywords: jdProvided && missingJobSkills.length > 0 ? missingJobSkills : topMissing,
+    missingSections,
+    detectedSections,
     isJobSpecific: jdProvided,
     jobTitle: targetRole,
     company: targetCompany,
@@ -800,68 +1340,169 @@ function generateDeterministicJobMatch(
   const lowerResume = resumeText.toLowerCase();
   const lowerDesc = jobDescription.toLowerCase();
 
-  const matchedSkills: { skill: string; status: 'matched'; context: string }[] = [];
-  const partialSkills: { skill: string; status: 'partial'; context: string }[] = [];
-  const missingSkills: { skill: string; status: 'missing'; context: string }[] = [];
+  // Distinguish required vs preferred skill context from job description text
+  const preferredSectionMatch = lowerDesc.match(
+    /(?:preferred|bonus|nice to have|good to have|desirable|plus|optional)[\s\S]*?(?:$|(?=requirements|qualifications|responsibilities|must have))/i
+  );
+  const preferredText = preferredSectionMatch ? preferredSectionMatch[0] : '';
+
+  const matchedSkills: SkillMatchDetail[] = [];
+  const partialSkills: SkillMatchDetail[] = [];
+  const missingSkills: SkillMatchDetail[] = [];
 
   for (const skill of INDUSTRY_SKILLS) {
-    const inDesc = lowerDesc.includes(skill.toLowerCase());
-    const inResume = lowerResume.includes(skill.toLowerCase());
+    const escaped = skill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    const skillPattern = new RegExp(`\\b${escaped}\\b`, 'i');
+    const inDesc = skillPattern.test(jobDescription);
+    const inResume = skillPattern.test(resumeText);
 
-    if (inDesc && inResume) {
-      matchedSkills.push({
-        skill,
-        status: 'matched',
-        context: `Verified in resume and requested by ${company}.`,
-      });
-    } else if (inDesc && !inResume) {
-      missingSkills.push({
-        skill,
-        status: 'missing',
-        context: `Mentioned in ${jobTitle} description but not explicitly found in your resume.`,
-      });
+    if (inDesc) {
+      const isPreferred = preferredText ? skillPattern.test(preferredText) : false;
+      const importance: 'required' | 'preferred' = isPreferred ? 'preferred' : 'required';
+
+      if (inResume) {
+        matchedSkills.push({
+          skill,
+          status: 'matched',
+          importance,
+          context: `Verified in resume and requested as ${importance} by ${company}.`,
+        });
+      } else {
+        missingSkills.push({
+          skill,
+          status: 'missing',
+          importance,
+          context: `Listed as ${importance} competency for ${jobTitle} but not explicitly found in resume.`,
+        });
+      }
+    } else if (inResume) {
+      // Skill in resume, not in JD - check if it directly matches job title domain
+      const titlePattern = new RegExp(`\\b${escaped}\\b`, 'i');
+      if (titlePattern.test(jobTitle)) {
+        matchedSkills.push({
+          skill,
+          status: 'matched',
+          importance: 'preferred',
+          context: `Matches ${jobTitle} domain specialization.`,
+        });
+      }
     }
   }
 
-  if (matchedSkills.length === 0) {
-    matchedSkills.push(
-      { skill: 'Problem Solving', status: 'matched', context: 'Demonstrated in career experience.' }
-    );
-  }
-  if (missingSkills.length === 0) {
-    missingSkills.push({
-      skill: 'System Architecture',
-      status: 'missing',
-      context: 'Beneficial for enterprise technical evaluations.',
-    });
+  // Experience level evaluation
+  const jdYearsMatch = jobDescription.match(/(\d+)\+?\s*(?:-\s*(\d+)\s*)?years?/i);
+  const requiredYears = jdYearsMatch ? parseInt(jdYearsMatch[1], 10) : 0;
+
+  const resumeYearsMatch = resumeText.match(/(\d+)\+?\s*years?\s*(?:of)?\s*(?:experience|working)?/i);
+  const dateRanges = resumeText.match(/\b(20\d\d|19\d\d)\s*[-–—to]+\s*(20\d\d|present|current)\b/gi);
+  let estimatedYears = resumeYearsMatch ? parseInt(resumeYearsMatch[1], 10) : 0;
+  if (dateRanges && dateRanges.length > 0 && estimatedYears === 0) {
+    estimatedYears = Math.min(dateRanges.length * 2, 15);
   }
 
-  const baseScore = Math.min(
-    Math.max(60 + matchedSkills.length * 5 - missingSkills.length * 2, 65),
-    94
+  let experienceScore = 70;
+  if (requiredYears > 0) {
+    if (estimatedYears >= requiredYears) {
+      experienceScore = Math.min(85 + (estimatedYears - requiredYears) * 3, 98);
+    } else if (estimatedYears > 0) {
+      experienceScore = Math.max(30, Math.round((estimatedYears / requiredYears) * 80));
+    } else {
+      experienceScore = 48;
+    }
+  } else {
+    experienceScore = estimatedYears >= 3 ? 82 : 68;
+  }
+
+  // Education evaluation
+  const degreeKeywords = ['bachelor', 'master', 'phd', 'doctorate', 'b.tech', 'b.s.', 'm.s.', 'bba', 'mba', 'computer science'];
+  const hasDegree = degreeKeywords.some((deg) => lowerResume.includes(deg));
+  const jdRequiresDegree = /degree|bachelor|master|bs|ms|phd|university|college/i.test(jobDescription);
+  const educationScore = jdRequiresDegree ? (hasDegree ? 92 : 45) : (hasDegree ? 88 : 75);
+
+  // Keyword overlap
+  const stopWords = new Set(['with', 'from', 'that', 'this', 'have', 'will', 'your', 'about', 'their', 'they', 'what', 'when', 'where', 'which']);
+  const jdWords = new Set(
+    lowerDesc.split(/[^a-z0-9+#.-]+/).filter((w) => w.length > 3 && !stopWords.has(w))
   );
+  let resumeKeywordMatches = 0;
+  for (const w of Array.from(jdWords)) {
+    if (lowerResume.includes(w)) resumeKeywordMatches++;
+  }
+  const keywordScore = jdWords.size > 0 ? Math.min(96, Math.max(15, Math.round((resumeKeywordMatches / Math.max(jdWords.size, 1)) * 100))) : 60;
+
+  // Skills match score computation
+  const totalIdentifiedSkills = matchedSkills.length + missingSkills.length;
+  let skillsScore = 50;
+  if (totalIdentifiedSkills > 0) {
+    const requiredTotal = matchedSkills.filter((s) => s.importance === 'required').length + missingSkills.filter((s) => s.importance === 'required').length;
+    const requiredMatched = matchedSkills.filter((s) => s.importance === 'required').length;
+    const preferredTotal = matchedSkills.filter((s) => s.importance === 'preferred').length + missingSkills.filter((s) => s.importance === 'preferred').length;
+    const preferredMatched = matchedSkills.filter((s) => s.importance === 'preferred').length;
+
+    const reqRatio = requiredTotal > 0 ? requiredMatched / requiredTotal : 1;
+    const prefRatio = preferredTotal > 0 ? preferredMatched / preferredTotal : 1;
+
+    skillsScore = Math.round(reqRatio * 75 + prefRatio * 25);
+  } else {
+    skillsScore = keywordScore;
+  }
+
+  // Overall match composite (10-98, never invent or clamp to high minimum)
+  const overallMatchScore = Math.min(
+    98,
+    Math.max(
+      10,
+      Math.round(skillsScore * 0.45 + experienceScore * 0.25 + educationScore * 0.15 + keywordScore * 0.15)
+    )
+  );
+
+  // Strengths and Gaps grounded strictly in real data
+  const keyStrengths: string[] = [];
+  if (matchedSkills.length > 0) {
+    const matchedNames = matchedSkills.slice(0, 4).map((s) => s.skill).join(', ');
+    keyStrengths.push(`Direct alignment on key target skills: ${matchedNames}.`);
+  }
+  if (experienceScore >= 80) {
+    keyStrengths.push(`Experience tenure aligns well with ${jobTitle} expectations.`);
+  }
+  if (hasDegree) {
+    keyStrengths.push(`Educational background supports role qualifications.`);
+  }
+  if (keyStrengths.length === 0) {
+    keyStrengths.push(`Foundational qualifications align with general profile standards.`);
+  }
+
+  const gapsToAddress: string[] = [];
+  const requiredMissing = missingSkills.filter((s) => s.importance === 'required');
+  if (requiredMissing.length > 0) {
+    gapsToAddress.push(`Critical required skills missing from resume: ${requiredMissing.slice(0, 4).map((s) => s.skill).join(', ')}.`);
+  }
+  const preferredMissing = missingSkills.filter((s) => s.importance === 'preferred');
+  if (preferredMissing.length > 0) {
+    gapsToAddress.push(`Preferred bonus qualifications not detected: ${preferredMissing.slice(0, 3).map((s) => s.skill).join(', ')}.`);
+  }
+  if (requiredYears > 0 && estimatedYears < requiredYears) {
+    gapsToAddress.push(`Target role mentions ${requiredYears}+ years experience (resume demonstrates ~${estimatedYears} years).`);
+  }
+  if (gapsToAddress.length === 0) {
+    gapsToAddress.push(`Highlight measurable impact metrics and project outcomes to strengthen interview readiness.`);
+  }
 
   return {
     jobTitle,
     company,
-    overallMatchScore: baseScore,
-    skillsMatchScore: Math.min(baseScore + 3, 96),
-    experienceMatchScore: Math.max(baseScore - 2, 68),
-    educationMatchScore: 90,
-    keywordMatchScore: Math.min(baseScore + 4, 95),
-    projectRelevanceScore: 84,
+    overallMatchScore,
+    skillsMatchScore: skillsScore,
+    experienceMatchScore: experienceScore,
+    educationMatchScore: educationScore,
+    keywordMatchScore: keywordScore,
+    projectRelevanceScore: Math.round((skillsScore + keywordScore) / 2),
     matchedSkills,
     partialSkills,
     missingSkills,
-    keyStrengths: [
-      `High alignment with ${jobTitle} core technical competencies (${matchedSkills.slice(0, 3).map((s) => s.skill).join(', ')}).`,
-      `Demonstrated impact and professional foundation align with ${company} standards.`,
-    ],
-    gapsToAddress: [
-      `Consider incorporating specific mentions of ${missingSkills.slice(0, 3).map((s) => s.skill).join(', ')}.`,
-      `Emphasize domain-specific scalability metrics in your project highlights.`,
-    ],
-    recommendationSummary: `Candidate presents an estimated ${baseScore}% profile match for ${jobTitle} at ${company}. Integrating key missing skills will elevate interview callback probability.`,
+    keyStrengths,
+    gapsToAddress,
+    recommendationSummary: `Advisory match assessment: ${overallMatchScore}% profile alignment for ${jobTitle} at ${company}.${missingSkills.length > 0 ? ` Addressing ${missingSkills.length} missing skill(s) will improve ATS alignment.` : ' Profile exhibits comprehensive keyword coverage.'}`,
     analyzedAt: new Date().toISOString(),
   };
 }
@@ -927,9 +1568,9 @@ Return ONLY valid JSON matching this schema:
   "recommendedSkills": string[]
 }`;
 
-    const rawResponse = await callGeminiWithRetry(async (client) => {
+    const rawResponse = await callGeminiWithRetry(async (client, model) => {
       const response = await client.models.generateContent({
-        model: PRIMARY_GEMINI_MODEL,
+        model,
         contents: prompt,
         config: {
           responseMimeType: 'application/json',

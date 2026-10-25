@@ -54,6 +54,11 @@ export async function POST(req: Request) {
       total: stats.total,
     }));
 
+    try {
+      const { endLiveProctoringSession } = await import('@/server/db');
+      await endLiveProctoringSession(attemptId, graded?.status === 'terminated' ? 'terminated' : 'completed');
+    } catch {}
+
     return NextResponse.json({
       ...graded,
       userAnswers,

@@ -42,60 +42,79 @@ export function ResumeRenderer({
 }) {
   const activeTemplate = normalizeTemplateId(templateId || data.templateId);
 
+  // Sanitize bullet points so blank/empty lines never render empty bullets in preview or print
+  const cleanData = React.useMemo<ResumeData>(() => {
+    return {
+      ...data,
+      experience: (data.experience || []).map((exp) => ({
+        ...exp,
+        bulletPoints: (exp.bulletPoints || [])
+          .map((b) => (typeof b === 'string' ? b.trim() : b))
+          .filter(Boolean),
+      })),
+      projects: (data.projects || []).map((proj) => ({
+        ...proj,
+        bullets: (proj.bullets || [])
+          .map((b) => (typeof b === 'string' ? b.trim() : b))
+          .filter(Boolean),
+      })),
+    };
+  }, [data]);
+
   switch (activeTemplate) {
     // 12 Production SaaS Templates
     case 'ats-classic':
-      return <ATSClassicTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <ATSClassicTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'software-engineer':
-      return <SoftwareEngineerTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <SoftwareEngineerTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'graduate-fresher':
     case 'fresh-graduate':
-      return <FreshGraduateTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <FreshGraduateTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'executive-professional':
     case 'corporate-executive':
-      return <CorporateExecutiveTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <CorporateExecutiveTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'data-analyst':
-      return <DataAnalystTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <DataAnalystTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'ui-ux-designer':
-      return <UIUXDesignerTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <UIUXDesignerTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'full-stack-developer':
-      return <FullStackDeveloperTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <FullStackDeveloperTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'internship-applicant':
-      return <InternshipApplicantTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <InternshipApplicantTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'academic-research':
     case 'academic':
-      return <AcademicTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <AcademicTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'sales-marketing':
-      return <SalesMarketingTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <SalesMarketingTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'operations-management':
-      return <OperationsManagementTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <OperationsManagementTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'modern-two-column':
     case 'contemporary':
-      return <ModernTwoColumnTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <ModernTwoColumnTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
 
     // Legacy Reference Templates
     case 'modern-professional':
-      return <ModernProfessionalTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <ModernProfessionalTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'minimalist':
-      return <MinimalistTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <MinimalistTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'creative-professional':
-      return <CreativeProfessionalTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <CreativeProfessionalTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'compact-one-page':
-      return <CompactOnePageTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <CompactOnePageTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'experienced-professional':
-      return <ExperiencedProfessionalTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <ExperiencedProfessionalTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'thomas-hamptone':
-      return <ThomasHamptoneTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <ThomasHamptoneTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'nick-koe':
-      return <NickKoeTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <NickKoeTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'richard-sanchez':
-      return <RichardSanchezTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <RichardSanchezTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'olivia-wilson-grid':
-      return <OliviaWilsonGridTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <OliviaWilsonGridTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'olivia-wilson-blush':
-      return <OliviaWilsonBlushTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <OliviaWilsonBlushTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
 
     default:
-      return <ATSClassicTemplate data={data} isMiniPreview={isMiniPreview} />;
+      return <ATSClassicTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
   }
 }

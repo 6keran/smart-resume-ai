@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
-import { verifySessionToken } from '@/lib/db';
+import { verifyAdminTokenAsync } from '@/lib/db';
 import { AdminSidebar } from '@/components/admin/AdminSidebar';
 import { AdminHeader } from '@/components/admin/AdminHeader';
 
@@ -18,7 +18,7 @@ export default async function AdminProtectedLayout({
     redirect('/admin/login');
   }
 
-  const payload = verifySessionToken(token);
+  const payload = await verifyAdminTokenAsync(token);
   if (!payload || payload.role !== 'ADMIN') {
     redirect('/admin/login');
   }

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
+import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import {
   MessageSquare,
@@ -229,6 +230,7 @@ export function CareerChatbot() {
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
   const [isDragging, setIsDragging] = useState(false);
   const [isClient, setIsClient] = useState(false);
+  const prefersReduced = useReducedMotion();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -652,57 +654,85 @@ export function CareerChatbot() {
 
   return (
     <>
-      {/* Floating Draggable Launcher Trigger */}
-      {!isOpen && (
-        <div
-          ref={launcherRef}
-          style={launcherStyle}
-          onPointerDown={handlePointerDown}
-          onPointerMove={handlePointerMove}
-          onPointerUp={handlePointerUp}
-          onPointerCancel={handlePointerCancel}
-          className={`z-50 select-none no-print transition-shadow ${
-            isDragging ? 'cursor-grabbing opacity-90 scale-105' : 'cursor-grab'
-          }`}
-        >
-          <button
-            type="button"
-            onClick={(e) => {
-              if (isDragging) {
-                e.preventDefault();
-                return;
-              }
-              setIsOpen(true);
-            }}
-            onKeyDown={handleKeyDownLauncher}
-            className="flex items-center gap-2 sm:gap-2.5 px-3 py-2.5 sm:px-4 sm:py-3 rounded-full bg-[#0F172A] hover:bg-[#1E293B] text-white shadow-xl hover:shadow-2xl transition-transform border border-slate-700/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 group cursor-pointer"
-            aria-label="Open AI Assistant (Draggable, use arrow keys to reposition)"
-            title={position ? "AI Assistant (Drag to move, Home key to reset)" : "AI Assistant (Drag to reposition)"}
+      <AnimatePresence mode="wait">
+        {/* Floating Draggable Launcher Trigger */}
+        {!isOpen && (
+          <motion.div
+            key="chat-launcher"
+            ref={launcherRef}
+            style={launcherStyle}
+            initial={prefersReduced ? { opacity: 1 } : { opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={prefersReduced ? { opacity: 0 } : { opacity: 0, scale: 0.9 }}
+            transition={prefersReduced ? { duration: 0 } : { duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            onPointerDown={handlePointerDown}
+            onPointerMove={handlePointerMove}
+            onPointerUp={handlePointerUp}
+            onPointerCancel={handlePointerCancel}
+            className={`z-50 select-none no-print transition-shadow ${
+              isDragging ? 'cursor-grabbing opacity-90' : 'cursor-grab'
+            }`}
           >
-            <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white shrink-0 group-hover:rotate-12 transition-transform">
-              <Sparkles className="w-3.5 h-3.5" />
-            </div>
-            <span className="text-xs font-semibold tracking-wide hidden xs:inline sm:inline">AI Assistant</span>
-            <GripHorizontal className="w-3 h-3 text-slate-500 group-hover:text-slate-300 ml-0.5 opacity-60" aria-hidden="true" />
-          </button>
-        </div>
-      )}
+            <button
+              type="button"
+              onClick={(e) => {
+                if (isDragging) {
+                  e.preventDefault();
+                  return;
+                }
+                setIsOpen(true);
+              }}
+              onKeyDown={handleKeyDownLauncher}
+              className="flex items-center gap-2 sm:gap-2.5 px-3 py-2.5 sm:px-4 sm:py-3 rounded-full bg-[#0F172A] hover:bg-[#1E293B] text-white shadow-xl hover:shadow-2xl transition-transform border border-slate-700/60 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 focus-visible:ring-offset-slate-900 group cursor-pointer"
+              aria-label="Open AI Assistant (Draggable, use arrow keys to reposition)"
+              title={position ? "AI Assistant (Drag to move, Home key to reset)" : "AI Assistant (Drag to reposition)"}
+            >
+              <div className="w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white shrink-0 group-hover:rotate-12 transition-transform">
+                <Sparkles className="w-3.5 h-3.5" />
+              </div>
+              <span className="text-xs font-semibold tracking-wide hidden xs:inline sm:inline">AI Assistant</span>
+              <GripHorizontal className="w-3 h-3 text-slate-500 group-hover:text-slate-300 ml-0.5 opacity-60" aria-hidden="true" />
+            </button>
+          </motion.div>
+        )}
 
-      {/* Chat Window: Windowed vs Full Screen */}
-      {isOpen && (
-        <div
-          role="dialog"
-          aria-label="Smart Resume AI Assistant"
-          aria-modal={isFullScreen}
-          style={getPanelStyle()}
-          className={
-            isFullScreen
-              ? 'fixed inset-0 z-50 w-screen h-[100dvh] max-h-[100dvh] bg-white dark:bg-[#0F172A] flex flex-col overflow-hidden no-print transition-all duration-200 ease-in-out'
-              : 'fixed inset-x-2 bottom-2 sm:inset-x-auto z-50 w-auto sm:w-[460px] max-w-[calc(100vw-16px)] sm:max-w-none h-[560px] sm:h-[620px] max-h-[calc(100dvh-16px)] sm:max-h-[85vh] rounded-2xl bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 shadow-2xl flex flex-col overflow-hidden no-print animate-in fade-in slide-in-from-bottom-4 duration-200'
-          }
-        >
+        {/* Chat Window: Windowed vs Full Screen */}
+        {isOpen && (
+          <motion.div
+            role="dialog"
+            aria-label="Smart Resume AI Assistant"
+            aria-modal={isFullScreen}
+            style={getPanelStyle()}
+            initial={
+              prefersReduced
+                ? { opacity: 0 }
+                : isFullScreen
+                ? { opacity: 0 }
+                : { opacity: 0, scale: 0.97, y: 10 }
+            }
+            animate={
+              prefersReduced
+                ? { opacity: 1 }
+                : isFullScreen
+                ? { opacity: 1 }
+                : { opacity: 1, scale: 1, y: 0 }
+            }
+            exit={
+              prefersReduced
+                ? { opacity: 0 }
+                : isFullScreen
+                ? { opacity: 0 }
+                : { opacity: 0, scale: 0.97, y: 10 }
+            }
+            transition={prefersReduced ? { duration: 0 } : { duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className={
+              isFullScreen
+                ? 'fixed inset-0 z-50 w-screen h-[100dvh] max-h-[100dvh] bg-[var(--bg-primary)]/95 backdrop-blur-2xl flex flex-col overflow-hidden no-print'
+                : 'fixed inset-x-2 bottom-2 sm:inset-x-auto z-50 w-auto sm:w-[460px] max-w-[calc(100vw-16px)] sm:max-w-none h-[560px] sm:h-[620px] max-h-[calc(100dvh-16px)] sm:max-h-[85vh] rounded-2xl bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] shadow-[var(--shadow-glass-hover)] backdrop-blur-2xl flex flex-col overflow-hidden no-print'
+            }
+          >
           {/* Header */}
-          <div className="shrink-0 px-4 py-3 sm:px-6 bg-slate-50 dark:bg-slate-900/90 border-b border-slate-200 dark:border-slate-800">
+          <div className="shrink-0 px-4 py-3 sm:px-6 bg-[var(--glass-bg)] border-b border-[var(--glass-border)] backdrop-blur-md">
             <div className={`flex items-center justify-between ${isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}`}>
               <div className="flex items-center gap-2.5">
                 <div className="w-8 h-8 rounded-lg bg-blue-600/10 dark:bg-blue-600/20 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
@@ -773,8 +803,11 @@ export function CareerChatbot() {
           <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:px-6 space-y-3.5 text-xs sm:text-sm">
             <div className={`space-y-3.5 ${isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}`}>
               {messages.map((m) => (
-                <div
+                <motion.div
                   key={m.id}
+                  initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={prefersReduced ? { duration: 0 } : { duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
                   className={`flex gap-2.5 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                 >
                   {m.role === 'assistant' && (
@@ -807,7 +840,7 @@ export function CareerChatbot() {
                       {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
                     </div>
                   )}
-                </div>
+                </motion.div>
               ))}
 
               {chatLoading && (
@@ -866,7 +899,7 @@ export function CareerChatbot() {
           )}
 
           {/* Input Form */}
-          <div className="shrink-0 p-3 sm:px-6 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-[#0F172A] pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+          <div className="shrink-0 p-3 sm:px-6 border-t border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))]">
             <div className={isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}>
               <form
                 onSubmit={(e) => {
@@ -896,8 +929,9 @@ export function CareerChatbot() {
               </form>
             </div>
           </div>
-        </div>
-      )}
+        </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 }

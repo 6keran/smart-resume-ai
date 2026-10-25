@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { Geist, Geist_Mono } from 'next/font/google';
+import Script from 'next/script';
 import './globals.css';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { ResumeProvider } from '@/context/ResumeContext';
@@ -56,20 +57,18 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
-      <head>
-        <script
+      <body className="min-h-screen flex bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased font-sans transition-colors duration-250" suppressHydrationWarning>
+        <Script
           id="smart-resume-theme-init"
-          dangerouslySetInnerHTML={{
-            __html: `(function(){try{var t=localStorage.getItem('smart_resume_theme')||localStorage.getItem('theme');var d=window.matchMedia('(prefers-color-scheme: light)').matches?'light':'dark';var m=t==='light'||t==='dark'?t:(t==='system'?d:'dark');var r=document.documentElement;r.classList.remove('light','dark');r.classList.add(m);r.setAttribute('data-theme',m);r.style.colorScheme=m;}catch(e){}})()`,
-          }}
+          src="/theme-init.js"
+          strategy="beforeInteractive"
         />
-      </head>
-      <body className="min-h-screen flex bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased font-sans transition-colors duration-250">
         <ThemeProvider>
           <ResumeProvider>
             <CareerProvider>
               <UserProvider>
-                <div className="flex w-full min-h-screen">
+                <div className="ambient-glow no-print" data-no-print="true" aria-hidden="true" />
+                <div className="flex w-full min-h-screen relative z-[1]">
                   <Sidebar />
                   <div className="flex-1 flex flex-col min-w-0">
                     <Header />

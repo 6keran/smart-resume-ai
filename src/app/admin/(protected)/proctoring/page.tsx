@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import {
   ShieldAlert,
   ShieldCheck,
@@ -20,6 +20,10 @@ import {
   Activity,
   Radio,
   Lock,
+  Video,
+  VideoOff,
+  Wifi,
+  WifiOff,
 } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 
@@ -46,6 +50,13 @@ interface MonitoredSession {
   created_at: string;
   user_name: string | null;
   user_email: string | null;
+  camera_status?: string | null;
+  stream_health?: 'good' | 'degraded' | 'offline' | 'unknown' | null;
+  frame_rate?: number | null;
+  resolution?: string | null;
+  last_heartbeat_at?: string | null;
+  consent_given?: number | null;
+  started_at?: string | null;
 }
 
 interface ProctoringSummaryData {
@@ -65,15 +76,30 @@ export default function AdminProctoringPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [actionNotice, setActionNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
 
-  const fetchProctoringData = async () => {
+  // Live Proctoring Stream State
+  const remoteVideoRef = useRef<HTMLVideoElement | null>(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const [webRtcConnected, setWebRtcConnected] = useState(false);
+  const [liveFrame, setLiveFrame] = useState<string | null>(null);
+  const [streamHealth, setStreamHealth] = useState<'good' | 'degraded' | 'offline' | 'unknown'>('unknown');
+  const [liveFps, setLiveFps] = useState<number>(0);
+  const [liveResolution, setLiveResolution] = useState<string>('unknown');
+  const [heartbeatAge, setHeartbeatAge] = useState<number | null>(null);
+  const [streamError, setStreamError] = useState<string | null>(null);
+
+  const fetchProctoringData = useCallback(async () => {
     try {
       setLoading(true);
       const res = await fetch('/api/admin/proctoring');
       if (res.ok) {
         const json = await res.json();
         setData(json);
-        if (json.activeOrRecentSessions?.length > 0 && !selectedSession) {
-          setSelectedSession(json.activeOrRecentSessions[0]);
+        if (json.activeOrRecentSessions?.length > 0) {
+          setSelectedSession((prev) => {
+            if (!prev) return json.activeOrRecentSessions[0];
+            const updated = json.activeOrRecentSessions.find((s: MonitoredSession) => s.id === prev.id);
+            return updated || prev;
+          });
         }
       }
     } catch (err) {
@@ -81,13 +107,146 @@ export default function AdminProctoringPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchProctoringData();
-    const interval = setInterval(fetchProctoringData, 15000); // 15s auto-refresh
+    const interval = setInterval(fetchProctoringData, 10000); // 10s auto-refresh
     return () => clearInterval(interval);
-  }, []);
+  }, [fetchProctoringData]);
+
+  // Live Video Streaming & Telemetry receiver for selected candidate
+  useEffect(() => {
+    setWebRtcConnected(false);
+    setLiveFrame(null);
+    setStreamError(null);
+
+    if (peerConnectionRef.current) {
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
+    }
+
+    if (!selectedSession) return;
+
+    // Privacy & Authorization Guard: Stream only while actively running and consented!
+    const isActivelyRunning = selectedSession.status === 'in_progress';
+    const hasConsent = Boolean(selectedSession.consent_given);
+
+    if (!isActivelyRunning || !hasConsent) {
+      setStreamHealth('offline');
+      return;
+    }
+
+    let isSubscribed = true;
+    let pollTimer: NodeJS.Timeout | null = null;
+    let signalingTimer: NodeJS.Timeout | null = null;
+
+    // 1. Frame Polling (Fast initial display & reliable network fallback)
+    const fetchFrame = async () => {
+      try {
+        const res = await fetch(`/api/proctoring/frame?assessmentId=${encodeURIComponent(selectedSession.id)}`);
+        if (!isSubscribed) return;
+
+        if (res.ok) {
+          const json = await res.json();
+          if (json.active && json.frame) {
+            setLiveFrame(json.frame);
+            setStreamHealth(json.streamHealth || 'good');
+            setLiveFps(json.frameRate || 30);
+            setLiveResolution(json.resolution || '640x480');
+            setHeartbeatAge(json.lastHeartbeatAgeSeconds ?? 0);
+            setStreamError(null);
+          } else {
+            setStreamHealth('degraded');
+          }
+        } else if (res.status === 403) {
+          const errData = await res.json().catch(() => ({}));
+          setStreamError(errData.message || 'Stream unavailable: assessment is not active or consent missing');
+          setStreamHealth('offline');
+        }
+      } catch {
+        if (isSubscribed) setStreamHealth('degraded');
+      }
+    };
+
+    fetchFrame();
+    pollTimer = setInterval(fetchFrame, 1500);
+
+    // 2. WebRTC PeerConnection Setup (Direct P2P video stream)
+    const setupWebRtc = async () => {
+      try {
+        const res = await fetch(`/api/proctoring/signal?assessmentId=${encodeURIComponent(selectedSession.id)}&for=admin`);
+        if (!isSubscribed || !res.ok) return;
+
+        const { signal } = await res.json();
+        if (!signal?.offer) return;
+
+        if (!peerConnectionRef.current || peerConnectionRef.current.signalingState === 'closed') {
+          const pc = new RTCPeerConnection({
+            iceServers: [
+              { urls: 'stun:stun.l.google.com:19302' },
+              { urls: 'stun:stun1.l.google.com:19302' },
+            ],
+          });
+          peerConnectionRef.current = pc;
+
+          pc.ontrack = (event) => {
+            if (remoteVideoRef.current && event.streams[0]) {
+              remoteVideoRef.current.srcObject = event.streams[0];
+              remoteVideoRef.current.play().catch(() => {});
+              setWebRtcConnected(true);
+              setStreamHealth('good');
+            }
+          };
+
+          pc.onicecandidate = (event) => {
+            if (event.candidate) {
+              fetch('/api/proctoring/signal', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  assessmentId: selectedSession.id,
+                  sender: 'admin',
+                  type: 'candidate',
+                  data: event.candidate,
+                }),
+              }).catch(() => {});
+            }
+          };
+
+          await pc.setRemoteDescription(new RTCSessionDescription(signal.offer));
+          const answer = await pc.createAnswer();
+          await pc.setLocalDescription(answer);
+
+          await fetch('/api/proctoring/signal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              assessmentId: selectedSession.id,
+              sender: 'admin',
+              type: 'answer',
+              data: answer,
+            }),
+          });
+        }
+      } catch (err) {
+        console.warn('Admin WebRTC signal setup notice:', err);
+      }
+    };
+
+    setupWebRtc();
+    signalingTimer = setInterval(setupWebRtc, 4000);
+
+    return () => {
+      isSubscribed = false;
+      if (pollTimer) clearInterval(pollTimer);
+      if (signalingTimer) clearInterval(signalingTimer);
+      if (peerConnectionRef.current) {
+        peerConnectionRef.current.close();
+        peerConnectionRef.current = null;
+      }
+    };
+  }, [selectedSession]);
 
   const handleModerateSession = async (action: 'warn' | 'terminate', assessmentId: string) => {
     try {
@@ -242,49 +401,71 @@ export default function AdminProctoringPage() {
             </span>
           </div>
 
-          <div className="space-y-2 max-h-[500px] overflow-y-auto pr-1">
+          <div className="space-y-2.5 max-h-[520px] overflow-y-auto pr-1">
             {(data?.activeOrRecentSessions || []).map((sess) => {
               const isSelected = selectedSession?.id === sess.id;
               const hasViolations = sess.proctoring_violation_count > 0;
+              const isLive = sess.status === 'in_progress';
+              const isGoodHealth = sess.stream_health === 'good';
 
               return (
                 <div
                   key={sess.id}
                   onClick={() => setSelectedSession(sess)}
-                  className={`p-3.5 rounded-xl border text-xs cursor-pointer transition-all space-y-1.5 ${
+                  className={`p-3.5 rounded-xl border text-xs cursor-pointer transition-all space-y-2 ${
                     isSelected
                       ? 'border-[var(--accent)] bg-[var(--accent)]/10 shadow-sm ring-1 ring-[var(--accent)]/20'
                       : 'border-[var(--border-color)] bg-[var(--bg-secondary)]/50 hover:border-[var(--border-hover)]'
                   }`}
                 >
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold text-[var(--text-primary)]">
-                      {sess.user_name || 'Candidate'}
-                    </span>
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0">
+                      <span className="font-bold text-[var(--text-primary)] block truncate">
+                        {sess.user_name || 'Candidate'}
+                      </span>
+                      <span className="text-[11px] text-[var(--text-secondary)] block truncate">
+                        {sess.user_email || 'No email recorded'}
+                      </span>
+                    </div>
                     <span
-                      className={`px-2 py-0.5 rounded text-[10px] font-bold ${
-                        sess.status === 'passed'
+                      className={`px-2 py-0.5 rounded text-[10px] font-bold shrink-0 uppercase tracking-wider ${
+                        isLive
+                          ? 'bg-indigo-500/15 text-indigo-400 border border-indigo-500/30 animate-pulse'
+                          : sess.status === 'passed'
                           ? 'bg-emerald-500/10 text-emerald-400'
                           : sess.status === 'terminated'
                           ? 'bg-rose-500/10 text-rose-400'
                           : 'bg-amber-500/10 text-amber-400'
                       }`}
                     >
-                      {sess.status.toUpperCase()}
+                      {sess.status.replace('_', ' ')}
                     </span>
                   </div>
 
                   <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
-                    <span>{sess.skill} Assessment</span>
+                    <span className="font-medium text-[var(--text-primary)]">{sess.skill}</span>
                     <span>Score: {sess.score}/10</span>
                   </div>
 
-                  <div className="flex items-center justify-between text-[10px] pt-1">
+                  {/* Telemetry pill bar */}
+                  <div className="flex items-center justify-between text-[10px] pt-1 border-t border-[var(--border-color)]/50">
+                    <div className="flex items-center gap-1.5">
+                      <span
+                        className={`w-2 h-2 rounded-full ${
+                          isLive && isGoodHealth
+                            ? 'bg-emerald-400 animate-pulse'
+                            : isLive
+                            ? 'bg-amber-400'
+                            : 'bg-slate-500'
+                        }`}
+                      />
+                      <span className="font-mono text-[var(--text-secondary)]">
+                        {isLive ? (isGoodHealth ? 'Stream Live' : 'Degraded') : 'Stream Ended'}
+                      </span>
+                    </div>
+
                     <span className={hasViolations ? 'text-rose-400 font-semibold' : 'text-emerald-400 font-semibold'}>
                       {sess.proctoring_violation_count} Violations
-                    </span>
-                    <span className="font-mono text-[var(--text-secondary)]">
-                      {new Date(sess.created_at).toLocaleTimeString()}
                     </span>
                   </div>
                 </div>
@@ -309,13 +490,13 @@ export default function AdminProctoringPage() {
               <div className="flex items-center gap-2">
                 <button
                   onClick={() => handleModerateSession('warn', selectedSession.id)}
-                  className="px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-semibold transition-all"
+                  className="px-3 py-1.5 rounded-lg border border-amber-500/30 bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 text-xs font-semibold transition-all cursor-pointer"
                 >
                   Send Warning
                 </button>
                 <button
                   onClick={() => handleModerateSession('terminate', selectedSession.id)}
-                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition-all"
+                  className="px-3 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white text-xs font-semibold shadow-sm transition-all cursor-pointer"
                 >
                   Terminate Session
                 </button>
@@ -325,37 +506,121 @@ export default function AdminProctoringPage() {
 
           {selectedSession ? (
             <div className="space-y-4">
-              {/* Camera Simulation Viewport */}
-              <div className="relative aspect-video rounded-2xl bg-black border border-[var(--border-color)] overflow-hidden flex flex-col items-center justify-center text-center p-6 shadow-inner">
-                {/* Simulated Overlay HUD */}
-                <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-[10px] text-white font-mono">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-ping" />
-                  <span>CAMERA STREAM ACTIVE (720P)</span>
-                </div>
+              {/* Remote Live Video Viewport */}
+              {selectedSession.status === 'in_progress' && selectedSession.consent_given ? (
+                <div className="relative aspect-video rounded-2xl bg-black border border-[var(--border-color)] overflow-hidden shadow-inner flex items-center justify-center">
+                  {/* WebRTC Video Element */}
+                  <video
+                    ref={remoteVideoRef}
+                    autoPlay
+                    playsInline
+                    muted
+                    className={`w-full h-full object-cover transform -scale-x-100 ${
+                      webRtcConnected ? 'block' : 'hidden'
+                    }`}
+                  />
 
-                <div className="absolute top-3 right-3 bg-black/70 backdrop-blur-md px-2.5 py-1 rounded-lg border border-white/10 text-[10px] font-mono text-emerald-400">
-                  FACE DETECTED: 100% CONFIDENCE
-                </div>
+                  {/* Fallback Live Frame Relay */}
+                  {!webRtcConnected && liveFrame && (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <img
+                      src={liveFrame}
+                      alt="Candidate live stream"
+                      className="w-full h-full object-cover transform -scale-x-100"
+                    />
+                  )}
 
-                {/* Center Visual Mockup */}
-                <div className="w-20 h-20 rounded-full border-2 border-dashed border-emerald-500/50 flex items-center justify-center text-emerald-400 mb-2">
-                  <Camera className="w-8 h-8 opacity-75" />
-                </div>
-                <p className="text-xs font-medium text-slate-300">
-                  Candidate: {selectedSession.user_name || 'Verified User'} ({selectedSession.user_email || 'No email recorded'})
-                </p>
-                <p className="text-[11px] text-slate-400">
-                  Target Skill: {selectedSession.skill} • Exam Status: {selectedSession.status}
-                </p>
+                  {/* Connecting Placeholder while video stream initializes */}
+                  {!webRtcConnected && !liveFrame && (
+                    <div className="flex flex-col items-center justify-center space-y-2 p-6 text-center">
+                      <RefreshCw className="w-8 h-8 text-[var(--accent)] animate-spin opacity-80" />
+                      <p className="text-xs font-medium text-slate-300">
+                        Connecting to candidate live video feed...
+                      </p>
+                      <p className="text-[11px] text-slate-400">
+                        {streamError || 'Waiting for candidate frame handshake...'}
+                      </p>
+                    </div>
+                  )}
 
-                {/* Bottom telemetry telemetry bar */}
-                <div className="absolute bottom-3 left-3 right-3 flex items-center justify-between bg-black/70 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10 text-[10px] font-mono text-slate-300">
-                  <span>LIGHTING: OPTIMAL (88%)</span>
-                  <span>NOISE: NORMAL (12 dB)</span>
-                  <span>FULLSCREEN: LOCKED</span>
-                  <span className={selectedSession.proctoring_violation_count > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400'}>
-                    VIOLATIONS: {selectedSession.proctoring_violation_count}/3
+                  {/* Top Live Overlay HUD */}
+                  <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/75 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/10 text-[10px] text-white font-mono shadow-md">
+                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="font-bold tracking-wide">LIVE PROCTOR STREAM</span>
+                    <span className="text-white/60">({liveResolution} • {liveFps} FPS)</span>
+                  </div>
+
+                  <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/75 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/10 text-[10px] font-mono text-emerald-400 shadow-md">
+                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                    <span>{webRtcConnected ? 'WebRTC P2P' : 'Frame Relay'}</span>
+                  </div>
+
+                  {/* Bottom Telemetry HUD Bar */}
+                  <div className="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 bg-black/80 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/10 text-[10px] font-mono text-slate-300 shadow-lg">
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-400">Heartbeat:</span>
+                      <span className="text-emerald-400 font-bold">
+                        {heartbeatAge !== null ? `${heartbeatAge}s ago` : 'Active'}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-400">Health:</span>
+                      <span className={streamHealth === 'good' ? 'text-emerald-400 font-bold uppercase' : 'text-amber-400 font-bold uppercase'}>
+                        {streamHealth}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-400">Consent:</span>
+                      <span className="text-indigo-300 font-bold">Verified</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-slate-400">Violations:</span>
+                      <span className={selectedSession.proctoring_violation_count > 0 ? 'text-rose-400 font-bold' : 'text-emerald-400 font-bold'}>
+                        {selectedSession.proctoring_violation_count}/3
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                /* Privacy Protection Placeholder when test is completed/inactive */
+                <div className="relative aspect-video rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-color)] overflow-hidden flex flex-col items-center justify-center text-center p-6 space-y-3">
+                  <div className="w-14 h-14 rounded-2xl bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
+                    <Lock className="w-7 h-7 opacity-80" />
+                  </div>
+                  <div className="space-y-1 max-w-md">
+                    <h4 className="text-sm font-bold text-[var(--text-primary)]">
+                      {selectedSession.status === 'in_progress'
+                        ? 'Waiting for Camera Verification'
+                        : 'Camera Stream Inactive (Privacy Safeguard)'}
+                    </h4>
+                    <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                      {selectedSession.status === 'in_progress'
+                        ? 'Candidate is currently completing pre-assessment camera verification.'
+                        : `Remote camera preview is restricted to active, in-progress assessments with verified candidate consent. Assessment status is "${selectedSession.status.toUpperCase()}". Camera media tracks were released per privacy compliance.`}
+                    </p>
+                  </div>
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] text-[11px] font-mono text-[var(--text-secondary)]">
+                    <span>Status: {selectedSession.status.toUpperCase()}</span>
+                    <span>•</span>
+                    <span>Score: {selectedSession.score}/10</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Candidate Info and Session Metrics Strip */}
+              <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] flex flex-col sm:flex-row sm:items-center justify-between gap-2 text-xs">
+                <div>
+                  <span className="text-[var(--text-secondary)]">Candidate Identity:</span>{' '}
+                  <span className="font-bold text-[var(--text-primary)]">
+                    {selectedSession.user_name || 'Verified User'}
+                  </span>{' '}
+                  <span className="text-[var(--text-secondary)] font-mono text-[11px]">
+                    ({selectedSession.user_email || 'No email recorded'})
                   </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="text-[var(--text-secondary)]">Target Skill:</span>
+                  <span className="font-bold text-[var(--accent)]">{selectedSession.skill}</span>
                 </div>
               </div>
 
@@ -376,7 +641,7 @@ export default function AdminProctoringPage() {
                   </span>
                 </div>
                 <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-                  <span className="text-[10px] text-[var(--text-secondary)] block">Created At</span>
+                  <span className="text-[10px] text-[var(--text-secondary)] block">Session Time</span>
                   <span className="font-bold text-[var(--text-primary)] font-mono text-[11px]">
                     {new Date(selectedSession.created_at).toLocaleTimeString()}
                   </span>

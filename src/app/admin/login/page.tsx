@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
   ShieldCheck,
@@ -9,6 +10,7 @@ import {
   Lock,
   Mail,
   ArrowRight,
+  ArrowLeft,
   Loader2,
   Sparkles,
   AlertCircle,
@@ -19,7 +21,13 @@ import { ThemeToggle } from '@/components/theme/ThemeToggle';
 function AdminLoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const from = searchParams.get('from') || '/admin/dashboard';
+  const rawFrom = searchParams.get('from');
+  const safeFrom =
+    rawFrom &&
+    rawFrom.startsWith('/') &&
+    !rawFrom.startsWith('//')
+      ? rawFrom
+      : '/admin/dashboard';
 
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -59,8 +67,8 @@ function AdminLoginForm() {
         return;
       }
 
-      // Successful authentication -> navigate to admin dashboard
-      window.location.replace(from);
+      // Successful authentication -> navigate to safe destination
+      window.location.replace(safeFrom);
     } catch {
       setError('Secure connection failed. Please check network connectivity and retry.');
       setIsLoading(false);
@@ -212,11 +220,20 @@ function AdminLoginForm() {
           )}
         </form>
 
-        {/* Footer Guarantee */}
-        <div className="mt-6 pt-5 border-t border-[var(--border-color)] text-center">
+        {/* Footer Guarantee & User Portal Navigation */}
+        <div className="mt-6 pt-5 border-t border-[var(--border-color)] text-center space-y-2.5">
           <p className="text-[11px] text-[var(--text-secondary)] font-medium">
             Authorized administrative personnel only.
           </p>
+          <div>
+            <Link
+              href="/"
+              className="inline-flex items-center justify-center gap-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--accent)] font-medium transition-colors cursor-pointer group"
+            >
+              <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+              <span>Back to User Portal</span>
+            </Link>
+          </div>
         </div>
       </div>
     </div>
@@ -226,7 +243,17 @@ function AdminLoginForm() {
 export default function AdminLoginPage() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center p-4 bg-[var(--bg-primary)] text-[var(--text-primary)] relative overflow-hidden">
-      {/* Top Bar with Theme Toggle */}
+      {/* Top Bar: Back to User Portal (Left) & Theme Toggle (Right) */}
+      <div className="absolute top-4 left-4 sm:top-6 sm:left-6 z-30">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3 py-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)]/80 hover:bg-[var(--bg-card)] hover:border-[var(--border-hover)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all active:scale-95 shadow-xs backdrop-blur-xs cursor-pointer group"
+        >
+          <ArrowLeft className="w-3.5 h-3.5 group-hover:-translate-x-0.5 transition-transform" />
+          <span>Back to User Portal</span>
+        </Link>
+      </div>
+
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30 flex items-center gap-2">
         <div className="sm:hidden">
           <ThemeToggle variant="icon" />

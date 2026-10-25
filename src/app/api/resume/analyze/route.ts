@@ -119,9 +119,11 @@ export async function POST(req: Request) {
 
     // Persist real upload and analysis to database
     let createdResumeId: string | null = null;
+    let assignedVisitorId: string | null = null;
     try {
       const user = await getUserFromRequest(req);
       const visitorId = await getOrCreateVisitorId(req);
+      assignedVisitorId = visitorId;
       const resumeId = await recordResumeUpload({
         visitorId,
         userId: user?.id,
@@ -149,7 +151,15 @@ export async function POST(req: Request) {
       console.error('[DB Event Error] Failed to persist resume analysis:', dbErr);
     }
 
-    return NextResponse.json({ ...result, resumeId: createdResumeId });
+    const response = NextResponse.json({ ...result, resumeId: createdResumeId });
+    if (assignedVisitorId && !req.headers.get('cookie')?.includes('sra_visitor_id=')) {
+      response.cookies.set('sra_visitor_id', assignedVisitorId, {
+        path: '/',
+        maxAge: 60 * 60 * 24 * 365,
+        sameSite: 'lax',
+      });
+    }
+    return response;
   } catch (err: unknown) {
     // Log developer information locally without exposing raw stack traces to users
     console.error('Server error in /api/resume/analyze:', err);

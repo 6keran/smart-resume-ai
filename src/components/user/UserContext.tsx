@@ -70,6 +70,8 @@ export function UserProvider({ children }: { children: React.ReactNode }) {
       console.error('Error logging out:', err);
     } finally {
       setUser(null);
+      // Hard navigation on logout ensures all React state, cache, and session cookies are cleanly reset
+      // eslint-disable-next-line @next/next/no-location-assign-relative-destination
       window.location.href = '/login';
     }
   };

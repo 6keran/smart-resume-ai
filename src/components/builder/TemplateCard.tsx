@@ -41,10 +41,10 @@ export function TemplateCard({
     <div
       id={`template-card-${template.id}`}
       data-template-id={template.id}
-      className={`group relative flex flex-col justify-between rounded-xl border transition-all duration-150 overflow-hidden ${
+      className={`group relative flex flex-col justify-between rounded-2xl border transition-all duration-200 overflow-hidden hover:-translate-y-1 active:scale-[0.99] ${
         isSelected
-          ? 'border-[var(--accent)] bg-[var(--accent-subtle)] ring-1 ring-[var(--accent)] shadow-sm'
-          : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--border-hover)] hover:shadow-sm'
+          ? 'border-[var(--accent)] bg-[var(--accent-subtle)] ring-2 ring-[var(--accent)]/30 shadow-[var(--shadow-glass-hover)] -translate-y-0.5'
+          : 'border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] hover:border-[var(--glass-border-hover)] hover:shadow-[var(--shadow-glass-hover)] backdrop-blur-xl'
       }`}
     >
       {/* Top Details & Badges */}
@@ -123,12 +123,12 @@ export function TemplateCard({
       </div>
 
       {/* Card Actions */}
-      <div className="p-3 pt-2 mt-auto border-t border-[var(--border-color)] flex items-center gap-2">
+      <div className="p-3.5 pt-2.5 mt-auto border-t border-[var(--glass-border)] flex items-center gap-2">
         <button
           id={`btn-preview-template-${template.id}`}
           type="button"
           onClick={() => onPreview(template.id)}
-          className="flex-1 py-1.5 px-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-elevated)] text-[var(--text-primary)] text-[11px] font-semibold flex items-center justify-center gap-1 transition-colors cursor-pointer"
+          className="flex-1 py-1.5 px-2.5 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] text-[var(--text-primary)] text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs active:scale-95"
           title="Full Preview of this template"
         >
           <Eye className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
@@ -139,10 +139,10 @@ export function TemplateCard({
           id={`btn-select-template-${template.id}`}
           type="button"
           onClick={() => onSelect(template.id)}
-          className={`flex-1 py-1.5 px-2 rounded-lg text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer ${
+          className={`flex-1 py-1.5 px-2.5 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer active:scale-95 ${
             isSelected
               ? 'bg-emerald-600 text-white shadow-sm'
-              : 'bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white shadow-sm'
+              : 'bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white shadow-sm hover:shadow-[0_4px_12px_rgba(79,143,247,0.3)]'
           }`}
           title="Select this template"
         >

@@ -181,6 +181,8 @@ export interface ResumeAnalysisResult {
   bulletStrengthScore?: number;
   detectedKeywords: string[];
   missingKeywords: string[];
+  missingSections?: string[];
+  detectedSections?: string[];
   strengths: AnalysisStrength[];
   weaknesses: AnalysisWeakness[];
   recommendations: AnalysisRecommendation[];
@@ -250,3 +252,13 @@ export interface ResumeValidationResult {
   signals: ResumeValidationSignals;
 }
 
+/**
+ * Determines whether a resume ID is a transient client-side template, sample,
+ * or draft placeholder rather than a canonical persisted database record.
+ */
+export function isClientDraftResumeId(id: string | null | undefined): boolean {
+  if (!id || typeof id !== 'string') return true;
+  const trimmed = id.trim();
+  if (!trimmed || trimmed === 'res_default') return true;
+  return /^(res_default|res_fresher|res_sample|fresher_|exp_|sparse_|draft_|demo_|temp_)/i.test(trimmed);
+}

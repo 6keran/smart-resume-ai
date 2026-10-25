@@ -27,6 +27,9 @@ import {
   X,
   AlertCircle,
   ShieldAlert,
+  Edit2,
+  Shield,
+  Key,
 } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
 
@@ -35,6 +38,8 @@ interface UserDetailData {
     id: string;
     name: string;
     email: string | null;
+    role?: string;
+    is_active?: number;
     created_at: string;
     last_active_at: string;
   };
@@ -61,6 +66,77 @@ export default function AdminUserDetailPage() {
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [deleteError, setDeleteError] = useState<string | null>(null);
+
+  // Edit modal state
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editForm, setEditForm] = useState({
+    name: '',
+    email: '',
+    password: '',
+    role: 'USER',
+    is_active: 1,
+  });
+  const [isEditing, setIsEditing] = useState(false);
+  const [editError, setEditError] = useState<string | null>(null);
+
+  // Global feedback toast
+  const [actionNotice, setActionNotice] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
+
+  const openEditModal = () => {
+    if (!data?.user) return;
+    setEditForm({
+      name: data.user.name,
+      email: data.user.email || '',
+      password: '',
+      role: data.user.role || 'USER',
+      is_active: data.user.is_active !== undefined ? data.user.is_active : 1,
+    });
+    setEditError(null);
+    setShowEditModal(true);
+  };
+
+  const handleEditUser = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!userId) return;
+
+    setIsEditing(true);
+    setEditError(null);
+
+    try {
+      const payload: any = {
+        name: editForm.name,
+        email: editForm.email,
+        role: editForm.role,
+        is_active: editForm.is_active,
+      };
+      if (editForm.password.trim()) {
+        payload.password = editForm.password.trim();
+      }
+
+      const res = await fetch(`/api/admin/users/${encodeURIComponent(userId)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+      const resJson = await res.json();
+
+      if (!res.ok) {
+        throw new Error(resJson.message || 'Failed to update user profile.');
+      }
+
+      setActionNotice({
+        type: 'success',
+        message: resJson.message || `User "${editForm.name}" updated successfully.`,
+      });
+      setShowEditModal(false);
+      await fetchUserDetail();
+    } catch (err: unknown) {
+      const msg = err instanceof Error ? err.message : String(err);
+      setEditError(msg);
+    } finally {
+      setIsEditing(false);
+    }
+  };
 
   const fetchCurrentAdmin = async () => {
     try {
@@ -184,11 +260,29 @@ export default function AdminUserDetailPage() {
               {user.name.charAt(0).toUpperCase()}
             </div>
             <div>
-              <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight">
-                {user.name}
-              </h1>
-              <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-secondary)] mt-0.5">
-                <span className="flex items-center gap-1">
+              <div className="flex items-center gap-2.5">
+                <h1 className="text-2xl sm:text-3xl font-black text-[var(--text-primary)] tracking-tight">
+                  {user.name}
+                </h1>
+                <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
+                  (user.role || '').toUpperCase() === 'ADMIN'
+                    ? 'bg-purple-500/10 text-purple-400 border-purple-500/25'
+                    : 'bg-blue-500/10 text-blue-400 border-blue-500/25'
+                }`}>
+                  <Shield className="w-3 h-3" />
+                  {user.role || 'USER'}
+                </span>
+                <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-semibold ${
+                  user.is_active !== 0
+                    ? 'bg-emerald-500/10 text-emerald-400'
+                    : 'bg-zinc-500/15 text-zinc-400'
+                }`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${user.is_active !== 0 ? 'bg-emerald-400' : 'bg-zinc-400'}`} />
+                  {user.is_active !== 0 ? 'Active' : 'Inactive'}
+                </span>
+              </div>
+              <div className="flex flex-wrap items-center gap-3 text-xs text-[var(--text-secondary)] mt-1">
+                <span className="flex items-center gap-1 font-mono">
                   <Mail className="w-3.5 h-3.5" />
                   {user.email || <span className="italic">Not provided</span>}
                 </span>
@@ -209,12 +303,20 @@ export default function AdminUserDetailPage() {
 
         <div className="flex items-center gap-2">
           <button
+            onClick={openEditModal}
+            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[var(--accent)] hover:opacity-90 text-white text-xs font-semibold transition-all active:scale-95 shadow-sm"
+          >
+            <Edit2 className="w-3.5 h-3.5" />
+            <span>Edit Profile</span>
+          </button>
+
+          <button
             onClick={fetchUserDetail}
             disabled={loading}
             className="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] hover:bg-[var(--bg-elevated)] text-xs font-semibold text-[var(--text-primary)] transition-all active:scale-95 shadow-sm"
           >
             <RefreshCw className={`w-3.5 h-3.5 ${loading ? 'animate-spin' : ''}`} />
-            Refresh Profile
+            Refresh
           </button>
 
           <button
@@ -229,6 +331,32 @@ export default function AdminUserDetailPage() {
           </button>
         </div>
       </div>
+
+      {/* Global Action Banner */}
+      {actionNotice && (
+        <div
+          className={`p-4 rounded-xl border flex items-center justify-between gap-3 text-xs sm:text-sm ${
+            actionNotice.type === 'success'
+              ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-400'
+              : 'bg-red-500/10 border-red-500/30 text-red-400'
+          }`}
+        >
+          <div className="flex items-center gap-2">
+            {actionNotice.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 shrink-0" />
+            ) : (
+              <AlertCircle className="w-4 h-4 shrink-0" />
+            )}
+            <span>{actionNotice.message}</span>
+          </div>
+          <button
+            onClick={() => setActionNotice(null)}
+            className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-1 rounded-md"
+          >
+            <X className="w-4 h-4" />
+          </button>
+        </div>
+      )}
 
       {/* KPI Overview Strip */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
@@ -747,6 +875,141 @@ export default function AdminUserDetailPage() {
                 )}
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Edit User Modal */}
+      {showEditModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+          <div className="w-full max-w-lg rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)] shadow-2xl p-6 space-y-5 text-left">
+            <div className="flex items-start justify-between gap-3 border-b border-[var(--border-color)] pb-4">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/25">
+                  <Edit2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-bold text-[var(--text-primary)]">
+                    Edit User Account
+                  </h3>
+                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                    Update profile details and administrative permissions.
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={() => setShowEditModal(false)}
+                disabled={isEditing}
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] p-1 rounded-lg"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {editError && (
+              <div className="p-3.5 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0" />
+                <span>{editError}</span>
+              </div>
+            )}
+
+            <form onSubmit={handleEditUser} className="space-y-4">
+              <div>
+                <label className="block text-xs font-bold text-[var(--text-primary)] mb-1">
+                  Full Name <span className="text-red-400">*</span>
+                </label>
+                <input
+                  type="text"
+                  required
+                  value={editForm.name}
+                  onChange={(e) => setEditForm({ ...editForm, name: e.target.value })}
+                  className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[var(--text-primary)] mb-1">
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  value={editForm.email}
+                  onChange={(e) => setEditForm({ ...editForm, email: e.target.value })}
+                  placeholder="e.g. user@example.com"
+                  className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-[var(--text-primary)] mb-1 flex items-center gap-1.5">
+                  <Key className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
+                  <span>Update Password (Optional)</span>
+                </label>
+                <input
+                  type="password"
+                  value={editForm.password}
+                  onChange={(e) => setEditForm({ ...editForm, password: e.target.value })}
+                  placeholder="Leave blank to keep current password"
+                  className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-bold text-[var(--text-primary)] mb-1">
+                    Role
+                  </label>
+                  <select
+                    value={editForm.role}
+                    onChange={(e) => setEditForm({ ...editForm, role: e.target.value })}
+                    className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] cursor-pointer"
+                  >
+                    <option value="USER">User (Candidate)</option>
+                    <option value="ADMIN">Administrator</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-[var(--text-primary)] mb-1">
+                    Account Status
+                  </label>
+                  <select
+                    value={editForm.is_active}
+                    onChange={(e) => setEditForm({ ...editForm, is_active: parseInt(e.target.value, 10) })}
+                    className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs sm:text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] cursor-pointer"
+                  >
+                    <option value={1}>Active</option>
+                    <option value={0}>Inactive / Suspended</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[var(--border-color)]">
+                <button
+                  type="button"
+                  onClick={() => setShowEditModal(false)}
+                  disabled={isEditing}
+                  className="px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-xs font-semibold text-[var(--text-primary)] transition-all"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isEditing}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-[var(--accent)] hover:opacity-90 text-white text-xs font-bold disabled:opacity-50 transition-all shadow-md"
+                >
+                  {isEditing ? (
+                    <>
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                      <span>Saving Changes...</span>
+                    </>
+                  ) : (
+                    <span>Save Changes</span>
+                  )}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

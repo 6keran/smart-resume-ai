@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import {
-  verifySessionToken,
+  verifyAdminToken,
   getProctoringSummary,
   recordProctoringEvent,
   getDb,
@@ -10,9 +10,7 @@ import {
 async function checkAdminAuth() {
   const cookieStore = await cookies();
   const token = cookieStore.get('sra_admin_session')?.value;
-  if (!token) return false;
-  const payload = verifySessionToken(token);
-  return payload && payload.role === 'ADMIN';
+  return Boolean(verifyAdminToken(token));
 }
 
 export async function GET() {
@@ -59,6 +57,11 @@ export async function POST(req: Request) {
         'violation',
         reason || 'Assessment terminated by proctoring administrator.'
       );
+
+      try {
+        const { endLiveProctoringSession } = await import('@/server/db');
+        await endLiveProctoringSession(assessmentId, 'terminated');
+      } catch {}
 
       return NextResponse.json({ success: true, message: 'Assessment terminated successfully' });
     }

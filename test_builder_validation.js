@@ -24,6 +24,16 @@ function validateStep(step, data) {
     }
     if (!data.personalInfo.phone?.trim()) {
       addError('personalInfo.phone', 'Please enter your phone number.', 'input-phone');
+    } else {
+      const phone = data.personalInfo.phone.trim();
+      const digitCount = phone.replace(/\D/g, '').length;
+      if (!/^[+]?[\d\s().-]{7,25}$/.test(phone) || digitCount < 7 || digitCount > 15) {
+        addError(
+          'personalInfo.phone',
+          'Please enter a valid phone number (7 to 15 digits, optionally with country code).',
+          'input-phone'
+        );
+      }
     }
     if (!data.personalInfo.location?.trim()) {
       addError('personalInfo.location', 'Please enter your location (city, state/country).', 'input-location');
@@ -42,35 +52,56 @@ function validateStep(step, data) {
     if (!data.education || data.education.length === 0) {
       addError('education', 'Please add at least one education credential.', 'add-education-btn');
     } else {
-      if (!data.education[0].degree?.trim()) {
-        addError('education.0.degree', 'Please enter your degree or program of study.', 'input-edu-degree-0');
-      }
-      if (!data.education[0].institution?.trim()) {
-        addError('education.0.institution', 'Please enter the institution or university name.', 'input-edu-institution-0');
-      }
+      data.education.forEach((edu, idx) => {
+        if (!edu.degree?.trim()) {
+          addError(`education.${idx}.degree`, 'Please enter your degree or program of study.', `input-edu-degree-${idx}`);
+        }
+        if (!edu.institution?.trim()) {
+          addError(`education.${idx}.institution`, 'Please enter the institution or university name.', `input-edu-institution-${idx}`);
+        }
+      });
     }
   } else if (step === 5) {
     if (data.candidateType === 'experienced') {
       if (!data.experience || data.experience.length === 0) {
         addError('experience', 'Please add at least one professional work experience.', 'add-experience-btn');
       } else {
-        if (!data.experience[0].role?.trim()) {
-          addError('experience.0.role', 'Please enter your role title.', 'input-exp-role-0');
-        }
-        if (!data.experience[0].company?.trim()) {
-          addError('experience.0.company', 'Please enter the company name.', 'input-exp-company-0');
-        }
+        data.experience.forEach((exp, idx) => {
+          if (!exp.role?.trim()) {
+            addError(`experience.${idx}.role`, 'Please enter your role title.', `input-exp-role-${idx}`);
+          }
+          if (!exp.company?.trim()) {
+            addError(`experience.${idx}.company`, 'Please enter the company name.', `input-exp-company-${idx}`);
+          }
+        });
       }
+    } else if (data.experience && data.experience.length > 0) {
+      data.experience.forEach((exp, idx) => {
+        if (!exp.role?.trim()) {
+          addError(`experience.${idx}.role`, 'Please enter your role title.', `input-exp-role-${idx}`);
+        }
+        if (!exp.company?.trim()) {
+          addError(`experience.${idx}.company`, 'Please enter the company name.', `input-exp-company-${idx}`);
+        }
+      });
     }
   } else if (step === 6) {
     if (data.candidateType === 'fresher') {
       if (!data.projects || data.projects.length === 0) {
         addError('projects', 'Please add at least one project (required for entry-level candidates).', 'add-project-btn');
       } else {
-        if (!data.projects[0].title?.trim()) {
-          addError('projects.0.title', 'Please enter the project name.', 'input-proj-title-0');
-        }
+        data.projects.forEach((proj, idx) => {
+          if (!proj.title?.trim()) {
+            addError(`projects.${idx}.title`, 'Please enter the project name.', `input-proj-title-${idx}`);
+          }
+        });
       }
+    } else if (data.projects && data.projects.length > 0) {
+      data.projects.forEach((proj, idx) => {
+        if (!proj.title?.trim()) {
+          addError(`projects.${idx}.title`, 'Please enter the project name.', `input-proj-title-${idx}`);
+        }
+      });
     }
   }
 

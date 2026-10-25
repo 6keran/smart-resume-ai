@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { useUserProfile } from '@/components/user/UserContext';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
+import { motion } from 'framer-motion';
 
 const PLATFORM_HIGHLIGHTS = [
   {
@@ -175,14 +176,19 @@ function RegisterForm() {
   return (
     <div className="w-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-14 items-center relative z-10">
       {/* LEFT COLUMN: Premium Brand Experience & Journey (~55%) */}
-      <div className="lg:col-span-7 flex flex-col justify-between space-y-8">
+      <motion.div
+        initial={{ opacity: 0, x: -20 }}
+        animate={{ opacity: 1, x: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="lg:col-span-7 flex flex-col justify-between space-y-8"
+      >
         {/* Brand Header */}
         <div className="space-y-4">
           <Link
             href="/"
             className="inline-flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] rounded-xl"
           >
-            <div className="w-11 h-11 rounded-xl bg-[var(--accent)] flex items-center justify-center text-white shadow-md shadow-[var(--accent)]/20 group-hover:scale-105 transition-transform duration-200">
+            <div className="w-11 h-11 rounded-xl bg-[var(--accent)] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(79,143,247,0.35)] group-hover:scale-105 transition-transform duration-200">
               <Sparkles className="w-5 h-5" />
             </div>
             <div className="flex flex-col leading-tight">
@@ -196,7 +202,7 @@ function RegisterForm() {
           </Link>
 
           <div className="pt-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs font-semibold bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)] mb-3">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs font-semibold bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-secondary)] mb-3 shadow-[var(--shadow-glass)] backdrop-blur-md">
               <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
               <span>CAREER INTELLIGENCE PLATFORM</span>
             </div>
@@ -225,9 +231,9 @@ function RegisterForm() {
               return (
                 <div
                   key={item.title}
-                  className="group flex items-center gap-3.5 p-3 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)]/50 hover:border-[var(--accent)]/40 hover:bg-[var(--bg-secondary)] transition-all duration-200"
+                  className="group flex items-center gap-3.5 p-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--accent)]/40 hover:bg-[var(--glass-bg-elevated)] backdrop-blur-md shadow-xs transition-all duration-200"
                 >
-                  <div className="w-8 h-8 rounded-md bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20 flex items-center justify-center shrink-0 group-hover:scale-105 transition-transform">
                     <Icon className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
@@ -251,29 +257,36 @@ function RegisterForm() {
 
         {/* Bottom Feature Pill Bar */}
         <div className="hidden sm:flex items-center gap-3 pt-2 text-[11px] font-medium text-[var(--text-secondary)]">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
             100% Free Candidate Account
           </span>
           <span className="opacity-40">•</span>
-          <span className="inline-flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-xs">
+            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_6px_rgba(79,143,247,0.5)]" />
             Private & Encrypted Data
           </span>
           <span className="opacity-40">•</span>
-          <span className="inline-flex items-center gap-1.5">
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-xs">
             <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
             Direct Dashboard Access
           </span>
         </div>
-      </div>
+      </motion.div>
 
-      {/* RIGHT COLUMN: Elevated Register Card (~45%) */}
-      <div className="lg:col-span-5 w-full max-w-md mx-auto">
-        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-7 sm:p-9 shadow-lg relative overflow-hidden">
+      {/* RIGHT COLUMN: Elevated Glass Register Card (~45%) */}
+      <motion.div
+        initial={{ opacity: 0, y: 16 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
+        className="lg:col-span-5 w-full max-w-md mx-auto"
+      >
+        <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg-elevated)] backdrop-blur-2xl p-7 sm:p-9 shadow-[var(--shadow-glass)] relative overflow-hidden transition-all duration-300">
+          {/* Top highlight gradient edge */}
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent" />
 
           {/* Mobile brand header */}
-          <div className="lg:hidden flex items-center justify-center gap-2.5 mb-6 pb-4 border-b border-[var(--border-color)]">
+          <div className="lg:hidden flex items-center justify-center gap-2.5 mb-6 pb-4 border-b border-[var(--glass-border)]">
             <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-white shadow-sm">
               <Sparkles className="w-4 h-4" />
             </div>
@@ -300,7 +313,7 @@ function RegisterForm() {
           {/* Error Banner */}
           {error && (
             <div
-              className="mb-5 p-3.5 rounded-lg bg-red-500/10 border border-red-500/25 text-red-500 dark:text-red-400 text-xs flex items-start gap-2.5"
+              className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/25 text-red-500 dark:text-red-400 text-xs flex items-start gap-2.5 backdrop-blur-xs"
               role="alert"
               id="register-error"
             >
@@ -340,7 +353,7 @@ function RegisterForm() {
                   placeholder="Rahul Sharma"
                   aria-invalid={Boolean(error)}
                   aria-describedby={error ? 'register-error' : undefined}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 shadow-xs transition-all"
                 />
               </div>
             </div>
@@ -371,7 +384,7 @@ function RegisterForm() {
                   placeholder="rahul.sharma@email.com"
                   aria-invalid={Boolean(error)}
                   aria-describedby={error ? 'register-error' : undefined}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all"
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 shadow-xs transition-all"
                 />
               </div>
             </div>
@@ -402,7 +415,7 @@ function RegisterForm() {
                   placeholder="At least 6 characters"
                   aria-invalid={Boolean(error)}
                   aria-describedby={error ? 'register-error' : undefined}
-                  className="w-full pl-10 pr-11 py-2.5 rounded-lg bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all"
+                  className="w-full pl-10 pr-11 py-2.5 rounded-xl bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 shadow-xs transition-all"
                 />
                 <button
                   type="button"
@@ -447,7 +460,7 @@ function RegisterForm() {
                   placeholder="Repeat your password"
                   aria-invalid={Boolean(error)}
                   aria-describedby={error ? 'register-error' : undefined}
-                  className="w-full pl-10 pr-11 py-2.5 rounded-lg bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all"
+                  className="w-full pl-10 pr-11 py-2.5 rounded-xl bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-2 focus:ring-[var(--accent)]/20 shadow-xs transition-all"
                 />
                 <button
                   type="button"
@@ -470,7 +483,7 @@ function RegisterForm() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full mt-2 h-[44px] px-4 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-medium text-sm transition-all duration-150 flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="w-full mt-2 h-[44px] px-4 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-semibold text-sm shadow-[0_4px_16px_rgba(79,143,247,0.3)] hover:shadow-[0_6px_20px_rgba(79,143,247,0.4)] transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
             >
               {isLoading ? (
                 <>
@@ -489,9 +502,9 @@ function RegisterForm() {
           {/* Divider */}
           <div className="relative my-6 text-center">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-[var(--border-color)]" />
+              <div className="w-full border-t border-[var(--glass-border)]" />
             </div>
-            <span className="relative px-3 bg-[var(--bg-card)] text-[11px] uppercase tracking-wider text-[var(--text-secondary)] font-medium">
+            <span className="relative px-3 bg-[var(--glass-bg-elevated)] text-[11px] uppercase tracking-wider text-[var(--text-secondary)] font-medium">
               Already have an account?
             </span>
           </div>
@@ -499,13 +512,13 @@ function RegisterForm() {
           {/* Sign In Link */}
           <Link
             href={`/login${safeFrom !== '/dashboard' ? `?from=${encodeURIComponent(safeFrom)}` : ''}`}
-            className="w-full py-2.5 px-4 rounded-lg border border-[var(--border-color)] hover:border-[var(--accent)] text-[var(--text-primary)] font-medium text-sm transition-all flex items-center justify-center gap-2 hover:bg-[var(--bg-secondary)] cursor-pointer"
+            className="w-full py-2.5 px-4 rounded-xl border border-[var(--glass-border)] hover:border-[var(--accent)] text-[var(--text-primary)] font-medium text-sm transition-all flex items-center justify-center gap-2 bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] shadow-xs cursor-pointer"
           >
             <span>Sign in →</span>
           </Link>
 
           {/* Admin Footnote */}
-          <div className="text-center mt-5 pt-4 border-t border-[var(--border-color)]/60">
+          <div className="text-center mt-5 pt-4 border-t border-[var(--glass-border)]">
             <p className="text-[11px] text-[var(--text-secondary)]">
               Need administrative access?{' '}
               <Link
@@ -517,7 +530,7 @@ function RegisterForm() {
             </p>
           </div>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }

@@ -82,13 +82,13 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
     <>
       <header
         data-no-print="true"
-        className="sticky top-0 z-20 h-16 w-full max-w-full border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/90 backdrop-blur-xl flex items-center justify-between px-3 sm:px-6 overflow-hidden no-print"
+        className="sticky top-0 z-20 h-16 w-full max-w-full glass-nav flex items-center justify-between px-4 sm:px-8 overflow-hidden no-print"
       >
         {/* Left: Mobile Toggle & Page Title */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
           <button
             onClick={() => setMobileMenuOpen(true)}
-            className="md:hidden p-2 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] active:scale-95 transition-all duration-150 shrink-0"
+            className="md:hidden p-2 rounded-xl border border-[var(--glass-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] active:scale-95 transition-all duration-150 shrink-0"
             aria-label="Open dashboard navigation menu"
           >
             <Menu className="w-5 h-5" />
@@ -102,8 +102,8 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
         </div>
 
         {/* Right: Actions */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-          {/* Responsive ThemeToggle: icon on mobile/tablet, segmented on desktop */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+          {/* Responsive ThemeToggle */}
           <div className="lg:hidden shrink-0">
             <ThemeToggle variant="icon" />
           </div>
@@ -115,7 +115,7 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
             href="/analyzer"
             title="Upload New Resume"
             aria-label="Upload New Resume"
-            className="inline-flex items-center gap-1.5 p-2 sm:px-3 sm:py-1.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold transition-all duration-150 shadow-xs active:scale-95 cursor-pointer shrink-0"
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold transition-all duration-150 shadow-[0_2px_10px_rgba(79,143,247,0.3)] active:scale-95 cursor-pointer shrink-0"
           >
             <Upload className="w-3.5 h-3.5" />
             <span className="hidden sm:inline">Upload New Resume</span>
@@ -123,11 +123,11 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
 
           <Link
             href="/dashboard/profile"
-            className="flex items-center gap-1.5 p-1.5 sm:px-2 rounded-lg hover:bg-[var(--bg-card)] border border-transparent hover:border-[var(--border-color)] active:scale-[0.98] transition-all duration-150 cursor-pointer shrink-0"
+            className="flex items-center gap-2 p-1.5 sm:px-2.5 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] hover:border-[var(--glass-border-hover)] active:scale-[0.98] transition-all duration-150 cursor-pointer shrink-0 shadow-xs"
             title={`Account Settings (${user.name})`}
             aria-label={`Account Settings (${user.name})`}
           >
-            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-md bg-[var(--accent)]/15 text-[var(--accent)] font-bold text-xs flex items-center justify-center border border-[var(--accent)]/20 shrink-0">
+            <div className="w-6 h-6 sm:w-7 sm:h-7 rounded-lg bg-[var(--accent)]/15 text-[var(--accent)] font-bold text-xs flex items-center justify-center border border-[var(--accent)]/20 shrink-0">
               {user.name.charAt(0).toUpperCase()}
             </div>
             <span className="hidden md:inline font-semibold text-xs text-[var(--text-primary)] max-w-[120px] truncate">
@@ -139,9 +139,10 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
             onClick={() => logout()}
             title="Sign Out"
             aria-label="Sign Out"
-            className="p-2 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--color-error)] hover:border-[var(--color-error)]/30 active:scale-95 transition-all duration-150 cursor-pointer shrink-0"
+            className="p-2 sm:px-3 sm:py-1.5 rounded-xl border border-[var(--glass-border)] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--color-error)] hover:border-[var(--color-error)]/30 active:scale-95 transition-all duration-150 cursor-pointer shrink-0"
           >
-            <LogOut className="w-4 h-4" />
+            <LogOut className="w-3.5 h-3.5 sm:hidden" />
+            <span className="hidden sm:inline">Sign Out</span>
           </button>
         </div>
       </header>

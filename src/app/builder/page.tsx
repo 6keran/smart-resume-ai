@@ -38,7 +38,7 @@ import {
 } from 'lucide-react';
 import { useResume } from '@/context/ResumeContext';
 import { RESUME_TEMPLATES, MINI_SAMPLE_RESUME_DATA, normalizeTemplateId } from '@/lib/templates';
-import { ResumeData } from '@/types/resume';
+import { isClientDraftResumeId, ResumeData } from '@/types/resume';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { A4ResumeDocument } from '@/components/builder/A4ResumeDocument';
 import { TemplateCard } from '@/components/builder/TemplateCard';
@@ -56,8 +56,6 @@ function ResumeBuilderContent() {
     updateCertifications,
     setTemplateId,
     setCandidateType,
-    resetToSampleResume,
-    loadFresherSample,
     targetJob,
     clearTargetJob,
     analysisResult,
@@ -101,6 +99,51 @@ function ResumeBuilderContent() {
   const [improvingProjIdx, setImprovingProjIdx] = useState<number | null>(null);
   const [tailorSuccessToast, setTailorSuccessToast] = useState<string | null>(null);
 
+  // Controlled Skills Text Inputs (preserves trailing commas/spaces while typing)
+  const [technicalSkillsInput, setTechnicalSkillsInput] = useState<string>(() =>
+    (resumeData.skills?.technical || []).join(', ')
+  );
+  const [toolsSkillsInput, setToolsSkillsInput] = useState<string>(() =>
+    (resumeData.skills?.tools || []).join(', ')
+  );
+  const [softSkillsInput, setSoftSkillsInput] = useState<string>(() =>
+    (resumeData.skills?.soft || []).join(', ')
+  );
+
+  // Synchronize skills inputs when external changes occur (restore, template, chip remove, db load)
+  useEffect(() => {
+    setTechnicalSkillsInput((current) => {
+      const parsed = current.split(',').map((s) => s.trim()).filter(Boolean);
+      const actual = resumeData.skills?.technical || [];
+      if (parsed.join('|') !== actual.join('|')) {
+        return actual.join(', ');
+      }
+      return current;
+    });
+  }, [resumeData.skills?.technical]);
+
+  useEffect(() => {
+    setToolsSkillsInput((current) => {
+      const parsed = current.split(',').map((s) => s.trim()).filter(Boolean);
+      const actual = resumeData.skills?.tools || [];
+      if (parsed.join('|') !== actual.join('|')) {
+        return actual.join(', ');
+      }
+      return current;
+    });
+  }, [resumeData.skills?.tools]);
+
+  useEffect(() => {
+    setSoftSkillsInput((current) => {
+      const parsed = current.split(',').map((s) => s.trim()).filter(Boolean);
+      const actual = resumeData.skills?.soft || [];
+      if (parsed.join('|') !== actual.join('|')) {
+        return actual.join(', ');
+      }
+      return current;
+    });
+  }, [resumeData.skills?.soft]);
+
   const previewViewportRef = useRef<HTMLDivElement>(null);
 
   const isFresher = resumeData.candidateType === 'fresher';
@@ -113,14 +156,20 @@ function ResumeBuilderContent() {
   };
 
   const fetchVersions = useCallback(async (resId?: string) => {
+    const q = resId || (activeResumeId && !isClientDraftResumeId(activeResumeId) ? activeResumeId : null);
+    if (!q || isClientDraftResumeId(q)) {
+      setVersions([]);
+      return;
+    }
     setIsLoadingVersions(true);
     try {
-      const q = resId || activeResumeId;
-      const url = q ? `/api/user/resumes/versions?resumeId=${encodeURIComponent(q)}` : '/api/user/resumes/versions';
+      const url = `/api/user/resumes/versions?resumeId=${encodeURIComponent(q)}`;
       const res = await fetch(url);
       if (res.ok) {
         const data = await res.json();
         setVersions(data.versions || []);
+      } else if (res.status === 404) {
+        setVersions([]);
       }
     } catch (err) {
       console.error('Failed to load resume versions:', err);
@@ -156,25 +205,34 @@ function ResumeBuilderContent() {
     if (e) e.preventDefault();
     setIsSavingSnapshot(true);
     try {
+      let effectiveResumeId = activeResumeId && !isClientDraftResumeId(activeResumeId) ? activeResumeId : null;
+      if (!effectiveResumeId) {
+        const saveRes = await saveActiveResume(resumeData, undefined, { force: true });
+        if (saveRes.success && saveRes.resumeId) {
+          effectiveResumeId = saveRes.resumeId;
+          setActiveResumeId(effectiveResumeId);
+        }
+      }
+
       const summary = snapshotSummary.trim() || `Snapshot at ${new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`;
       const res = await fetch('/api/user/resumes/versions', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          resumeId: activeResumeId,
+          resumeId: effectiveResumeId,
           resumeData,
           changeSummary: summary,
         }),
       });
       if (res.ok) {
         const data = await res.json();
-        if (data.version?.resumeId && !activeResumeId) {
+        if (data.version?.resumeId && (!activeResumeId || isClientDraftResumeId(activeResumeId))) {
           setActiveResumeId(data.version.resumeId);
         }
-        triggerToast(`Saved Version ${data.version?.versionNumber || ''} snapshot!`);
+        triggerToast(`Saved Version ${data.version?.versionNumber ?? data.version?.version_number ?? ''} snapshot!`);
         setShowSaveSnapshotModal(false);
         setSnapshotSummary('');
-        fetchVersions(data.version?.resumeId || activeResumeId || undefined);
+        fetchVersions(data.version?.resumeId || effectiveResumeId || undefined);
       } else {
         triggerToast('Please sign in to save cloud snapshots.');
       }
@@ -219,7 +277,14 @@ function ResumeBuilderContent() {
   };
 
   // AI Assistant: Tailor Summary
+  // AI Assistant: Tailor Summary
   const handleTailorSummary = async () => {
+    const summaryText = resumeData.summary?.trim();
+    if (!summaryText) {
+      triggerToast('Please write a professional summary first before improving it.');
+      return;
+    }
+
     setIsImprovingSummary(true);
     try {
       const res = await fetch('/api/resume/improve', {
@@ -227,9 +292,7 @@ function ResumeBuilderContent() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sectionName: 'summary',
-          originalContent:
-            resumeData.summary ||
-            'Experienced engineer delivering scalable web and backend applications.',
+          originalContent: summaryText,
           jobDescription: targetJob.description || undefined,
           jobTitle: targetJob.title || undefined,
         }),
@@ -240,9 +303,12 @@ function ResumeBuilderContent() {
           improved: data.improvedContent,
           reasoning: data.reasoning,
         });
+      } else {
+        triggerToast('Unable to improve summary at this time.');
       }
     } catch (err) {
       console.error('Tailor summary error:', err);
+      triggerToast('Unable to improve summary at this time.');
     } finally {
       setIsImprovingSummary(false);
     }
@@ -251,11 +317,15 @@ function ResumeBuilderContent() {
   // AI Assistant: Improve Experience Bullet
   const handleImproveBullet = async (expIndex: number) => {
     if (!resumeData.experience[expIndex]) return;
+    const bullets = resumeData.experience[expIndex].bulletPoints;
+    if (!bullets || bullets.length === 0 || !bullets.join('').trim()) {
+      triggerToast('Please write accomplishment bullets first before improving.');
+      return;
+    }
+
     setImprovingExpIdx(expIndex);
     try {
-      const originalBullets = resumeData.experience[expIndex].bulletPoints;
-      const bulletToImprove =
-        originalBullets[0] || 'Spearheaded key engineering workflows with high reliability.';
+      const bulletToImprove = bullets.join('\n');
       const res = await fetch('/api/resume/improve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -269,16 +339,19 @@ function ResumeBuilderContent() {
       if (res.ok) {
         const data = await res.json();
         const updated = [...resumeData.experience];
-        if (updated[expIndex].bulletPoints.length > 0) {
-          updated[expIndex].bulletPoints[0] = data.improvedContent;
-        } else {
-          updated[expIndex].bulletPoints.push(data.improvedContent);
-        }
+        const improvedList = (data.improvedContent || '')
+          .split('\n')
+          .map((b: string) => b.trim())
+          .filter(Boolean);
+        updated[expIndex].bulletPoints = improvedList.length > 0 ? improvedList : [data.improvedContent];
         updateExperience(updated);
-        triggerToast('Updated first bullet point with high-impact active phrasing.');
+        triggerToast('Refined bullet phrasing with professional action verbs while preserving your experience.');
+      } else {
+        triggerToast('Unable to improve bullet points at this time.');
       }
     } catch (err) {
       console.error('Improve bullet error:', err);
+      triggerToast('Unable to improve bullet points at this time.');
     } finally {
       setImprovingExpIdx(null);
     }
@@ -287,16 +360,21 @@ function ResumeBuilderContent() {
   // AI Assistant: Improve Project
   const handleImproveProject = async (projIndex: number) => {
     if (!resumeData.projects[projIndex]) return;
+    const proj = resumeData.projects[projIndex];
+    const originalText = proj.description || (proj.bullets && proj.bullets.join('\n')) || proj.title;
+    if (!originalText || !originalText.trim()) {
+      triggerToast('Please provide a project description first before improving.');
+      return;
+    }
+
     setImprovingProjIdx(projIndex);
     try {
-      const proj = resumeData.projects[projIndex];
-      const originalText = proj.description || (proj.bullets && proj.bullets[0]) || proj.title;
       const res = await fetch('/api/resume/improve', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           sectionName: 'projects',
-          originalContent: originalText,
+          originalContent: originalText.trim(),
           jobDescription: targetJob.description || undefined,
           jobTitle: targetJob.title || undefined,
         }),
@@ -305,15 +383,22 @@ function ResumeBuilderContent() {
         const data = await res.json();
         const updated = [...resumeData.projects];
         if (updated[projIndex].bullets && updated[projIndex].bullets.length > 0) {
-          updated[projIndex].bullets[0] = data.improvedContent;
+          const improvedList = (data.improvedContent || '')
+            .split('\n')
+            .map((b: string) => b.trim())
+            .filter(Boolean);
+          updated[projIndex].bullets = improvedList.length > 0 ? improvedList : [data.improvedContent];
         } else {
           updated[projIndex].description = data.improvedContent;
         }
         updateProjects(updated);
-        triggerToast('Enhanced project description with active technical impact.');
+        triggerToast('Enhanced project description with professional terminology while preserving facts.');
+      } else {
+        triggerToast('Unable to improve project description at this time.');
       }
     } catch (err) {
       console.error('Improve project error:', err);
+      triggerToast('Unable to improve project description at this time.');
     } finally {
       setImprovingProjIdx(null);
     }
@@ -459,6 +544,16 @@ function ResumeBuilderContent() {
       }
       if (!data.personalInfo.phone?.trim()) {
         addError('personalInfo.phone', 'Please enter your phone number.', 'input-phone');
+      } else {
+        const phone = data.personalInfo.phone.trim();
+        const digitCount = phone.replace(/\D/g, '').length;
+        if (!/^[+]?[\d\s().-]{7,25}$/.test(phone) || digitCount < 7 || digitCount > 15) {
+          addError(
+            'personalInfo.phone',
+            'Please enter a valid phone number (7 to 15 digits, optionally with country code).',
+            'input-phone'
+          );
+        }
       }
       if (!data.personalInfo.location?.trim()) {
         addError(
@@ -489,20 +584,22 @@ function ResumeBuilderContent() {
       if (!data.education || data.education.length === 0) {
         addError('education', 'Please add at least one education credential.', 'add-education-btn');
       } else {
-        if (!data.education[0].degree?.trim()) {
-          addError(
-            'education.0.degree',
-            'Please enter your degree or program of study.',
-            'input-edu-degree-0'
-          );
-        }
-        if (!data.education[0].institution?.trim()) {
-          addError(
-            'education.0.institution',
-            'Please enter the institution or university name.',
-            'input-edu-institution-0'
-          );
-        }
+        data.education.forEach((edu, idx) => {
+          if (!edu.degree?.trim()) {
+            addError(
+              `education.${idx}.degree`,
+              'Please enter your degree or program of study.',
+              `input-edu-degree-${idx}`
+            );
+          }
+          if (!edu.institution?.trim()) {
+            addError(
+              `education.${idx}.institution`,
+              'Please enter the institution or university name.',
+              `input-edu-institution-${idx}`
+            );
+          }
+        });
       }
     } else if (step === 5) {
       if (data.candidateType === 'experienced') {
@@ -513,13 +610,24 @@ function ResumeBuilderContent() {
             'add-experience-btn'
           );
         } else {
-          if (!data.experience[0].role?.trim()) {
-            addError('experience.0.role', 'Please enter your role title.', 'input-exp-role-0');
-          }
-          if (!data.experience[0].company?.trim()) {
-            addError('experience.0.company', 'Please enter the company name.', 'input-exp-company-0');
-          }
+          data.experience.forEach((exp, idx) => {
+            if (!exp.role?.trim()) {
+              addError(`experience.${idx}.role`, 'Please enter your role title.', `input-exp-role-${idx}`);
+            }
+            if (!exp.company?.trim()) {
+              addError(`experience.${idx}.company`, 'Please enter the company name.', `input-exp-company-${idx}`);
+            }
+          });
         }
+      } else if (data.experience && data.experience.length > 0) {
+        data.experience.forEach((exp, idx) => {
+          if (!exp.role?.trim()) {
+            addError(`experience.${idx}.role`, 'Please enter your role title.', `input-exp-role-${idx}`);
+          }
+          if (!exp.company?.trim()) {
+            addError(`experience.${idx}.company`, 'Please enter the company name.', `input-exp-company-${idx}`);
+          }
+        });
       }
     } else if (step === 6) {
       if (data.candidateType === 'fresher') {
@@ -530,10 +638,18 @@ function ResumeBuilderContent() {
             'add-project-btn'
           );
         } else {
-          if (!data.projects[0].title?.trim()) {
-            addError('projects.0.title', 'Please enter the project name.', 'input-proj-title-0');
-          }
+          data.projects.forEach((proj, idx) => {
+            if (!proj.title?.trim()) {
+              addError(`projects.${idx}.title`, 'Please enter the project name.', `input-proj-title-${idx}`);
+            }
+          });
         }
+      } else if (data.projects && data.projects.length > 0) {
+        data.projects.forEach((proj, idx) => {
+          if (!proj.title?.trim()) {
+            addError(`projects.${idx}.title`, 'Please enter the project name.', `input-proj-title-${idx}`);
+          }
+        });
       }
     }
 
@@ -624,7 +740,7 @@ function ResumeBuilderContent() {
   };
 
   // Final Generate / Print validation
-  const handleGenerateOrPrint = () => {
+  const handleGenerateOrPrint = async () => {
     // Validate all steps from 1 through 6
     const validation = validateUpToStep(7, resumeData);
     if (!validation.isValid && validation.invalidStep) {
@@ -635,6 +751,13 @@ function ResumeBuilderContent() {
       );
       focusElement(validation.firstErrorField);
       return;
+    }
+
+    // Force flush persistence to guarantee latest saved resume data
+    try {
+      await saveActiveResume(resumeData, undefined, { force: true });
+    } catch (saveErr) {
+      console.warn('Auto-save prior to PDF export returned an error:', saveErr);
     }
 
     // All required fields valid! Set document title and trigger browser print/PDF
@@ -707,127 +830,120 @@ function ResumeBuilderContent() {
   // Input styling helper
   const getInputClassName = (fieldKey: string, extraClasses = '') => {
     const hasError = Boolean(fieldErrors[fieldKey]);
-    return `w-full p-2.5 rounded-lg border text-[var(--text-primary)] text-xs transition-all duration-150 focus:outline-none ${
+    return `w-full p-2.5 rounded-xl border text-[var(--text-primary)] text-xs transition-all duration-150 focus:outline-none ${
       hasError
-        ? 'border-[var(--color-error)] bg-[var(--color-error)]/5 focus:border-[var(--color-error)] focus-visible:ring-2 focus-visible:ring-[var(--color-error)]/20'
-        : 'border-[var(--border-color)] bg-[var(--input-bg)] focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20'
+        ? 'border-[var(--color-error)] bg-[var(--color-error)]/10 focus:border-[var(--color-error)] focus-visible:ring-2 focus-visible:ring-[var(--color-error)]/20'
+        : 'border-[var(--border-color)] bg-[var(--bg-secondary)]/80 focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 hover:border-[var(--accent)]/40'
     } ${extraClasses}`;
   };
 
   return (
     <div className="resume-builder-page-container min-h-screen py-6 sm:py-8 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 w-full max-w-full overflow-hidden">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-6 no-print">
-        <div>
-          <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-[var(--text-primary)] tracking-tight">
-            Resume Builder
-          </h1>
-          <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
-            Build, format, and export print-ready A4 resumes across recruiter-approved templates.
-          </p>
-        </div>
+      <div className="relative overflow-hidden rounded-3xl p-6 sm:p-7 glass-card border border-[var(--glass-border)] no-print">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-transparent rounded-full blur-3xl -z-10 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-tr from-cyan-500/10 via-blue-500/10 to-transparent rounded-full blur-3xl -z-10 pointer-events-none" />
 
-        {/* Candidate Type Toggle (Preserves user data) */}
-        <div className="flex flex-wrap items-center gap-2 sm:gap-3">
-          <div className="p-1 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] flex items-center gap-1 shadow-xs shrink-0">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="space-y-1.5">
+            <div className="inline-flex items-center gap-2 px-3 py-0.5 rounded-full text-xs font-semibold bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/20">
+              <FileEdit className="w-3.5 h-3.5" />
+              <span>A4 Print Precision Engine</span>
+            </div>
+            <h1 className="text-xl sm:text-2xl lg:text-3xl font-extrabold text-[var(--text-primary)] tracking-tight">
+              Resume Builder
+            </h1>
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)]">
+              Build, format, and export print-ready A4 resumes across recruiter-approved templates.
+            </p>
+          </div>
+
+          {/* Candidate Type Toggle (Preserves user data) */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="p-1 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-md flex items-center gap-1 shrink-0">
+              <button
+                id="btn-candidate-experienced"
+                type="button"
+                onClick={() => handleCandidateTypeChange('experienced')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 active:scale-95 cursor-pointer ${
+                  resumeData.candidateType === 'experienced'
+                    ? 'bg-[var(--accent)] text-white shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]'
+                }`}
+              >
+                <Briefcase className="w-3.5 h-3.5" />
+                <span>Experienced</span>
+              </button>
+              <button
+                id="btn-candidate-fresher"
+                type="button"
+                onClick={() => handleCandidateTypeChange('fresher')}
+                className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 active:scale-95 cursor-pointer ${
+                  resumeData.candidateType === 'fresher'
+                    ? 'bg-[var(--accent)] text-white shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]'
+                }`}
+              >
+                <GraduationCap className="w-3.5 h-3.5" />
+                <span>Fresher / Graduate</span>
+              </button>
+            </div>
+
+            {saveState === 'saving' && (
+              <span className="px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 text-[var(--text-secondary)] border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 backdrop-blur-md shrink-0">
+                <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
+                <span>Saving...</span>
+              </span>
+            )}
+            {saveState === 'saved' && (
+              <span className="px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 text-emerald-400 border border-emerald-500/20 bg-emerald-500/10 backdrop-blur-md shrink-0">
+                <Check className="w-3.5 h-3.5" />
+                <span>Saved</span>
+              </span>
+            )}
+            {saveState === 'error' && (
+              <button
+                type="button"
+                onClick={() => saveActiveResume()}
+                className="px-3 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 text-rose-500 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 transition-all duration-150 shrink-0 cursor-pointer"
+                title={saveError || 'Save failed'}
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                <span>Retry</span>
+              </button>
+            )}
+
             <button
-              id="btn-candidate-experienced"
+              id="btn-save-snapshot"
               type="button"
-              onClick={() => handleCandidateTypeChange('experienced')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 active:scale-95 cursor-pointer ${
-                resumeData.candidateType === 'experienced'
-                  ? 'bg-[var(--accent)] text-white shadow-xs'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]'
-              }`}
+              onClick={() => setShowSaveSnapshotModal(true)}
+              className="px-3.5 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all duration-150 active:scale-95 cursor-pointer text-[var(--text-primary)] hover:bg-[var(--bg-card)] hover:border-[var(--accent)] border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 backdrop-blur-md shadow-xs shrink-0"
+              title="Save a named version snapshot of this resume"
             >
-              <Briefcase className="w-3.5 h-3.5" />
-              <span>Experienced</span>
+              <History className="w-3.5 h-3.5 text-[var(--accent)]" />
+              <span>Save Snapshot</span>
             </button>
+
             <button
-              id="btn-candidate-fresher"
+              id="btn-version-history"
               type="button"
-              onClick={() => handleCandidateTypeChange('fresher')}
-              className={`px-3 py-1.5 rounded-md text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 active:scale-95 cursor-pointer ${
-                resumeData.candidateType === 'fresher'
-                  ? 'bg-[var(--accent)] text-white shadow-xs'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]'
-              }`}
+              onClick={() => {
+                setShowVersionsModal(true);
+                fetchVersions();
+              }}
+              className="px-3.5 py-2 rounded-xl text-xs font-medium flex items-center gap-1.5 transition-all duration-150 active:scale-95 cursor-pointer text-[var(--text-primary)] hover:bg-[var(--bg-card)] hover:border-[var(--accent)] border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 backdrop-blur-md shadow-xs shrink-0"
+              title="Browse and restore prior resume versions"
             >
-              <GraduationCap className="w-3.5 h-3.5" />
-              <span>Fresher / Graduate</span>
+              <Clock className="w-3.5 h-3.5 text-indigo-400" />
+              <span>History {versions.length > 0 ? `(${versions.length})` : ''}</span>
             </button>
           </div>
-          <button
-            id="btn-load-sample-data"
-            type="button"
-            onClick={() => {
-              if (resumeData.candidateType === 'fresher') {
-                loadFresherSample();
-              } else {
-                resetToSampleResume();
-              }
-            }}
-            className="px-3 py-2 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all duration-150 active:scale-95 cursor-pointer text-[var(--accent)] hover:bg-[var(--accent-subtle)] border border-[var(--border-color)] hover:border-[var(--accent)] bg-[var(--bg-card)] shadow-xs shrink-0"
-            title="Fill in rich sample resume data to preview templates immediately"
-          >
-            <Sparkles className="w-3.5 h-3.5" />
-            <span>Load Sample</span>
-          </button>
-
-          {saveState === 'saving' && (
-            <span className="px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 text-[var(--text-secondary)] border border-[var(--border-color)] bg-[var(--bg-secondary)] shrink-0">
-              <Loader2 className="w-3.5 h-3.5 animate-spin text-blue-500" />
-              <span>Saving...</span>
-            </span>
-          )}
-          {saveState === 'saved' && (
-            <span className="px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 text-emerald-500 border border-emerald-500/20 bg-emerald-500/10 shrink-0">
-              <Check className="w-3.5 h-3.5" />
-              <span>Saved to cloud</span>
-            </span>
-          )}
-          {saveState === 'error' && (
-            <button
-              type="button"
-              onClick={() => saveActiveResume()}
-              className="px-2.5 py-1.5 rounded-lg text-xs font-medium flex items-center gap-1.5 text-rose-500 border border-rose-500/30 bg-rose-500/10 hover:bg-rose-500/20 active:scale-95 transition-all duration-150 shrink-0 cursor-pointer"
-              title={saveError || 'Save failed'}
-            >
-              <RotateCcw className="w-3.5 h-3.5" />
-              <span>Retry Save</span>
-            </button>
-          )}
-
-          <button
-            id="btn-save-snapshot"
-            type="button"
-            onClick={() => setShowSaveSnapshotModal(true)}
-            className="px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all duration-150 active:scale-95 cursor-pointer text-[var(--text-primary)] hover:bg-[var(--bg-card)] hover:border-[var(--accent)] border border-[var(--border-color)] bg-[var(--bg-secondary)] shadow-xs shrink-0"
-            title="Save a named version snapshot of this resume"
-          >
-            <History className="w-3.5 h-3.5 text-[var(--accent)]" />
-            <span>Save Snapshot</span>
-          </button>
-
-          <button
-            id="btn-version-history"
-            type="button"
-            onClick={() => {
-              setShowVersionsModal(true);
-              fetchVersions();
-            }}
-            className="px-3 py-2 rounded-lg text-xs font-medium flex items-center gap-1.5 transition-all duration-150 active:scale-95 cursor-pointer text-[var(--text-primary)] hover:bg-[var(--bg-card)] hover:border-[var(--accent)] border border-[var(--border-color)] bg-[var(--bg-secondary)] shadow-xs shrink-0"
-            title="Browse and restore prior resume versions"
-          >
-            <Clock className="w-3.5 h-3.5 text-indigo-400" />
-            <span>History {versions.length > 0 ? `(${versions.length})` : ''}</span>
-          </button>
         </div>
       </div>
 
       {/* Toast Notification */}
       {tailorSuccessToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[var(--text-primary)] text-[var(--bg-primary)] px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-[var(--border-color)] animate-fade-in text-xs font-semibold">
+        <div className="fixed bottom-6 right-6 z-50 glass-card px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-[var(--glass-border)] animate-fade-in text-xs font-semibold backdrop-blur-xl bg-[var(--bg-elevated)]/90 text-[var(--text-primary)]">
           <Check className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{tailorSuccessToast}</span>
         </div>
@@ -835,7 +951,7 @@ function ResumeBuilderContent() {
 
       {/* Target Job Banner */}
       {(targetJob.title || targetJob.description) && (
-        <div className="no-print p-4 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm animate-fade-in">
+        <div className="no-print p-4 rounded-2xl border border-[var(--accent)]/30 bg-[var(--accent)]/10 backdrop-blur-md flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm animate-fade-in">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 rounded-xl bg-[var(--accent)] text-white flex items-center justify-center shrink-0 shadow-sm">
               <Target className="w-4 h-4" />
@@ -884,43 +1000,45 @@ function ResumeBuilderContent() {
         </div>
       )}
 
-      {/* Stepper Bar (1 to 10) */}
-      <div className="no-print w-full max-w-full overflow-x-auto pb-2">
-        <div className="flex items-center justify-between min-w-[700px] border-b border-[var(--border-color)] pb-4 px-1">
-          {steps.map((st) => {
-            const isCompleted = st.number < currentStep;
-            const isCurrent = st.number === currentStep;
+      {/* Floating Stepper Bar (1 to 10) */}
+      <div className="no-print w-full max-w-full overflow-x-auto pb-1">
+        <div className="min-w-[760px] p-2.5 rounded-2xl glass-card border border-[var(--glass-border)] bg-[var(--glass-bg)]/80 backdrop-blur-xl shadow-lg relative">
+          <div className="flex items-center justify-between px-2">
+            {steps.map((st) => {
+              const isCompleted = st.number < currentStep;
+              const isCurrent = st.number === currentStep;
 
-            return (
-              <button
-                id={`btn-step-${st.number}`}
-                data-step={st.number}
-                key={st.number}
-                type="button"
-                onClick={() => handleStepClick(st.number)}
-                className={`flex flex-col items-center gap-1.5 transition-all duration-150 active:scale-95 group cursor-pointer ${
-                  isCurrent
-                    ? 'text-[var(--accent)] font-bold'
-                    : isCompleted
-                    ? 'text-emerald-500 font-medium'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] opacity-70'
-                }`}
-              >
-                <div
-                  className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all duration-150 ${
+              return (
+                <button
+                  id={`btn-step-${st.number}`}
+                  data-step={st.number}
+                  key={st.number}
+                  type="button"
+                  onClick={() => handleStepClick(st.number)}
+                  className={`flex flex-col items-center gap-1.5 transition-all duration-200 active:scale-95 group cursor-pointer px-2 py-1 rounded-xl ${
                     isCurrent
-                      ? 'bg-[var(--accent)] text-white shadow-xs scale-105'
+                      ? 'text-[var(--accent)] font-bold'
                       : isCompleted
-                      ? 'bg-[var(--color-success)]/10 text-[var(--color-success)] border border-[var(--color-success)]/30'
-                      : 'bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-secondary)]'
+                      ? 'text-emerald-400 font-medium hover:text-emerald-300'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
-                  {isCompleted ? <Check className="w-4 h-4" /> : st.number}
-                </div>
-                <span className="text-[10px] whitespace-nowrap">{st.label}</span>
-              </button>
-            );
-          })}
+                  <div
+                    className={`w-8 h-8 rounded-xl flex items-center justify-center text-xs font-bold transition-all duration-200 ${
+                      isCurrent
+                        ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white shadow-lg shadow-indigo-500/30 scale-110 ring-2 ring-[var(--accent)]/40'
+                        : isCompleted
+                        ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 shadow-xs'
+                        : 'bg-[var(--bg-secondary)]/80 border border-[var(--border-color)] text-[var(--text-secondary)] group-hover:border-[var(--accent)]/40'
+                    }`}
+                  >
+                    {isCompleted ? <Check className="w-4 h-4 text-emerald-400" /> : st.number}
+                  </div>
+                  <span className="text-[10px] whitespace-nowrap tracking-tight">{st.label}</span>
+                </button>
+              );
+            })}
+          </div>
         </div>
       </div>
 
@@ -928,7 +1046,7 @@ function ResumeBuilderContent() {
       <div className="resume-builder-main-grid grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
         {/* Left: Step Form Content */}
         <div className={`no-print ${currentStep >= 9 ? 'lg:col-span-4' : 'lg:col-span-6'} min-w-0`}>
-          <GlassCard className="p-6 text-left space-y-6">
+          <GlassCard className="p-6 sm:p-7 text-left space-y-6 border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
               <div>
                 <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider">
@@ -1317,11 +1435,13 @@ function ResumeBuilderContent() {
                   <input
                     id="input-skills-technical"
                     type="text"
-                    value={resumeData.skills.technical.join(', ')}
+                    value={technicalSkillsInput}
                     onChange={(e) => {
+                      const val = e.target.value;
+                      setTechnicalSkillsInput(val);
                       updateSkills({
                         ...resumeData.skills,
-                        technical: e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
+                        technical: val.split(',').map((s) => s.trim()).filter(Boolean),
                       });
                       clearError('skills.technical');
                     }}
@@ -1344,9 +1464,22 @@ function ResumeBuilderContent() {
                     {resumeData.skills.technical.map((sk, idx) => (
                       <span
                         key={idx}
-                        className="px-2 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] font-medium text-[11px]"
+                        className="inline-flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--accent)]/10 text-[var(--accent)] font-medium text-[11px]"
                       >
-                        {sk}
+                        <span>{sk}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = resumeData.skills.technical.filter((_, i) => i !== idx);
+                            updateSkills({ ...resumeData.skills, technical: updated });
+                            setTechnicalSkillsInput(updated.join(', '));
+                          }}
+                          className="hover:text-rose-500 font-bold ml-0.5 text-xs focus:outline-none cursor-pointer"
+                          aria-label={`Remove ${sk}`}
+                          title={`Remove ${sk}`}
+                        >
+                          ×
+                        </button>
                       </span>
                     ))}
                   </div>
@@ -1382,10 +1515,12 @@ function ResumeBuilderContent() {
                               key={skill}
                               type="button"
                               onClick={() => {
+                                const newTechnical = [...resumeData.skills.technical, skill];
                                 updateSkills({
                                   ...resumeData.skills,
-                                  technical: [...resumeData.skills.technical, skill],
+                                  technical: newTechnical,
                                 });
+                                setTechnicalSkillsInput(newTechnical.join(', '));
                                 triggerToast(`Added "${skill}" to Technical Skills.`);
                               }}
                               className="px-2.5 py-1 rounded-md text-[11px] font-medium bg-[var(--accent-subtle)] text-[var(--accent)] hover:bg-[var(--accent)] hover:text-white transition-all border border-[var(--accent)]/20 cursor-pointer"
@@ -1405,13 +1540,15 @@ function ResumeBuilderContent() {
                   <input
                     id="input-skills-tools"
                     type="text"
-                    value={resumeData.skills.tools.join(', ')}
-                    onChange={(e) =>
+                    value={toolsSkillsInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setToolsSkillsInput(val);
                       updateSkills({
                         ...resumeData.skills,
-                        tools: e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
-                      })
-                    }
+                        tools: val.split(',').map((s) => s.trim()).filter(Boolean),
+                      });
+                    }}
                     placeholder="VS Code, GitLab CI, Terraform, Datadog..."
                     className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs focus:outline-none focus:border-[var(--accent)]"
                   />
@@ -1424,13 +1561,15 @@ function ResumeBuilderContent() {
                   <input
                     id="input-skills-soft"
                     type="text"
-                    value={resumeData.skills.soft.join(', ')}
-                    onChange={(e) =>
+                    value={softSkillsInput}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setSoftSkillsInput(val);
                       updateSkills({
                         ...resumeData.skills,
-                        soft: e.target.value.split(',').map((s) => s.trim()).filter(Boolean),
-                      })
-                    }
+                        soft: val.split(',').map((s) => s.trim()).filter(Boolean),
+                      });
+                    }}
                     placeholder="System Architecture, Cross-functional Leadership, Mentorship..."
                     className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs focus:outline-none focus:border-[var(--accent)]"
                   />
@@ -1485,19 +1624,17 @@ function ResumeBuilderContent() {
                     >
                       <div className="flex justify-between items-center">
                         <span className="font-bold text-[var(--text-primary)]">Degree #{idx + 1}</span>
-                        {resumeData.education.length > 1 && (
-                          <button
-                            type="button"
-                            onClick={() => {
-                              const updated = resumeData.education.filter((_, i) => i !== idx);
-                              updateEducation(updated);
-                            }}
-                            className="text-rose-400 hover:text-rose-500 transition-colors"
-                            title="Remove degree"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = resumeData.education.filter((_, i) => i !== idx);
+                            updateEducation(updated);
+                          }}
+                          className="text-rose-400 hover:text-rose-500 transition-colors cursor-pointer"
+                          title="Remove degree"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       </div>
 
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1506,7 +1643,7 @@ function ResumeBuilderContent() {
                             htmlFor={`input-edu-degree-${idx}`}
                             className="block font-medium text-[var(--text-primary)] mb-1"
                           >
-                            Degree / Program {idx === 0 && <span className="text-rose-500">*</span>}
+                            Degree / Program <span className="text-rose-500">*</span>
                           </label>
                           <input
                             id={`input-edu-degree-${idx}`}
@@ -1516,28 +1653,28 @@ function ResumeBuilderContent() {
                               const updated = [...resumeData.education];
                               updated[idx].degree = e.target.value;
                               updateEducation(updated);
-                              if (idx === 0) clearError('education.0.degree');
+                              clearError(`education.${idx}.degree`);
                             }}
                             placeholder="B.S. in Computer Science"
-                            aria-invalid={idx === 0 && Boolean(fieldErrors['education.0.degree'])}
+                            aria-invalid={Boolean(fieldErrors[`education.${idx}.degree`])}
                             aria-describedby={
-                              idx === 0 && fieldErrors['education.0.degree']
-                                ? 'edu-degree-0-error'
+                              fieldErrors[`education.${idx}.degree`]
+                                ? `edu-degree-${idx}-error`
                                 : undefined
                             }
                             className={getInputClassName(
-                              idx === 0 ? 'education.0.degree' : '',
+                              `education.${idx}.degree`,
                               'bg-[var(--bg-card)]'
                             )}
                           />
-                          {idx === 0 && fieldErrors['education.0.degree'] && (
+                          {fieldErrors[`education.${idx}.degree`] && (
                             <p
-                              id="edu-degree-0-error"
+                              id={`edu-degree-${idx}-error`}
                               role="alert"
                               className="text-[11px] font-medium text-rose-500 mt-1 flex items-center gap-1"
                             >
                               <AlertCircle className="w-3 h-3 shrink-0" />
-                              {fieldErrors['education.0.degree']}
+                              {fieldErrors[`education.${idx}.degree`]}
                             </p>
                           )}
                         </div>
@@ -1547,7 +1684,7 @@ function ResumeBuilderContent() {
                             htmlFor={`input-edu-institution-${idx}`}
                             className="block font-medium text-[var(--text-primary)] mb-1"
                           >
-                            University / Institution {idx === 0 && <span className="text-rose-500">*</span>}
+                            University / Institution <span className="text-rose-500">*</span>
                           </label>
                           <input
                             id={`input-edu-institution-${idx}`}
@@ -1557,30 +1694,28 @@ function ResumeBuilderContent() {
                               const updated = [...resumeData.education];
                               updated[idx].institution = e.target.value;
                               updateEducation(updated);
-                              if (idx === 0) clearError('education.0.institution');
+                              clearError(`education.${idx}.institution`);
                             }}
                             placeholder="UC Berkeley"
-                            aria-invalid={
-                              idx === 0 && Boolean(fieldErrors['education.0.institution'])
-                            }
+                            aria-invalid={Boolean(fieldErrors[`education.${idx}.institution`])}
                             aria-describedby={
-                              idx === 0 && fieldErrors['education.0.institution']
-                                ? 'edu-inst-0-error'
+                              fieldErrors[`education.${idx}.institution`]
+                                ? `edu-inst-${idx}-error`
                                 : undefined
                             }
                             className={getInputClassName(
-                              idx === 0 ? 'education.0.institution' : '',
+                              `education.${idx}.institution`,
                               'bg-[var(--bg-card)]'
                             )}
                           />
-                          {idx === 0 && fieldErrors['education.0.institution'] && (
+                          {fieldErrors[`education.${idx}.institution`] && (
                             <p
-                              id="edu-inst-0-error"
+                              id={`edu-inst-${idx}-error`}
                               role="alert"
                               className="text-[11px] font-medium text-rose-500 mt-1 flex items-center gap-1"
                             >
                               <AlertCircle className="w-3 h-3 shrink-0" />
-                              {fieldErrors['education.0.institution']}
+                              {fieldErrors[`education.${idx}.institution`]}
                             </p>
                           )}
                         </div>
@@ -1746,7 +1881,7 @@ function ResumeBuilderContent() {
                             className="block font-medium text-[var(--text-primary)] mb-1"
                           >
                             Role Title{' '}
-                            {resumeData.candidateType === 'experienced' && idx === 0 && (
+                            {(resumeData.candidateType === 'experienced' || exp.role?.trim() || exp.company?.trim()) && (
                               <span className="text-rose-500">*</span>
                             )}
                           </label>
@@ -1758,38 +1893,30 @@ function ResumeBuilderContent() {
                               const updated = [...resumeData.experience];
                               updated[idx].role = e.target.value;
                               updateExperience(updated);
-                              if (idx === 0) clearError('experience.0.role');
+                              clearError(`experience.${idx}.role`);
                             }}
                             placeholder="Senior Software Engineer"
-                            aria-invalid={
-                              resumeData.candidateType === 'experienced' &&
-                              idx === 0 &&
-                              Boolean(fieldErrors['experience.0.role'])
-                            }
+                            aria-invalid={Boolean(fieldErrors[`experience.${idx}.role`])}
                             aria-describedby={
-                              idx === 0 && fieldErrors['experience.0.role']
-                                ? 'exp-role-0-error'
+                              fieldErrors[`experience.${idx}.role`]
+                                ? `exp-role-${idx}-error`
                                 : undefined
                             }
                             className={getInputClassName(
-                              resumeData.candidateType === 'experienced' && idx === 0
-                                ? 'experience.0.role'
-                                : '',
+                              `experience.${idx}.role`,
                               'bg-[var(--bg-card)]'
                             )}
                           />
-                          {resumeData.candidateType === 'experienced' &&
-                            idx === 0 &&
-                            fieldErrors['experience.0.role'] && (
-                              <p
-                                id="exp-role-0-error"
-                                role="alert"
-                                className="text-[11px] font-medium text-rose-500 mt-1 flex items-center gap-1"
-                              >
-                                <AlertCircle className="w-3 h-3 shrink-0" />
-                                {fieldErrors['experience.0.role']}
-                              </p>
-                            )}
+                          {fieldErrors[`experience.${idx}.role`] && (
+                            <p
+                              id={`exp-role-${idx}-error`}
+                              role="alert"
+                              className="text-[11px] font-medium text-rose-500 mt-1 flex items-center gap-1"
+                            >
+                              <AlertCircle className="w-3 h-3 shrink-0" />
+                              {fieldErrors[`experience.${idx}.role`]}
+                            </p>
+                          )}
                         </div>
 
                         <div>
@@ -1798,7 +1925,7 @@ function ResumeBuilderContent() {
                             className="block font-medium text-[var(--text-primary)] mb-1"
                           >
                             Company{' '}
-                            {resumeData.candidateType === 'experienced' && idx === 0 && (
+                            {(resumeData.candidateType === 'experienced' || exp.role?.trim() || exp.company?.trim()) && (
                               <span className="text-rose-500">*</span>
                             )}
                           </label>
@@ -1810,38 +1937,30 @@ function ResumeBuilderContent() {
                               const updated = [...resumeData.experience];
                               updated[idx].company = e.target.value;
                               updateExperience(updated);
-                              if (idx === 0) clearError('experience.0.company');
+                              clearError(`experience.${idx}.company`);
                             }}
                             placeholder="Nexus Technologies"
-                            aria-invalid={
-                              resumeData.candidateType === 'experienced' &&
-                              idx === 0 &&
-                              Boolean(fieldErrors['experience.0.company'])
-                            }
+                            aria-invalid={Boolean(fieldErrors[`experience.${idx}.company`])}
                             aria-describedby={
-                              idx === 0 && fieldErrors['experience.0.company']
-                                ? 'exp-comp-0-error'
+                              fieldErrors[`experience.${idx}.company`]
+                                ? `exp-comp-${idx}-error`
                                 : undefined
                             }
                             className={getInputClassName(
-                              resumeData.candidateType === 'experienced' && idx === 0
-                                ? 'experience.0.company'
-                                : '',
+                              `experience.${idx}.company`,
                               'bg-[var(--bg-card)]'
                             )}
                           />
-                          {resumeData.candidateType === 'experienced' &&
-                            idx === 0 &&
-                            fieldErrors['experience.0.company'] && (
-                              <p
-                                id="exp-comp-0-error"
-                                role="alert"
-                                className="text-[11px] font-medium text-rose-500 mt-1 flex items-center gap-1"
-                              >
-                                <AlertCircle className="w-3 h-3 shrink-0" />
-                                {fieldErrors['experience.0.company']}
-                              </p>
-                            )}
+                          {fieldErrors[`experience.${idx}.company`] && (
+                            <p
+                              id={`exp-comp-${idx}-error`}
+                              role="alert"
+                              className="text-[11px] font-medium text-rose-500 mt-1 flex items-center gap-1"
+                            >
+                              <AlertCircle className="w-3 h-3 shrink-0" />
+                              {fieldErrors[`experience.${idx}.company`]}
+                            </p>
+                          )}
                         </div>
                       </div>
 
@@ -1865,10 +1984,10 @@ function ResumeBuilderContent() {
                           value={exp.bulletPoints.join('\n')}
                           onChange={(e) => {
                             const updated = [...resumeData.experience];
-                            updated[idx].bulletPoints = e.target.value.split('\n').filter(Boolean);
+                            updated[idx].bulletPoints = e.target.value.split('\n');
                             updateExperience(updated);
                           }}
-                          placeholder="Architected distributed microservices reducing query latency by 40%."
+                          placeholder="Developed web application features and resolved software defects to ensure platform reliability."
                           className="w-full p-2.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] text-xs focus:outline-none focus:border-[var(--accent)]"
                         />
                       </div>
@@ -1979,7 +2098,7 @@ function ResumeBuilderContent() {
                           className="block font-medium text-[var(--text-primary)] mb-1"
                         >
                           Project Name{' '}
-                          {resumeData.candidateType === 'fresher' && idx === 0 && (
+                          {(resumeData.candidateType === 'fresher' || proj.title?.trim() || proj.description?.trim()) && (
                             <span className="text-rose-500">*</span>
                           )}
                         </label>
@@ -1991,38 +2110,30 @@ function ResumeBuilderContent() {
                             const updated = [...resumeData.projects];
                             updated[idx].title = e.target.value;
                             updateProjects(updated);
-                            if (idx === 0) clearError('projects.0.title');
+                            clearError(`projects.${idx}.title`);
                           }}
                           placeholder="NeuralFlow Vector Search"
-                          aria-invalid={
-                            resumeData.candidateType === 'fresher' &&
-                            idx === 0 &&
-                            Boolean(fieldErrors['projects.0.title'])
-                          }
+                          aria-invalid={Boolean(fieldErrors[`projects.${idx}.title`])}
                           aria-describedby={
-                            idx === 0 && fieldErrors['projects.0.title']
-                              ? 'proj-title-0-error'
+                            fieldErrors[`projects.${idx}.title`]
+                              ? `proj-title-${idx}-error`
                               : undefined
                           }
                           className={getInputClassName(
-                            resumeData.candidateType === 'fresher' && idx === 0
-                              ? 'projects.0.title'
-                              : '',
+                            `projects.${idx}.title`,
                             'bg-[var(--bg-card)]'
                           )}
                         />
-                        {resumeData.candidateType === 'fresher' &&
-                          idx === 0 &&
-                          fieldErrors['projects.0.title'] && (
-                            <p
-                              id="proj-title-0-error"
-                              role="alert"
-                              className="text-[11px] font-medium text-rose-500 mt-1 flex items-center gap-1"
-                            >
-                              <AlertCircle className="w-3 h-3 shrink-0" />
-                              {fieldErrors['projects.0.title']}
-                            </p>
-                          )}
+                        {fieldErrors[`projects.${idx}.title`] && (
+                          <p
+                            id={`proj-title-${idx}-error`}
+                            role="alert"
+                            className="text-[11px] font-medium text-rose-500 mt-1 flex items-center gap-1"
+                          >
+                            <AlertCircle className="w-3 h-3 shrink-0" />
+                            {fieldErrors[`projects.${idx}.title`]}
+                          </p>
+                        )}
                       </div>
 
                       <div>
@@ -2422,28 +2533,28 @@ function ResumeBuilderContent() {
         >
           {/* Zoom & Document Viewer Controls */}
           <div className="no-print w-full flex items-center justify-between mb-3 px-1 sm:px-2 gap-2 flex-wrap">
-            <span className="text-xs font-semibold text-[var(--text-secondary)] flex items-center gap-1.5 truncate">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/20 backdrop-blur-md">
               <Eye className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
               <span>Live A4 Preview (210 × 297 mm)</span>
-            </span>
-            <div className="flex items-center gap-1 bg-[var(--bg-card)] border border-[var(--border-color)] rounded-lg p-1 text-xs shadow-sm shrink-0">
+            </div>
+            <div className="flex items-center gap-1.5 p-1 rounded-xl glass-card border border-[var(--glass-border)] bg-[var(--glass-bg)]/80 backdrop-blur-md shadow-sm shrink-0">
               <button
                 type="button"
                 onClick={handleZoomOut}
                 disabled={zoom <= 0.28}
-                className="p-1 rounded hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 cursor-pointer transition-colors"
                 title="Zoom Out (min 28%)"
               >
                 <ZoomOut className="w-3.5 h-3.5" />
               </button>
-              <span className="px-1.5 sm:px-2 font-mono font-semibold text-[var(--text-primary)] min-w-[38px] text-center text-[11px] sm:text-xs">
+              <span className="px-2 font-mono font-bold text-[var(--text-primary)] min-w-[42px] text-center text-xs">
                 {Math.round(zoom * 100)}%
               </span>
               <button
                 type="button"
                 onClick={handleZoomIn}
                 disabled={zoom >= 1.25}
-                className="p-1 rounded hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 cursor-pointer"
+                className="p-1.5 rounded-lg hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 cursor-pointer transition-colors"
                 title="Zoom In (max 125%)"
               >
                 <ZoomIn className="w-3.5 h-3.5" />
@@ -2451,7 +2562,7 @@ function ResumeBuilderContent() {
               <button
                 type="button"
                 onClick={handleResetZoom}
-                className="px-2 py-0.5 rounded text-[10px] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] flex items-center gap-1 transition-colors cursor-pointer"
+                className="px-2.5 py-1 rounded-lg text-[10px] font-semibold bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] flex items-center gap-1 transition-all cursor-pointer border border-[var(--border-color)]"
                 title="Fit to Container"
               >
                 <RotateCcw className="w-2.5 h-2.5" />
@@ -2464,7 +2575,7 @@ function ResumeBuilderContent() {
           <div
             ref={previewViewportRef}
             id="resume-print-viewport"
-            className="resume-preview-viewport w-full max-w-full overflow-x-auto overflow-y-auto max-h-[820px] rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] p-2 sm:p-4 flex justify-center shadow-sm focus:outline-none"
+            className="resume-preview-viewport w-full max-w-full overflow-x-auto overflow-y-auto max-h-[820px] rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)]/60 backdrop-blur-md p-3 sm:p-5 flex justify-center shadow-lg focus:outline-none"
             tabIndex={0}
             role="region"
             aria-label="A4 Resume Preview Viewport"
@@ -2655,22 +2766,22 @@ function ResumeBuilderContent() {
                     <div className="min-w-0 flex-1">
                       <div className="flex items-center gap-2">
                         <span className="text-[10px] font-bold px-2 py-0.5 rounded-md bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
-                          v{ver.version_number}
+                          v{ver.versionNumber ?? ver.version_number}
                         </span>
                         <span className="text-xs font-semibold text-[var(--text-primary)] truncate">
-                          {ver.change_summary || `Version ${ver.version_number}`}
+                          {ver.changeSummary ?? ver.change_summary ?? `Version ${ver.versionNumber ?? ver.version_number ?? ''}`}
                         </span>
                       </div>
                       <p className="text-[11px] text-[var(--text-secondary)] mt-1 flex items-center gap-1.5">
                         <Clock className="w-3 h-3 text-[var(--text-muted)]" />
-                        <span>{new Date(ver.created_at).toLocaleString()}</span>
+                        <span>{new Date(ver.createdAt ?? ver.created_at).toLocaleString()}</span>
                       </p>
                     </div>
 
                     <button
                       type="button"
                       disabled={isRestoringVersionId === ver.id}
-                      onClick={() => handleRestoreVersion(ver.id, ver.version_number)}
+                      onClick={() => handleRestoreVersion(ver.id, ver.versionNumber ?? ver.version_number ?? 1)}
                       className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-[var(--bg-card)] hover:bg-[var(--accent)] hover:text-white text-[var(--text-primary)] border border-[var(--border-color)] hover:border-transparent transition-all cursor-pointer shrink-0 disabled:opacity-50 flex items-center gap-1.5"
                     >
                       {isRestoringVersionId === ver.id ? (

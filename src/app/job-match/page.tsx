@@ -13,6 +13,7 @@ import {
   Building,
   Link2,
   TrendingUp,
+  Info,
 } from 'lucide-react';
 import { useResume } from '@/context/ResumeContext';
 import { useCareer } from '@/context/CareerContext';
@@ -25,58 +26,31 @@ export default function JobMatchPage() {
   const { resumeData } = useResume();
   const { saveJobMatch } = useCareer();
 
-  const [jobTitle, setJobTitle] = useState('Staff AI & Platform Engineer');
-  const [company, setCompany] = useState('Nexus AI Labs');
-  const [jobUrl, setJobUrl] = useState('https://nexusai.io/careers/staff-ai-engineer');
-  const [jobDescription, setJobDescription] = useState(`We are seeking a Staff AI & Platform Engineer to architect high-throughput distributed LLM pipelines and retrieval systems.
-Responsibilities:
-- Build and scale semantic retrieval search with sub-80ms p95 latency.
-- Containerize Go and Python microservices on AWS EKS and Kubernetes.
-- Drive cross-functional mentorship and architectural review standards.
-
-Requirements:
-- 5+ years building distributed cloud applications.
-- Strong proficiency in Python, React, SQL, and Docker.
-- Experience with AWS, Vector Search, and CI/CD pipelines.
-- B.S. in Computer Science or equivalent practical tenure.`);
+  const [jobTitle, setJobTitle] = useState('');
+  const [company, setCompany] = useState('');
+  const [jobUrl, setJobUrl] = useState('');
+  const [jobDescription, setJobDescription] = useState('');
 
   const [isLoading, setIsLoading] = useState(false);
   const [matchResult, setMatchResult] = useState<JobMatchResult | null>(null);
-
-  const handlePreFill = (sample: 'ai' | 'fullstack' | 'data') => {
-    if (sample === 'ai') {
-      setJobTitle('Senior AI / Machine Learning Engineer');
-      setCompany('Anthropic');
-      setJobUrl('https://anthropic.com/careers');
-      setJobDescription(`Looking for a Senior AI Engineer to scale model evaluation pipelines and high-performance vector retrieval architectures.
-Requirements:
-- Deep expertise in Python, Machine Learning, and SQL.
-- Experience deploying Docker containers on AWS.
-- Strong grounding in data structures, RAG, and distributed systems.`);
-    } else if (sample === 'fullstack') {
-      setJobTitle('Staff Platform & Full Stack Engineer');
-      setCompany('Stripe');
-      setJobUrl('https://stripe.com/jobs');
-      setJobDescription(`Join our Core Platform group building ultra-reliable payment processing systems.
-Requirements:
-- Deep experience in React, TypeScript, Python, and PostgreSQL.
-- Experience with Kubernetes, Docker, and AWS multi-region infrastructure.
-- 6+ years designing resilient distributed microservices.`);
-    } else {
-      setJobTitle('Lead Data Engineer');
-      setCompany('Snowflake');
-      setJobUrl('https://snowflake.com/careers');
-      setJobDescription(`Design and optimize high-throughput telemetry pipelines processing petabytes of real-time streaming data.
-Requirements:
-- Mastery of SQL, Python, and Data Analysis.
-- Familiarity with AWS data services and Git workflows.
-- Experience optimizing query execution plans.`);
-    }
-  };
+  const [matchError, setMatchError] = useState<string | null>(null);
+  const [validationWarning, setValidationWarning] = useState<string | null>(null);
 
   const handleRunMatch = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
+    setMatchError(null);
+    setValidationWarning(null);
+
+    const hasExperience = resumeData.experience && resumeData.experience.length > 0;
+    const hasSkills = resumeData.skills && resumeData.skills.technical && resumeData.skills.technical.length > 0;
+    const hasName = resumeData.personalInfo && resumeData.personalInfo.fullName && resumeData.personalInfo.fullName.trim().length > 0;
+
+    if (!hasName && !hasExperience && !hasSkills) {
+      setMatchError('Your resume profile appears empty. Please populate your skills and experience in the Resume Builder first.');
+      setIsLoading(false);
+      return;
+    }
 
     try {
       const resumeText = `${resumeData.personalInfo.fullName}\n${resumeData.personalInfo.headline}\n${resumeData.summary}\nSkills: ${resumeData.skills.technical.join(', ')}\nExperience:\n${resumeData.experience
@@ -94,13 +68,19 @@ Requirements:
         }),
       });
 
-      if (res.ok) {
-        const data: JobMatchResult = await res.json();
+      const data = await res.json();
+
+      if (!res.ok) {
+        setMatchError(data.message || 'Unable to evaluate job match. Please verify your inputs and try again.');
+        if (data.validation) {
+          setValidationWarning(data.validation.message || 'Resume structure needs additional sections.');
+        }
+      } else {
         setMatchResult(data);
         saveJobMatch(data);
       }
     } catch {
-      // ignore
+      setMatchError('A network error occurred while evaluating job match. Please check your connection and try again.');
     } finally {
       setIsLoading(false);
     }
@@ -118,30 +98,36 @@ Requirements:
             Compare your active resume against job descriptions to identify matching qualifications and keyword gaps.
           </p>
         </div>
+      </div>
 
-        {/* Quick Pre-fill samples */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-[var(--text-secondary)] font-medium">Quick Test:</span>
-          <button
-            onClick={() => handlePreFill('ai')}
-            className="px-3 py-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-[var(--text-primary)] text-xs font-medium"
-          >
-            Anthropic (AI)
-          </button>
-          <button
-            onClick={() => handlePreFill('fullstack')}
-            className="px-3 py-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-[var(--text-primary)] text-xs font-medium"
-          >
-            Stripe (Platform)
-          </button>
-          <button
-            onClick={() => handlePreFill('data')}
-            className="px-3 py-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-[var(--text-primary)] text-xs font-medium"
-          >
-            Snowflake (Data)
-          </button>
+      {/* Advisory Disclaimer */}
+      <div className="p-3.5 rounded-xl border border-blue-500/20 bg-blue-500/5 text-xs text-[var(--text-secondary)] flex items-start gap-2.5">
+        <Info className="w-4 h-4 text-blue-400 shrink-0 mt-0.5" />
+        <div>
+          <strong className="text-[var(--text-primary)]">Internal Advisory Estimate:</strong> This match score is an algorithmic assessment comparing keywords, skills, and qualifications between your resume and the job listing. It is provided strictly to guide your preparation and does not represent an official employer hiring decision or guarantee interview selection.
         </div>
       </div>
+
+      {/* Error / Incomplete Resume Guidance */}
+      {matchError && (
+        <div className="p-4 rounded-xl border border-rose-500/30 bg-rose-500/10 text-rose-300 text-xs flex flex-col sm:flex-row sm:items-center justify-between gap-3 animate-fade-in">
+          <div className="flex items-start sm:items-center gap-2">
+            <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5 sm:mt-0" />
+            <div>
+              <p className="font-semibold">{matchError}</p>
+              {validationWarning && (
+                <p className="text-[11px] text-rose-400/80 mt-0.5">{validationWarning}</p>
+              )}
+            </div>
+          </div>
+          <Link
+            href="/builder"
+            className="px-3.5 py-1.5 rounded-lg bg-rose-600 hover:bg-rose-700 text-white font-semibold text-xs transition-colors shrink-0 text-center"
+          >
+            Update Resume in Builder
+          </Link>
+        </div>
+      )}
 
       {/* Input Form Card */}
       <GlassCard className="p-6 text-left space-y-4">
@@ -303,7 +289,16 @@ Requirements:
               <div className="space-y-2 text-xs">
                 {matchResult.matchedSkills.map((sk, idx) => (
                   <div key={idx} className="p-2.5 rounded-lg bg-emerald-500/10 border border-emerald-500/20">
-                    <span className="font-bold text-[var(--text-primary)] block">{sk.skill}</span>
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="font-bold text-[var(--text-primary)] block">{sk.skill}</span>
+                      {sk.importance && (
+                        <span className={`text-[9px] uppercase px-1.5 py-0.5 rounded font-semibold ${
+                          sk.importance === 'required' ? 'bg-emerald-500/20 text-emerald-400' : 'bg-blue-500/20 text-blue-400'
+                        }`}>
+                          {sk.importance}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[11px] text-[var(--text-secondary)]">{sk.context}</span>
                   </div>
                 ))}
@@ -326,7 +321,14 @@ Requirements:
                 ) : (
                   matchResult.partialSkills.map((sk, idx) => (
                     <div key={idx} className="p-2.5 rounded-lg bg-amber-500/10 border border-amber-500/20">
-                      <span className="font-bold text-[var(--text-primary)] block">{sk.skill}</span>
+                      <div className="flex items-center justify-between gap-2 mb-1">
+                        <span className="font-bold text-[var(--text-primary)] block">{sk.skill}</span>
+                        {sk.importance && (
+                          <span className="text-[9px] uppercase px-1.5 py-0.5 rounded font-semibold bg-amber-500/20 text-amber-400">
+                            {sk.importance}
+                          </span>
+                        )}
+                      </div>
                       <span className="text-[11px] text-[var(--text-secondary)]">{sk.context}</span>
                     </div>
                   ))
@@ -345,7 +347,16 @@ Requirements:
               <div className="space-y-2 text-xs">
                 {matchResult.missingSkills.map((sk, idx) => (
                   <div key={idx} className="p-2.5 rounded-lg bg-rose-500/10 border border-rose-500/20">
-                    <span className="font-bold text-[var(--text-primary)] block">{sk.skill}</span>
+                    <div className="flex items-center justify-between gap-2 mb-1">
+                      <span className="font-bold text-[var(--text-primary)] block">{sk.skill}</span>
+                      {sk.importance && (
+                        <span className={`text-[9px] uppercase px-1.5 py-0.5 rounded font-semibold ${
+                          sk.importance === 'required' ? 'bg-rose-500/20 text-rose-400' : 'bg-amber-500/20 text-amber-400'
+                        }`}>
+                          {sk.importance}
+                        </span>
+                      )}
+                    </div>
                     <span className="text-[11px] text-[var(--text-secondary)]">{sk.context}</span>
                   </div>
                 ))}

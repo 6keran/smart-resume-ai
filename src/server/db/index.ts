@@ -2,8 +2,10 @@ import 'server-only';
 import crypto from 'node:crypto';
 import { SEED_SKILLS, INITIAL_ASSESSMENT_QUESTIONS } from './seedQuestions';
 import { getDb as getDbFromAdapter, getActiveTx, type DatabaseClient } from './adapter';
+import { isClientDraftResumeId } from '@/types/resume';
 
 export type { DatabaseClient };
+export { isClientDraftResumeId };
 
 let dbInstance: DatabaseClient | null = null;
 let isInitialized = false;
@@ -29,7 +31,7 @@ const DEV_ONLY_FALLBACK_SECRET = 'dev-only-secret-smart-resume-ai-do-not-use-in-
  */
 export function getAdminSessionSecret(): string | null {
   const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL);
-  const rawSecret = process.env.ADMIN_SESSION_SECRET;
+  const rawSecret = process.env.ADMIN_SESSION_SECRET || process.env.SESSION_SECRET;
   const secret = typeof rawSecret === 'string' ? rawSecret.trim() : '';
 
   if (isProduction) {
@@ -84,6 +86,7 @@ export function getDb(): DatabaseClient {
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL,
       last_login_at TEXT,
+      session_token TEXT,
       is_active INTEGER DEFAULT 1
     );
   `);
@@ -456,6 +459,37 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_user_skills_name ON user_skills(skill_name);
   `);
 
+  // 22. Live Proctoring Sessions Table (Camera & Assessment Telemetry)
+  dbInstance.exec(`
+    CREATE TABLE IF NOT EXISTS live_proctoring_sessions (
+      id TEXT PRIMARY KEY,
+      assessment_id TEXT UNIQUE NOT NULL,
+      user_id TEXT,
+      candidate_name TEXT NOT NULL,
+      candidate_email TEXT,
+      skill TEXT NOT NULL,
+      status TEXT NOT NULL,
+      camera_status TEXT NOT NULL,
+      stream_health TEXT NOT NULL DEFAULT 'unknown',
+      frame_rate REAL DEFAULT 0,
+      resolution TEXT DEFAULT 'unknown',
+      consent_given INTEGER DEFAULT 0,
+      consent_timestamp TEXT,
+      started_at TEXT,
+      last_heartbeat_at TEXT NOT NULL,
+      completed_at TEXT,
+      signaling_offer TEXT,
+      signaling_answer TEXT,
+      candidate_ice_candidates TEXT,
+      admin_ice_candidates TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_lps_assessment ON live_proctoring_sessions(assessment_id);
+    CREATE INDEX IF NOT EXISTS idx_lps_status ON live_proctoring_sessions(status);
+    CREATE INDEX IF NOT EXISTS idx_lps_last_hb ON live_proctoring_sessions(last_heartbeat_at);
+  `);
+
   // Safe column migrations to associate activity with user_id and expand users table
   const migrateColumns = [
     'ALTER TABLE visitors ADD COLUMN user_id TEXT;',
@@ -477,6 +511,7 @@ export function getDb(): DatabaseClient {
     'ALTER TABLE job_applications ADD COLUMN description_snippet TEXT;',
     'ALTER TABLE job_applications ADD COLUMN salary TEXT;',
     'ALTER TABLE resumes ADD COLUMN resume_data TEXT;',
+    'ALTER TABLE admin_users ADD COLUMN session_token TEXT;',
   ];
   for (const sql of migrateColumns) {
     try {
@@ -538,7 +573,7 @@ export function createSessionToken(userOrAdmin: { id: string; email: string; rol
   const secret = getAdminSessionSecret();
   if (!secret) {
     throw new Error(
-      'Session token creation failed: ADMIN_SESSION_SECRET is missing or invalid in production environment (minimum 32 characters required).'
+      'Session token creation failed: ADMIN_SESSION_SECRET or SESSION_SECRET is missing or invalid in production environment (minimum 32 characters required).'
     );
   }
 
@@ -661,6 +696,71 @@ export function verifyAdminToken(token: string | undefined | null): {
   if (!token) return null;
   const verified = verifySessionToken(token);
   if (!verified || verified.role !== 'ADMIN') return null;
+
+  try {
+    const db = getDb();
+    if (!db.isPostgres) {
+      const adminRecord = db
+        .prepare('SELECT id, is_active, session_token FROM admin_users WHERE id = ? OR LOWER(email) = ?')
+        .get(verified.sub, verified.email.toLowerCase()) as
+        | { id: string; is_active: number; session_token?: string | null }
+        | undefined;
+
+      if (!adminRecord) {
+        return null;
+      }
+      if (Number(adminRecord.is_active) === 0) {
+        return null;
+      }
+      if (adminRecord.session_token === 'REVOKED' || (adminRecord.session_token && adminRecord.session_token.startsWith('revoked_'))) {
+        return null;
+      }
+      if (adminRecord.session_token && adminRecord.session_token !== token) {
+        return null;
+      }
+    }
+  } catch {
+    // Fall back to cryptographic verification if DB query unavailable
+  }
+
+  return verified;
+}
+
+export async function verifyAdminTokenAsync(token: string | undefined | null): Promise<{
+  sub: string;
+  email: string;
+  role: string;
+  iat: number;
+  exp: number;
+} | null> {
+  if (!token) return null;
+  const verified = verifySessionToken(token);
+  if (!verified || verified.role !== 'ADMIN') return null;
+
+  try {
+    const db = getDb();
+    const adminRecord = (await db
+      .prepare('SELECT id, is_active, session_token FROM admin_users WHERE id = ? OR LOWER(email) = ?')
+      .get(verified.sub, verified.email.toLowerCase())) as
+      | { id: string; is_active: number; session_token?: string | null }
+      | undefined;
+
+    if (!adminRecord) {
+      return null;
+    }
+    if (Number(adminRecord.is_active) === 0) {
+      return null;
+    }
+    if (adminRecord.session_token === 'REVOKED' || (adminRecord.session_token && adminRecord.session_token.startsWith('revoked_'))) {
+      return null;
+    }
+    if (adminRecord.session_token && adminRecord.session_token !== token) {
+      return null;
+    }
+  } catch {
+    // Fall back to cryptographic verification if DB query unavailable
+  }
+
   return verified;
 }
 
@@ -670,7 +770,7 @@ function ensureAdminUserExists(db: DatabaseClient) {
 
   if (!adminEmail || !adminPass) return;
 
-  const existingStmt = db.prepare('SELECT id, password_hash FROM admin_users WHERE email = ?');
+  const existingStmt = db.prepare('SELECT id, password_hash FROM admin_users WHERE LOWER(email) = ?');
   const existing = existingStmt.get(adminEmail) as { id: string; password_hash: string } | undefined;
 
   const hash = hashPassword(adminPass);
@@ -983,6 +1083,12 @@ export async function registerUser(data: {
     throw new Error('Password must be at least 6 characters long.');
   }
 
+  // Prevent public registration from claiming or colliding with administrative accounts
+  const existingAdmin = (await db.prepare('SELECT id FROM admin_users WHERE LOWER(email) = ?').get(trimmedEmail)) as any;
+  if (existingAdmin) {
+    throw new Error('An account with this email already exists. Please sign in instead.');
+  }
+
   const existing = (await db.prepare(`
     SELECT id, email, password_hash, role, is_active, created_at
     FROM users
@@ -997,7 +1103,7 @@ export async function registerUser(data: {
   let userId: string;
   let createdAt = now;
   if (existing) {
-    if (existing.password_hash) {
+    if (existing.password_hash || existing.role === 'ADMIN') {
       throw new Error('An account with this email already exists. Please sign in instead.');
     }
     // Existing user record without password (e.g. from prior name-onboarding)
@@ -1673,16 +1779,45 @@ export async function recordJobSearchEvent(data: {
   userId?: string;
   query: string;
   location?: string;
-  provider: string;
-  resultsCount: number;
+  provider?: string;
+  resultsCount?: number;
+  resultCount?: number;
 }): Promise<string> {
   const db = getDb();
   const id = `jsr_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
   const now = new Date().toISOString();
+  const provider = data.provider || 'All';
+  const count = typeof data.resultsCount === 'number' ? data.resultsCount : (typeof data.resultCount === 'number' ? data.resultCount : 0);
 
   const effectiveUserId = data.userId || (data.visitorId ? (await db.prepare('SELECT user_id FROM visitors WHERE id = ? OR anonymous_id = ?').get(data.visitorId, data.visitorId) as any)?.user_id : null);
   const userName = await getUserNameById(effectiveUserId);
   const actorName = userName || 'Name not provided';
+
+  // Deduplicate rapid identical search events (e.g. pagination or refresh within 60 seconds)
+  const cutoffTime = new Date(Date.now() - 60000).toISOString();
+  let existingRecent: any = null;
+  if (effectiveUserId) {
+    existingRecent = await db.prepare(`
+      SELECT id FROM job_searches
+      WHERE user_id = ? AND LOWER(query) = LOWER(?) AND LOWER(COALESCE(location, '')) = LOWER(?) AND searched_at >= ?
+      ORDER BY searched_at DESC LIMIT 1
+    `).get(effectiveUserId, data.query, data.location || 'India', cutoffTime);
+  } else if (data.visitorId) {
+    existingRecent = await db.prepare(`
+      SELECT id FROM job_searches
+      WHERE visitor_id = ? AND LOWER(query) = LOWER(?) AND LOWER(COALESCE(location, '')) = LOWER(?) AND searched_at >= ?
+      ORDER BY searched_at DESC LIMIT 1
+    `).get(data.visitorId, data.query, data.location || 'India', cutoffTime);
+  }
+
+  if (existingRecent) {
+    await db.prepare('UPDATE job_searches SET results_count = ?, searched_at = ? WHERE id = ?').run(
+      count,
+      now,
+      existingRecent.id
+    );
+    return existingRecent.id;
+  }
 
   await db.prepare(`
     INSERT INTO job_searches (id, visitor_id, user_id, query, location, provider, results_count, searched_at, created_at)
@@ -1693,8 +1828,8 @@ export async function recordJobSearchEvent(data: {
     effectiveUserId || null,
     data.query,
     data.location || 'India',
-    data.provider,
-    data.resultsCount,
+    provider,
+    count,
     now,
     now
   );
@@ -1703,8 +1838,8 @@ export async function recordJobSearchEvent(data: {
     eventType: 'JOB_SEARCHED',
     actorType: effectiveUserId ? 'USER' : 'VISITOR',
     actorId: effectiveUserId || data.visitorId,
-    description: `${actorName} searched jobs: "${data.query}" in ${data.location || 'India'} (${data.resultsCount} found on ${data.provider})`,
-    metadata: { query: data.query, location: data.location, count: data.resultsCount, provider: data.provider, userId: effectiveUserId, userName },
+    description: `${actorName} searched jobs: "${data.query}" in ${data.location || 'India'} (${count} found on ${provider})`,
+    metadata: { query: data.query, location: data.location, count, provider, userId: effectiveUserId, userName },
   });
 
   return id;
@@ -1960,16 +2095,27 @@ function formatTimeAgo(dateStr: string): string {
 export async function getAdminByEmail(email: string) {
   const db = getDb();
   return (await db
-    .prepare('SELECT id, email, password_hash, role, is_active, last_login_at, created_at FROM admin_users WHERE email = ?')
+    .prepare('SELECT id, email, password_hash, role, is_active, last_login_at, created_at FROM admin_users WHERE LOWER(email) = ?')
     .get(email.trim().toLowerCase())) as
     | { id: string; email: string; password_hash: string; role: string; is_active: number; last_login_at: string | null; created_at: string }
     | undefined;
 }
 
-export async function recordAdminLogin(id: string) {
+export async function recordAdminLogin(id: string, sessionToken?: string) {
   const db = getDb();
   const now = new Date().toISOString();
-  await db.prepare('UPDATE admin_users SET last_login_at = ?, updated_at = ? WHERE id = ?').run(now, now, id);
+  if (sessionToken) {
+    await db.prepare('UPDATE admin_users SET last_login_at = ?, session_token = ?, updated_at = ? WHERE id = ?').run(now, sessionToken, now, id);
+  } else {
+    await db.prepare('UPDATE admin_users SET last_login_at = ?, updated_at = ? WHERE id = ?').run(now, now, id);
+  }
+}
+
+export async function revokeAdminSession(adminIdOrEmail: string): Promise<void> {
+  const db = getDb();
+  const now = new Date().toISOString();
+  await db.prepare("UPDATE admin_users SET session_token = 'REVOKED', updated_at = ? WHERE id = ? OR LOWER(email) = ?")
+    .run(now, adminIdOrEmail, adminIdOrEmail.toLowerCase());
 }
 
 export async function getAdminUsers(limit = 100) {
@@ -1979,6 +2125,8 @@ export async function getAdminUsers(limit = 100) {
       u.id,
       u.name,
       u.email,
+      COALESCE(u.role, 'USER') as role,
+      COALESCE(u.is_active, 1) as is_active,
       u.created_at,
       u.last_active_at,
       (SELECT COUNT(*) FROM resumes WHERE user_id = u.id) as resumes_count,
@@ -1993,6 +2141,8 @@ export async function getAdminUsers(limit = 100) {
     id: string;
     name: string;
     email: string | null;
+    role: string;
+    is_active: number;
     created_at: string;
     last_active_at: string;
     resumes_count: number;
@@ -2005,7 +2155,7 @@ export async function getAdminUsers(limit = 100) {
 
 export async function getAdminUserDetail(userId: string) {
   const db = getDb();
-  const user = await db.prepare('SELECT id, name, email, created_at, last_active_at FROM users WHERE id = ?').get(userId) as any;
+  const user = await db.prepare('SELECT id, name, email, COALESCE(role, \'USER\') as role, COALESCE(is_active, 1) as is_active, created_at, last_active_at FROM users WHERE id = ?').get(userId) as any;
   if (!user) return null;
 
   const resumes = await db.prepare('SELECT * FROM resumes WHERE user_id = ? ORDER BY uploaded_at DESC').all(userId);
@@ -2020,6 +2170,7 @@ export async function getAdminUserDetail(userId: string) {
   const verifiedSkills = await db.prepare('SELECT * FROM verified_skills WHERE user_id = ? ORDER BY created_at DESC').all(userId);
   const searches = await db.prepare('SELECT * FROM job_searches WHERE user_id = ? ORDER BY searched_at DESC').all(userId);
   const matches = await db.prepare('SELECT * FROM job_matches WHERE user_id = ? ORDER BY created_at DESC').all(userId);
+  const jobApplications = await db.prepare('SELECT * FROM job_applications WHERE user_id = ? ORDER BY applied_confirmed_at DESC, created_at DESC').all(userId);
   const feedbackList = await db.prepare('SELECT * FROM feedback WHERE user_id = ? ORDER BY created_at DESC').all(userId);
 
   return {
@@ -2030,6 +2181,7 @@ export async function getAdminUserDetail(userId: string) {
     verifiedSkills,
     searches,
     matches,
+    jobApplications,
     feedback: feedbackList,
   };
 }
@@ -2211,6 +2363,33 @@ export async function getAdminJobMatches(limit = 100) {
     FROM job_matches m
     LEFT JOIN users u ON m.user_id = u.id
     ORDER BY m.created_at DESC
+    LIMIT ?
+  `).all(limit);
+}
+
+export async function getAdminJobApplications(limit = 100) {
+  const db = getDb();
+  return await db.prepare(`
+    SELECT
+      a.id,
+      a.user_id,
+      COALESCE(u.name, 'Name not provided') as user_name,
+      COALESCE(u.email, '') as user_email,
+      a.job_id,
+      a.job_title,
+      a.company,
+      a.location,
+      a.salary,
+      a.job_url,
+      a.status,
+      a.notes,
+      a.resume_id,
+      a.applied_confirmed_at,
+      a.created_at,
+      a.updated_at
+    FROM job_applications a
+    LEFT JOIN users u ON a.user_id = u.id
+    ORDER BY a.created_at DESC
     LIMIT ?
   `).all(limit);
 }
@@ -3372,25 +3551,27 @@ export async function getUserDashboardData(userId: string) {
     LIMIT 4
   `).all(userId) as any[];
 
-  return {
-    metrics: {
-      totalResumes: resumesCount,
-      totalAnalyses: analysesCount,
-      avgAtsScore,
-      improvementsMade: improvementsCount,
-      jobsApplied: jobsAppliedCount,
-      totalApplications,
-      jobMatches: jobMatchesCount,
-      verifiedSkills: verifiedSkillsCount,
-      assessmentsCompleted: assessmentsCount,
-      certificatesEarned: certificatesCount,
-      coursesCompleted: coursesCompletedCount,
-    },
-    resumeProgress,
-    recentApplications,
-    recentAssessments,
-    recentImprovements,
-  };
+  return JSON.parse(
+    JSON.stringify({
+      metrics: {
+        totalResumes: resumesCount,
+        totalAnalyses: analysesCount,
+        avgAtsScore,
+        improvementsMade: improvementsCount,
+        jobsApplied: jobsAppliedCount,
+        totalApplications,
+        jobMatches: jobMatchesCount,
+        verifiedSkills: verifiedSkillsCount,
+        assessmentsCompleted: assessmentsCount,
+        certificatesEarned: certificatesCount,
+        coursesCompleted: coursesCompletedCount,
+      },
+      resumeProgress,
+      recentApplications,
+      recentAssessments,
+      recentImprovements,
+    })
+  );
 }
 
 export async function getUserResumes(userId: string) {
@@ -3504,12 +3685,39 @@ export async function getUserImprovements(userId: string) {
 
 export async function getUserJobApplications(userId: string) {
   const db = getDb();
-  return await db.prepare(`
+  const rows = await db.prepare(`
     SELECT *
     FROM job_applications
     WHERE user_id = ?
     ORDER BY applied_at DESC, created_at DESC
   `).all(userId) as any[];
+
+  return rows.map((r) => ({
+    id: r.id,
+    userId: r.user_id,
+    jobId: r.job_id,
+    jobTitle: r.job_title,
+    company: r.company,
+    location: r.location,
+    source: r.source,
+    jobUrl: r.job_url,
+    appliedAt: r.applied_at,
+    status: r.status,
+    notes: r.notes,
+    resumeId: r.resume_id,
+    appliedConfirmedAt: r.applied_confirmed_at,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+    user_id: r.user_id,
+    job_id: r.job_id,
+    job_title: r.job_title,
+    job_url: r.job_url,
+    applied_at: r.applied_at,
+    resume_id: r.resume_id,
+    applied_confirmed_at: r.applied_confirmed_at,
+    created_at: r.created_at,
+    updated_at: r.updated_at,
+  }));
 }
 
 export async function createJobApplication(userId: string, data: {
@@ -3546,7 +3754,16 @@ export async function createJobApplication(userId: string, data: {
 
   if (existing) {
     // Update existing record rather than creating a duplicate
-    const newStatus = data.status || existing.status;
+    const ADVANCED_STATUSES = ['Applied', 'Interview', 'Offer', 'Rejected', 'Withdrawn'];
+    let newStatus = data.status || existing.status;
+    if (
+      existing.status &&
+      ADVANCED_STATUSES.includes(existing.status) &&
+      (data.status === 'Application pending' || data.status === 'Saved' || data.status === 'Ready to apply')
+    ) {
+      // Do not downgrade an already applied or interviewing application
+      newStatus = existing.status;
+    }
     const newAppliedAt = data.appliedAt || existing.applied_at;
     const newResumeId = data.resumeId !== undefined ? data.resumeId : existing.resume_id;
     const newNotes = data.notes !== undefined ? data.notes : existing.notes;
@@ -3829,7 +4046,7 @@ export async function saveResumeVersion(
 
   const db = getDb();
   const now = new Date().toISOString();
-  let targetResumeId = resumeId;
+  let targetResumeId = resumeId && !isClientDraftResumeId(resumeId) ? resumeId.trim() : null;
 
   if (targetResumeId) {
     const existingResume = (await db.prepare('SELECT id, user_id, resume_data FROM resumes WHERE id = ?').get(targetResumeId)) as any;
@@ -3869,8 +4086,11 @@ export async function saveResumeVersion(
       userId: latestVersion.user_id,
       resumeId: latestVersion.resume_id,
       versionNumber: latestVersion.version_number,
+      version_number: latestVersion.version_number,
       changeSummary: latestVersion.change_summary,
+      change_summary: latestVersion.change_summary,
       createdAt: latestVersion.created_at,
+      created_at: latestVersion.created_at,
       isDuplicate: true,
     };
   }
@@ -3905,8 +4125,11 @@ export async function saveResumeVersion(
         userId,
         resumeId: targetResumeId,
         versionNumber: nextVer,
+        version_number: nextVer,
         changeSummary: finalSummary,
+        change_summary: finalSummary,
         createdAt,
+        created_at: createdAt,
         isDuplicate: false,
       };
       break;
@@ -3926,7 +4149,11 @@ export async function saveResumeVersion(
   return savedVersion;
 }
 
-export async function getResumeVersions(userId: string, resumeId?: string) {
+export async function getResumeVersions(
+  userId: string,
+  resumeId?: string,
+  options?: { isAdmin?: boolean }
+) {
   if (!userId || typeof userId !== 'string') {
     throw new Error('Unauthorized: Valid user ID is required.');
   }
@@ -3934,28 +4161,35 @@ export async function getResumeVersions(userId: string, resumeId?: string) {
   const db = getDb();
 
   if (resumeId) {
+    if (isClientDraftResumeId(resumeId)) {
+      return [];
+    }
+
     const resume = (await db.prepare('SELECT id, user_id FROM resumes WHERE id = ?').get(resumeId)) as any;
     if (!resume) {
       throw new Error('Resume not found.');
     }
-    if (resume.user_id !== userId) {
+    if (!options?.isAdmin && resume.user_id !== userId) {
       throw new Error('Forbidden: You do not own this resume.');
     }
 
     const rows = (await db.prepare(`
       SELECT id, user_id, resume_id, version_number, change_summary, created_at
       FROM resume_versions
-      WHERE user_id = ? AND resume_id = ?
+      WHERE resume_id = ? ${options?.isAdmin ? '' : 'AND user_id = ?'}
       ORDER BY version_number DESC
-    `).all(userId, resumeId)) as any[];
+    `).all(...(options?.isAdmin ? [resumeId] : [resumeId, userId]))) as any[];
 
     return rows.map((r) => ({
       id: r.id,
       userId: r.user_id,
       resumeId: r.resume_id,
       versionNumber: r.version_number,
+      version_number: r.version_number,
       changeSummary: r.change_summary,
+      change_summary: r.change_summary,
       createdAt: r.created_at,
+      created_at: r.created_at,
     }));
   }
 
@@ -3971,12 +4205,19 @@ export async function getResumeVersions(userId: string, resumeId?: string) {
     userId: r.user_id,
     resumeId: r.resume_id,
     versionNumber: r.version_number,
+    version_number: r.version_number,
     changeSummary: r.change_summary,
+    change_summary: r.change_summary,
     createdAt: r.created_at,
+    created_at: r.created_at,
   }));
 }
 
-export async function getResumeVersion(userId: string, versionId: string) {
+export async function getResumeVersion(
+  userId: string,
+  versionId: string,
+  options?: { isAdmin?: boolean }
+) {
   if (!userId || typeof userId !== 'string') {
     throw new Error('Unauthorized: Valid user ID is required.');
   }
@@ -3995,7 +4236,7 @@ export async function getResumeVersion(userId: string, versionId: string) {
     throw new Error('Resume version not found.');
   }
 
-  if (row.user_id !== userId) {
+  if (!options?.isAdmin && row.user_id !== userId) {
     throw new Error('Forbidden: You do not have permission to view this version.');
   }
 
@@ -4004,13 +4245,20 @@ export async function getResumeVersion(userId: string, versionId: string) {
     userId: row.user_id,
     resumeId: row.resume_id,
     versionNumber: row.version_number,
+    version_number: row.version_number,
     changeSummary: row.change_summary,
+    change_summary: row.change_summary,
     createdAt: row.created_at,
+    created_at: row.created_at,
     resumeData: typeof row.resume_data === 'string' ? JSON.parse(row.resume_data) : row.resume_data,
   };
 }
 
-export async function restoreResumeVersion(userId: string, versionId: string) {
+export async function restoreResumeVersion(
+  userId: string,
+  versionId: string,
+  options?: { isAdmin?: boolean }
+) {
   if (!userId || typeof userId !== 'string') {
     throw new Error('Unauthorized: Valid user ID is required.');
   }
@@ -4029,7 +4277,7 @@ export async function restoreResumeVersion(userId: string, versionId: string) {
     throw new Error('Resume version not found.');
   }
 
-  if (targetVersion.user_id !== userId) {
+  if (!options?.isAdmin && targetVersion.user_id !== userId) {
     throw new Error('Forbidden: You do not have permission to restore this version.');
   }
 
@@ -4044,7 +4292,7 @@ export async function restoreResumeVersion(userId: string, versionId: string) {
     throw new Error('Resume associated with this version not found.');
   }
 
-  if (targetResume.user_id !== userId) {
+  if (!options?.isAdmin && targetResume.user_id !== userId) {
     throw new Error('Forbidden: You do not own this resume.');
   }
 
@@ -4129,6 +4377,23 @@ export async function getUserResume(userId: string, resumeId: string) {
   };
 }
 
+export async function deleteUserResume(userId: string, resumeId: string): Promise<{ found: boolean; deleted: boolean }> {
+  const db = getDb();
+  const existing = (await db.prepare('SELECT id, user_id FROM resumes WHERE id = ?').get(resumeId)) as any;
+  if (!existing) {
+    return { found: false, deleted: false };
+  }
+  if (existing.user_id !== userId) {
+    throw new Error('Forbidden: You do not own this resume.');
+  }
+
+  // Delete versions & resume
+  await db.prepare('DELETE FROM resume_versions WHERE resume_id = ? AND user_id = ?').run(resumeId, userId);
+  await db.prepare('DELETE FROM resumes WHERE id = ? AND user_id = ?').run(resumeId, userId);
+
+  return { found: true, deleted: true };
+}
+
 export async function getUserActiveResume(userId: string) {
   const db = getDb();
   const row = (await db.prepare(`
@@ -4173,7 +4438,7 @@ export async function saveUserResume(
     'My Resume';
 
   // If a valid existing resumeId is supplied
-  if (data.resumeId && data.resumeId !== 'res_default' && !data.resumeId.startsWith('res_fresher')) {
+  if (data.resumeId && !isClientDraftResumeId(data.resumeId)) {
     const existing = (await db.prepare('SELECT id, user_id, filename, resume_data, uploaded_at FROM resumes WHERE id = ?').get(data.resumeId)) as any;
     if (existing) {
       if (existing.user_id !== userId) {
@@ -4231,7 +4496,7 @@ export async function saveUserResume(
       `).run(dataString, suggestedFilename, now, targetResumeId, userId);
     } else {
       // Create new canonical resume record for this user
-      targetResumeId = (data.resumeId && data.resumeId !== 'res_default' && !data.resumeId.startsWith('res_fresher'))
+      targetResumeId = (data.resumeId && !isClientDraftResumeId(data.resumeId))
         ? data.resumeId
         : `res_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
 
@@ -4307,6 +4572,12 @@ export async function recordUserImprovement(
 export async function deleteJobApplication(userId: string, applicationId: string): Promise<boolean> {
   const db = getDb();
   const res = await db.prepare('DELETE FROM job_applications WHERE id = ? AND user_id = ?').run(applicationId, userId);
+  return res.changes > 0;
+}
+
+export async function deleteJobApplicationByJobId(userId: string, jobId: string): Promise<boolean> {
+  const db = getDb();
+  const res = await db.prepare('DELETE FROM job_applications WHERE job_id = ? AND user_id = ?').run(jobId, userId);
   return res.changes > 0;
 }
 
@@ -4860,11 +5131,22 @@ export async function getProctoringSummary() {
     `).all();
 
     const activeOrRecentSessions = await db.prepare(`
-      SELECT a.id, a.skill, a.score, a.passed, a.status, a.duration_seconds, a.proctoring_violation_count, a.created_at,
-             u.name as user_name, u.email as user_email
+      SELECT a.id, a.skill, a.score, a.passed,
+             COALESCE(lps.status, a.status) as status,
+             a.duration_seconds, a.proctoring_violation_count, a.created_at,
+             COALESCE(lps.candidate_name, u.name, 'Candidate') as user_name,
+             COALESCE(lps.candidate_email, u.email, 'No email recorded') as user_email,
+             lps.camera_status,
+             lps.stream_health,
+             lps.frame_rate,
+             lps.resolution,
+             lps.last_heartbeat_at,
+             lps.consent_given,
+             lps.started_at
       FROM assessments a
-      LEFT JOIN users u ON a.visitor_id = u.id
-      ORDER BY a.created_at DESC
+      LEFT JOIN live_proctoring_sessions lps ON a.id = lps.assessment_id
+      LEFT JOIN users u ON (a.user_id = u.id OR a.visitor_id = u.id)
+      ORDER BY COALESCE(lps.last_heartbeat_at, a.created_at) DESC
       LIMIT 20
     `).all();
 
@@ -4955,10 +5237,17 @@ export async function deleteUserAndData(
     // Job searches & matches
     const userSearches = (await tx.prepare('SELECT id FROM job_searches WHERE user_id = ?').all(targetUserId)) as Array<{ id: string }>;
     for (const s of userSearches) {
-      await tx.prepare('DELETE FROM job_search_results WHERE search_id = ?').run(s.id);
+      try {
+        await tx.prepare('DELETE FROM job_search_results WHERE search_id = ?').run(s.id);
+      } catch {}
     }
     await tx.prepare('DELETE FROM job_searches WHERE user_id = ?').run(targetUserId);
     await tx.prepare('DELETE FROM job_matches WHERE user_id = ?').run(targetUserId);
+
+    // Live proctoring sessions
+    try {
+      await tx.prepare('DELETE FROM live_proctoring_sessions WHERE user_id = ?').run(targetUserId);
+    } catch {}
 
     // Anonymize visitors & feedback to preserve aggregate metrics without PII
     await tx.prepare('UPDATE visitors SET user_id = NULL WHERE user_id = ?').run(targetUserId);
@@ -4998,6 +5287,478 @@ export async function deleteUserAndData(
       },
     };
   });
+}
+
+// ==========================================
+// ADMIN USER CREATION & UPDATES
+// ==========================================
+
+export async function createAdminUserRecord(data: {
+  name: string;
+  email: string;
+  passwordHash: string;
+  role?: string;
+  isActive?: number;
+  adminActor: { id: string; email: string };
+}) {
+  const db = getDb();
+  const trimmedName = data.name.trim();
+  const trimmedEmail = data.email.trim().toLowerCase();
+  const role = (data.role || 'USER').toUpperCase() === 'ADMIN' ? 'ADMIN' : 'USER';
+  const isActive = data.isActive === 0 ? 0 : 1;
+  const now = new Date().toISOString();
+
+  // Duplicate email check across users and admin_users
+  const existingUser = await db.prepare('SELECT id FROM users WHERE LOWER(email) = ?').get(trimmedEmail);
+  if (existingUser) {
+    throw new Error(`An account with email "${trimmedEmail}" already exists.`);
+  }
+  const existingAdmin = await db.prepare('SELECT id FROM admin_users WHERE LOWER(email) = ?').get(trimmedEmail);
+  if (existingAdmin) {
+    throw new Error(`An administrator account with email "${trimmedEmail}" already exists.`);
+  }
+
+  const userId = `usr_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+  const sessionToken = createSessionToken({ id: userId, email: trimmedEmail, role });
+
+  return await db.transaction(async (tx) => {
+    await tx.prepare(`
+      INSERT INTO users (
+        id, name, email, password_hash, role, is_active, session_token,
+        created_at, updated_at, last_login_at, last_active_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(userId, trimmedName, trimmedEmail, data.passwordHash, role, isActive, sessionToken, now, now, now, now);
+
+    if (role === 'ADMIN') {
+      const adminId = `adm_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+      await tx.prepare(`
+        INSERT INTO admin_users (
+          id, email, password_hash, role, created_at, updated_at, is_active
+        ) VALUES (?, ?, ?, 'ADMIN', ?, ?, ?)
+      `).run(adminId, trimmedEmail, data.passwordHash, now, now, isActive);
+    }
+
+    await logAuditEvent({
+      eventType: 'ADMIN_USER_CREATED',
+      actorType: 'ADMIN',
+      actorId: data.adminActor.id,
+      description: `Administrator ${data.adminActor.email} created user account "${trimmedName}" (${trimmedEmail}) [ID: ${userId}] with role ${role}.`,
+      metadata: {
+        createdUserId: userId,
+        name: trimmedName,
+        email: trimmedEmail,
+        role,
+        isActive,
+        adminId: data.adminActor.id,
+        adminEmail: data.adminActor.email,
+        timestamp: now,
+      },
+    }, tx, true);
+
+    return {
+      id: userId,
+      name: trimmedName,
+      email: trimmedEmail,
+      role,
+      is_active: isActive,
+      created_at: now,
+      updated_at: now,
+      last_active_at: now,
+    };
+  });
+}
+
+export async function updateAdminUserRecord(
+  userId: string,
+  data: {
+    name?: string;
+    email?: string;
+    passwordHash?: string;
+    role?: string;
+    isActive?: number;
+    adminActor: { id: string; email: string };
+  }
+) {
+  const db = getDb();
+  const now = new Date().toISOString();
+
+  return await db.transaction(async (tx) => {
+    const existing = (await tx.prepare('SELECT * FROM users WHERE id = ?').get(userId)) as any;
+    if (!existing) {
+      throw new Error('User account not found.');
+    }
+
+    const currentEmail = (existing.email || '').trim().toLowerCase();
+    const currentRole = (existing.role || 'USER').toUpperCase();
+    const currentIsActive = existing.is_active === 0 ? 0 : 1;
+
+    const newName = data.name !== undefined ? data.name.trim() : existing.name;
+    const newEmail = data.email !== undefined ? data.email.trim().toLowerCase() : currentEmail;
+    const newRole = data.role !== undefined ? (data.role.toUpperCase() === 'ADMIN' ? 'ADMIN' : 'USER') : currentRole;
+    const newIsActive = data.isActive !== undefined ? (data.isActive === 0 ? 0 : 1) : currentIsActive;
+
+    // Email duplicate check if email changed
+    if (newEmail && newEmail !== currentEmail) {
+      const dupUser = await tx.prepare('SELECT id FROM users WHERE LOWER(email) = ? AND id != ?').get(newEmail, userId);
+      if (dupUser) {
+        throw new Error(`An account with email "${newEmail}" already exists.`);
+      }
+      const dupAdmin = await tx.prepare('SELECT id FROM admin_users WHERE LOWER(email) = ? AND id != ?').get(newEmail, userId);
+      if (dupAdmin) {
+        throw new Error(`An administrator account with email "${newEmail}" already exists.`);
+      }
+    }
+
+    // Last Active Admin Protection:
+    // Prevent demotion or deactivation of the last active administrator
+    const wasActiveAdmin = currentRole === 'ADMIN' && currentIsActive === 1;
+    const becomingInactiveOrDemoted = (newRole !== 'ADMIN' || newIsActive === 0);
+
+    if (wasActiveAdmin && becomingInactiveOrDemoted) {
+      const totalActiveAdmins = ((await tx.prepare('SELECT COUNT(*) as c FROM admin_users WHERE is_active = 1').get()) as any)?.c || 0;
+      const otherActiveUserAdmins = ((await tx.prepare("SELECT COUNT(*) as c FROM users WHERE role = 'ADMIN' AND is_active = 1 AND id != ?").get(userId)) as any)?.c || 0;
+
+      if (totalActiveAdmins <= 1 && otherActiveUserAdmins === 0) {
+        throw new Error('Action prohibited: Cannot demote or deactivate the last active administrator account.');
+      }
+    }
+
+    // Update users record
+    if (data.passwordHash) {
+      await tx.prepare(`
+        UPDATE users
+        SET name = ?, email = ?, role = ?, is_active = ?, password_hash = ?, updated_at = ?
+        WHERE id = ?
+      `).run(newName, newEmail || null, newRole, newIsActive, data.passwordHash, now, userId);
+    } else {
+      await tx.prepare(`
+        UPDATE users
+        SET name = ?, email = ?, role = ?, is_active = ?, updated_at = ?
+        WHERE id = ?
+      `).run(newName, newEmail || null, newRole, newIsActive, now, userId);
+    }
+
+    // Sync admin_users table
+    if (newRole === 'ADMIN') {
+      const existingAdmin = (await tx.prepare('SELECT id FROM admin_users WHERE LOWER(email) = ?').get(currentEmail || newEmail)) as any;
+      if (existingAdmin) {
+        if (data.passwordHash) {
+          await tx.prepare(`
+            UPDATE admin_users
+            SET email = ?, password_hash = ?, role = 'ADMIN', is_active = ?, updated_at = ?
+            WHERE id = ?
+          `).run(newEmail, data.passwordHash, newIsActive, now, existingAdmin.id);
+        } else {
+          await tx.prepare(`
+            UPDATE admin_users
+            SET email = ?, role = 'ADMIN', is_active = ?, updated_at = ?
+            WHERE id = ?
+          `).run(newEmail, newIsActive, now, existingAdmin.id);
+        }
+      } else {
+        const newAdminId = `adm_${Date.now()}_${crypto.randomBytes(4).toString('hex')}`;
+        const passHash = data.passwordHash || existing.password_hash || hashPassword(crypto.randomBytes(16).toString('hex'));
+        await tx.prepare(`
+          INSERT INTO admin_users (id, email, password_hash, role, created_at, updated_at, is_active)
+          VALUES (?, ?, ?, 'ADMIN', ?, ?, ?)
+        `).run(newAdminId, newEmail, passHash, now, now, newIsActive);
+      }
+    } else if (currentRole === 'ADMIN' && newRole === 'USER') {
+      // User was demoted: remove or deactivate in admin_users if not the acting admin
+      if (currentEmail && currentEmail !== data.adminActor.email.toLowerCase()) {
+        await tx.prepare('DELETE FROM admin_users WHERE LOWER(email) = ?').run(currentEmail);
+      }
+    }
+
+    await logAuditEvent({
+      eventType: 'ADMIN_USER_UPDATED',
+      actorType: 'ADMIN',
+      actorId: data.adminActor.id,
+      description: `Administrator ${data.adminActor.email} updated user account "${newName}" (${newEmail || 'no-email'}) [ID: ${userId}]. Role: ${newRole}, Active: ${newIsActive}.`,
+      metadata: {
+        userId,
+        name: newName,
+        email: newEmail,
+        role: newRole,
+        isActive: newIsActive,
+        passwordChanged: Boolean(data.passwordHash),
+        adminId: data.adminActor.id,
+        adminEmail: data.adminActor.email,
+        timestamp: now,
+      },
+    }, tx, true);
+
+    return {
+      id: userId,
+      name: newName,
+      email: newEmail || null,
+      role: newRole,
+      is_active: newIsActive,
+      updated_at: now,
+    };
+  });
+}
+
+// ==========================================
+// LIVE PROCTORING SESSIONS & STREAM SIGNALING
+// ==========================================
+
+const liveFramesCache = new Map<string, { frame: string; timestamp: number }>();
+
+export function saveLiveStreamFrame(assessmentId: string, frameDataUrl: string) {
+  liveFramesCache.set(assessmentId, { frame: frameDataUrl, timestamp: Date.now() });
+}
+
+export function getLiveStreamFrame(assessmentId: string): string | null {
+  const item = liveFramesCache.get(assessmentId);
+  if (!item) return null;
+  if (Date.now() - item.timestamp > 10000) {
+    liveFramesCache.delete(assessmentId);
+    return null;
+  }
+  return item.frame;
+}
+
+export function clearLiveStreamFrame(assessmentId: string) {
+  liveFramesCache.delete(assessmentId);
+}
+
+export async function upsertLiveProctoringSession(data: {
+  assessmentId: string;
+  userId?: string | null;
+  candidateName: string;
+  candidateEmail?: string | null;
+  skill: string;
+  status: string;
+  cameraStatus: string;
+  streamHealth?: string;
+  frameRate?: number;
+  resolution?: string;
+  consentGiven?: boolean;
+}) {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const sessionId = `lps_${data.assessmentId}`;
+  const consentGivenInt = data.consentGiven ? 1 : 0;
+  const consentTimestamp = data.consentGiven ? now : null;
+
+  const existing = (await db.prepare('SELECT id, user_id FROM live_proctoring_sessions WHERE assessment_id = ?').get(data.assessmentId)) as any;
+
+  if (existing) {
+    if (existing.user_id && data.userId && existing.user_id !== data.userId) {
+      throw new Error('Forbidden: You do not own this proctoring session.');
+    }
+    await db.prepare(`
+      UPDATE live_proctoring_sessions
+      SET status = ?,
+          camera_status = ?,
+          stream_health = COALESCE(?, stream_health),
+          frame_rate = COALESCE(?, frame_rate),
+          resolution = COALESCE(?, resolution),
+          consent_given = COALESCE(?, consent_given),
+          last_heartbeat_at = ?,
+          updated_at = ?
+      WHERE assessment_id = ?
+    `).run(
+      data.status,
+      data.cameraStatus,
+      data.streamHealth || null,
+      data.frameRate !== undefined ? data.frameRate : null,
+      data.resolution || null,
+      consentGivenInt,
+      now,
+      now,
+      data.assessmentId
+    );
+  } else {
+    await db.prepare(`
+      INSERT INTO live_proctoring_sessions (
+        id, assessment_id, user_id, candidate_name, candidate_email,
+        skill, status, camera_status, stream_health, frame_rate, resolution,
+        consent_given, consent_timestamp, started_at, last_heartbeat_at,
+        created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `).run(
+      sessionId,
+      data.assessmentId,
+      data.userId || null,
+      data.candidateName,
+      data.candidateEmail || null,
+      data.skill,
+      data.status,
+      data.cameraStatus,
+      data.streamHealth || 'unknown',
+      data.frameRate || 0,
+      data.resolution || 'unknown',
+      consentGivenInt,
+      consentTimestamp,
+      now,
+      now,
+      now,
+      now
+    );
+  }
+
+  return { success: true, sessionId, timestamp: now };
+}
+
+export async function updateLiveProctoringHeartbeat(
+  assessmentId: string,
+  data: {
+    status?: string;
+    cameraStatus?: string;
+    streamHealth?: string;
+    frameRate?: number;
+    resolution?: string;
+  }
+) {
+  const db = getDb();
+  const now = new Date().toISOString();
+
+  await db.prepare(`
+    UPDATE live_proctoring_sessions
+    SET last_heartbeat_at = ?,
+        updated_at = ?,
+        status = COALESCE(?, status),
+        camera_status = COALESCE(?, camera_status),
+        stream_health = COALESCE(?, stream_health),
+        frame_rate = COALESCE(?, frame_rate),
+        resolution = COALESCE(?, resolution)
+    WHERE assessment_id = ?
+  `).run(
+    now,
+    now,
+    data.status || null,
+    data.cameraStatus || null,
+    data.streamHealth || null,
+    data.frameRate !== undefined ? data.frameRate : null,
+    data.resolution || null,
+    assessmentId
+  );
+
+  return { success: true, timestamp: now };
+}
+
+export async function getLiveProctoringSessionDetail(assessmentId: string) {
+  const db = getDb();
+  const session = (await db.prepare(`
+    SELECT * FROM live_proctoring_sessions WHERE assessment_id = ?
+  `).get(assessmentId)) as any;
+
+  if (!session) return null;
+
+  const lastHb = new Date(session.last_heartbeat_at).getTime();
+  const diffSec = Math.floor((Date.now() - lastHb) / 1000);
+  const isHeartbeatFresh = diffSec <= 12;
+
+  let effectiveConnection = 'offline';
+  if (session.status === 'in_progress') {
+    effectiveConnection = isHeartbeatFresh ? 'connected' : 'interrupted';
+  } else if (session.status === 'waiting_camera') {
+    effectiveConnection = isHeartbeatFresh ? 'waiting' : 'offline';
+  } else if (session.status === 'completed' || session.status === 'submitted') {
+    effectiveConnection = 'completed';
+  }
+
+  return {
+    ...session,
+    heartbeat_age_seconds: diffSec,
+    is_live: isHeartbeatFresh && session.status === 'in_progress',
+    connection_status: effectiveConnection,
+  };
+}
+
+export async function saveWebRtcSignal(
+  assessmentId: string,
+  sender: 'candidate' | 'admin',
+  type: 'offer' | 'answer' | 'candidate',
+  signalData: any
+) {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const serialized = typeof signalData === 'string' ? signalData : JSON.stringify(signalData);
+
+  if (type === 'offer') {
+    await db.prepare(`
+      UPDATE live_proctoring_sessions
+      SET signaling_offer = ?, updated_at = ?
+      WHERE assessment_id = ?
+    `).run(serialized, now, assessmentId);
+  } else if (type === 'answer') {
+    await db.prepare(`
+      UPDATE live_proctoring_sessions
+      SET signaling_answer = ?, updated_at = ?
+      WHERE assessment_id = ?
+    `).run(serialized, now, assessmentId);
+  } else if (type === 'candidate') {
+    const col = sender === 'candidate' ? 'candidate_ice_candidates' : 'admin_ice_candidates';
+    const row = (await db.prepare(`SELECT ${col} FROM live_proctoring_sessions WHERE assessment_id = ?`).get(assessmentId)) as any;
+    let list: any[] = [];
+    if (row && row[col]) {
+      try { list = JSON.parse(row[col]); } catch {}
+    }
+    list.push(signalData);
+    await db.prepare(`
+      UPDATE live_proctoring_sessions
+      SET ${col} = ?, updated_at = ?
+      WHERE assessment_id = ?
+    `).run(JSON.stringify(list), now, assessmentId);
+  }
+
+  return { success: true };
+}
+
+export async function getWebRtcSignal(assessmentId: string, forRole: 'candidate' | 'admin') {
+  const db = getDb();
+  const row = (await db.prepare(`
+    SELECT signaling_offer, signaling_answer, candidate_ice_candidates, admin_ice_candidates, status, last_heartbeat_at
+    FROM live_proctoring_sessions
+    WHERE assessment_id = ?
+  `).get(assessmentId)) as any;
+
+  if (!row) return null;
+
+  let offer = null;
+  let answer = null;
+  let candidates: any[] = [];
+
+  if (row.signaling_offer) {
+    try { offer = JSON.parse(row.signaling_offer); } catch {}
+  }
+  if (row.signaling_answer) {
+    try { answer = JSON.parse(row.signaling_answer); } catch {}
+  }
+
+  if (forRole === 'admin') {
+    if (row.candidate_ice_candidates) {
+      try { candidates = JSON.parse(row.candidate_ice_candidates); } catch {}
+    }
+    return { offer, answer, candidates, status: row.status };
+  } else {
+    if (row.admin_ice_candidates) {
+      try { candidates = JSON.parse(row.admin_ice_candidates); } catch {}
+    }
+    return { offer, answer, candidates, status: row.status };
+  }
+}
+
+export async function endLiveProctoringSession(assessmentId: string, status: 'completed' | 'submitted' | 'terminated' | 'camera_interrupted') {
+  const db = getDb();
+  const now = new Date().toISOString();
+
+  await db.prepare(`
+    UPDATE live_proctoring_sessions
+    SET status = ?,
+        camera_status = 'disconnected',
+        stream_health = 'offline',
+        completed_at = ?,
+        updated_at = ?
+    WHERE assessment_id = ?
+  `).run(status, now, now, assessmentId);
+
+  clearLiveStreamFrame(assessmentId);
+
+  return { success: true, timestamp: now };
 }
 
 

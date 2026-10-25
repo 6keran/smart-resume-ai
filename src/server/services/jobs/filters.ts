@@ -45,5 +45,35 @@ export function filterJobs(jobs: NormalizedJob[], params: JobSearchParams): Norm
     });
   }
 
+  // 6. Keywords relevance filter: ensure external provider fallback results actually relate to the user's query
+  if (params.keywords && params.keywords.trim().length > 0) {
+    const queryTerms = params.keywords
+      .toLowerCase()
+      .split(/\s+/)
+      .map((t) => t.trim())
+      .filter((t) => t.length >= 2 && !['and', 'the', 'for', 'with'].includes(t));
+
+    if (queryTerms.length > 0) {
+      filtered = filtered.filter((job) => {
+        const text = `${job.title} ${job.company} ${job.description} ${(job.skills || []).join(' ')}`.toLowerCase();
+        return queryTerms.some((term) => text.includes(term));
+      });
+    }
+  }
+
+  // 7. Location relevance filter: ensure provider results respect specific location queries
+  if (
+    params.location &&
+    params.location.trim().length > 0 &&
+    !['all', 'any', 'india', 'worldwide', 'global'].includes(params.location.toLowerCase().trim())
+  ) {
+    const locTerm = params.location.toLowerCase().trim();
+    filtered = filtered.filter((job) => {
+      if (job.workplaceType && job.workplaceType.toLowerCase() === 'remote') return true;
+      const jobLoc = (job.location || '').toLowerCase();
+      return jobLoc.includes(locTerm) || locTerm.includes(jobLoc);
+    });
+  }
+
   return filtered;
 }

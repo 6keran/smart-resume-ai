@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/userSession';
-import { getUserResumes, getUserResume, getUserActiveResume, saveUserResume } from '@/lib/db';
+import { getUserResumes, getUserResume, getUserActiveResume, saveUserResume, deleteUserResume } from '@/lib/db';
 import { validateResumeData } from '@/lib/resumeValidator';
 
 export async function GET(req: Request) {
@@ -45,6 +45,42 @@ export async function POST(req: Request) {
 
 export async function PUT(req: Request) {
   return handleSaveResume(req);
+}
+
+export async function DELETE(req: Request) {
+  try {
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    const { searchParams } = new URL(req.url);
+    let resumeId = searchParams.get('id');
+
+    if (!resumeId) {
+      try {
+        const body = await req.json();
+        resumeId = body.id || body.resumeId;
+      } catch {}
+    }
+
+    if (!resumeId) {
+      return NextResponse.json({ message: 'Resume ID is required.' }, { status: 400 });
+    }
+
+    const result = await deleteUserResume(user.id, resumeId);
+    if (!result.found) {
+      return NextResponse.json({ message: 'Resume not found' }, { status: 404 });
+    }
+
+    return NextResponse.json({ success: true, message: 'Resume deleted successfully.' });
+  } catch (err: any) {
+    const msg = err instanceof Error ? err.message : String(err);
+    if (/forbidden|permission|do not own/i.test(msg)) {
+      return NextResponse.json({ message: msg }, { status: 403 });
+    }
+    return NextResponse.json({ message: msg || 'Failed to delete resume' }, { status: 500 });
+  }
 }
 
 async function handleSaveResume(req: Request) {

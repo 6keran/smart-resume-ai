@@ -14,12 +14,15 @@ import {
   Info,
   CheckCircle2,
   Edit2,
+  Copy,
+  ArrowRight,
 } from 'lucide-react';
 import { useResume, isImprovementAppliedToResume } from '@/context/ResumeContext';
 
 export default function ResumeImproverPage() {
   const {
     resumeData,
+    targetJob,
     improvements,
     setImprovements,
     acceptImprovement,
@@ -37,11 +40,103 @@ export default function ResumeImproverPage() {
   const [editTextValue, setEditTextValue] = useState<string>('');
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
+  // Live direct text improver state
+  const [customInput, setCustomInput] = useState('');
+  const [customSection, setCustomSection] = useState<'experience' | 'projects' | 'summary' | 'skills' | 'education'>('experience');
+  const [isImprovingCustom, setIsImprovingCustom] = useState(false);
+  const [customResult, setCustomResult] = useState<{
+    original: string;
+    improved: string;
+    reasoning: string;
+    metricImpact: string;
+  } | null>(null);
+  const [isCopied, setIsCopied] = useState(false);
+
   const triggerToast = (msg: string) => {
     setToastMessage(msg);
     setTimeout(() => {
       setToastMessage(null);
     }, 3200);
+  };
+
+  const handleImproveCustom = async () => {
+    const trimmed = customInput.trim();
+    if (!trimmed) {
+      triggerToast('Please enter text to improve.');
+      return;
+    }
+
+    setIsImprovingCustom(true);
+    try {
+      const res = await fetch('/api/resume/improve', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          sectionName: customSection,
+          originalContent: trimmed,
+          jobDescription: targetJob?.description || undefined,
+          jobTitle: targetJob?.title || undefined,
+        }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        setCustomResult({
+          original: trimmed,
+          improved: data.improvedContent,
+          reasoning: data.reasoning,
+          metricImpact: data.metricImpact,
+        });
+        triggerToast('Phrasing improved while strictly preserving your content and facts.');
+      } else {
+        triggerToast('Unable to improve phrasing at this time.');
+      }
+    } catch {
+      triggerToast('Unable to improve phrasing at this time.');
+    } finally {
+      setIsImprovingCustom(false);
+    }
+  };
+
+  const handleApplyCustomToResume = async () => {
+    if (!customResult) return;
+    const newItem = {
+      id: `imp_manual_${Date.now()}`,
+      section: customSection,
+      field:
+        customSection === 'experience'
+          ? 'Work Experience Bullet'
+          : customSection === 'projects'
+          ? 'Project Description'
+          : customSection === 'summary'
+          ? 'Professional Summary'
+          : 'Resume Section',
+      originalContent: customResult.original,
+      improvedContent: customResult.improved,
+      reasoning: customResult.reasoning,
+      metricImpact: customResult.metricImpact,
+      status: 'pending' as const,
+      diff: {
+        before: customResult.original,
+        after: customResult.improved,
+      },
+    };
+
+    setImprovements((prev) => [newItem, ...prev]);
+    const ok = await acceptImprovement(newItem.id, newItem);
+    if (ok) {
+      triggerToast('Applied suggestion directly to your resume.');
+    } else {
+      triggerToast('Added to your suggestions list.');
+    }
+  };
+
+  const handleCopyImproved = () => {
+    if (!customResult) return;
+    navigator.clipboard.writeText(customResult.improved);
+    setIsCopied(true);
+    setTimeout(() => setIsCopied(false), 2000);
+    triggerToast('Copied improved text to clipboard.');
   };
 
   const filtered =
@@ -146,7 +241,7 @@ export default function ResumeImproverPage() {
       </div>
 
       {/* Content Guideline Note */}
-      <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] flex items-start gap-3 shadow-xs">
+      <div className="p-4 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-md flex items-start gap-3 shadow-xs">
         <Info className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
         <div className="text-xs leading-relaxed">
           <strong className="text-[var(--text-primary)] block font-semibold mb-0.5">
@@ -158,16 +253,159 @@ export default function ResumeImproverPage() {
         </div>
       </div>
 
+      {/* Live Content Editor & Improver Card */}
+      <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl p-5 sm:p-6 space-y-4 shadow-[var(--shadow-glass)]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border-color)]">
+          <div className="flex items-center gap-2">
+            <div className="w-8 h-8 rounded-lg bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center border border-[var(--accent)]/20 shadow-xs">
+              <Sparkles className="w-4 h-4" />
+            </div>
+            <div>
+              <h2 className="text-sm sm:text-base font-bold text-[var(--text-primary)]">
+                Live Content Editor & Improver
+              </h2>
+              <p className="text-[11px] text-[var(--text-secondary)]">
+                Paste any bullet point, project description, or summary to elevate phrasing while strictly preserving facts and technologies.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <span className="text-[11px] text-[var(--text-muted)] font-medium">Target Section:</span>
+            <select
+              value={customSection}
+              onChange={(e) => setCustomSection(e.target.value as any)}
+              className="text-xs bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-lg px-2.5 py-1 text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+            >
+              <option value="experience">Experience Bullet</option>
+              <option value="projects">Project Description</option>
+              <option value="summary">Professional Summary</option>
+              <option value="skills">Technical Skills</option>
+              <option value="education">Education</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <textarea
+            rows={3}
+            value={customInput}
+            onChange={(e) => setCustomInput(e.target.value)}
+            placeholder="e.g. I made a website using Python and Django where users can register and login."
+            className="w-full p-3 rounded-xl bg-[var(--input-bg)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition-all shadow-xs leading-relaxed"
+          />
+
+          <div className="flex items-center justify-between">
+            <span className="text-[11px] text-[var(--text-muted)]">
+              {customInput.trim().length} characters
+            </span>
+
+            <div className="flex items-center gap-2">
+              {customInput.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setCustomInput('');
+                    setCustomResult(null);
+                  }}
+                  className="px-3 py-1.5 rounded-lg border border-[var(--border-color)] text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-all cursor-pointer"
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={handleImproveCustom}
+                disabled={isImprovingCustom || !customInput.trim()}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold active:scale-95 transition-all shadow-xs disabled:opacity-50 cursor-pointer"
+              >
+                <Wand2 className={`w-3.5 h-3.5 ${isImprovingCustom ? 'animate-spin' : ''}`} />
+                <span>{isImprovingCustom ? 'Improving...' : 'Improve Phrasing'}</span>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* Live Improvement Result Display */}
+        {customResult && (
+          <div className="mt-4 pt-4 border-t border-[var(--border-color)] space-y-4 animate-fade-in">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {/* Original Card */}
+              <div className="p-4 rounded-xl bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] space-y-2">
+                <div className="flex items-center justify-between pb-1 border-b border-[var(--glass-border)]">
+                  <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-1.5">
+                    <FileText className="w-3.5 h-3.5" />
+                    Original Input
+                  </span>
+                  <span className="text-[10px] text-[var(--text-muted)] font-mono">Source of Truth</span>
+                </div>
+                <div className="text-xs text-[var(--text-primary)] font-mono leading-relaxed bg-[var(--glass-bg)] p-3 rounded-lg border border-[var(--glass-border)] whitespace-pre-wrap">
+                  {customResult.original}
+                </div>
+              </div>
+
+              {/* Improved Card */}
+              <div className="p-4 rounded-xl bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] space-y-2">
+                <div className="flex items-center justify-between pb-1 border-b border-[var(--glass-border)]">
+                  <span className="text-[11px] font-semibold text-[var(--accent)] uppercase tracking-wider flex items-center gap-1.5">
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Professional Refinement
+                  </span>
+                  <span className="inline-flex items-center gap-1 text-[10px] text-emerald-500 font-semibold">
+                    <ShieldCheck className="w-3 h-3" />
+                    Facts & Tech Preserved
+                  </span>
+                </div>
+                <div className="text-xs text-[var(--text-primary)] font-medium leading-relaxed bg-[var(--glass-bg)] p-3 rounded-lg border border-[var(--glass-border)] whitespace-pre-wrap">
+                  {customResult.improved}
+                </div>
+              </div>
+            </div>
+
+            {/* Observation & Metric Impact */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-xs">
+              <div className="flex items-start gap-2">
+                <Info className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
+                <span className="text-[var(--text-secondary)] leading-relaxed">
+                  <strong className="text-[var(--text-primary)] font-semibold">Editor Note: </strong>
+                  {customResult.reasoning}
+                </span>
+              </div>
+
+              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                <button
+                  type="button"
+                  onClick={handleCopyImproved}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-secondary)] text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] active:scale-95 transition-all cursor-pointer"
+                >
+                  {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-500" /> : <Copy className="w-3.5 h-3.5" />}
+                  <span>{isCopied ? 'Copied' : 'Copy'}</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={handleApplyCustomToResume}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold active:scale-95 transition-all shadow-xs cursor-pointer"
+                >
+                  <Check className="w-3.5 h-3.5" />
+                  <span>Apply to Resume</span>
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Section Tabs */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[var(--border-color)]">
+      <div className="flex items-center gap-2 overflow-x-auto pb-2 border-b border-[var(--glass-border)]">
         {(['all', 'summary', 'experience', 'projects', 'skills', 'education'] as const).map((tab) => (
           <button
             key={tab}
             onClick={() => setActiveTab(tab)}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold uppercase tracking-wider transition-all duration-150 active:scale-95 whitespace-nowrap cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold uppercase tracking-wider transition-all duration-150 active:scale-95 whitespace-nowrap cursor-pointer ${
               activeTab === tab
                 ? 'bg-[var(--accent)] text-white shadow-xs'
-                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]'
             }`}
           >
             {tab}
@@ -177,8 +415,8 @@ export default function ResumeImproverPage() {
 
       {/* Split Screen Cards List or Empty State */}
       {filtered.length === 0 ? (
-        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-12 text-center space-y-4 shadow-sm">
-          <div className="w-12 h-12 rounded-xl bg-[var(--accent-subtle)] text-[var(--accent)] mx-auto flex items-center justify-center">
+        <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-2xl p-12 text-center space-y-4 shadow-[var(--shadow-glass)]">
+          <div className="w-12 h-12 rounded-2xl bg-[var(--accent-subtle)] text-[var(--accent)] mx-auto flex items-center justify-center border border-[var(--accent)]/20 shadow-xs">
             <Wand2 className="w-6 h-6" />
           </div>
           <h2 className="text-lg font-bold text-[var(--text-primary)]">
@@ -190,7 +428,7 @@ export default function ResumeImproverPage() {
           <div className="pt-2">
             <Link
               href="/analyzer"
-              className="inline-flex items-center gap-2 h-[42px] px-5 rounded-lg bg-[var(--accent)] text-white text-xs font-medium hover:bg-[var(--accent-hover)] transition-all shadow-sm"
+              className="inline-flex items-center gap-2 h-[42px] px-5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] transition-all shadow-[0_4px_16px_rgba(79,143,247,0.3)] active:scale-95"
             >
               <Sparkles className="w-4 h-4" />
               <span>Analyze Resume to Generate Improvements</span>
@@ -208,12 +446,12 @@ export default function ResumeImproverPage() {
           return (
             <div
               key={item.id}
-              className={`rounded-xl border p-5 sm:p-6 transition-all space-y-4 bg-[var(--bg-card)] ${
+              className={`rounded-2xl border p-5 sm:p-6 transition-all space-y-4 backdrop-blur-xl shadow-[var(--shadow-glass)] ${
                 isRejected
-                  ? 'border-[var(--border-color)] opacity-60'
+                  ? 'border-[var(--glass-border)] bg-[var(--glass-bg)] opacity-60'
                   : isAppliedToResume
-                  ? 'border-[var(--border-color)] shadow-sm'
-                  : 'border-[var(--border-color)] hover:border-[var(--border-hover)]'
+                  ? 'border-[var(--glass-border-hover)] bg-[var(--glass-bg-elevated)]'
+                  : 'border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] hover:border-[var(--glass-border-hover)]'
               }`}
             >
               {/* Card Header */}
@@ -249,9 +487,9 @@ export default function ResumeImproverPage() {
               {/* Split Screen Comparison UI */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {/* Left: Original Content */}
-                <div className="p-4 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-3 flex flex-col justify-between">
+                <div className="p-4 rounded-xl bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] space-y-3 flex flex-col justify-between shadow-xs">
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between pb-1 border-b border-[var(--border-color)]/60">
+                    <div className="flex items-center justify-between pb-1 border-b border-[var(--glass-border)]">
                       <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-1.5">
                         <FileText className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
                         Current Phrasing
@@ -260,12 +498,12 @@ export default function ResumeImproverPage() {
                         Extracted Text
                       </span>
                     </div>
-                    <div className="text-xs text-[var(--text-primary)] font-mono leading-relaxed bg-[var(--bg-card)] p-3 rounded-md border border-[var(--border-color)]/70 whitespace-pre-wrap min-h-[64px]">
+                    <div className="text-xs text-[var(--text-primary)] font-mono leading-relaxed bg-[var(--glass-bg)] p-3 rounded-lg border border-[var(--glass-border)] whitespace-pre-wrap min-h-[64px]">
                       {item.originalContent || 'No existing text recorded for this section.'}
                     </div>
                   </div>
 
-                  <div className="text-[11px] text-[var(--text-secondary)] leading-relaxed pt-2.5 border-t border-[var(--border-color)]/60 flex items-start gap-1.5">
+                  <div className="text-[11px] text-[var(--text-secondary)] leading-relaxed pt-2.5 border-t border-[var(--glass-border)] flex items-start gap-1.5">
                     <Info className="w-3.5 h-3.5 text-[var(--accent)] shrink-0 mt-0.5" />
                     <div>
                       <span className="font-semibold text-[var(--text-primary)]">Observation: </span>
@@ -275,9 +513,9 @@ export default function ResumeImproverPage() {
                 </div>
 
                 {/* Right: AI Improved Content */}
-                <div className="p-4 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-3 flex flex-col justify-between">
+                <div className="p-4 rounded-xl bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] space-y-3 flex flex-col justify-between shadow-xs">
                   <div className="space-y-2">
-                    <div className="flex items-center justify-between pb-1 border-b border-[var(--border-color)]/60">
+                    <div className="flex items-center justify-between pb-1 border-b border-[var(--glass-border)]">
                       <span className="text-[11px] font-semibold text-[var(--accent)] uppercase tracking-wider flex items-center gap-1.5">
                         <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
                         Proposed AI Alternative
@@ -303,28 +541,28 @@ export default function ResumeImproverPage() {
                           rows={3}
                           value={editTextValue}
                           onChange={(e) => setEditTextValue(e.target.value)}
-                          className="w-full p-2.5 rounded-md bg-[var(--bg-card)] border border-[var(--accent)] text-xs text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 transition-all duration-150"
+                          className="w-full p-2.5 rounded-lg bg-[var(--input-bg)] border border-[var(--accent)] text-xs text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 transition-all duration-150 shadow-xs"
                           placeholder="Edit suggested wording..."
                         />
                         <div className="flex items-center justify-end gap-2 pt-1">
                           <button
                             type="button"
                             onClick={() => setEditingSuggestionId(null)}
-                            className="px-2.5 py-1 rounded-md text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] border border-[var(--border-color)] active:scale-95 transition-all duration-150 cursor-pointer"
+                            className="px-2.5 py-1 rounded-lg text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] border border-[var(--glass-border)] active:scale-95 transition-all duration-150 cursor-pointer"
                           >
                             Cancel
                           </button>
                           <button
                             type="button"
                             onClick={() => handleSaveEdit(item.id, false)}
-                            className="px-3 py-1 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold active:scale-95 transition-all duration-150 cursor-pointer shadow-xs"
+                            className="px-3 py-1 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold active:scale-95 transition-all duration-150 cursor-pointer shadow-xs"
                           >
                             Save Changes
                           </button>
                         </div>
                       </div>
                     ) : (
-                      <div className="text-xs text-[var(--text-primary)] leading-relaxed bg-[var(--bg-card)] p-3 rounded-md border border-[var(--border-color)]/70 whitespace-pre-wrap font-medium min-h-[64px]">
+                      <div className="text-xs text-[var(--text-primary)] leading-relaxed bg-[var(--glass-bg)] p-3 rounded-lg border border-[var(--glass-border)] whitespace-pre-wrap font-medium min-h-[64px]">
                         {item.improvedContent}
                       </div>
                     )}

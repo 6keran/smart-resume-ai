@@ -24,6 +24,7 @@ export interface JobPosting {
 export interface SkillMatchDetail {
   skill: string;
   status: 'matched' | 'partial' | 'missing';
+  importance?: 'required' | 'preferred';
   context?: string;
 }
 

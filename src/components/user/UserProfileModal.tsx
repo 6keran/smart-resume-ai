@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Sparkles, ArrowRight, Loader2, AlertCircle } from 'lucide-react';
+import { scaleIn, overlay } from '@/lib/motion';
 import { useUserProfile } from './UserContext';
 
 export function UserProfileModal() {
@@ -19,7 +20,15 @@ export function UserProfileModal() {
     }
   }, [user]);
 
-  if (!isModalOpen) return null;
+  useEffect(() => {
+    if (isModalOpen) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      return () => {
+        document.body.style.overflow = prev;
+      };
+    }
+  }, [isModalOpen]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -46,23 +55,26 @@ export function UserProfileModal() {
 
   return (
     <AnimatePresence>
-      <div data-no-print="true" className="no-print fixed inset-0 z-50 flex items-center justify-center p-4">
-        {/* Backdrop */}
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 bg-black/80 backdrop-blur-md"
-        />
+      {isModalOpen && (
+        <div data-no-print="true" className="no-print fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <motion.div
+            variants={overlay}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="fixed inset-0 bg-black/80 backdrop-blur-md"
+          />
 
-        {/* Modal Card */}
-        <motion.div
-          initial={{ opacity: 0, scale: 0.95, y: 10 }}
-          animate={{ opacity: 1, scale: 1, y: 0 }}
-          exit={{ opacity: 0, scale: 0.95, y: 10 }}
-          transition={{ duration: 0.25, ease: 'easeOut' }}
-          className="relative w-full max-w-md rounded-2xl bg-[var(--bg-card)]/95 border border-[var(--border-color)]/80 p-6 sm:p-8 shadow-2xl backdrop-blur-2xl text-left"
-        >
+          {/* Modal Card */}
+          <motion.div
+            variants={scaleIn}
+            initial="hidden"
+            animate="visible"
+            exit="exit"
+            className="relative w-full max-w-md rounded-2xl bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] p-6 sm:p-8 shadow-[var(--shadow-glass-hover)] backdrop-blur-2xl text-left overflow-hidden"
+          >
+          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent pointer-events-none" />
           {/* Subtle Ambient Glow */}
           <div className="absolute -top-12 -left-12 w-48 h-48 bg-[var(--accent)]/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -153,7 +165,8 @@ export function UserProfileModal() {
             </button>
           </form>
         </motion.div>
-      </div>
+        </div>
+      )}
     </AnimatePresence>
   );
 }

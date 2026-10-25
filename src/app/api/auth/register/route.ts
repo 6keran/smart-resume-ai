@@ -4,7 +4,7 @@ import { getOrCreateVisitorId } from '@/lib/visitor';
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
     const { fullName, email, password, confirmPassword } = body;
 
     // 1. Validation
@@ -79,11 +79,35 @@ export async function POST(req: Request) {
 
     return response;
   } catch (err: any) {
-    console.log('[Auth Registration Error]:', err?.message || String(err));
-    const isConflict = (err?.message || '').toLowerCase().includes('already exists');
+    const errorMsg = err?.message || String(err);
+    console.error('[Auth Registration Error]:', errorMsg);
+
+    const isConflict =
+      errorMsg.toLowerCase().includes('already exists') ||
+      errorMsg.toLowerCase().includes('unique') ||
+      errorMsg.toLowerCase().includes('duplicate');
+
+    if (isConflict) {
+      return NextResponse.json(
+        { message: 'An account with this email already exists. Please sign in instead.' },
+        { status: 409 }
+      );
+    }
+
+    // Check for known user-facing validation errors from registerUser
+    if (
+      errorMsg.includes('valid full name') ||
+      errorMsg.includes('Full name cannot exceed') ||
+      errorMsg.includes('valid email address') ||
+      errorMsg.includes('at least 6 characters')
+    ) {
+      return NextResponse.json({ message: errorMsg }, { status: 400 });
+    }
+
+    // Unexpected or database errors: fail safely without leaking SQL/internals
     return NextResponse.json(
-      { message: err?.message || 'Registration failed. Please try again.' },
-      { status: isConflict ? 409 : 400 }
+      { message: 'Registration service temporarily unavailable. Please try again later.' },
+      { status: 500 }
     );
   }
 }

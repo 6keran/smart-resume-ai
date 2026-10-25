@@ -1,8 +1,16 @@
 import { NextResponse } from 'next/server';
-import { getRealAdminStats } from '@/lib/db';
+import { cookies } from 'next/headers';
+import { verifyAdminToken, getRealAdminStats } from '@/lib/db';
 
 export async function GET() {
   try {
+    const cookieStore = await cookies();
+    const token = cookieStore.get('sra_admin_session')?.value;
+
+    if (!verifyAdminToken(token)) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
     const stats = await getRealAdminStats();
     return NextResponse.json(stats);
   } catch (err) {

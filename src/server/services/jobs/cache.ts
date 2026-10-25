@@ -10,11 +10,12 @@ class JobSearchCache {
   private readonly TTL = 10 * 60 * 1000; // 10 minutes in milliseconds
   private readonly MAX_ENTRIES = 100;
 
-  private generateKey(provider: string, keywords = '', location = '', radius = 0, page = 1): string {
-    return `${provider.toLowerCase()}:${keywords.toLowerCase().trim()}:${location.toLowerCase().trim()}:${radius}:${page}`;
+  private generateKey(provider: string, keywords = '', location = '', radius = 0, page?: number): string {
+    const pagePart = page !== undefined ? `:${page}` : '';
+    return `${provider.toLowerCase()}:${keywords.toLowerCase().trim()}:${location.toLowerCase().trim()}:${radius}${pagePart}`;
   }
 
-  get(provider: string, keywords = '', location = '', radius = 0, page = 1): NormalizedJob[] | null {
+  get(provider: string, keywords = '', location = '', radius = 0, page?: number): NormalizedJob[] | null {
     const key = this.generateKey(provider, keywords, location, radius, page);
     const entry = this.cache.get(key);
 
@@ -28,7 +29,7 @@ class JobSearchCache {
     return entry.jobs;
   }
 
-  set(provider: string, jobs: NormalizedJob[], keywords = '', location = '', radius = 0, page = 1): void {
+  set(provider: string, jobs: NormalizedJob[], keywords = '', location = '', radius = 0, page?: number): void {
     if (this.cache.size >= this.MAX_ENTRIES) {
       // Evict oldest entry
       const oldestKey = this.cache.keys().next().value;

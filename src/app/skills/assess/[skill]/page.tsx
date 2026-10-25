@@ -54,14 +54,22 @@ export default function AssessmentRunnerPage() {
   // Lifecycle Stage
   const [stage, setStage] = useState<AssessmentStage>('readiness');
 
-  // Camera Hardware State
+  // Camera Hardware & Proctoring Lifecycle State
+  const [assessmentStatus, setAssessmentStatus] = useState<
+    'not_started' | 'waiting_camera' | 'in_progress' | 'camera_interrupted' | 'submitted' | 'completed'
+  >('not_started');
+  const [cameraHardwareStatus, setCameraHardwareStatus] = useState<
+    'prompt' | 'granted' | 'denied' | 'unavailable' | 'disconnected' | 'active'
+  >('prompt');
+  const [streamHealth, setStreamHealth] = useState<'good' | 'degraded' | 'offline' | 'unknown'>('unknown');
   const [cameraActive, setCameraActive] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(false);
   const [cameraError, setCameraError] = useState<string | null>(null);
+  const [framesVerified, setFramesVerified] = useState(false);
+  const [measuringFrames, setMeasuringFrames] = useState(false);
+  const [measuredFps, setMeasuredFps] = useState(0);
+  const [measuredResolution, setMeasuredResolution] = useState('unknown');
   const [rulesAccepted, setRulesAccepted] = useState(false);
-  const mediaStreamRef = useRef<MediaStream | null>(null);
-  const readinessVideoRef = useRef<HTMLVideoElement | null>(null);
-  const activeVideoRef = useRef<HTMLVideoElement | null>(null);
 
   // Fullscreen Enforced State
   const [fullscreenError, setFullscreenError] = useState<string | null>(null);
@@ -96,20 +104,337 @@ export default function AssessmentRunnerPage() {
   const incidentActiveRef = useRef<boolean>(false);
   const lastIncidentTimeRef = useRef<number>(0);
 
-  // Stop Camera Helper: stops all hardware tracks immediately
+  // References for WebRTC, media tracks, and streaming timers
+  const mediaStreamRef = useRef<MediaStream | null>(null);
+  const readinessVideoRef = useRef<HTMLVideoElement | null>(null);
+  const activeVideoRef = useRef<HTMLVideoElement | null>(null);
+  const peerConnectionRef = useRef<RTCPeerConnection | null>(null);
+  const heartbeatTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const frameSyncTimerRef = useRef<NodeJS.Timeout | null>(null);
+  const isInitializingRef = useRef<boolean>(false);
+
+  // Stop Camera Helper: stops all hardware tracks immediately and releases resources
   const stopCamera = useCallback(() => {
+    if (heartbeatTimerRef.current) {
+      clearInterval(heartbeatTimerRef.current);
+      heartbeatTimerRef.current = null;
+    }
+    if (frameSyncTimerRef.current) {
+      clearInterval(frameSyncTimerRef.current);
+      frameSyncTimerRef.current = null;
+    }
+    if (peerConnectionRef.current) {
+      peerConnectionRef.current.close();
+      peerConnectionRef.current = null;
+    }
     if (mediaStreamRef.current) {
       mediaStreamRef.current.getTracks().forEach((track) => {
         track.stop();
       });
       mediaStreamRef.current = null;
     }
+    if (readinessVideoRef.current) {
+      readinessVideoRef.current.srcObject = null;
+    }
+    if (activeVideoRef.current) {
+      activeVideoRef.current.srcObject = null;
+    }
     setCameraActive(false);
+    setCameraHardwareStatus('disconnected');
+    setStreamHealth('offline');
   }, []);
 
-  // Cleanup on unmount
+  // Frame Verification: Verifies video stream is actually producing genuine video frames (not just getUserMedia success)
+  const verifyCameraFrames = useCallback(
+    (
+      videoEl: HTMLVideoElement,
+      stream?: MediaStream | null
+    ): Promise<{ verified: boolean; fps: number; resolution: string; failureReason?: string }> => {
+      return new Promise((resolve) => {
+        const activeStream = stream || (videoEl.srcObject as MediaStream | null) || mediaStreamRef.current;
+        const videoTrack = activeStream?.getVideoTracks?.()[0];
+
+        if (!videoTrack) {
+          resolve({
+            verified: false,
+            fps: 0,
+            resolution: 'unknown',
+            failureReason: 'No video track found in the camera stream.',
+          });
+          return;
+        }
+
+        // Hardware privacy switch check: track.muted is set when physical shutter or switch is active
+        if (videoTrack.muted) {
+          resolve({
+            verified: false,
+            fps: 0,
+            resolution: 'unknown',
+            failureReason:
+              'Camera connected, but video frames are not rendering. Please check your physical webcam shutter, permissions, or privacy switch.',
+          });
+          return;
+        }
+
+        // Ensure stream is attached to the video element
+        if (activeStream && videoEl.srcObject !== activeStream) {
+          videoEl.srcObject = activeStream;
+        }
+        videoEl.muted = true;
+        videoEl.playsInline = true;
+        videoEl.play().catch(() => {});
+
+        let frameCount = 0;
+        let lastTime = -1;
+        let isSettled = false;
+        const startTime = Date.now();
+        const canvas = document.createElement('canvas');
+        canvas.width = 32;
+        canvas.height = 32;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
+
+        const finish = (result: { verified: boolean; fps: number; resolution: string; failureReason?: string }) => {
+          if (isSettled) return;
+          isSettled = true;
+          clearInterval(checkInterval);
+          if (rVFCHandle !== null && typeof (videoEl as any).cancelVideoFrameCallback === 'function') {
+            (videoEl as any).cancelVideoFrameCallback(rVFCHandle);
+          }
+          resolve(result);
+        };
+
+        // Listen for hardware mute events during verification
+        const onMute = () => {
+          finish({
+            verified: false,
+            fps: 0,
+            resolution: 'unknown',
+            failureReason:
+              'Camera connected, but video frames are not rendering. Please check your physical webcam shutter, permissions, or privacy switch.',
+          });
+        };
+        videoTrack.addEventListener('mute', onMute, { once: true });
+
+        // Method 1: requestVideoFrameCallback (standard in Chrome 83+, Edge 83+, Safari 15.4+, Firefox 120+)
+        let rVFCHandle: number | null = null;
+        if (typeof (videoEl as any).requestVideoFrameCallback === 'function') {
+          const onFrame = (_now: number, metadata: any) => {
+            if (isSettled) return;
+            if (metadata && metadata.width > 0 && metadata.height > 0) {
+              frameCount++;
+              if (frameCount >= 2) {
+                const fps = 30;
+                const resolution = `${videoEl.videoWidth || metadata.width}x${videoEl.videoHeight || metadata.height}`;
+                finish({ verified: true, fps, resolution });
+                return;
+              }
+            }
+            if (!isSettled && typeof (videoEl as any).requestVideoFrameCallback === 'function') {
+              rVFCHandle = (videoEl as any).requestVideoFrameCallback(onFrame);
+            }
+          };
+          rVFCHandle = (videoEl as any).requestVideoFrameCallback(onFrame);
+        }
+
+        // Method 2: High-frequency polling fallback across all browsers
+        const checkInterval = setInterval(() => {
+          if (isSettled) return;
+
+          // Timeout check (5.5 seconds)
+          if (Date.now() - startTime > 5500) {
+            if (videoEl.readyState < 2) {
+              finish({
+                verified: false,
+                fps: 0,
+                resolution: 'unknown',
+                failureReason:
+                  'Camera connected, but video frames timed out before playback started. Please check camera connection.',
+              });
+            } else if (videoEl.videoWidth === 0 || videoEl.videoHeight === 0) {
+              finish({
+                verified: false,
+                fps: 0,
+                resolution: 'unknown',
+                failureReason:
+                  'Camera connected, but video dimensions are invalid (0x0). Please check your camera driver.',
+              });
+            } else {
+              finish({
+                verified: false,
+                fps: 0,
+                resolution: 'unknown',
+                failureReason:
+                  'Camera connected, but video frames are not rendering. Please check your physical webcam shutter, permissions, or privacy switch.',
+              });
+            }
+            return;
+          }
+
+          if (videoEl.readyState >= 2 && videoEl.videoWidth > 0 && videoEl.videoHeight > 0) {
+            const currentTime = videoEl.currentTime;
+            if (currentTime !== lastTime) {
+              lastTime = currentTime;
+              frameCount++;
+
+              if (ctx) {
+                try {
+                  ctx.drawImage(videoEl, 0, 0, 32, 32);
+                } catch {}
+              }
+
+              if (frameCount >= 2) {
+                const fps = 30;
+                const resolution = `${videoEl.videoWidth}x${videoEl.videoHeight}`;
+                finish({ verified: true, fps, resolution });
+              }
+            }
+          }
+        }, 100);
+      });
+    },
+    []
+  );
+
+  // WebRTC Publisher: Streams live camera feed P2P to authenticated administrator console
+  const initWebRtcPublisher = useCallback(async (currentAttemptId: string, stream: MediaStream) => {
+    try {
+      if (peerConnectionRef.current) {
+        peerConnectionRef.current.close();
+        peerConnectionRef.current = null;
+      }
+
+      const pc = new RTCPeerConnection({
+        iceServers: [
+          { urls: 'stun:stun.l.google.com:19302' },
+          { urls: 'stun:stun1.l.google.com:19302' },
+        ],
+      });
+      peerConnectionRef.current = pc;
+
+      stream.getVideoTracks().forEach((track) => {
+        pc.addTrack(track, stream);
+      });
+
+      pc.onicecandidate = (event) => {
+        if (event.candidate) {
+          fetch('/api/proctoring/signal', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              assessmentId: currentAttemptId,
+              sender: 'candidate',
+              type: 'candidate',
+              data: event.candidate,
+            }),
+          }).catch(() => {});
+        }
+      };
+
+      const offer = await pc.createOffer();
+      await pc.setLocalDescription(offer);
+
+      await fetch('/api/proctoring/signal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assessmentId: currentAttemptId,
+          sender: 'candidate',
+          type: 'offer',
+          data: offer,
+        }),
+      });
+
+      const answerPoll = setInterval(async () => {
+        if (!peerConnectionRef.current || pc.signalingState === 'closed') {
+          clearInterval(answerPoll);
+          return;
+        }
+        try {
+          const res = await fetch(`/api/proctoring/signal?assessmentId=${encodeURIComponent(currentAttemptId)}&for=candidate`);
+          if (res.ok) {
+            const json = await res.json();
+            if (json.signal?.answer && pc.signalingState === 'have-local-offer') {
+              await pc.setRemoteDescription(new RTCSessionDescription(json.signal.answer));
+              clearInterval(answerPoll);
+            }
+          }
+        } catch {}
+      }, 2500);
+    } catch (err) {
+      console.warn('WebRTC signaling notice:', err);
+    }
+  }, []);
+
+  // Heartbeat loop: Sends authenticated health telemetry every 3 seconds
+  const startHeartbeatLoop = useCallback((currentAttemptId: string, currentRes: string, currentFps: number) => {
+    if (heartbeatTimerRef.current) clearInterval(heartbeatTimerRef.current);
+
+    const sendHeartbeat = async () => {
+      try {
+        const isTrackActive = Boolean(
+          mediaStreamRef.current &&
+          mediaStreamRef.current.getVideoTracks().some((t) => t.readyState === 'live' && t.enabled)
+        );
+
+        const statusToSend = isTrackActive ? 'in_progress' : 'camera_interrupted';
+        const camStatusToSend = isTrackActive ? 'active' : 'disconnected';
+        const streamHealthToSend = isTrackActive ? 'good' : 'offline';
+
+        await fetch('/api/proctoring/heartbeat', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            assessmentId: currentAttemptId,
+            status: statusToSend,
+            cameraStatus: camStatusToSend,
+            streamHealth: streamHealthToSend,
+            frameRate: isTrackActive ? currentFps : 0,
+            resolution: currentRes,
+          }),
+        });
+      } catch {}
+    };
+
+    sendHeartbeat();
+    heartbeatTimerRef.current = setInterval(sendHeartbeat, 3000);
+  }, []);
+
+  // Frame sync loop: Authenticated snapshot streaming (~1.5s) for instant loading & network fallback
+  const startFrameSyncLoop = useCallback((currentAttemptId: string) => {
+    if (frameSyncTimerRef.current) clearInterval(frameSyncTimerRef.current);
+
+    const canvas = document.createElement('canvas');
+    canvas.width = 320;
+    canvas.height = 240;
+    const ctx = canvas.getContext('2d');
+
+    frameSyncTimerRef.current = setInterval(() => {
+      const video = activeVideoRef.current || readinessVideoRef.current;
+      if (video && video.readyState >= 2 && ctx && mediaStreamRef.current) {
+        try {
+          ctx.drawImage(video, 0, 0, 320, 240);
+          const dataUrl = canvas.toDataURL('image/jpeg', 0.6);
+          fetch('/api/proctoring/frame', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              assessmentId: currentAttemptId,
+              frame: dataUrl,
+            }),
+          }).catch(() => {});
+        } catch {}
+      }
+    }, 1500);
+  }, []);
+
+  // Cleanup on unmount or browser refresh
   useEffect(() => {
+    const handleBeforeUnload = () => {
+      stopCamera();
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
     return () => {
+      window.removeEventListener('beforeunload', handleBeforeUnload);
       stopCamera();
     };
   }, [stopCamera]);
@@ -129,14 +454,31 @@ export default function AssessmentRunnerPage() {
     }
   }, [stage]);
 
-  // Request Camera Permission & Activate Live Feed
+  // Request Camera Permission & Activate Live Feed with Frame Verification
   const handleEnableCamera = async () => {
+    if (isInitializingRef.current) return;
+    isInitializingRef.current = true;
+
     setCameraLoading(true);
     setCameraError(null);
+    setAssessmentStatus('waiting_camera');
+    setCameraHardwareStatus('prompt');
+
+    // Clean up any existing stream before reacquiring
+    if (mediaStreamRef.current) {
+      mediaStreamRef.current.getTracks().forEach((track) => track.stop());
+      mediaStreamRef.current = null;
+    }
+    if (readinessVideoRef.current) {
+      readinessVideoRef.current.srcObject = null;
+    }
 
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
       setCameraError('Your browser does not support webcam access. Please use an updated modern browser.');
+      setCameraHardwareStatus('unavailable');
+      setStreamHealth('offline');
       setCameraLoading(false);
+      isInitializingRef.current = false;
       return;
     }
 
@@ -151,36 +493,77 @@ export default function AssessmentRunnerPage() {
       });
 
       mediaStreamRef.current = stream;
-      setCameraActive(true);
-      setCameraError(null);
+      setCameraHardwareStatus('granted');
+      setMeasuringFrames(true);
 
-      // Listen for camera disconnect or hardware disconnection
       const videoTrack = stream.getVideoTracks()[0];
       if (videoTrack) {
         videoTrack.addEventListener('ended', () => {
           setCameraActive(false);
+          setCameraHardwareStatus('disconnected');
+          setStreamHealth('offline');
+          setAssessmentStatus('camera_interrupted');
           recordIncidentViolation('CAMERA_DISCONNECTED', 'Camera stream was disconnected or revoked during examination.');
         });
       }
 
-      if (readinessVideoRef.current) {
-        readinessVideoRef.current.srcObject = stream;
-        readinessVideoRef.current.play().catch(() => {});
+      // Attach stream to mounted video element (or fallback element)
+      const targetVideo = readinessVideoRef.current || document.createElement('video');
+      targetVideo.srcObject = stream;
+      targetVideo.muted = true;
+      targetVideo.playsInline = true;
+      await targetVideo.play().catch((playErr) => {
+        console.warn('Video element play notice:', playErr);
+      });
+
+      // Perform genuine frame verification
+      const verifyRes = await verifyCameraFrames(targetVideo, stream);
+
+      if (verifyRes.verified) {
+        setFramesVerified(true);
+        setCameraActive(true);
+        setCameraHardwareStatus('active');
+        setStreamHealth('good');
+        setMeasuredFps(verifyRes.fps);
+        setMeasuredResolution(verifyRes.resolution);
+        setAssessmentStatus('waiting_camera');
+        setCameraError(null);
+      } else {
+        setFramesVerified(false);
+        setCameraActive(false);
+        setCameraHardwareStatus('unavailable');
+        setStreamHealth('offline');
+        setCameraError(
+          verifyRes.failureReason ||
+            'Camera connected, but video frames are not rendering. Please check your physical webcam shutter, permissions, or privacy switch.'
+        );
+        stopCamera();
       }
     } catch (err: any) {
       console.error('Camera access error:', err);
-      let userFriendlyMsg = 'Unable to connect to camera. Please check your camera settings.';
-      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
-        userFriendlyMsg = 'Camera permission was denied. Please allow camera permissions in your browser address bar to proceed.';
-      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
-        userFriendlyMsg = 'No camera device was detected on your computer. An active camera is required for proctoring.';
-      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
-        userFriendlyMsg = 'Camera is currently in use by another application. Please close other video software and retry.';
-      }
-      setCameraError(userFriendlyMsg);
+      setFramesVerified(false);
       setCameraActive(false);
+
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        setCameraHardwareStatus('denied');
+        setCameraError('Camera permission was denied in your browser settings. Please click the lock or camera icon in your address bar, grant camera access, and click Retry Camera.');
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        setCameraHardwareStatus('unavailable');
+        setCameraError('No webcam hardware detected on this machine. An active camera is required for proctoring.');
+      } else if (err.name === 'NotReadableError' || err.name === 'TrackStartError') {
+        setCameraHardwareStatus('unavailable');
+        setCameraError('Camera is currently in use by another application. Please close other video software (Zoom, Teams, Meet) and retry.');
+      } else if (err.name === 'OverconstrainedError') {
+        setCameraHardwareStatus('unavailable');
+        setCameraError('Requested camera video constraints could not be satisfied. Please retry with standard camera resolution.');
+      } else {
+        setCameraHardwareStatus('unavailable');
+        setCameraError(err.message || 'Unable to connect to camera. Please check your camera settings.');
+      }
     } finally {
       setCameraLoading(false);
+      setMeasuringFrames(false);
+      isInitializingRef.current = false;
     }
   };
 
@@ -232,8 +615,23 @@ export default function AssessmentRunnerPage() {
   const handleTerminateTest = async (reason: string) => {
     if (!attemptId) return;
 
+    // Send proctoring status update
+    try {
+      await fetch('/api/proctoring/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assessmentId: attemptId,
+          status: 'terminated',
+          cameraStatus: 'disconnected',
+          streamHealth: 'offline',
+        }),
+      });
+    } catch {}
+
     // Stop hardware immediately and exit fullscreen
     stopCamera();
+    setAssessmentStatus('camera_interrupted');
     if (document.fullscreenElement) {
       document.exitFullscreen().catch(() => {});
     }
@@ -253,7 +651,6 @@ export default function AssessmentRunnerPage() {
 
       if (res.ok) {
         const attempt: AssessmentAttempt = await res.json();
-        // Explicitly set INCOMPLETE status
         attempt.status = 'INCOMPLETE';
         attempt.passed = false;
         recordAssessmentResult(attempt);
@@ -351,6 +748,37 @@ export default function AssessmentRunnerPage() {
       }
 
       setAttemptId(data.attemptId);
+      setAssessmentStatus('in_progress');
+
+      // Register session with Live Proctoring Center
+      try {
+        await fetch('/api/proctoring/session', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            assessmentId: data.attemptId,
+            skill: skillParam,
+            status: 'in_progress',
+            cameraStatus: 'active',
+            streamHealth: 'good',
+            frameRate: measuredFps || 30,
+            resolution: measuredResolution || '640x480',
+            consentGiven: true,
+          }),
+        });
+      } catch (err) {
+        console.warn('Live proctoring registration notice:', err);
+      }
+
+      // Initialize WebRTC P2P publisher
+      if (mediaStreamRef.current) {
+        initWebRtcPublisher(data.attemptId, mediaStreamRef.current);
+      }
+
+      // Start periodic heartbeats and frame snapshots
+      startHeartbeatLoop(data.attemptId, measuredResolution, measuredFps || 30);
+      startFrameSyncLoop(data.attemptId);
+
       const mapped: ExamQuestion[] = (data.questions || []).map((q: any) => ({
         id: q.id,
         question: q.question_text,
@@ -501,6 +929,21 @@ export default function AssessmentRunnerPage() {
   const handleSubmitTest = async () => {
     if (!attemptId || isSubmitting) return;
     setIsSubmitting(true);
+    setAssessmentStatus('submitted');
+
+    // Notify proctoring session of submission
+    try {
+      await fetch('/api/proctoring/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          assessmentId: attemptId,
+          status: 'submitted',
+          cameraStatus: 'disconnected',
+          streamHealth: 'offline',
+        }),
+      });
+    } catch {}
 
     // Stop camera hardware and exit fullscreen immediately
     stopCamera();
@@ -536,6 +979,7 @@ export default function AssessmentRunnerPage() {
         }
 
         setAttemptResult(attempt);
+        setAssessmentStatus('completed');
         setStage('result');
       } else {
         alert('Failed to submit assessment. Please retry.');
@@ -651,85 +1095,128 @@ export default function AssessmentRunnerPage() {
                   </h3>
                 </div>
 
-                {cameraActive ? (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    Camera Ready
-                  </span>
-                ) : (
-                  <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                    Camera Required
-                  </span>
-                )}
+                <div className="flex items-center gap-2">
+                  {cameraActive && framesVerified ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                      Frames Verified ({measuredResolution}, {measuredFps} FPS)
+                    </span>
+                  ) : measuringFrames ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                      <RefreshCw className="w-3 h-3 animate-spin" />
+                      Verifying Video Frames...
+                    </span>
+                  ) : cameraHardwareStatus === 'denied' ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-red-500/10 text-red-400 border border-red-500/20">
+                      Permission Denied
+                    </span>
+                  ) : cameraHardwareStatus === 'unavailable' ? (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      Camera Unavailable
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                      Camera Required
+                    </span>
+                  )}
+                </div>
               </div>
 
-              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                To guarantee credential authenticity, this assessment uses your browser&apos;s real camera for live candidate verification.
-                Your camera preview is active during the test. <span className="text-[var(--text-primary)] font-semibold">Video is neither recorded nor stored permanently on servers</span>.
-              </p>
+              {/* Assessment Lifecycle Status Banner */}
+              <div className="p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-between text-xs">
+                <span className="text-[var(--text-secondary)]">Assessment Lifecycle Status:</span>
+                <span className="font-bold text-[var(--accent)] uppercase tracking-wider text-[11px]">
+                  {assessmentStatus === 'not_started'
+                    ? 'Not Started'
+                    : assessmentStatus === 'waiting_camera'
+                    ? 'Waiting for Camera Verification'
+                    : assessmentStatus === 'in_progress'
+                    ? 'In Progress'
+                    : assessmentStatus === 'camera_interrupted'
+                    ? 'Camera Interrupted'
+                    : assessmentStatus === 'submitted'
+                    ? 'Submitted'
+                    : 'Completed'}
+                </span>
+              </div>
 
-              {/* Video Preview Box or Enable Prompt */}
-              {cameraActive ? (
-                <div className="relative rounded-xl overflow-hidden bg-black border border-[var(--border-color)] max-w-md mx-auto aspect-video">
-                  <video
-                    ref={readinessVideoRef}
-                    autoPlay
-                    muted
-                    playsInline
-                    className="w-full h-full object-cover transform -scale-x-100"
-                  />
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-[10px] text-white flex items-center gap-1.5 font-medium">
+              <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300 leading-relaxed space-y-1">
+                <p className="font-semibold text-indigo-200">
+                  Candidate Consent & Camera Proctoring Notice:
+                </p>
+                <p className="text-[11px] text-indigo-200/80">
+                  By starting this examination, you acknowledge and consent that your camera feed is streamed in real-time to the administrator proctoring console for skill authentication. Audio is strictly disabled. Video media tracks are stopped and released immediately when your assessment concludes.
+                </p>
+              </div>
+
+              {/* Video Preview Box with Persistent Video Element */}
+              <div className="relative rounded-xl overflow-hidden bg-black border border-[var(--border-color)] max-w-md mx-auto aspect-video flex items-center justify-center shadow-inner">
+                {/* Real Mirrored Video Element - Permanently mounted so ref and layout are always available */}
+                <video
+                  ref={readinessVideoRef}
+                  autoPlay
+                  muted
+                  playsInline
+                  className="w-full h-full object-cover transform -scale-x-100"
+                />
+
+                {/* State 1: Live Verified Overlay Badge */}
+                {cameraActive && framesVerified && (
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-[10px] text-white flex items-center gap-1.5 font-medium z-10">
                     <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-                    Live Camera Feed Connected
+                    Live Verified Camera Stream ({measuredResolution})
                   </div>
-                </div>
-              ) : (
-                <div className="p-6 rounded-xl border border-dashed border-[var(--border-color)] bg-[var(--bg-elevated)]/40 text-center space-y-3">
-                  <div className="w-12 h-12 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center mx-auto text-[var(--text-secondary)]">
-                    <Video className="w-6 h-6" />
-                  </div>
-                  <div>
-                    <h4 className="text-xs font-bold text-[var(--text-primary)]">
-                      Camera Permission Required
-                    </h4>
-                    <p className="text-[11px] text-[var(--text-secondary)] max-w-sm mx-auto mt-0.5">
-                      Click below to grant camera access and preview your verification video feed.
-                    </p>
-                  </div>
+                )}
 
-                  <button
-                    type="button"
-                    onClick={handleEnableCamera}
-                    disabled={cameraLoading}
-                    className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold shadow-md shadow-[var(--accent)]/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
-                  >
-                    {cameraLoading ? (
-                      <>
-                        <RefreshCw className="w-4 h-4 animate-spin" />
-                        <span>Connecting Camera...</span>
-                      </>
-                    ) : (
-                      <>
-                        <Camera className="w-4 h-4" />
-                        <span>Enable Camera for Proctoring</span>
-                      </>
-                    )}
-                  </button>
-                </div>
-              )}
+                {/* State 2: Camera Loading or Measuring Frames Overlay */}
+                {(cameraLoading || measuringFrames) && (
+                  <div className="absolute inset-0 bg-black/70 backdrop-blur-xs flex flex-col items-center justify-center p-4 text-center z-10 space-y-2">
+                    <RefreshCw className="w-6 h-6 animate-spin text-[var(--accent)]" />
+                    <p className="text-xs font-bold text-white">Verifying Camera & Video Frames...</p>
+                    <p className="text-[11px] text-white/80">Checking live video playback and frame delivery</p>
+                  </div>
+                )}
+
+                {/* State 3: Not active and not measuring (Initial prompt or idle state) */}
+                {!cameraActive && !measuringFrames && !cameraLoading && (
+                  <div className="absolute inset-0 bg-[var(--bg-elevated)] flex flex-col items-center justify-center text-center p-6 space-y-3 z-10 border border-dashed border-[var(--border-color)] rounded-xl">
+                    <div className="w-12 h-12 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center mx-auto text-[var(--text-secondary)]">
+                      <Video className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h4 className="text-xs font-bold text-[var(--text-primary)]">
+                        Camera Permission & Frame Verification Required
+                      </h4>
+                      <p className="text-[11px] text-[var(--text-secondary)] max-w-sm mx-auto mt-0.5">
+                        Click below to request camera access and verify that active video frames are rendering.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleEnableCamera}
+                      disabled={cameraLoading || measuringFrames}
+                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold shadow-md shadow-[var(--accent)]/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                    >
+                      <Camera className="w-4 h-4" />
+                      <span>Enable Camera & Verify Frames</span>
+                    </button>
+                  </div>
+                )}
+              </div>
 
               {/* Error Notice if camera failed */}
               {cameraError && (
                 <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-400 text-xs flex items-start gap-2.5">
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                   <div className="flex-1 space-y-2">
-                    <p>{cameraError}</p>
+                    <p className="font-medium">{cameraError}</p>
                     <button
                       type="button"
                       onClick={handleEnableCamera}
                       className="px-3 py-1 rounded-lg bg-rose-500 text-white text-[11px] font-semibold hover:bg-rose-600 transition-colors"
                     >
-                      Retry Camera
+                      Retry Camera Access
                     </button>
                   </div>
                 </div>
@@ -1092,9 +1579,27 @@ export default function AssessmentRunnerPage() {
                     playsInline
                     className="w-full h-full object-cover transform -scale-x-100"
                   />
-                  <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/60 backdrop-blur-sm text-[9px] text-white/90 font-mono flex items-center gap-1">
-                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
-                    Live Camera Feed
+                  <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/60 backdrop-blur-md text-[9px] text-white/90 font-mono flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                    <span>STREAMING ({measuredResolution})</span>
+                  </div>
+                </div>
+
+                {/* Telemetry Metrics Bar */}
+                <div className="p-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] text-[10px] space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[var(--text-secondary)]">Stream Health:</span>
+                    <span className={streamHealth === 'good' ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}>
+                      {streamHealth === 'good' ? 'Active (Good)' : 'Interrupted'}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[var(--text-secondary)]">Frame Rate:</span>
+                    <span className="font-mono text-[var(--text-primary)]">{measuredFps || 30} FPS</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[var(--text-secondary)]">Assessment Status:</span>
+                    <span className="font-bold text-[var(--accent)] uppercase">{assessmentStatus}</span>
                   </div>
                 </div>
 

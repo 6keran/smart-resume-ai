@@ -266,20 +266,20 @@ export default function SkillVerificationPage() {
             return (
               <div
                 key={sk.name}
-                className="p-3.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] flex items-center justify-between text-xs"
+                className="p-3.5 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] backdrop-blur-xl shadow-xs flex items-center justify-between text-xs transition-all hover:-translate-y-0.5"
               >
                 <div>
                   <h4 className="font-bold text-[var(--text-primary)]">{sk.name}</h4>
                   <p className="text-[10px] text-[var(--text-secondary)]">{sk.category}</p>
                 </div>
                 {isUserSkill ? (
-                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                  <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20">
                     Added
                   </span>
                 ) : (
                   <button
                     onClick={() => addSkill(sk.name, sk.category, true)}
-                    className="p-1.5 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--accent)] hover:text-white text-[var(--text-secondary)] transition-colors"
+                    className="p-1.5 rounded-xl bg-[var(--glass-bg-elevated)] hover:bg-[var(--accent)] hover:text-white text-[var(--text-secondary)] border border-[var(--glass-border)] transition-colors cursor-pointer"
                     title={`Add ${sk.name}`}
                   >
                     <Plus className="w-3.5 h-3.5" />
@@ -293,13 +293,14 @@ export default function SkillVerificationPage() {
 
       {/* ADD SKILL MODAL */}
       {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-md rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-xl space-y-5 text-left">
-            <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in">
+          <div className="w-full max-w-md rounded-2xl bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] p-6 sm:p-7 shadow-[var(--shadow-glass-hover)] backdrop-blur-2xl space-y-5 text-left relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent pointer-events-none" />
+            <div className="flex items-center justify-between border-b border-[var(--glass-border)] pb-3">
               <h3 className="text-base font-bold text-[var(--text-primary)]">Add Skill To Profile</h3>
               <button
                 onClick={() => setIsAddModalOpen(false)}
-                className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
@@ -318,7 +319,7 @@ export default function SkillVerificationPage() {
                     const match = allSupportedSkills.find((s) => s.name === val);
                     if (match) setSelectedCategory(match.category);
                   }}
-                  className="w-full p-2.5 rounded-lg border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] shadow-xs"
                 >
                   {allSupportedSkills.map((sk) => (
                     <option key={sk.name} value={sk.name}>
@@ -335,7 +336,7 @@ export default function SkillVerificationPage() {
                 <select
                   value={selectedCategory}
                   onChange={(e) => setSelectedCategory(e.target.value as UserSkill['category'])}
-                  className="w-full p-2.5 rounded-lg border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] shadow-xs"
                 >
                   <option value="Programming">Programming</option>
                   <option value="Frontend">Frontend</option>
@@ -359,17 +360,17 @@ export default function SkillVerificationPage() {
                 </label>
               </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[var(--border-color)]">
+              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[var(--glass-border)]">
                 <button
                   type="button"
                   onClick={() => setIsAddModalOpen(false)}
-                  className="h-[38px] px-4 rounded-lg text-xs font-medium border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-primary)] transition-colors"
+                  className="h-[38px] px-4 rounded-xl text-xs font-semibold border border-[var(--glass-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] transition-all cursor-pointer shadow-xs"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
-                  className="h-[38px] px-4 rounded-lg text-xs font-semibold bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white shadow-sm transition-colors"
+                  className="h-[38px] px-4 rounded-xl text-xs font-semibold bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white shadow-sm hover:shadow-[0_4px_16px_rgba(79,143,247,0.3)] transition-all cursor-pointer"
                 >
                   Add Skill
                 </button>
@@ -379,31 +380,32 @@ export default function SkillVerificationPage() {
         </div>
       )}
 
-      {/* REMOVE SKILL CONFIRMATION MODAL (Phase 16) */}
+      {/* REMOVE SKILL CONFIRMATION MODAL */}
       {skillToRemove && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-sm rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-xl space-y-4 text-center">
-            <div className="w-12 h-12 rounded-full bg-rose-500/10 text-rose-500 mx-auto flex items-center justify-center">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in">
+          <div className="w-full max-w-sm rounded-2xl bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] p-6 sm:p-7 shadow-[var(--shadow-glass-hover)] backdrop-blur-2xl space-y-4 text-center relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-rose-500/40 to-transparent pointer-events-none" />
+            <div className="w-12 h-12 rounded-2xl bg-rose-500/10 text-rose-500 mx-auto flex items-center justify-center border border-rose-500/20 shadow-xs">
               <Trash2 className="w-5 h-5" />
             </div>
             <h3 className="text-base font-bold text-[var(--text-primary)]">
               Remove {skillToRemove.name} from your skills?
             </h3>
-            <p className="text-xs text-[var(--text-secondary)]">
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
               Are you sure you want to remove this skill? Your assessments and earned certificates will remain safely preserved.
             </p>
             <div className="flex items-center justify-center gap-3 pt-2">
               <button
                 disabled={isDeleting}
                 onClick={() => setSkillToRemove(null)}
-                className="h-[38px] px-4 rounded-lg text-xs font-medium border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-50 transition-colors"
+                className="h-[38px] px-4 rounded-xl text-xs font-semibold border border-[var(--glass-border)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] disabled:opacity-50 transition-all cursor-pointer shadow-xs"
               >
                 Cancel
               </button>
               <button
                 disabled={isDeleting}
                 onClick={handleConfirmRemove}
-                className="h-[38px] px-4 rounded-lg text-xs font-semibold bg-[var(--error)] hover:opacity-90 text-white shadow-sm flex items-center justify-center gap-2 disabled:opacity-50 transition-colors min-w-[110px]"
+                className="h-[38px] px-4 rounded-xl text-xs font-semibold bg-rose-600 hover:bg-rose-700 text-white shadow-sm hover:shadow-[0_4px_16px_rgba(225,29,72,0.3)] flex items-center justify-center gap-2 disabled:opacity-50 transition-all min-w-[110px] cursor-pointer"
               >
                 {isDeleting ? (
                   <>
@@ -421,7 +423,7 @@ export default function SkillVerificationPage() {
 
       {/* Floating Toast Notification */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-lg shadow-lg border text-xs font-medium backdrop-blur-md bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-primary)]">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-xs font-medium backdrop-blur-2xl bg-[var(--glass-bg-elevated)] border-[var(--glass-border)] text-[var(--text-primary)]">
           {toast.type === 'success' ? (
             <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
           ) : (

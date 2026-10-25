@@ -58,7 +58,38 @@ function JobSearchContent() {
   const [showConfirmPrompt, setShowConfirmPrompt] = useState(false);
   const [confirmStatusMessage, setConfirmStatusMessage] = useState<string | null>(null);
   const [savedJobIds, setSavedJobIds] = useState<Set<string>>(new Set());
+  const [savedAppMap, setSavedAppMap] = useState<Map<string, string>>(new Map());
   const [savingJobId, setSavingJobId] = useState<string | null>(null);
+  const [searchError, setSearchError] = useState<string | null>(null);
+
+  // Load existing saved applications on mount to ensure persistence across refresh/login
+  useEffect(() => {
+    async function loadSavedApplications() {
+      try {
+        const res = await fetch('/api/user/applications');
+        if (res.ok) {
+          const data = await res.json();
+          const apps = data.applications || [];
+          const sIds = new Set<string>();
+          const aMap = new Map<string, string>();
+          for (const app of apps) {
+            const jId = app.job_id || app.jobId;
+            if (jId) {
+              aMap.set(jId, app.id);
+              if (app.status === 'Saved' || app.status === 'Ready to apply') {
+                sIds.add(jId);
+              }
+            }
+          }
+          setSavedJobIds(sIds);
+          setSavedAppMap(aMap);
+        }
+      } catch (err) {
+        console.error('Failed to load user saved applications:', err);
+      }
+    }
+    loadSavedApplications();
+  }, []);
 
   // Tab return listener for automatic prompt trigger
   useEffect(() => {
@@ -98,6 +129,25 @@ function JobSearchContent() {
   const [geoError, setGeoError] = useState<string | null>(null);
   const [lastUpdatedTime, setLastUpdatedTime] = useState<string | null>(null);
 
+  // Body scroll lock & Escape key handling for slide-over drawer and confirm prompt
+  useEffect(() => {
+    if (selectedJob || showConfirmPrompt) {
+      const prev = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          if (showConfirmPrompt) setShowConfirmPrompt(false);
+          else if (selectedJob) setSelectedJob(null);
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+      return () => {
+        document.body.style.overflow = prev;
+        window.removeEventListener('keydown', handleKeyDown);
+      };
+    }
+  }, [selectedJob, showConfirmPrompt]);
+
   // Derive candidate skills without inventing any data
   const candidateSkills = Array.from(
     new Set([
@@ -113,6 +163,7 @@ function JobSearchContent() {
     async (pageToLoad = 1, bypassCache = false) => {
       setIsLoading(true);
       setHasSearched(true);
+      setSearchError(null);
       setCurrentPage(pageToLoad);
 
       try {
@@ -158,8 +209,11 @@ function JobSearchContent() {
         if (res.ok) {
           const data: JobSearchResponse = await res.json();
           setSearchResponse(data);
+          setSearchError(null);
           setLastUpdatedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
         } else {
+          const errData = await res.json().catch(() => ({}));
+          setSearchError(errData.message || 'Live job search is temporarily unavailable. Please try again.');
           setSearchResponse({
             jobs: [],
             totalJobs: 0,
@@ -172,6 +226,16 @@ function JobSearchContent() {
         }
       } catch (err) {
         console.error('Job search failed:', err);
+        setSearchError('Network error connecting to job search service. Please check your connection and retry.');
+        setSearchResponse({
+          jobs: [],
+          totalJobs: 0,
+          page: 1,
+          totalPages: 0,
+          configuredProviders: [],
+          activeSources: [],
+          isConfigured: true,
+        });
       } finally {
         setIsLoading(false);
       }
@@ -246,30 +310,60 @@ function JobSearchContent() {
 
   // Application Workflow Handlers
   const handleSaveJob = async (job: Job) => {
+    const isCurrentlySaved = savedJobIds.has(job.id);
     try {
       setSavingJobId(job.id);
-      const res = await fetch('/api/user/applications', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          jobId: job.id,
-          jobTitle: job.title,
-          company: job.company,
-          location: job.location,
-          source: job.source,
-          jobUrl: job.applyUrl || job.sourceUrl,
-          status: 'Saved',
-          descriptionSnippet: job.snippet,
-          salary: job.salaryDisplay || job.salary,
-        }),
-      });
-      if (res.ok) {
-        setSavedJobIds((prev) => new Set([...prev, job.id]));
-        setConfirmStatusMessage(`Saved "${job.title} at ${job.company}" to your Saved Jobs.`);
-        setTimeout(() => setConfirmStatusMessage(null), 4000);
+      if (isCurrentlySaved) {
+        // UNSAVE
+        const appId = savedAppMap.get(job.id);
+        const deleteUrl = appId
+          ? `/api/user/applications?id=${encodeURIComponent(appId)}`
+          : `/api/user/applications?jobId=${encodeURIComponent(job.id)}`;
+        const res = await fetch(deleteUrl, { method: 'DELETE' });
+        if (res.ok) {
+          setSavedJobIds((prev) => {
+            const next = new Set(prev);
+            next.delete(job.id);
+            return next;
+          });
+          setSavedAppMap((prev) => {
+            const next = new Map(prev);
+            next.delete(job.id);
+            return next;
+          });
+          setConfirmStatusMessage(`Removed "${job.title}" from Saved Jobs.`);
+          setTimeout(() => setConfirmStatusMessage(null), 4000);
+        }
+      } else {
+        // SAVE
+        const res = await fetch('/api/user/applications', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jobId: job.id,
+            jobTitle: job.title,
+            company: job.company,
+            location: job.location,
+            source: job.source,
+            jobUrl: job.applyUrl || job.sourceUrl,
+            status: 'Saved',
+            descriptionSnippet: job.snippet,
+            salary: job.salaryDisplay || job.salary,
+          }),
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const createdApp = data.application;
+          setSavedJobIds((prev) => new Set([...prev, job.id]));
+          if (createdApp?.id) {
+            setSavedAppMap((prev) => new Map(prev).set(job.id, createdApp.id));
+          }
+          setConfirmStatusMessage(`Saved "${job.title} at ${job.company}" to your Saved Jobs.`);
+          setTimeout(() => setConfirmStatusMessage(null), 4000);
+        }
       }
     } catch (err) {
-      console.error('Error saving job:', err);
+      console.error('Error toggling saved job:', err);
     } finally {
       setSavingJobId(null);
     }
@@ -433,18 +527,24 @@ function JobSearchContent() {
 
       {/* Return Confirmation Modal */}
       {showConfirmPrompt && pendingApplication && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-md rounded-2xl bg-white dark:bg-[#0F172A] border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+        <div
+          className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowConfirmPrompt(false);
+          }}
+        >
+          <div className="w-full max-w-md rounded-2xl bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] shadow-[var(--shadow-glass-hover)] backdrop-blur-2xl p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200 relative overflow-hidden">
+            <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent pointer-events-none" />
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20">
+                <div className="w-10 h-10 rounded-xl bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20 shadow-xs">
                   <Send className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  <h3 className="text-base font-bold text-[var(--text-primary)]">
                     Did you apply for this job?
                   </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                     {pendingApplication.jobTitle} @ {pendingApplication.company}
                   </p>
                 </div>
@@ -490,63 +590,74 @@ function JobSearchContent() {
         </div>
       )}
       {/* Top Section Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight">
-            Job Search
-          </h1>
-          <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
-            Search active job openings and compare requirements against your resume skills.
-          </p>
-        </div>
+      <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 glass-card border border-[var(--glass-border)]">
+        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-transparent rounded-full blur-3xl -z-10 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-tr from-cyan-500/10 via-blue-500/10 to-transparent rounded-full blur-3xl -z-10 pointer-events-none" />
 
-        {/* Resume-Aware Status Indicator */}
-        {hasCandidateResume ? (
-          <div className="flex items-center gap-3 p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm">
-            <Sparkles className="w-5 h-5 text-[var(--accent)] shrink-0" />
-            <div className="text-xs">
-              <span className="font-semibold text-[var(--text-primary)] block">
-                Detected Resume Skills
-              </span>
-              <div className="flex flex-wrap gap-1 mt-1">
-                {candidateSkills.slice(0, 4).map((sk) => (
-                  <span
-                    key={sk}
-                    className="px-2 py-0.5 rounded text-[10px] font-medium bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)]"
-                  >
-                    {sk}
-                  </span>
-                ))}
-                {candidateSkills.length > 4 && (
-                  <span className="text-[10px] text-[var(--text-secondary)] self-center">
-                    +{candidateSkills.length - 4} more
-                  </span>
-                )}
-              </div>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/20 backdrop-blur-md">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>Live Market Intelligence</span>
             </div>
-            <button
-              onClick={() => {
-                setKeywords(candidateSkills.slice(0, 3).join(', '));
-                performSearch(1);
-              }}
-              className="ml-auto px-3 py-1.5 rounded-xl bg-[var(--accent)] text-white text-[11px] font-semibold hover:bg-[var(--accent-hover)] transition-all shadow-sm"
-            >
-              Match Roles
-            </button>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[var(--text-primary)] tracking-tight">
+              Job Search & Role Matcher
+            </h1>
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+              Search active verified openings across LinkedIn and major platforms. Compare job requirements directly against your resume with real-time match scoring.
+            </p>
           </div>
-        ) : (
-          <Link
-            href="/analyzer"
-            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-xs font-semibold text-[var(--text-primary)] transition-all shadow-sm"
-          >
-            <Sparkles className="w-4 h-4 text-[var(--accent)]" />
-            Upload Resume for Match Score
-          </Link>
-        )}
+
+          {/* Resume-Aware Status Indicator Dock */}
+          {hasCandidateResume ? (
+            <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)]/80 backdrop-blur-md shadow-sm shrink-0">
+              <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/15 text-[var(--accent)] flex items-center justify-center shrink-0">
+                <Sparkles className="w-5 h-5" />
+              </div>
+              <div className="text-xs">
+                <span className="font-bold text-[var(--text-primary)] block">
+                  Detected Resume Skills
+                </span>
+                <div className="flex flex-wrap gap-1 mt-1">
+                  {candidateSkills.slice(0, 4).map((sk) => (
+                    <span
+                      key={sk}
+                      className="px-2 py-0.5 rounded-md text-[10px] font-semibold bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)]"
+                    >
+                      {sk}
+                    </span>
+                  ))}
+                  {candidateSkills.length > 4 && (
+                    <span className="text-[10px] text-[var(--text-secondary)] self-center font-medium">
+                      +{candidateSkills.length - 4} more
+                    </span>
+                  )}
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setKeywords(candidateSkills.slice(0, 3).join(', '));
+                  performSearch(1);
+                }}
+                className="ml-auto px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold hover:opacity-95 transition-all shadow-md shadow-indigo-500/20 active:scale-95 cursor-pointer"
+              >
+                Match Roles
+              </button>
+            </div>
+          ) : (
+            <Link
+              href="/analyzer"
+              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] text-xs font-bold text-[var(--text-primary)] transition-all shadow-md backdrop-blur-md active:scale-95 shrink-0"
+            >
+              <Sparkles className="w-4 h-4 text-[var(--accent)]" />
+              <span>Upload Resume for Match Score</span>
+            </Link>
+          )}
+        </div>
       </div>
 
-      {/* Search Controls Panel */}
-      <GlassCard className="p-5 sm:p-6 space-y-4 shadow-sm border border-[var(--border-color)]">
+      {/* Frosted Glass Search Controls Dock */}
+      <GlassCard className="p-6 sm:p-7 space-y-4 shadow-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl rounded-3xl relative overflow-hidden">
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -562,7 +673,7 @@ function JobSearchContent() {
               value={keywords}
               onChange={(e) => setKeywords(e.target.value)}
               placeholder="Job title / keywords (e.g. Python Developer, React, Data Analyst)..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-lg border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] text-xs sm:text-sm focus:outline-none focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 transition-all duration-150"
+              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs sm:text-sm focus:outline-none focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 transition-all duration-150"
             />
           </div>
 
@@ -574,13 +685,13 @@ function JobSearchContent() {
               value={location}
               onChange={(e) => setLocation(e.target.value)}
               placeholder="Location (e.g. Bengaluru, India, Hyderabad, Mumbai, Remote)..."
-              className="w-full pl-10 pr-24 py-2.5 rounded-lg border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] text-xs sm:text-sm focus:outline-none focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 transition-all duration-150"
+              className="w-full pl-10 pr-24 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs sm:text-sm focus:outline-none focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 transition-all duration-150"
             />
             <button
               type="button"
               onClick={handleUseMyLocation}
               title="Use my location"
-              className="absolute right-2 top-2 px-2 py-1 rounded-md hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--accent)] active:scale-95 transition-all duration-150 text-xs flex items-center gap-1 font-medium cursor-pointer"
+              className="absolute right-2 top-2 px-2.5 py-1 rounded-lg hover:bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--accent)] active:scale-95 transition-all duration-150 text-xs flex items-center gap-1 font-medium cursor-pointer"
             >
               <LocateFixed className={`w-3.5 h-3.5 ${geoLocating ? 'animate-spin text-[var(--accent)]' : ''}`} />
               <span className="text-[10px] hidden sm:inline">Use my location</span>
@@ -592,7 +703,7 @@ function JobSearchContent() {
             <button
               type="submit"
               disabled={isLoading}
-              className="w-full inline-flex items-center justify-center gap-2 h-[44px] px-5 rounded-lg bg-[var(--accent)] text-white text-xs sm:text-sm font-semibold hover:bg-[var(--accent-hover)] transition-all duration-150 shadow-xs active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="w-full inline-flex items-center justify-center gap-2 h-[44px] px-6 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-xs sm:text-sm font-bold hover:opacity-95 transition-all duration-150 shadow-lg shadow-indigo-500/25 active:scale-95 disabled:opacity-50 cursor-pointer"
             >
               {isLoading ? (
                 <>
@@ -622,7 +733,7 @@ function JobSearchContent() {
             <select
               value={experienceLevel}
               onChange={(e) => setExperienceLevel(e.target.value)}
-              className="p-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs font-medium focus:outline-none focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 transition-all duration-150"
+              className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs font-medium focus:outline-none focus:border-[var(--accent)] transition-all duration-150 cursor-pointer"
             >
               <option value="any">Experience: Any</option>
               <option value="Fresher">Fresher</option>
@@ -636,7 +747,7 @@ function JobSearchContent() {
             <select
               value={jobType}
               onChange={(e) => setJobType(e.target.value)}
-              className="p-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs font-medium focus:outline-none focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 transition-all duration-150"
+              className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs font-medium focus:outline-none focus:border-[var(--accent)] transition-all duration-150 cursor-pointer"
             >
               <option value="any">Job type: Any</option>
               <option value="Full-time">Full-time</option>
@@ -649,7 +760,7 @@ function JobSearchContent() {
             <select
               value={workMode}
               onChange={(e) => setWorkMode(e.target.value)}
-              className="p-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs font-medium focus:outline-none focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 transition-all duration-150"
+              className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs font-medium focus:outline-none focus:border-[var(--accent)] transition-all duration-150 cursor-pointer"
             >
               <option value="any">Work mode: Any</option>
               <option value="On-site">On-site</option>
@@ -661,7 +772,7 @@ function JobSearchContent() {
             <select
               value={postedDays}
               onChange={(e) => setPostedDays(Number(e.target.value))}
-              className="p-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs font-medium focus:outline-none focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 transition-all duration-150"
+              className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs font-medium focus:outline-none focus:border-[var(--accent)] transition-all duration-150 cursor-pointer"
             >
               <option value={0}>Posted: Any time</option>
               <option value={1}>Past 24 hours</option>
@@ -675,7 +786,7 @@ function JobSearchContent() {
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="p-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs font-medium focus:outline-none focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 transition-all duration-150"
+              className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs font-medium focus:outline-none focus:border-[var(--accent)] transition-all duration-150 cursor-pointer"
             >
               {hasCandidateResume && <option value="match">Sort: Best Resume Match</option>}
               <option value="relevance">Sort: Relevance</option>
@@ -698,18 +809,22 @@ function JobSearchContent() {
                 onClick={() => performSearch(currentPage, true)}
                 disabled={isLoading}
                 title="Refresh fresh listings from sources"
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-card)] text-[var(--text-primary)] active:scale-95 transition-all duration-150 font-medium text-xs disabled:opacity-50 cursor-pointer"
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] text-[var(--text-primary)] active:scale-95 transition-all duration-150 font-medium text-xs disabled:opacity-50 cursor-pointer"
               >
                 <RotateCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Refresh</span>
               </button>
             )}
 
-            <div className="flex items-center gap-1 border border-[var(--border-color)] rounded-lg p-0.5 bg-[var(--bg-secondary)]">
+            <div className="flex items-center gap-1 border border-[var(--glass-border)] rounded-xl p-1 bg-[var(--glass-bg)]">
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
-                className={`p-1 rounded active:scale-95 transition-all duration-150 cursor-pointer ${viewMode === 'grid' ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-xs' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                className={`p-1.5 rounded-lg active:scale-95 transition-all duration-150 cursor-pointer ${
+                  viewMode === 'grid'
+                    ? 'bg-[var(--accent)] text-white shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                }`}
                 title="Grid View"
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -717,7 +832,11 @@ function JobSearchContent() {
               <button
                 type="button"
                 onClick={() => setViewMode('list')}
-                className={`p-1 rounded active:scale-95 transition-all duration-150 cursor-pointer ${viewMode === 'list' ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-xs' : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'}`}
+                className={`p-1.5 rounded-lg active:scale-95 transition-all duration-150 cursor-pointer ${
+                  viewMode === 'list'
+                    ? 'bg-[var(--accent)] text-white shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                }`}
                 title="List View"
               >
                 <List className="w-3.5 h-3.5" />
@@ -733,50 +852,84 @@ function JobSearchContent() {
           {activeSources.map((src) => (
             <span
               key={src}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold"
+              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold"
             >
               <CheckCircle2 className="w-3.5 h-3.5" />
               {src} results available
             </span>
           ))}
 
-          {unavailableSources.map((src) => (
-            <div
-              key={src}
-              className="inline-flex items-center gap-2 px-3 py-1 rounded-lg bg-amber-500/10 text-amber-400 border border-amber-500/25 font-medium"
-            >
-              <AlertTriangle className="w-3.5 h-3.5" />
-              <span>{src} temporarily protected by CAPTCHA</span>
-              <a
-                href={`https://www.naukri.com/${encodeURIComponent(keywords || 'software-developer')}-jobs-in-${encodeURIComponent(location || 'india')}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="underline hover:text-amber-300 font-semibold inline-flex items-center gap-0.5 ml-1"
+          {unavailableSources.map((src) => {
+            const isNaukri = src.toLowerCase().includes('naukri');
+            const isLinkedIn = src.toLowerCase().includes('linkedin');
+            const isAdzuna = src.toLowerCase().includes('adzuna');
+            const isJooble = src.toLowerCase().includes('jooble');
+
+            let message = `${src} search is temporarily unavailable`;
+            let fallbackUrl: string | null = null;
+            let fallbackLabel = `Search on ${src} ↗`;
+
+            if (isNaukri) {
+              message = 'Naukri temporarily protected by automated challenge';
+              fallbackUrl = `https://www.naukri.com/${encodeURIComponent(keywords || 'software-developer')}-jobs-in-${encodeURIComponent(location || 'india')}`;
+              fallbackLabel = 'Search on Naukri ↗';
+            } else if (isLinkedIn) {
+              message = 'LinkedIn search temporarily rate limited';
+              fallbackUrl = `https://www.linkedin.com/jobs/search?keywords=${encodeURIComponent(keywords || 'developer')}&location=${encodeURIComponent(location || 'India')}`;
+              fallbackLabel = 'Search on LinkedIn ↗';
+            } else if (isAdzuna) {
+              message = 'Adzuna API credentials not configured or limit reached';
+            } else if (isJooble) {
+              message = 'Jooble API credentials not configured or limit reached';
+            }
+
+            return (
+              <div
+                key={src}
+                className="inline-flex items-center gap-2 px-3 py-1 rounded-xl bg-amber-500/10 text-amber-400 border border-amber-500/25 font-medium"
               >
-                Search on Naukri ↗
-              </a>
-            </div>
-          ))}
+                <AlertTriangle className="w-3.5 h-3.5 shrink-0" />
+                <span>{message}</span>
+                {fallbackUrl && (
+                  <a
+                    href={fallbackUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="underline hover:text-amber-300 font-semibold inline-flex items-center gap-0.5 ml-1"
+                  >
+                    {fallbackLabel}
+                  </a>
+                )}
+              </div>
+            );
+          })}
         </div>
       )}
 
       {/* STATE 1: Initial Discovery State */}
       {!hasSearched && !isLoading && (
-        <div className="p-8 sm:p-12 rounded-3xl border border-[var(--border-color)] bg-[var(--bg-card)] text-center space-y-4">
-          <div className="w-14 h-14 rounded-2xl bg-[var(--accent)]/10 text-[var(--accent)] mx-auto flex items-center justify-center">
-            <Compass className="w-7 h-7" />
+        <div className="p-10 sm:p-14 rounded-3xl border border-[var(--glass-border)] bg-[var(--glass-bg)]/80 backdrop-blur-xl text-center space-y-6 shadow-xl relative overflow-hidden">
+          <div className="absolute top-0 right-1/4 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl -z-10 pointer-events-none" />
+          <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl -z-10 pointer-events-none" />
+
+          <div className="relative w-16 h-16 mx-auto">
+            <div className="absolute inset-0 bg-[var(--accent)]/20 rounded-full blur-xl" />
+            <div className="relative w-16 h-16 rounded-2xl bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--border-color)] flex items-center justify-center shadow-lg">
+              <Compass className="w-8 h-8" />
+            </div>
           </div>
-          <div className="space-y-1">
-            <h2 className="text-xl sm:text-2xl font-black text-[var(--text-primary)]">
-              Search thousands of opportunities...
+
+          <div className="space-y-2">
+            <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-[var(--text-primary)]">
+              Discover Thousands of Verified Opportunities
             </h2>
-            <p className="text-xs sm:text-sm text-[var(--text-secondary)] max-w-lg mx-auto">
-              Enter your target job title and city above to discover active listings directly from LinkedIn and major platforms.
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)] max-w-lg mx-auto leading-relaxed">
+              Explore active listings from LinkedIn and top corporate career portals with real-time ATS match scoring and qualification alignment.
             </p>
           </div>
 
-          <div className="pt-4 flex flex-wrap items-center justify-center gap-2 text-xs">
-            <span className="font-semibold text-[var(--text-secondary)] mr-1">Try searching:</span>
+          <div className="pt-2 flex flex-wrap items-center justify-center gap-2.5 text-xs">
+            <span className="font-semibold text-[var(--text-secondary)] mr-1">Recommended searches:</span>
             {[
               { q: 'Python Developer', loc: 'Bengaluru' },
               { q: 'React Developer', loc: 'Hyderabad' },
@@ -791,9 +944,9 @@ function JobSearchContent() {
                   setLocation(s.loc);
                   performSearch(1);
                 }}
-                className="px-3 py-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] text-[var(--text-primary)] transition-all font-semibold"
+                className="px-3.5 py-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--glass-bg-elevated)] text-[var(--text-primary)] transition-all font-semibold shadow-xs cursor-pointer active:scale-95"
               >
-                {s.q} · <span className="text-[var(--text-secondary)]">{s.loc}</span>
+                {s.q} · <span className="text-[var(--text-secondary)] font-normal">{s.loc}</span>
               </button>
             ))}
           </div>
@@ -831,8 +984,35 @@ function JobSearchContent() {
         </div>
       )}
 
+      {/* ERROR STATE: Network or Provider Outage */}
+      {!isLoading && Boolean(searchError) && (
+        <GlassCard className="p-10 text-center space-y-4 border border-rose-500/30 bg-rose-500/5">
+          <div className="w-14 h-14 rounded-2xl bg-rose-500/10 text-rose-500 mx-auto flex items-center justify-center">
+            <AlertCircle className="w-7 h-7" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)]">
+              Job Search Temporarily Unavailable
+            </h3>
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)] max-w-md mx-auto leading-relaxed">
+              {searchError}
+            </p>
+          </div>
+          <div className="pt-2 flex items-center justify-center gap-3 text-xs">
+            <button
+              type="button"
+              onClick={() => performSearch(currentPage, true)}
+              className="px-4 py-2 rounded-xl bg-[var(--accent)] hover:opacity-90 text-white font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-md"
+            >
+              <RotateCw className="w-3.5 h-3.5" />
+              <span>Retry Search</span>
+            </button>
+          </div>
+        </GlassCard>
+      )}
+
       {/* STATE 3: No Matching Jobs Found */}
-      {!isLoading && hasSearched && jobs.length === 0 && (
+      {!isLoading && hasSearched && !searchError && jobs.length === 0 && (
         <GlassCard className="p-10 text-center space-y-4 border border-[var(--border-color)]">
           <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-500 mx-auto flex items-center justify-center">
             <AlertCircle className="w-7 h-7" />
@@ -1026,15 +1206,15 @@ function JobSearchContent() {
                     <button
                       type="button"
                       onClick={() => handleSaveJob(job)}
-                      disabled={savingJobId === job.id || savedJobIds.has(job.id)}
-                      title="Save to Application Tracker"
-                      className={`inline-flex items-center gap-1 text-xs font-medium transition-colors ${
+                      disabled={savingJobId === job.id}
+                      title={savedJobIds.has(job.id) ? "Remove from Saved Jobs" : "Save to Application Tracker"}
+                      className={`inline-flex items-center gap-1 text-xs font-medium transition-colors cursor-pointer ${
                         savedJobIds.has(job.id)
                           ? 'text-emerald-500 font-semibold'
                           : 'text-[var(--text-secondary)] hover:text-emerald-400'
                       }`}
                     >
-                      <Bookmark className="w-3.5 h-3.5" />
+                      <Bookmark className={`w-3.5 h-3.5 ${savedJobIds.has(job.id) ? 'fill-current' : ''}`} />
                       <span>{savedJobIds.has(job.id) ? 'Saved' : 'Save'}</span>
                     </button>
                   </div>
@@ -1088,11 +1268,16 @@ function JobSearchContent() {
 
       {/* Slide-over Detailed Job View Drawer */}
       {selectedJob && (
-        <div className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-fade-in">
-          <div className="w-full max-w-2xl h-full bg-[var(--bg-card)] border-l border-[var(--border-color)] p-6 sm:p-8 flex flex-col justify-between overflow-y-auto shadow-2xl space-y-6">
+        <div
+          className="fixed inset-0 z-50 flex justify-end bg-black/60 backdrop-blur-sm animate-fade-in"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setSelectedJob(null);
+          }}
+        >
+          <div className="w-full max-w-2xl h-full bg-[var(--glass-bg-elevated)] border-l border-[var(--glass-border)] backdrop-blur-2xl p-6 sm:p-8 flex flex-col justify-between overflow-y-auto shadow-2xl space-y-6 relative">
             <div className="space-y-6">
               {/* Drawer Top Header */}
-              <div className="flex items-start justify-between gap-4 pb-4 border-b border-[var(--border-color)]">
+              <div className="flex items-start justify-between gap-4 pb-4 border-b border-[var(--glass-border)]">
                 <div>
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[var(--bg-secondary)] text-[var(--accent)] mb-2">
                     <ShieldCheck className="w-3.5 h-3.5" />
@@ -1299,13 +1484,14 @@ function JobSearchContent() {
                 <button
                   type="button"
                   onClick={() => handleSaveJob(selectedJob)}
-                  disabled={savingJobId === selectedJob.id || savedJobIds.has(selectedJob.id)}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-xs font-semibold transition-all ${
-                    savedJobIds.has(selectedJob.id) ? 'text-emerald-500' : 'text-[var(--text-secondary)]'
+                  disabled={savingJobId === selectedJob.id}
+                  title={savedJobIds.has(selectedJob.id) ? "Remove from Saved Jobs" : "Save to Application Tracker"}
+                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-xs font-semibold transition-all cursor-pointer ${
+                    savedJobIds.has(selectedJob.id) ? 'text-emerald-500 border-emerald-500/30' : 'text-[var(--text-secondary)]'
                   }`}
                 >
-                  <Bookmark className="w-3.5 h-3.5" />
-                  <span>{savedJobIds.has(selectedJob.id) ? 'Job Saved' : 'Save Job'}</span>
+                  <Bookmark className={`w-3.5 h-3.5 ${savedJobIds.has(selectedJob.id) ? 'fill-current' : ''}`} />
+                  <span>{savedJobIds.has(selectedJob.id) ? 'Saved' : 'Save Job'}</span>
                 </button>
 
                 <button

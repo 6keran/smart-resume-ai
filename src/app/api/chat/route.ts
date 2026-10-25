@@ -159,7 +159,7 @@ export async function POST(req: Request) {
     const contents = formatChatContents(validHistory, trimmedMessage);
 
     // Call Gemini with primary fast model, cascade to secondary fallbacks if model experiences high demand
-    const candidateModels = ['gemini-3.5-flash', 'gemini-3.8-flash', 'gemini-flash-latest', 'gemini-2.5-flash'];
+    const candidateModels = ['gemini-3.5-flash', 'gemini-3.5-flash-lite', 'gemini-flash-latest'];
     let lastError: Error | null = null;
     let replyText = '';
     let usedModel = 'Gemini 3.5 Flash';

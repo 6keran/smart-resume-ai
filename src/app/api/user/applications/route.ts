@@ -5,6 +5,7 @@ import {
   createJobApplication,
   updateJobApplication,
   deleteJobApplication,
+  deleteJobApplicationByJobId,
 } from '@/lib/db';
 
 export async function GET(req: Request) {
@@ -152,31 +153,47 @@ export async function DELETE(req: Request) {
 
     const url = new URL(req.url);
     let id = url.searchParams.get('id');
+    const jobId = url.searchParams.get('jobId');
 
-    if (!id) {
+    if (!id && !jobId) {
       const body = await req.json().catch(() => ({}));
       id = body.id;
     }
 
-    if (!id) {
-      return NextResponse.json(
-        { message: 'Application ID is required.' },
-        { status: 400 }
-      );
+    if (id) {
+      const deleted = await deleteJobApplication(user.id, id);
+      if (!deleted) {
+        return NextResponse.json(
+          { message: 'Application not found or unauthorized.' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Job application deleted.',
+      });
     }
 
-    const deleted = await deleteJobApplication(user.id, id);
-    if (!deleted) {
-      return NextResponse.json(
-        { message: 'Application not found or unauthorized.' },
-        { status: 404 }
-      );
+    if (jobId) {
+      const deleted = await deleteJobApplicationByJobId(user.id, jobId);
+      if (!deleted) {
+        return NextResponse.json(
+          { message: 'Saved job not found or unauthorized.' },
+          { status: 404 }
+        );
+      }
+
+      return NextResponse.json({
+        success: true,
+        message: 'Saved job removed.',
+      });
     }
 
-    return NextResponse.json({
-      success: true,
-      message: 'Job application deleted.',
-    });
+    return NextResponse.json(
+      { message: 'Application ID or Job ID is required.' },
+      { status: 400 }
+    );
   } catch (err: any) {
     console.error('Error deleting job application:', err);
     return NextResponse.json(

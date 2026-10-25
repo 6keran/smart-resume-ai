@@ -8,7 +8,7 @@ import { getUserFromRequest } from '@/lib/userSession';
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { resumeText, jobTitle, company, jobDescription, allowUncertainOverride } = body;
+    const { resumeId, jobId, resumeText, jobTitle, company, jobDescription, allowUncertainOverride } = body;
 
     if (!resumeText || typeof resumeText !== 'string' || resumeText.trim().length === 0) {
       return NextResponse.json(
@@ -16,6 +16,16 @@ export async function POST(req: Request) {
         { status: 400 }
       );
     }
+
+    if (!jobDescription || typeof jobDescription !== 'string' || jobDescription.trim().length < 20) {
+      return NextResponse.json(
+        { message: 'A valid job description (minimum 20 characters) is required for accurate matching.' },
+        { status: 400 }
+      );
+    }
+
+    const cleanJobTitle = (typeof jobTitle === 'string' && jobTitle.trim()) || 'Target Role';
+    const cleanCompany = (typeof company === 'string' && company.trim()) || 'Target Company';
 
     // Enforce document validation to prevent non-resume documents from bypassing validation
     const validation = validateResumeDocument(resumeText, { allowUncertainOverride: Boolean(allowUncertainOverride) });
@@ -31,10 +41,14 @@ export async function POST(req: Request) {
 
     const result = await matchResumeToJob(
       resumeText,
-      jobTitle || 'Target Role',
-      company || 'Target Company',
-      jobDescription || ''
+      cleanJobTitle,
+      cleanCompany,
+      jobDescription
     );
+
+    if (jobId && typeof jobId === 'string') {
+      result.jobId = jobId;
+    }
 
     // Persist to database
     try {
@@ -43,8 +57,10 @@ export async function POST(req: Request) {
       await recordJobMatchEvent({
         visitorId,
         userId: user?.id,
-        jobTitle: jobTitle || 'Target Role',
-        company: company || 'Target Company',
+        resumeId: typeof resumeId === 'string' ? resumeId : undefined,
+        jobId: typeof jobId === 'string' ? jobId : undefined,
+        jobTitle: cleanJobTitle,
+        company: cleanCompany,
         matchScore: result.overallMatchScore,
         matchedSkills: (result.matchedSkills || []).map((s: any) => typeof s === 'string' ? s : s.skill),
         partialSkills: (result.partialSkills || []).map((s: any) => typeof s === 'string' ? s : s.skill),

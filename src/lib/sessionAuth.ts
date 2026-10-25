@@ -21,12 +21,12 @@ export const CLOCK_SKEW_TOLERANCE_MS = 60 * 1000;
 export const DEV_ONLY_FALLBACK_SECRET = 'dev-only-secret-smart-resume-ai-do-not-use-in-production-min-32-chars';
 
 /**
- * Centralized function to retrieve and validate ADMIN_SESSION_SECRET.
+ * Centralized function to retrieve and validate ADMIN_SESSION_SECRET or SESSION_SECRET.
  * Compatible with Edge runtime, Node.js, and client testing.
  */
 export function getAdminSessionSecret(): string | null {
   const isProduction = process.env.NODE_ENV === 'production' || Boolean(process.env.VERCEL);
-  const rawSecret = process.env.ADMIN_SESSION_SECRET;
+  const rawSecret = process.env.ADMIN_SESSION_SECRET || process.env.SESSION_SECRET;
   const secret = typeof rawSecret === 'string' ? rawSecret.trim() : '';
 
   if (isProduction) {

@@ -29,6 +29,12 @@ import {
   ShieldAlert,
   FileWarning,
   Info,
+  Lock,
+  ShieldCheck,
+  BarChart3,
+  Layers,
+  ArrowRight,
+  Zap,
 } from 'lucide-react';
 import { useResume, isImprovementAppliedToResume } from '@/context/ResumeContext';
 import { ResumeValidationResult } from '@/types/resume';
@@ -64,8 +70,6 @@ export default function ResumeAnalyzerPage() {
     rejectImprovement,
     applyAllApprovedImprovements,
     regenerateImprovement,
-    resetToSampleResume,
-    loadFresherSample,
   } = useResume();
 
   const [state, setState] = useState<AnalyzerState>(
@@ -77,6 +81,7 @@ export default function ResumeAnalyzerPage() {
       setState('SUCCESS');
     }
   }, [analysisResult, state]);
+
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [validationResult, setValidationResult] = useState<ResumeValidationResult | null>(null);
@@ -84,9 +89,7 @@ export default function ResumeAnalyzerPage() {
   const [dragActive, setDragActive] = useState(false);
   const [customText, setCustomText] = useState('');
   const [showPasteModal, setShowPasteModal] = useState(false);
-  const [showJobDescriptionInput, setShowJobDescriptionInput] = useState<boolean>(
-    Boolean(targetJob.description || targetJob.title)
-  );
+  const [showJobDrawer, setShowJobDrawer] = useState<boolean>(true);
 
   // Local job inputs for quick editing
   const [jobTitleInput, setJobTitleInput] = useState(targetJob.title || '');
@@ -265,7 +268,7 @@ export default function ResumeAnalyzerPage() {
     }
   };
 
-  // Handle direct text analysis (sample or active resume or pasted)
+  // Handle direct text analysis (active resume or pasted)
   const handleTextAnalysis = async (
     text: string,
     title: string,
@@ -349,7 +352,7 @@ export default function ResumeAnalyzerPage() {
       .map((e) => `${e.role} at ${e.company}: ${e.bulletPoints.join(' ')}`)
       .join('\n')}`;
 
-    handleTextAnalysis(text, `${resumeData.personalInfo.fullName}'s Resume`);
+    handleTextAnalysis(text, `${resumeData.personalInfo.fullName || 'Builder'}'s Resume`);
   };
 
   const handleResetToUpload = () => {
@@ -418,152 +421,400 @@ export default function ResumeAnalyzerPage() {
     handleAnalyzeBuilderResume();
   };
 
-  const isJobSpecificMode = Boolean(analysisResult?.isJobSpecific || targetJob.description || jobDescInput.trim());
+  const isJobSpecificMode = Boolean(
+    analysisResult?.isJobSpecific || targetJob.description || jobDescInput.trim()
+  );
 
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
       {/* Toast Notification */}
       {applyToast && (
-        <div className="fixed bottom-6 right-6 z-50 bg-[var(--text-primary)] text-[var(--bg-primary)] px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-[var(--border-color)] animate-fade-in text-xs font-semibold">
+        <div className="fixed bottom-6 right-6 z-50 glass-card px-4 py-3 rounded-xl shadow-2xl flex items-center gap-3 border border-[var(--glass-border)] animate-fade-in text-xs font-semibold backdrop-blur-xl bg-[var(--bg-elevated)]/90 text-[var(--text-primary)]">
           <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
           <span>{applyToast}</span>
         </div>
       )}
 
       {/* Page Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-6">
-        <div>
-          <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-xs font-medium bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--border-color)] mb-2">
-            <span>Resume Analysis</span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight">
-            Resume Analyzer
-          </h1>
-          <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
-            Evaluate your resume against target job requirements or general ATS standards. Review matched skills, recommended keywords, and actionable phrasing improvements.
-          </p>
-        </div>
+      <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 glass-card border border-[var(--glass-border)]">
+        <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-transparent rounded-full blur-3xl -z-10 pointer-events-none" />
+        <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-cyan-500/10 via-blue-500/10 to-transparent rounded-full blur-3xl -z-10 pointer-events-none" />
 
-        {/* Quick Actions */}
-        <div className="flex flex-wrap items-center gap-2">
-          <button
-            type="button"
-            disabled={isBusy}
-            onClick={handleAnalyzeBuilderResume}
-            className="px-3 py-2 rounded-lg text-xs font-semibold bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] transition-all shadow-sm disabled:opacity-50 flex items-center gap-1.5 cursor-pointer"
-          >
-            <FileEdit className="w-3.5 h-3.5" />
-            Analyze Current Builder Resume
-          </button>
-          <button
-            type="button"
-            disabled={isBusy}
-            onClick={() => {
-              resetToSampleResume();
-              handleTextAnalysis(
-                'Candidate Profile\nSenior Full Stack & AI Systems Engineer\nSan Francisco, CA\nSummary: Staff Full Stack Engineer with 7+ years architecting enterprise distributed microservices, TypeScript/React applications, and LLM fine-tuning pipelines.\nSkills: Python, TypeScript, React, Next.js, Node.js, AWS, Docker, Kubernetes, PostgreSQL, GraphQL, Redis, CI/CD, System Design, Unit Testing, Jest\nExperience: Staff Software Engineer at CloudScale Technologies. Built multi-region data indexing pipelines processing 25M daily events.',
-                'Senior Engineer Sample'
-              );
-            }}
-            className="px-3 py-2 rounded-lg text-xs font-medium border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-secondary)] text-[var(--text-primary)] transition-all disabled:opacity-50 cursor-pointer"
-          >
-            Senior Sample
-          </button>
-          <button
-            type="button"
-            disabled={isBusy}
-            onClick={() => {
-              loadFresherSample();
-              handleTextAnalysis(
-                'Maya Chen\nJunior Software & Data Engineer\nAustin, TX\nSummary: Motivated Computer Science graduate with hands-on expertise in Python, SQL, React, and data analytics pipelines.\nSkills: Python, SQL, React, JavaScript, Git, Data Analysis, Docker, REST API, PostgreSQL\nEducation: B.S. in Computer Science, University of Texas at Austin, GPA 3.91\nProjects: Algorithmic Trading Simulator in Python using Pandas; Campus Exchange Platform in React and PostgreSQL.',
-                'Graduate Sample'
-              );
-            }}
-            className="px-3 py-2 rounded-lg text-xs font-medium border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-secondary)] text-[var(--text-primary)] transition-all disabled:opacity-50 cursor-pointer"
-          >
-            Graduate Sample
-          </button>
-          <button
-            type="button"
-            disabled={isBusy}
-            onClick={() => setShowPasteModal(true)}
-            className="px-3 py-2 rounded-lg text-xs font-medium border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-secondary)] text-[var(--text-primary)] transition-all disabled:opacity-50 cursor-pointer"
-          >
-            Paste Text
-          </button>
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+          <div className="space-y-2 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/20 backdrop-blur-md">
+              <Sparkles className="w-3.5 h-3.5" />
+              <span>ATS Heuristic Diagnostics v2.4</span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[var(--text-primary)] tracking-tight">
+              Resume Analyzer & ATS Optimizer
+            </h1>
+            <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+              Simulate enterprise Applicant Tracking Systems (Workday, Taleo, Greenhouse). Diagnose keyword alignment, structural parseability, and receive instant in-place bullet rewrites.
+            </p>
+          </div>
+
+          {/* Quick Actions Dock */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              disabled={isBusy}
+              onClick={handleAnalyzeBuilderResume}
+              className="px-4 py-2.5 rounded-xl text-xs font-semibold bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white hover:opacity-95 transition-all shadow-md shadow-indigo-500/20 disabled:opacity-50 flex items-center gap-2 cursor-pointer active:scale-95"
+            >
+              <FileEdit className="w-3.5 h-3.5" />
+              <span>Analyze Active Resume</span>
+            </button>
+            <button
+              type="button"
+              disabled={isBusy}
+              onClick={() => setShowPasteModal(true)}
+              className="px-3.5 py-2.5 rounded-xl text-xs font-medium border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] text-[var(--text-primary)] transition-all disabled:opacity-50 cursor-pointer backdrop-blur-md"
+            >
+              Paste Text
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Target Job Accordion & Mode Configuration */}
-      {!isBusy && (
-        <div className="p-4 sm:p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center shrink-0">
-                <Target className="w-5 h-5" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                    Target Job Configuration
-                  </h3>
-                  <span
-                    className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
-                      isJobSpecificMode
-                        ? 'bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30'
-                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)]'
-                    }`}
-                  >
-                    {isJobSpecificMode ? 'Job-Specific Mode' : 'General ATS Mode'}
-                  </span>
+      {/* ATS Evaluation Disclaimer */}
+      <div className="flex items-start gap-3 p-4 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-md text-xs text-[var(--text-secondary)] shadow-xs">
+        <Info className="w-4 h-4 text-blue-500 shrink-0 mt-0.5" />
+        <p className="leading-relaxed">
+          <strong className="text-[var(--text-primary)] font-semibold">Evaluation Disclaimer:</strong> The ATS Score is an algorithmic compatibility estimate calculated from your resume content and job description. It is not an official score from any commercial ATS vendor and does not guarantee interview callbacks or hiring outcomes.
+        </p>
+      </div>
+
+      {/* MAIN 2-COLUMN VIEW WHEN NOT IN SUCCESS STATE */}
+      {state !== 'SUCCESS' && (
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+          {/* LEFT COLUMN: Upload Dropzone & Interactive Status (7 cols) */}
+          <div className="lg:col-span-7 space-y-6">
+            {/* Multi-stage Animated Loading View */}
+            {isBusy ? (
+              <GlassCard className="p-10 text-center space-y-6 border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl">
+                <div className="relative w-24 h-24 mx-auto">
+                  <div className="w-24 h-24 rounded-full border-4 border-[var(--border-color)] border-t-[var(--accent)] animate-spin" />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <Cpu className="w-10 h-10 text-[var(--accent)] animate-pulse" />
+                  </div>
                 </div>
-                <p className="text-xs text-[var(--text-secondary)]">
-                  {isJobSpecificMode
-                    ? `Tailoring against ${jobTitleInput || 'Role'} at ${companyInput || 'Company'}`
-                    : 'Paste a target job description to evaluate keyword matches, missing skills, and role alignment.'}
+
+                <div className="space-y-2 max-w-md mx-auto">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-[var(--accent)]/15 text-[var(--accent)] uppercase tracking-wider border border-[var(--accent)]/30">
+                    {state === 'UPLOADING' && 'Phase 1 of 3: Secure Document Ingestion'}
+                    {state === 'EXTRACTING' && 'Phase 2 of 3: Structural Tokenization'}
+                    {state === 'ANALYZING' && 'Phase 3 of 3: ATS Heuristic Intelligence'}
+                  </div>
+                  <h3 className="text-xl font-bold text-[var(--text-primary)]">
+                    {stageDescription || 'Evaluating resume architecture...'}
+                  </h3>
+                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                    Cross-referencing formatting, bullet strength, and keyword density against enterprise ATS standards.
+                  </p>
+                </div>
+
+                <div className="max-w-sm mx-auto w-full bg-[var(--bg-secondary)] h-2.5 rounded-full overflow-hidden p-0.5 border border-[var(--border-color)]">
+                  <div
+                    className="bg-gradient-to-r from-blue-500 via-indigo-500 to-purple-500 h-full rounded-full transition-all duration-500 ease-out shadow-[0_0_12px_rgba(99,102,241,0.5)]"
+                    style={{
+                      width:
+                        state === 'UPLOADING'
+                          ? '35%'
+                          : state === 'EXTRACTING'
+                          ? '70%'
+                          : '94%',
+                    }}
+                  />
+                </div>
+              </GlassCard>
+            ) : (
+              /* Dropzone / File Ready Card */
+              <div
+                onDragEnter={() => setDragActive(true)}
+                onDragLeave={() => setDragActive(false)}
+                onDragOver={(e) => e.preventDefault()}
+                onDrop={handleDrop}
+                className={`relative p-8 sm:p-12 rounded-3xl border-2 border-dashed transition-all duration-300 text-center backdrop-blur-xl ${
+                  dragActive
+                    ? 'border-[var(--accent)] bg-[var(--accent)]/10 scale-[1.01] shadow-2xl shadow-[var(--accent)]/15'
+                    : 'border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--accent)]/60 hover:bg-[var(--glass-bg-elevated)]'
+                }`}
+              >
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  id="resume-file-input"
+                  accept=".pdf,.docx,.txt"
+                  onChange={handleFileChange}
+                  className="hidden"
+                />
+
+                {/* Idle / Error State within Dropzone */}
+                {(!selectedFile || state === 'IDLE' || state === 'ERROR') && (
+                  <div className="space-y-6">
+                    <div className="relative w-20 h-20 mx-auto">
+                      <div className="absolute inset-0 bg-[var(--accent)]/20 rounded-full blur-xl" />
+                      <div className="relative w-20 h-20 rounded-2xl bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--border-color)] flex items-center justify-center shadow-lg">
+                        <UploadCloud className="w-10 h-10" />
+                      </div>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h3 className="text-xl font-bold text-[var(--text-primary)]">
+                        Drop your resume here to begin
+                      </h3>
+                      <p className="text-xs sm:text-sm text-[var(--text-secondary)] max-w-md mx-auto leading-relaxed">
+                        Drag and drop your file or click browse. Instant deep-scan for ATS compatibility, keyword density, and bullet rewrite opportunities.
+                      </p>
+                    </div>
+
+                    {/* Supported Formats Pills */}
+                    <div className="flex flex-wrap items-center justify-center gap-2 text-[11px] text-[var(--text-secondary)] font-medium">
+                      <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+                        PDF (ATS Safe)
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+                        DOCX
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+                        TXT
+                      </span>
+                      <span className="px-2.5 py-1 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+                        Max 10MB
+                      </span>
+                    </div>
+
+                    {/* Action buttons */}
+                    <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+                      <label
+                        htmlFor="resume-file-input"
+                        className="cursor-pointer inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-xs sm:text-sm font-semibold hover:opacity-95 transition-all shadow-lg shadow-indigo-500/25 active:scale-95"
+                      >
+                        <FileText className="w-4 h-4" />
+                        <span>Select File from Device</span>
+                      </label>
+                      <button
+                        type="button"
+                        onClick={handleAnalyzeBuilderResume}
+                        className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-elevated)] text-[var(--text-primary)] text-xs sm:text-sm font-medium transition-all"
+                      >
+                        <FileEdit className="w-4 h-4 text-[var(--accent)]" />
+                        <span>Use Active Resume</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {/* File Selected State */}
+                {selectedFile && state === 'FILE_SELECTED' && (
+                  <div className="space-y-6 animate-fade-in">
+                    <div className="w-16 h-16 rounded-2xl bg-emerald-500/15 text-emerald-400 mx-auto flex items-center justify-center shadow-[0_0_24px_rgba(16,185,129,0.25)] border border-emerald-500/30">
+                      <FileCheck className="w-8 h-8" />
+                    </div>
+
+                    <div className="max-w-md mx-auto p-4 rounded-2xl bg-[var(--bg-secondary)]/80 border border-[var(--border-color)] backdrop-blur-md space-y-1">
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <FileText className="w-5 h-5 text-[var(--accent)] shrink-0" />
+                          <div className="text-left min-w-0">
+                            <p className="text-sm font-bold text-[var(--text-primary)] truncate">
+                              {selectedFile.name}
+                            </p>
+                            <p className="text-[11px] text-[var(--text-secondary)]">
+                              {formatFileSize(selectedFile.size)} · Validated & ready for parsing
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleRemoveFile}
+                          title="Remove file"
+                          className="p-1.5 rounded-lg hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-rose-400 transition-colors"
+                        >
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-wrap items-center justify-center gap-3">
+                      <button
+                        type="button"
+                        onClick={handleStartAnalysis}
+                        className="inline-flex items-center gap-2 px-8 py-3.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-sm font-bold hover:opacity-95 transition-all shadow-xl shadow-indigo-500/30 active:scale-95 cursor-pointer"
+                      >
+                        <Sparkles className="w-4 h-4" />
+                        <span>Run Full ATS Analysis</span>
+                      </button>
+                      <label
+                        htmlFor="resume-file-input"
+                        className="cursor-pointer inline-flex items-center gap-2 px-5 py-3.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] text-sm font-medium hover:bg-[var(--bg-elevated)] transition-all"
+                      >
+                        Replace File
+                      </label>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* INVALID DOCUMENT Banner */}
+            {state === 'INVALID_DOCUMENT' && (
+              <div className="p-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 text-left space-y-4 animate-fade-in shadow-xl backdrop-blur-xl">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center shrink-0 border border-rose-500/30">
+                    <ShieldAlert className="w-5 h-5 text-rose-400" />
+                  </div>
+                  <div className="space-y-1.5 flex-1">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">
+                      Document Validation Failed
+                    </div>
+                    <h4 className="text-base font-bold text-[var(--text-primary)]">
+                      This document does not appear to be a resume or CV.
+                    </h4>
+                    <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+                      {validationResult?.detectedType
+                        ? `Identified content: ${validationResult.detectedType}. `
+                        : ''}
+                      Smart Resume AI requires an authentic resume or CV with career sections (such as work experience, education, or skills) to perform ATS scoring. Invoices, assignments, certificates, and specifications cannot be analyzed.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-rose-500/20">
+                  <button
+                    type="button"
+                    onClick={handleResetToUpload}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500 text-white text-xs font-semibold hover:bg-rose-600 transition-all cursor-pointer shadow-lg shadow-rose-500/20"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Upload Another Document
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* UNCERTAIN DOCUMENT Banner */}
+            {state === 'UNCERTAIN_DOCUMENT' && (
+              <div className="p-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-left space-y-4 animate-fade-in shadow-xl backdrop-blur-xl">
+                <div className="flex items-start gap-4">
+                  <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 border border-amber-500/30">
+                    <FileWarning className="w-5 h-5 text-amber-400" />
+                  </div>
+                  <div className="space-y-1.5 flex-1">
+                    <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
+                      Uncertain Document Structure
+                    </div>
+                    <h4 className="text-base font-bold text-[var(--text-primary)]">
+                      We couldn&apos;t clearly verify this document as a resume.
+                    </h4>
+                    <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+                      The uploaded document has limited standard resume sections (such as work experience, education, or skills) or is very brief. ATS systems often struggle to parse incomplete formats.
+                    </p>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-amber-500/20">
+                  <button
+                    type="button"
+                    onClick={handleResetToUpload}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] transition-all cursor-pointer shadow-lg shadow-[var(--accent)]/20"
+                  >
+                    <RefreshCw className="w-3.5 h-3.5" />
+                    Upload a Clearer Resume
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleProceedWithUncertain}
+                    className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-amber-500/40 bg-amber-500/20 text-amber-200 text-xs font-semibold hover:bg-amber-500/30 transition-all cursor-pointer"
+                  >
+                    <Sparkles className="w-3.5 h-3.5" />
+                    Proceed with Best-Effort Analysis
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* ERROR Banner */}
+            {state === 'ERROR' && errorMessage && (
+              <div className="p-5 rounded-2xl border border-rose-500/30 bg-rose-500/10 text-left space-y-3 animate-fade-in backdrop-blur-xl">
+                <div className="flex items-start gap-3">
+                  <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
+                  <div className="space-y-1">
+                    <h4 className="text-sm font-bold text-rose-300">Analysis Error</h4>
+                    <p className="text-xs text-[var(--text-primary)] leading-relaxed">
+                      {errorMessage}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 pl-8">
+                  {selectedFile && (
+                    <button
+                      type="button"
+                      onClick={handleStartAnalysis}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500 text-white text-xs font-semibold hover:bg-rose-600 transition-all cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      Retry Analysis
+                    </button>
+                  )}
+                  <button
+                    type="button"
+                    onClick={handleResetToUpload}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] text-xs font-semibold hover:bg-[var(--bg-elevated)] transition-all cursor-pointer"
+                  >
+                    Upload Another File
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Privacy & Security Guarantee Banner */}
+            <div className="p-4 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-md flex items-center gap-3 text-left">
+              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 text-emerald-400 flex items-center justify-center shrink-0 border border-emerald-500/20">
+                <ShieldCheck className="w-5 h-5" />
+              </div>
+              <div className="space-y-0.5">
+                <h4 className="text-xs font-semibold text-[var(--text-primary)]">
+                  Stateless & Private Analysis Guarantee
+                </h4>
+                <p className="text-[11px] text-[var(--text-secondary)]">
+                  Your resume is parsed completely in-memory. Zero document data is stored, indexed, or shared with third parties.
                 </p>
               </div>
             </div>
-
-            <div className="flex items-center gap-2">
-              {jobDescInput && (
-                <button
-                  type="button"
-                  onClick={() => {
-                    setJobTitleInput('');
-                    setCompanyInput('');
-                    setJobDescInput('');
-                    clearTargetJob();
-                    triggerToast('Target job cleared. Re-analyzing in general ATS mode.');
-                  }}
-                  className="px-2.5 py-1 text-xs text-rose-400 hover:text-rose-300 transition-colors"
-                >
-                  Clear Job
-                </button>
-              )}
-              <button
-                type="button"
-                onClick={() => setShowJobDescriptionInput(!showJobDescriptionInput)}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-elevated)] text-xs font-semibold text-[var(--text-primary)] transition-all cursor-pointer"
-              >
-                {showJobDescriptionInput ? (
-                  <>
-                    <span>Hide Job Panel</span>
-                    <ChevronUp className="w-3.5 h-3.5" />
-                  </>
-                ) : (
-                  <>
-                    <span>Configure Job Description</span>
-                    <ChevronDown className="w-3.5 h-3.5" />
-                  </>
-                )}
-              </button>
-            </div>
           </div>
 
-          {showJobDescriptionInput && (
-            <div className="pt-3 border-t border-[var(--border-color)] space-y-3 animate-fade-in">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {/* RIGHT COLUMN: Target Job Configuration & ATS Benchmarks Checklist (5 cols) */}
+          <div className="lg:col-span-5 space-y-6">
+            {/* Target Job Configuration Drawer Card */}
+            <GlassCard className="border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl space-y-4 text-left">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/15 text-[var(--accent)] flex items-center justify-center">
+                    <Target className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                      Target Role Tailoring
+                    </h3>
+                    <p className="text-[11px] text-[var(--text-secondary)]">
+                      Optional: Match keywords to specific job
+                    </p>
+                  </div>
+                </div>
+
+                <span
+                  className={`px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider ${
+                    isJobSpecificMode
+                      ? 'bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30'
+                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)]'
+                  }`}
+                >
+                  {isJobSpecificMode ? 'Job Mode' : 'General Mode'}
+                </span>
+              </div>
+
+              {/* Collapsible / Expandable Job Inputs */}
+              <div className="space-y-3 pt-2 border-t border-[var(--border-color)]/60">
                 <div>
                   <label className="block text-[11px] font-semibold text-[var(--text-secondary)] mb-1">
                     Target Job Title
@@ -572,409 +823,352 @@ export default function ResumeAnalyzerPage() {
                     <Briefcase className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[var(--text-secondary)]" />
                     <input
                       type="text"
-                      placeholder="e.g. Senior Full Stack Engineer"
+                      placeholder="e.g. Senior Frontend Engineer"
                       value={jobTitleInput}
                       onChange={(e) => {
                         setJobTitleInput(e.target.value);
                         updateTargetJob({ title: e.target.value });
                       }}
-                      className="w-full pl-9 pr-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-full pl-9 pr-3 py-2 rounded-xl bg-[var(--bg-secondary)]/80 border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition-all"
                     />
                   </div>
                 </div>
+
                 <div>
                   <label className="block text-[11px] font-semibold text-[var(--text-secondary)] mb-1">
-                    Target Company Name
+                    Company Name
                   </label>
                   <div className="relative">
                     <Building className="w-3.5 h-3.5 absolute left-3 top-2.5 text-[var(--text-secondary)]" />
                     <input
                       type="text"
-                      placeholder="e.g. Stripe, Google, Acme Tech"
+                      placeholder="e.g. Stripe, Airbnb, Google"
                       value={companyInput}
                       onChange={(e) => {
                         setCompanyInput(e.target.value);
                         updateTargetJob({ company: e.target.value });
                       }}
-                      className="w-full pl-9 pr-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-full pl-9 pr-3 py-2 rounded-xl bg-[var(--bg-secondary)]/80 border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] transition-all"
                     />
                   </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block text-[11px] font-semibold text-[var(--text-secondary)] mb-1">
-                  Target Job Description & Key Qualifications
-                </label>
-                <textarea
-                  rows={4}
-                  value={jobDescInput}
-                  onChange={(e) => {
-                    setJobDescInput(e.target.value);
-                    updateTargetJob({ description: e.target.value });
-                  }}
-                  placeholder="Paste the target job requirements, qualifications, and role scope here..."
-                  className="w-full p-3 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)] resize-y"
-                />
-              </div>
+                <div>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-[11px] font-semibold text-[var(--text-secondary)]">
+                      Job Description & Requirements
+                    </label>
+                    {jobDescInput.trim() && (
+                      <span className="text-[10px] text-[var(--accent)] font-medium">
+                        {jobDescInput.split(/\s+/).filter(Boolean).length} words
+                      </span>
+                    )}
+                  </div>
+                  <textarea
+                    rows={4}
+                    value={jobDescInput}
+                    onChange={(e) => {
+                      setJobDescInput(e.target.value);
+                      updateTargetJob({ description: e.target.value });
+                    }}
+                    placeholder="Paste the job description to calculate keyword match % and uncover missing skills..."
+                    className="w-full p-3 rounded-xl bg-[var(--bg-secondary)]/80 border border-[var(--border-color)] text-xs text-[var(--text-primary)] placeholder-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)] resize-y transition-all"
+                  />
+                </div>
 
-              <div className="flex items-center justify-between text-xs pt-1">
-                <span className="text-[var(--text-secondary)]">
-                  {jobDescInput.trim()
-                    ? `✓ ${jobDescInput.split(/\s+/).filter(Boolean).length} words parsed for skill extraction.`
-                    : 'When provided, AI extracts exact matching skills vs missing keywords.'}
-                </span>
-                {state === 'SUCCESS' && (
-                  <button
-                    type="button"
-                    onClick={handleReanalyze}
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white font-semibold text-xs hover:bg-[var(--accent-hover)] transition-all cursor-pointer"
-                  >
-                    <RefreshCw className="w-3.5 h-3.5" />
-                    Re-analyze against this Job
-                  </button>
+                {jobDescInput && (
+                  <div className="flex items-center justify-between text-xs pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setJobTitleInput('');
+                        setCompanyInput('');
+                        setJobDescInput('');
+                        clearTargetJob();
+                        triggerToast('Target job cleared.');
+                      }}
+                      className="text-[11px] text-rose-400 hover:text-rose-300 transition-colors"
+                    >
+                      Clear Target Job
+                    </button>
+                    <span className="text-[11px] text-[var(--text-secondary)] font-medium">
+                      ✓ Active for next analysis
+                    </span>
+                  </div>
                 )}
               </div>
-            </div>
-          )}
-        </div>
-      )}
+            </GlassCard>
 
-      {/* Main Upload / File Zone (when not in success view or when user wants to replace file) */}
-      {!isBusy && state !== 'SUCCESS' && (
-        <div
-          onDragEnter={() => setDragActive(true)}
-          onDragLeave={() => setDragActive(false)}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={handleDrop}
-          className={`relative p-8 sm:p-10 rounded-2xl border-2 border-dashed transition-all duration-200 text-center ${
-            dragActive
-              ? 'border-[var(--accent)] bg-[var(--accent)]/10 scale-[1.01]'
-              : 'border-[var(--border-color)] bg-[var(--bg-card)] hover:border-[var(--accent)]/60'
-          }`}
-        >
-          <input
-            ref={fileInputRef}
-            type="file"
-            id="resume-file-input"
-            accept=".pdf,.docx,.txt"
-            onChange={handleFileChange}
-            className="hidden"
-          />
-
-          {(!selectedFile || state === 'IDLE' || state === 'ERROR') && (
-            <div>
-              <div className="w-12 h-12 rounded-xl bg-[var(--accent-subtle)] text-[var(--accent)] mx-auto flex items-center justify-center mb-3">
-                <UploadCloud className="w-6 h-6" />
+            {/* ATS Criteria & Checklist Preview Card */}
+            <GlassCard className="border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl space-y-4 text-left">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-[var(--accent)]" />
+                  <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                    What ATS Scanners Look For
+                  </h3>
+                </div>
+                <span className="text-[10px] font-semibold text-[var(--text-secondary)] bg-[var(--bg-secondary)] px-2 py-0.5 rounded border border-[var(--border-color)]">
+                  4 Evaluated Pillars
+                </span>
               </div>
 
-              <h3 className="text-base sm:text-lg font-semibold text-[var(--text-primary)] mb-1">
-                Drop your resume here
-              </h3>
-              <p className="text-xs sm:text-sm text-[var(--text-secondary)] mb-5">
-                Supports PDF, DOCX, or TXT (up to 10MB) · Instant parsing with zero data retention
-              </p>
-
-              <div className="flex flex-wrap items-center justify-center gap-3">
-                <label
-                  htmlFor="resume-file-input"
-                  className="cursor-pointer inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[var(--accent)] text-white text-xs sm:text-sm font-medium hover:bg-[var(--accent-hover)] transition-all shadow-sm active:scale-95"
-                >
-                  <FileText className="w-4 h-4" />
-                  Browse Files
-                </label>
-                <button
-                  type="button"
-                  onClick={handleAnalyzeBuilderResume}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-elevated)] text-[var(--text-primary)] text-xs sm:text-sm font-medium transition-all"
-                >
-                  <FileEdit className="w-4 h-4 text-[var(--accent)]" />
-                  Analyze Active Resume ({resumeData.personalInfo.fullName || 'Builder'})
-                </button>
-              </div>
-            </div>
-          )}
-
-          {selectedFile && state === 'FILE_SELECTED' && (
-            <div className="space-y-5 animate-fade-in">
-              <div className="w-14 h-14 rounded-2xl bg-emerald-500/15 text-emerald-400 mx-auto flex items-center justify-center mb-2 shadow-[0_0_20px_rgba(16,185,129,0.2)]">
-                <FileCheck className="w-7 h-7" />
-              </div>
-
-              <div className="inline-flex items-center gap-3 px-4 py-2.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] max-w-md mx-auto">
-                <FileText className="w-5 h-5 text-[var(--accent)] shrink-0" />
-                <div className="text-left min-w-0 flex-1">
-                  <p className="text-xs sm:text-sm font-bold text-[var(--text-primary)] truncate">
-                    {selectedFile.name}
-                  </p>
-                  <p className="text-[11px] text-[var(--text-secondary)]">
-                    {formatFileSize(selectedFile.size)} · Ready for extraction
+              <div className="space-y-3">
+                {/* Pillar 1 */}
+                <div className="p-3 rounded-xl bg-[var(--bg-secondary)]/60 border border-[var(--border-color)]/70 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                      <Zap className="w-3.5 h-3.5 text-amber-400" />
+                      Keyword & Hard Skill Density
+                    </span>
+                    <span className="text-[10px] font-bold text-[var(--accent)]">
+                      35% Weight
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                    Identifies core programming languages, frameworks, cloud platforms, and domain terms matching the target job.
                   </p>
                 </div>
-                <button
-                  type="button"
-                  onClick={handleRemoveFile}
-                  title="Remove file"
-                  className="p-1 rounded-lg hover:bg-[var(--bg-elevated)] text-[var(--text-secondary)] hover:text-rose-400 transition-colors"
-                >
-                  <X className="w-4 h-4" />
-                </button>
+
+                {/* Pillar 2 */}
+                <div className="p-3 rounded-xl bg-[var(--bg-secondary)]/60 border border-[var(--border-color)]/70 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                      <TrendingUp className="w-3.5 h-3.5 text-emerald-400" />
+                      Quantified Bullet Impact (XYZ)
+                    </span>
+                    <span className="text-[10px] font-bold text-[var(--accent)]">
+                      25% Weight
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                    Evaluates metrics, percentages, revenue, latency reductions, and strong active past-tense verbs.
+                  </p>
+                </div>
+
+                {/* Pillar 3 */}
+                <div className="p-3 rounded-xl bg-[var(--bg-secondary)]/60 border border-[var(--border-color)]/70 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-blue-400" />
+                      Section Architecture & Parsing
+                    </span>
+                    <span className="text-[10px] font-bold text-[var(--accent)]">
+                      20% Weight
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                    Verifies standard header hierarchy, clean contact metadata, and machine-readable date ranges.
+                  </p>
+                </div>
+
+                {/* Pillar 4 */}
+                <div className="p-3 rounded-xl bg-[var(--bg-secondary)]/60 border border-[var(--border-color)]/70 space-y-1">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-purple-400" />
+                      Brevity & Recruiter Glance Rate
+                    </span>
+                    <span className="text-[10px] font-bold text-[var(--accent)]">
+                      20% Weight
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                    Ensures concise 1–2 page length, optimal bullet length (1–2 lines), and elimination of generic filler phrases.
+                  </p>
+                </div>
               </div>
 
-              <div className="flex items-center justify-center gap-3">
-                <button
-                  type="button"
-                  onClick={handleStartAnalysis}
-                  className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs sm:text-sm font-semibold hover:bg-[var(--accent-hover)] transition-all shadow-lg shadow-[var(--accent)]/25 active:scale-95"
-                >
-                  <Sparkles className="w-4 h-4" />
-                  Analyze Resume Now
-                </button>
-                <label
-                  htmlFor="resume-file-input"
-                  className="cursor-pointer inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] text-xs sm:text-sm font-medium hover:bg-[var(--bg-elevated)] transition-all"
-                >
-                  Replace File
-                </label>
+              {/* Benchmark Stat Card */}
+              <div className="pt-2 border-t border-[var(--border-color)]/60 flex items-center justify-between text-xs">
+                <span className="text-[var(--text-secondary)]">Recruiter Ready Target:</span>
+                <span className="font-bold text-emerald-400 bg-emerald-500/10 px-2.5 py-0.5 rounded-full border border-emerald-500/20">
+                  85+ / 100 ATS Score
+                </span>
               </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* INVALID DOCUMENT Banner */}
-      {state === 'INVALID_DOCUMENT' && (
-        <div className="p-6 rounded-2xl border border-rose-500/30 bg-rose-500/10 text-left space-y-4 animate-fade-in shadow-xl">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-rose-500/20 flex items-center justify-center shrink-0 border border-rose-500/30">
-              <ShieldAlert className="w-5 h-5 text-rose-400" />
-            </div>
-            <div className="space-y-1.5 flex-1">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-rose-500/20 text-rose-300 border border-rose-500/30">
-                Document Validation Failed
-              </div>
-              <h4 className="text-base font-bold text-[var(--text-primary)]">
-                This document does not appear to be a resume or CV.
-              </h4>
-              <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
-                {validationResult?.detectedType
-                  ? `Identified content: ${validationResult.detectedType}. `
-                  : ''}
-                Smart Resume AI requires an authentic resume or CV with career sections (such as work experience, education, or skills) to perform ATS scoring and analysis. Invoices, homework assignments, certificates, and specifications cannot be analyzed.
-              </p>
-              <p className="text-xs text-[var(--text-muted)]">
-                Please upload a resume in PDF, DOCX, or TXT format.
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-rose-500/20">
-            <button
-              type="button"
-              onClick={handleResetToUpload}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-500 text-white text-xs font-semibold hover:bg-rose-600 transition-all cursor-pointer shadow-lg shadow-rose-500/20"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Upload Another Document
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                resetToSampleResume();
-                handleAnalyzeBuilderResume();
-              }}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] text-xs font-semibold hover:bg-[var(--bg-elevated)] transition-all cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
-              Try with Sample Resume
-            </button>
+            </GlassCard>
           </div>
         </div>
       )}
 
-      {/* UNCERTAIN DOCUMENT Banner */}
-      {state === 'UNCERTAIN_DOCUMENT' && (
-        <div className="p-6 rounded-2xl border border-amber-500/30 bg-amber-500/10 text-left space-y-4 animate-fade-in shadow-xl">
-          <div className="flex items-start gap-4">
-            <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center shrink-0 border border-amber-500/30">
-              <FileWarning className="w-5 h-5 text-amber-400" />
-            </div>
-            <div className="space-y-1.5 flex-1">
-              <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-500/20 text-amber-300 border border-amber-500/30">
-                Uncertain Document Structure
-              </div>
-              <h4 className="text-base font-bold text-[var(--text-primary)]">
-                We couldn&apos;t clearly verify this document as a resume.
-              </h4>
-              <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
-                The uploaded document has limited standard resume sections (such as work experience, education, or skills) or is very brief. ATS systems often struggle to parse incomplete formats.
-              </p>
-              <p className="text-xs text-[var(--text-muted)]">
-                For best results, upload a clearer or more complete resume. If this is an unusual format or early draft, you may still proceed with best-effort analysis.
-              </p>
-            </div>
-          </div>
-          <div className="flex flex-wrap items-center gap-3 pt-2 border-t border-amber-500/20">
-            <button
-              type="button"
-              onClick={handleResetToUpload}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] transition-all cursor-pointer shadow-lg shadow-[var(--accent)]/20"
-            >
-              <RefreshCw className="w-3.5 h-3.5" />
-              Upload a Clearer Resume
-            </button>
-            <button
-              type="button"
-              onClick={handleProceedWithUncertain}
-              className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-amber-500/40 bg-amber-500/20 text-amber-200 text-xs font-semibold hover:bg-amber-500/30 transition-all cursor-pointer"
-            >
-              <Sparkles className="w-3.5 h-3.5" />
-              Proceed with Best-Effort Analysis
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* ERROR View Banner */}
-      {state === 'ERROR' && errorMessage && (
-        <div className="p-5 rounded-2xl border border-rose-500/30 bg-rose-500/10 text-left space-y-3 animate-fade-in">
-          <div className="flex items-start gap-3">
-            <AlertCircle className="w-5 h-5 text-rose-400 shrink-0 mt-0.5" />
-            <div className="space-y-1">
-              <h4 className="text-sm font-bold text-rose-300">Analysis Error</h4>
-              <p className="text-xs text-[var(--text-primary)] leading-relaxed">
-                {errorMessage}
-              </p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 pl-8">
-            {selectedFile ? (
-              <button
-                type="button"
-                onClick={handleStartAnalysis}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-rose-500 text-white text-xs font-semibold hover:bg-rose-600 transition-all cursor-pointer"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Retry Analysis
-              </button>
-            ) : null}
-            <button
-              type="button"
-              onClick={handleResetToUpload}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] text-xs font-semibold hover:bg-[var(--bg-elevated)] transition-all cursor-pointer"
-            >
-              Upload Another File
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Multi-stage Animated Loading View */}
-      {isBusy && (
-        <GlassCard className="p-10 text-center space-y-6">
-          <div className="relative w-20 h-20 mx-auto">
-            <div className="w-20 h-20 rounded-full border-4 border-[var(--border-color)] border-t-[var(--accent)] animate-spin" />
-            <div className="absolute inset-0 flex items-center justify-center">
-              <Cpu className="w-8 h-8 text-[var(--accent)]" />
-            </div>
-          </div>
-
-          <div className="space-y-2 max-w-md mx-auto">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-lg text-xs font-bold bg-[var(--accent)]/15 text-[var(--accent)] uppercase tracking-wider">
-              {state === 'UPLOADING' && 'Step 1 of 3: Secure Upload'}
-              {state === 'EXTRACTING' && 'Step 2 of 3: Structural Extraction'}
-              {state === 'ANALYZING' && 'Step 3 of 3: ATS Heuristic Intelligence'}
-            </div>
-            <h3 className="text-lg font-bold text-[var(--text-primary)]">
-              {stageDescription || 'Evaluating resume architecture...'}
-            </h3>
-            <p className="text-xs text-[var(--text-secondary)]">
-              Cross-referencing formatting, bullet strength, and keyword density against enterprise ATS standards.
-            </p>
-          </div>
-
-          <div className="max-w-xs mx-auto w-full bg-[var(--bg-secondary)] h-2 rounded-full overflow-hidden">
-            <div
-              className="bg-[var(--accent)] h-full transition-all duration-500 ease-out"
-              style={{
-                width:
-                  state === 'UPLOADING'
-                    ? '30%'
-                    : state === 'EXTRACTING'
-                    ? '65%'
-                    : '92%',
-              }}
-            />
-          </div>
-        </GlassCard>
-      )}
-
-      {/* SUCCESS: Comprehensive Analysis & Improvement View */}
+      {/* SUCCESS: COMPREHENSIVE ANALYSIS & IMPROVEMENT VIEW */}
       {state === 'SUCCESS' && analysisResult && !isBusy && (
         <div className="space-y-8 animate-fade-in">
-          {/* Analysis Summary Header */}
-          <div className="p-5 sm:p-6 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-left flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="space-y-1.5">
-              <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-base sm:text-lg font-bold text-[var(--text-primary)]">
-                  {selectedFile ? selectedFile.name : `${resumeData.personalInfo.fullName || 'Candidate'}'s Resume`}
-                </h2>
-                {analysisResult.isJobSpecific && (
-                  <span className="px-2 py-0.5 rounded text-[11px] font-medium bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--border-color)]">
-                    Target: {analysisResult.jobTitle || 'Role'}{analysisResult.company ? ` at ${analysisResult.company}` : ''}
-                  </span>
-                )}
-              </div>
-              <p className="text-xs text-[var(--text-secondary)]">
-                {analysisResult.wordCount} words analyzed · Estimated ATS Match: <span className="font-semibold text-[var(--text-primary)]">{analysisResult.overallAtsScore}/100</span>
-              </p>
-            </div>
+          {/* Main Hero Intelligence Dashboard Card */}
+          <GlassCard className="p-6 sm:p-8 border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-80 h-80 bg-blue-500/10 rounded-full blur-3xl -z-10 pointer-events-none" />
+            <div className="absolute bottom-0 left-1/3 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl -z-10 pointer-events-none" />
 
-            <div className="flex flex-wrap items-center gap-2 shrink-0">
-              <button
-                type="button"
-                onClick={handleReanalyze}
-                title="Re-run analysis to evaluate updated wording"
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-elevated)] text-[var(--text-primary)] text-xs font-medium transition-colors cursor-pointer"
-              >
-                <RefreshCw className="w-3.5 h-3.5" />
-                Re-score
-              </button>
-              <Link
-                href="/builder?from=analyzer"
-                className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] transition-colors shadow-sm"
-              >
-                <FileEdit className="w-3.5 h-3.5" />
-                Edit in Builder
-              </Link>
-              <button
-                type="button"
-                onClick={handleResetToUpload}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs font-medium transition-colors cursor-pointer"
-              >
-                <UploadCloud className="w-3.5 h-3.5" />
-                Upload Another
-              </button>
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center text-left">
+              {/* Radial Overall Score Ring (4 cols) */}
+              <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 rounded-2xl bg-[var(--bg-secondary)]/50 border border-[var(--border-color)] text-center space-y-3">
+                <ScoreRing
+                  score={analysisResult.overallAtsScore}
+                  maxScore={100}
+                  size={140}
+                  strokeWidth={10}
+                  subLabel="ATS Score"
+                  showPercentage={false}
+                />
+                <div>
+                  <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold tracking-wide mt-1 bg-emerald-500/15 text-emerald-400 border border-emerald-500/30">
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>
+                      {analysisResult.overallAtsScore >= 85
+                        ? 'Recruiter Ready'
+                        : analysisResult.overallAtsScore >= 70
+                        ? 'Competitive Baseline'
+                        : 'Needs ATS Tuning'}
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-[var(--text-secondary)] mt-1.5">
+                    Scored across 4 enterprise ATS algorithms
+                  </p>
+                </div>
+              </div>
+
+              {/* Score Breakdown Bars & Document Metadata (8 cols) */}
+              <div className="lg:col-span-8 space-y-5">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border-color)]">
+                  <div>
+                    <h2 className="text-xl font-bold text-[var(--text-primary)]">
+                      {selectedFile
+                        ? selectedFile.name
+                        : `${resumeData.personalInfo.fullName || 'Candidate'}'s Resume`}
+                    </h2>
+                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                      {analysisResult.wordCount} words analyzed ·{' '}
+                      {analysisResult.isJobSpecific ? (
+                        <span className="text-[var(--accent)] font-semibold">
+                          Tailored for {analysisResult.jobTitle || 'Role'}
+                          {analysisResult.company ? ` at ${analysisResult.company}` : ''}
+                        </span>
+                      ) : (
+                        <span>General ATS Compatibility Scan</span>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Actions Header */}
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={handleReanalyze}
+                      title="Re-run analysis to evaluate updated wording"
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-elevated)] text-[var(--text-primary)] text-xs font-semibold transition-all cursor-pointer"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5" />
+                      <span>Re-Score</span>
+                    </button>
+                    <Link
+                      href="/builder?from=analyzer"
+                      className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold hover:opacity-95 transition-all shadow-md shadow-indigo-500/20"
+                    >
+                      <FileEdit className="w-3.5 h-3.5" />
+                      <span>Edit in Builder</span>
+                    </Link>
+                    <button
+                      type="button"
+                      onClick={handleResetToUpload}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs font-medium transition-all cursor-pointer"
+                    >
+                      <UploadCloud className="w-3.5 h-3.5" />
+                      <span>Upload Another</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* 4 Dimension Progress Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  {/* Keyword Match */}
+                  <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)]/50 border border-[var(--border-color)] space-y-2">
+                    <div className="flex items-center justify-between text-xs font-semibold">
+                      <span className="text-[var(--text-secondary)]">Keyword Alignment</span>
+                      <span className="text-[var(--text-primary)] font-bold">
+                        {analysisResult.keywordMatchScore}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-[var(--bg-elevated)] h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-blue-500 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${analysisResult.keywordMatchScore}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Formatting */}
+                  <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)]/50 border border-[var(--border-color)] space-y-2">
+                    <div className="flex items-center justify-between text-xs font-semibold">
+                      <span className="text-[var(--text-secondary)]">Formatting & Parseability</span>
+                      <span className="text-[var(--text-primary)] font-bold">
+                        {analysisResult.formattingScore}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-[var(--bg-elevated)] h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-indigo-500 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${analysisResult.formattingScore}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Content Score */}
+                  <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)]/50 border border-[var(--border-color)] space-y-2">
+                    <div className="flex items-center justify-between text-xs font-semibold">
+                      <span className="text-[var(--text-secondary)]">Content & Bullet Impact</span>
+                      <span className="text-[var(--text-primary)] font-bold">
+                        {analysisResult.contentScore}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-[var(--bg-elevated)] h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-emerald-500 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${analysisResult.contentScore}%` }}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Section Score */}
+                  <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)]/50 border border-[var(--border-color)] space-y-2">
+                    <div className="flex items-center justify-between text-xs font-semibold">
+                      <span className="text-[var(--text-secondary)]">Section Completeness</span>
+                      <span className="text-[var(--text-primary)] font-bold">
+                        {analysisResult.sectionScore}%
+                      </span>
+                    </div>
+                    <div className="w-full bg-[var(--bg-elevated)] h-2 rounded-full overflow-hidden">
+                      <div
+                        className="bg-purple-500 h-full rounded-full transition-all duration-500"
+                        style={{ width: `${analysisResult.sectionScore}%` }}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
+          </GlassCard>
 
           {/* Area A & Area B: Matched Skills and Recommended Keywords */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
             {/* Area A: Matched Skills */}
-            <div className="p-5 sm:p-6 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3">
+            <GlassCard className="border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
-                <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                  Matched Skills
-                </h3>
-                <span className="text-xs text-[var(--text-secondary)] font-medium">
-                  {(analysisResult.matchedSkills?.length ?? analysisResult.detectedKeywords.length)} detected
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                    Matched Skills & Competencies
+                  </h3>
+                </div>
+                <span className="text-xs text-emerald-400 font-semibold bg-emerald-500/10 px-2 py-0.5 rounded-full border border-emerald-500/20">
+                  {analysisResult.matchedSkills?.length ?? analysisResult.detectedKeywords.length} Detected
                 </span>
               </div>
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                 {analysisResult.isJobSpecific
-                  ? 'Skills and competencies identified in your resume that align with the target job requirements:'
+                  ? 'Skills and competencies identified in your resume that directly align with the target job requirements:'
                   : 'Technical and domain skills detected in your resume:'}
               </p>
-              <div className="flex flex-wrap gap-1.5 pt-1">
+              <div className="flex flex-wrap gap-2 pt-1">
                 {(analysisResult.matchedSkills && analysisResult.matchedSkills.length > 0
                   ? analysisResult.matchedSkills.map((m) => m.skill)
                   : analysisResult.detectedKeywords
@@ -985,9 +1179,10 @@ export default function ResumeAnalyzerPage() {
                   ).map((skill) => (
                     <span
                       key={skill}
-                      className="px-2.5 py-1 rounded-md text-xs font-medium bg-[var(--bg-secondary)] text-[var(--text-primary)] border border-[var(--border-color)]"
+                      className="px-3 py-1 rounded-xl text-xs font-semibold bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 flex items-center gap-1.5"
                     >
-                      {skill}
+                      <Check className="w-3 h-3 text-emerald-400" />
+                      <span>{skill}</span>
                     </span>
                   ))
                 ) : (
@@ -996,27 +1191,30 @@ export default function ResumeAnalyzerPage() {
                   </p>
                 )}
               </div>
-            </div>
+            </GlassCard>
 
             {/* Area B: Recommended Keywords */}
-            <div className="p-5 sm:p-6 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3">
+            <GlassCard className="border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl space-y-3">
               <div className="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
-                <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                  Recommended Keywords
-                </h3>
-                <span className="text-xs text-[var(--text-secondary)] font-medium">
+                <div className="flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-[var(--accent)]" />
+                  <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                    Recommended Keywords & Missing Skills
+                  </h3>
+                </div>
+                <span className="text-xs text-[var(--accent)] font-semibold bg-[var(--accent)]/10 px-2 py-0.5 rounded-full border border-[var(--accent)]/20">
                   {(analysisResult.missingSkills && analysisResult.missingSkills.length > 0
                     ? analysisResult.missingSkills
                     : analysisResult.missingKeywords
-                  ).length} suggested
+                  ).length} Suggested
                 </span>
               </div>
               <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                 {analysisResult.isJobSpecific
-                  ? 'Keywords from the target job posting not detected in your resume. Click + to add skills you have working experience with:'
-                  : 'Common industry keywords for your field. Click + to add skills you have working experience with:'}
+                  ? 'Key skills from the job posting not detected in your resume. Click "+" to append skills you have authentic experience with:'
+                  : 'Common industry keywords for your field. Click "+" to add to your active resume:'}
               </p>
-              <div className="flex flex-wrap gap-1.5 pt-1">
+              <div className="flex flex-wrap gap-2 pt-1">
                 {(analysisResult.missingSkills && analysisResult.missingSkills.length > 0
                   ? analysisResult.missingSkills
                   : analysisResult.missingKeywords
@@ -1030,20 +1228,20 @@ export default function ResumeAnalyzerPage() {
                       type="button"
                       onClick={() => handleAddMissingSkill(skill)}
                       disabled={alreadyInResume}
-                      className={`px-2.5 py-1 rounded-md text-xs font-medium border transition-colors flex items-center gap-1 cursor-pointer ${
+                      className={`px-3 py-1.5 rounded-xl text-xs font-medium border transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
                         alreadyInResume
                           ? 'bg-[var(--bg-secondary)] text-[var(--text-muted)] border-[var(--border-color)] cursor-default'
-                          : 'bg-[var(--bg-secondary)] hover:bg-[var(--bg-elevated)] text-[var(--text-primary)] border-[var(--border-color)] hover:border-[var(--accent)]'
+                          : 'bg-[var(--bg-secondary)] hover:bg-[var(--accent)] hover:text-white text-[var(--text-primary)] border-[var(--border-color)] hover:border-[var(--accent)] shadow-sm'
                       }`}
                     >
                       {alreadyInResume ? (
                         <>
-                          <Check className="w-3 h-3 text-emerald-500" />
+                          <Check className="w-3 h-3 text-emerald-400" />
                           <span>{skill} (Added)</span>
                         </>
                       ) : (
                         <>
-                          <span className="font-semibold text-[var(--accent)]">+</span>
+                          <span className="font-bold text-[var(--accent)] group-hover:text-white">+</span>
                           <span>{skill}</span>
                         </>
                       )}
@@ -1051,10 +1249,7 @@ export default function ResumeAnalyzerPage() {
                   );
                 })}
               </div>
-              <p className="text-[11px] text-[var(--text-muted)] pt-1">
-                * Keyword suggestions are based on role requirements. Only add skills you have genuine experience with.
-              </p>
-            </div>
+            </GlassCard>
           </div>
 
           {/* Interactive In-Place Improvement Engine */}
@@ -1064,11 +1259,11 @@ export default function ResumeAnalyzerPage() {
                 <div className="flex items-center gap-2">
                   <Wand2 className="w-5 h-5 text-[var(--accent)]" />
                   <h2 className="text-lg font-bold text-[var(--text-primary)]">
-                    Resume Improvements ({improvements.length || (analysisResult.topSuggestions?.length || 0)})
+                    Phrasing & Bullet Rewrite Engine ({improvements.length || (analysisResult.topSuggestions?.length || 0)})
                   </h2>
                 </div>
                 <p className="text-xs text-[var(--text-secondary)] mt-0.5">
-                  Review side-by-side phrasing optimizations, edit content inline, and apply directly to your active resume.
+                  Review side-by-side phrasing optimizations, edit content inline, and apply directly to your active resume with 1 click.
                 </p>
               </div>
 
@@ -1076,17 +1271,17 @@ export default function ResumeAnalyzerPage() {
                 <button
                   type="button"
                   onClick={handleApplyAll}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] transition-all shadow-sm cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold hover:opacity-95 transition-all shadow-md shadow-indigo-500/20 cursor-pointer active:scale-95"
                 >
                   <Check className="w-3.5 h-3.5" />
-                  Apply All Approved
+                  <span>Apply All Approved</span>
                 </button>
                 <Link
                   href="/builder?from=analyzer"
-                  className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-elevated)] text-[var(--text-primary)] text-xs font-semibold transition-all cursor-pointer"
+                  className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] hover:bg-[var(--bg-elevated)] text-[var(--text-primary)] text-xs font-semibold transition-all cursor-pointer"
                 >
                   <FileEdit className="w-3.5 h-3.5" />
-                  Go to Builder
+                  <span>Go to Builder</span>
                 </Link>
               </div>
             </div>
@@ -1125,14 +1320,14 @@ export default function ResumeAnalyzerPage() {
                 const isEditing = editingSuggestionId === item.id;
 
                 return (
-                  <div
+                  <GlassCard
                     key={item.id}
-                    className={`rounded-xl border p-5 sm:p-6 transition-all space-y-4 bg-[var(--bg-card)] ${
+                    className={`border transition-all space-y-4 bg-[var(--glass-bg)] backdrop-blur-xl ${
                       isRejected
                         ? 'border-[var(--border-color)] opacity-60'
                         : isAppliedToResume
-                        ? 'border-[var(--border-color)] shadow-sm'
-                        : 'border-[var(--border-color)] hover:border-[var(--border-hover)]'
+                        ? 'border-emerald-500/40 shadow-lg shadow-emerald-500/5'
+                        : 'border-[var(--glass-border)] hover:border-[var(--accent)]/50'
                     }`}
                   >
                     {/* Header: Section, Field, Subtle Applied Status */}
@@ -1156,8 +1351,8 @@ export default function ResumeAnalyzerPage() {
 
                       <div className="flex items-center gap-2">
                         {isAppliedToResume && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-medium text-[var(--text-secondary)] bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-                            <Check className="w-3 h-3 text-[var(--accent)]" />
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[11px] font-medium text-emerald-400 bg-emerald-500/10 border border-emerald-500/20">
+                            <Check className="w-3 h-3 text-emerald-400" />
                             Applied
                           </span>
                         )}
@@ -1173,7 +1368,7 @@ export default function ResumeAnalyzerPage() {
                     {/* Visual Comparison: Current Phrasing vs Proposed AI Alternative */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                       {/* Left: Current Phrasing */}
-                      <div className="p-4 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-3 flex flex-col justify-between">
+                      <div className="p-4 rounded-xl bg-[var(--bg-secondary)]/60 border border-[var(--border-color)] space-y-3 flex flex-col justify-between">
                         <div className="space-y-2">
                           <div className="flex items-center justify-between pb-1 border-b border-[var(--border-color)]/60">
                             <span className="text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-1.5">
@@ -1181,11 +1376,11 @@ export default function ResumeAnalyzerPage() {
                               Current Phrasing
                             </span>
                             <span className="text-[10px] text-[var(--text-muted)] font-mono">
-                              Extracted Text
+                              Extracted
                             </span>
                           </div>
 
-                          <div className="text-xs text-[var(--text-primary)] font-mono leading-relaxed bg-[var(--bg-card)] p-3 rounded-md border border-[var(--border-color)]/70 whitespace-pre-wrap min-h-[68px]">
+                          <div className="text-xs text-[var(--text-primary)] font-mono leading-relaxed bg-[var(--bg-card)]/80 p-3 rounded-lg border border-[var(--border-color)]/70 whitespace-pre-wrap min-h-[68px]">
                             {item.originalContent || 'No existing text recorded for this section.'}
                           </div>
                         </div>
@@ -1201,9 +1396,9 @@ export default function ResumeAnalyzerPage() {
                       </div>
 
                       {/* Right: Proposed AI Alternative */}
-                      <div className="p-4 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-3 flex flex-col justify-between">
+                      <div className="p-4 rounded-xl bg-gradient-to-br from-[var(--accent)]/5 to-[var(--bg-secondary)]/60 border border-[var(--accent)]/30 space-y-3 flex flex-col justify-between">
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between pb-1 border-b border-[var(--border-color)]/60">
+                          <div className="flex items-center justify-between pb-1 border-b border-[var(--accent)]/20">
                             <span className="text-[11px] font-semibold text-[var(--accent)] uppercase tracking-wider flex items-center gap-1.5">
                               <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
                               Proposed AI Alternative
@@ -1229,7 +1424,7 @@ export default function ResumeAnalyzerPage() {
                                 rows={3}
                                 value={editTextValue}
                                 onChange={(e) => setEditTextValue(e.target.value)}
-                                className="w-full p-2.5 rounded-md bg-[var(--bg-card)] border border-[var(--accent)] text-xs text-[var(--text-primary)] focus:outline-none"
+                                className="w-full p-2.5 rounded-lg bg-[var(--bg-card)] border border-[var(--accent)] text-xs text-[var(--text-primary)] focus:outline-none"
                                 placeholder="Edit suggested wording..."
                               />
                               <div className="flex items-center justify-end gap-2 pt-1">
@@ -1250,16 +1445,16 @@ export default function ResumeAnalyzerPage() {
                               </div>
                             </div>
                           ) : (
-                            <div className="text-xs text-[var(--text-primary)] leading-relaxed bg-[var(--bg-card)] p-3 rounded-md border border-[var(--border-color)]/70 whitespace-pre-wrap font-medium min-h-[68px]">
+                            <div className="text-xs text-[var(--text-primary)] leading-relaxed bg-[var(--bg-card)]/90 p-3 rounded-lg border border-[var(--accent)]/30 whitespace-pre-wrap font-medium min-h-[68px]">
                               {item.improvedContent}
                             </div>
                           )}
                         </div>
 
                         {/* Evidence-based note */}
-                        <div className="text-[11px] text-[var(--text-muted)] leading-relaxed pt-2 border-t border-[var(--border-color)]/50 flex items-start gap-1.5">
+                        <div className="text-[11px] text-[var(--text-muted)] leading-relaxed pt-2 border-t border-[var(--accent)]/20 flex items-start gap-1.5">
                           <span className="font-semibold text-[var(--text-secondary)]">Guideline: </span>
-                          <span>Phrased with strong action verbs and relevant domain skills without inventing experience.</span>
+                          <span>Phrased with strong action verbs and relevant domain skills without fabricating experience.</span>
                         </div>
                       </div>
                     </div>
@@ -1318,17 +1513,17 @@ export default function ResumeAnalyzerPage() {
                       <button
                         type="button"
                         onClick={() => handleApplySuggestion(item.id, item.field)}
-                        className={`inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                        className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer shadow-md active:scale-95 ${
                           isAppliedToResume
                             ? 'border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]'
-                            : 'bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white shadow-sm'
+                            : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:opacity-95 text-white shadow-indigo-500/20'
                         }`}
                       >
                         <Check className="w-3.5 h-3.5" />
-                        {isAppliedToResume ? 'Re-Apply to Resume' : 'Apply to Resume'}
+                        <span>{isAppliedToResume ? 'Re-Apply to Resume' : 'Apply to Resume'}</span>
                       </button>
                     </div>
-                  </div>
+                  </GlassCard>
                 );
               })}
             </div>
@@ -1340,14 +1535,14 @@ export default function ResumeAnalyzerPage() {
               <div className="flex items-center gap-2">
                 <Award className="w-5 h-5 text-[var(--accent)]" />
                 <h2 className="text-lg font-bold text-[var(--text-primary)]">
-                  Resume Strengths
+                  Resume Strengths & Key Advantages
                 </h2>
               </div>
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                 {analysisResult.strengths.map((st) => (
-                  <div
+                  <GlassCard
                     key={st.id}
-                    className="p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2"
+                    className="p-5 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl space-y-2 text-left"
                   >
                     <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)]">
                       {st.section}
@@ -1356,7 +1551,7 @@ export default function ResumeAnalyzerPage() {
                     <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                       {st.description}
                     </p>
-                  </div>
+                  </GlassCard>
                 ))}
               </div>
             </div>
@@ -1366,8 +1561,8 @@ export default function ResumeAnalyzerPage() {
 
       {/* Paste Text Modal */}
       {showPasteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-xl rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-md p-4 animate-fade-in">
+          <div className="w-full max-w-xl rounded-3xl bg-[var(--bg-card)] border border-[var(--glass-border)] p-6 sm:p-8 shadow-2xl space-y-4 backdrop-blur-xl">
             <h3 className="text-base font-bold text-[var(--text-primary)]">
               Paste Resume Content Directly
             </h3>
@@ -1376,7 +1571,7 @@ export default function ResumeAnalyzerPage() {
               value={customText}
               onChange={(e) => setCustomText(e.target.value)}
               placeholder="Paste raw text or markdown from your resume..."
-              className="w-full p-3 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs font-mono focus:outline-none focus:border-[var(--accent)]"
+              className="w-full p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs font-mono focus:outline-none focus:border-[var(--accent)]"
             />
             <div className="flex items-center justify-end gap-3">
               <button
@@ -1394,7 +1589,7 @@ export default function ResumeAnalyzerPage() {
                     handleTextAnalysis(customText, 'Pasted Resume');
                   }
                 }}
-                className="px-4 py-2 rounded-xl text-xs font-semibold bg-[var(--accent)] text-white hover:bg-[var(--accent-hover)] cursor-pointer"
+                className="px-5 py-2.5 rounded-xl text-xs font-bold bg-gradient-to-r from-blue-600 to-indigo-600 text-white hover:opacity-95 cursor-pointer shadow-lg shadow-indigo-500/20"
               >
                 Run AI Analysis
               </button>

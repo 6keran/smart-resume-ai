@@ -2,6 +2,8 @@ import 'server-only';
 import { cookies } from 'next/headers';
 import {
   verifyAdminToken,
+  verifyAdminTokenAsync,
+  revokeAdminSession,
   createSessionToken,
   getAdminByEmail,
   verifyPassword,
@@ -33,11 +35,19 @@ export async function getAuthenticatedAdmin(): Promise<{ sub: string; email: str
     const cookieStore = await cookies();
     const token = cookieStore.get('sra_admin_session')?.value;
     if (!token) return null;
-    return verifyAdminToken(token);
+    return await verifyAdminTokenAsync(token);
   } catch (err) {
     console.error('Error fetching admin session from cookies:', err);
     return null;
   }
 }
 
-export { verifyAdminToken, createSessionToken, getAdminByEmail, verifyPassword, recordAdminLogin };
+export {
+  verifyAdminToken,
+  verifyAdminTokenAsync,
+  revokeAdminSession,
+  createSessionToken,
+  getAdminByEmail,
+  verifyPassword,
+  recordAdminLogin,
+};
