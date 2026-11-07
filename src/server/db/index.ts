@@ -6653,6 +6653,9 @@ export async function upsertUserCareerGoal(
     skillsSummary?: string[] | null;
   }
 ): Promise<UserCareerGoalRecord> {
+  if (!userId || typeof userId !== 'string' || !userId.trim()) {
+    throw new Error('Valid User ID is required to upsert career goal.');
+  }
   const db = getDb();
   const now = new Date().toISOString();
   const existing = await getUserCareerGoal(userId);
@@ -7295,6 +7298,9 @@ export async function createGuidedProject(
   userId: string,
   data: Partial<GuidedProjectDTO>
 ): Promise<GuidedProjectDTO> {
+  if (!userId || typeof userId !== 'string' || !userId.trim()) {
+    throw new Error('Valid User ID is required to create a guided project.');
+  }
   const db = getDb();
   const id = `gproj_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
   const now = new Date().toISOString();

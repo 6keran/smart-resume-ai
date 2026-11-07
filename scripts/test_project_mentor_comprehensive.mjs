@@ -1,5 +1,9 @@
 import assert from 'node:assert';
 import Module from 'node:module';
+import { setupTestDb } from './testDbIsolation.mjs';
+
+// Initialize isolated SQLite sandbox to protect data/smart_resume.db
+setupTestDb('project_mentor_comprehensive');
 
 // Intercept server-only for standalone script execution
 const origLoad = Module._load;
@@ -61,6 +65,18 @@ async function runProjectMentorValidation() {
   let userBId = '';
 
   // --------------------------------------------------------------------------
+  // Pre-flight: Assert HTTP test server is running
+  // --------------------------------------------------------------------------
+  try {
+    await fetch(`${BASE_URL}/`, { redirect: 'manual', signal: AbortSignal.timeout(3000) });
+  } catch (err) {
+    console.error(`\n❌ [PRE-FLIGHT ERROR] HTTP server at ${BASE_URL} is not reachable.`);
+    console.error(`   To run this live HTTP test suite, ensure the Next.js server is running`);
+    console.error(`   or execute the automated isolated runner: node scripts/run_live_e2e_isolated.mjs\n`);
+    process.exit(1);
+  }
+
+  // --------------------------------------------------------------------------
   // Phase 1: Authentication & Account Fixtures
   // --------------------------------------------------------------------------
   console.log('--- Phase 1: Authentication & User Accounts Setup ---');
@@ -109,6 +125,12 @@ async function runProjectMentorValidation() {
     pass('Register Student B', `ID: ${userBId}, Email: ${studentBEmail}`);
   } catch (err) {
     fail('Register Student B', err);
+  }
+
+  if (!userAId || !userBId) {
+    console.error('\n❌ [REGISTRATION ABORT] User registration failed; user IDs are missing.');
+    console.error('   Aborting further tests to prevent database writes with empty user IDs.\n');
+    process.exit(1);
   }
 
   // --------------------------------------------------------------------------

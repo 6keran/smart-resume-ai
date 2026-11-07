@@ -55,6 +55,7 @@ async function main() {
   const serverEnv = {
     PORT: String(PORT),
     NODE_ENV: 'production',
+    DB_PROVIDER: 'sqlite',
     SQLITE_PATH: testDbPath,
     STAGING_DB_PATH: testDbPath,
     ADMIN_SESSION_SECRET: 'a_very_secure_long_staging_session_secret_32_characters_min',
@@ -86,6 +87,7 @@ async function main() {
 
     const testEnv = {
       TEST_BASE_URL: BASE_URL,
+      DB_PROVIDER: 'sqlite',
       SQLITE_PATH: testDbPath,
       STAGING_DB_PATH: testDbPath,
       ADMIN_SESSION_SECRET: serverEnv.ADMIN_SESSION_SECRET,
@@ -97,10 +99,30 @@ async function main() {
     await runCommand('npx', ['tsx', 'scripts/test_auth_security_comprehensive.mjs'], testEnv);
     console.log('✓ Suite 1 passed successfully!');
 
-    // 2. Run 17-Step Student Journey E2E
-    console.log('\n--- SUITE 2: COMPLETE 17-STEP STUDENT JOURNEY E2E ---');
-    await runCommand('npx', ['tsx', 'scripts/test_student_full_journey_e2e.mjs'], testEnv);
+    // 2. Run P0/P1 Security Fixes Suite
+    console.log('\n--- SUITE 2: P0/P1 SECURITY REGRESSION FIXES ---');
+    await runCommand('npx', ['tsx', 'scripts/test_p0_p1_security_fixes.mjs'], testEnv);
     console.log('✓ Suite 2 passed successfully!');
+
+    // 3. Run Admin Security Regression Suite
+    console.log('\n--- SUITE 3: ADMIN SECURITY REGRESSION SUITE ---');
+    await runCommand('npx', ['tsx', 'scripts/test_admin_security_regression.mjs'], testEnv);
+    console.log('✓ Suite 3 passed successfully!');
+
+    // 4. Run 17-Step Student Journey E2E
+    console.log('\n--- SUITE 4: COMPLETE 17-STEP STUDENT JOURNEY E2E ---');
+    await runCommand('npx', ['tsx', 'scripts/test_student_full_journey_e2e.mjs'], testEnv);
+    console.log('✓ Suite 4 passed successfully!');
+
+    // 5. Run Advanced AI Project Mentor Suite
+    console.log('\n--- SUITE 5: ADVANCED AI PROJECT MENTOR SUITE ---');
+    await runCommand('npx', ['tsx', 'scripts/test_project_mentor_comprehensive.mjs'], testEnv);
+    console.log('✓ Suite 5 passed successfully!');
+
+    // 6. Run AI Job Application Assistant Suite
+    console.log('\n--- SUITE 6: AI JOB APPLICATION ASSISTANT SUITE ---');
+    await runCommand('npx', ['tsx', 'scripts/test_application_assistant_comprehensive.mjs'], testEnv);
+    console.log('✓ Suite 6 passed successfully!');
 
     allPassed = true;
   } finally {

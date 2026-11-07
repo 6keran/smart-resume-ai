@@ -90,6 +90,16 @@ async function runSuite() {
   const db = getDb();
   const testRunId = Date.now().toString(36);
 
+  // Pre-flight check: Verify live Next.js HTTP server is reachable
+  try {
+    await fetch(`${baseUrl}/`, { redirect: 'manual', signal: AbortSignal.timeout(2000) });
+  } catch (err) {
+    console.error(`\n❌ [PRE-FLIGHT ERROR] HTTP server at ${baseUrl} is not reachable.`);
+    console.error(`   To run this live HTTP test suite, ensure the Next.js server is running`);
+    console.error(`   or execute the automated isolated runner: node scripts/run_live_e2e_isolated.mjs\n`);
+    process.exit(1);
+  }
+
   try {
     // -------------------------------------------------------------
     // GROUP 1: UNAUTHENTICATED ACCESS CONTROLS (PAGES & APIS)

@@ -1,5 +1,9 @@
 import assert from 'node:assert';
 import Module from 'node:module';
+import { setupTestDb } from './testDbIsolation.mjs';
+
+// Initialize isolated SQLite sandbox to protect data/smart_resume.db
+setupTestDb('student_full_journey_e2e');
 
 // Intercept server-only for standalone script execution
 const origLoad = Module._load;
@@ -37,6 +41,18 @@ async function runStudentJourney() {
   let sampleResumeId = '';
   let sampleAppId = '';
   let sampleSessionId = '';
+
+  // --------------------------------------------------------------------------
+  // Pre-flight: Assert HTTP test server is running
+  // --------------------------------------------------------------------------
+  try {
+    await fetch(`${BASE_URL}/`, { redirect: 'manual', signal: AbortSignal.timeout(3000) });
+  } catch (err) {
+    console.error(`\n❌ [PRE-FLIGHT ERROR] HTTP server at ${BASE_URL} is not reachable.`);
+    console.error(`   To run this live HTTP student journey, ensure the Next.js server is running`);
+    console.error(`   or execute the automated isolated runner: node scripts/run_live_e2e_isolated.mjs\n`);
+    process.exit(1);
+  }
 
   // --------------------------------------------------------------------------
   // STEP 1: Register and log in as a student
