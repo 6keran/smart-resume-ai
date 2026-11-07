@@ -3,6 +3,10 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
 import Module from 'node:module';
+import { setupTestDb } from './testDbIsolation.mjs';
+
+// Initialize isolated SQLite sandbox to protect data/smart_resume.db
+setupTestDb('p0_p1_security_fixes');
 
 // Intercept server-only for standalone test execution
 const origLoad = Module._load;
@@ -70,13 +74,41 @@ function makeToken(payload, secret = (getAdminSessionSecret() || DEV_ONLY_FALLBA
 
 async function runAllTests() {
   const {
+    getDb,
     verifySessionToken: verifySessionTokenNode,
     verifyAdminToken: verifyAdminTokenNode,
     createSessionToken,
   } = await import('../src/server/db/index.ts');
 
+  const db = getDb();
+  const seededAdminIds = [];
+  const testAdminFixtures = [
+    { id: 'adm_valid_001', email: 'admin@example.com' },
+    { id: 'adm_canonical_001', email: 'canonical@example.com' },
+    { id: 'adm_test_auth_001', email: 'admin_auth@example.com' },
+  ];
+
+  try {
+    for (const fixture of testAdminFixtures) {
+      const existing = await db
+        .prepare('SELECT id FROM admin_users WHERE id = ? OR LOWER(email) = ?')
+        .get(fixture.id, fixture.email.toLowerCase());
+      if (!existing) {
+        const nowIso = new Date().toISOString();
+        await db.prepare(`
+          INSERT INTO admin_users (id, email, password_hash, role, created_at, updated_at, is_active)
+          VALUES (?, ?, ?, 'ADMIN', ?, ?, 1)
+        `).run(fixture.id, fixture.email.toLowerCase(), 'salt:dummyhash', nowIso, nowIso);
+        seededAdminIds.push(fixture.id);
+      }
+    }
+  } catch (seedErr) {
+    console.warn('Notice: Could not pre-seed test admin fixtures:', seedErr.message);
+  }
+
   const now = Date.now();
 
+  try {
   // -------------------------------------------------------------
   // GROUP 1: CRYPTOGRAPHIC VERIFICATION & CLAIM ENFORCEMENT (EDGE & NODE)
   // -------------------------------------------------------------
@@ -377,7 +409,7 @@ async function runAllTests() {
   // -------------------------------------------------------------
   console.log('\n--- GROUP 2: LIVE HTTP ENDPOINT ROUTE ACCESS CONTROL ---');
 
-  const baseUrl = 'http://localhost:3000';
+  const baseUrl = process.env.TEST_BASE_URL || 'http://localhost:3000';
 
   await test('Anonymous GET /privacy returns HTTP 200 (Public Legal Page)', async () => {
     const res = await fetch(`${baseUrl}/privacy`, { redirect: 'manual' });
@@ -507,6 +539,19 @@ async function runAllTests() {
     });
     assert.equal(res.status, 401, `Expected 401 for non-exact public path: got ${res.status}`);
   });
+  } finally {
+    if (seededAdminIds.length > 0) {
+      console.log('\n--- CLEANING UP TEST FIXTURES ---');
+      try {
+        for (const id of seededAdminIds) {
+          await db.prepare('DELETE FROM admin_users WHERE id = ?').run(id);
+        }
+        console.log(`✓ Cleaned up ${seededAdminIds.length} isolated test admin records.`);
+      } catch (cleanErr) {
+        console.warn('Notice: Test admin cleanup failed:', cleanErr.message);
+      }
+    }
+  }
 
   // -------------------------------------------------------------
   // SUMMARY

@@ -13,6 +13,7 @@
 import pg from 'pg';
 import path from 'node:path';
 import fs from 'node:fs';
+import { assertStagingTargetSafe, verifyDatabaseIdentity, maskDatabaseUrl } from './dbSecurityGate.mjs';
 
 const { Client } = pg;
 
@@ -40,13 +41,13 @@ function loadEnv() {
 
 loadEnv();
 
-const postgresUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+const postgresUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.NEON_DATABASE_URL;
 
 if (!postgresUrl) {
   console.log('================================================================');
   console.log('SMART RESUME AI: POSTGRESQL SCHEMA VERIFICATION (READ-ONLY)');
   console.log('================================================================');
-  console.log('\n⚠️  NOTICE: POSTGRES_URL or DATABASE_URL is not set in environment or .env.local.');
+  console.log('\n⚠️  NOTICE: POSTGRES_URL, DATABASE_URL, or NEON_DATABASE_URL is not set in environment or .env.local.');
   console.log('\nTo run a read-only schema verification against your Neon PostgreSQL database:');
   console.log('  POSTGRES_URL="postgresql://user:pass@ep-pooler.region.neon.tech/neondb?sslmode=require" node scripts/verify_postgres_schema.mjs\n');
   process.exit(0);
@@ -72,13 +73,80 @@ const REQUIRED_TABLES = [
   'user_skills',
   'job_searches',
   'job_search_results',
+  'job_matches',
   'job_applications',
   'feedback',
   'proctoring_events',
+  'live_proctoring_sessions',
   'audit_events',
+  'student_profiles',
+  'guided_projects',
+  'career_readiness_history',
+  'user_career_goals',
+  'user_learning_roadmaps',
+  'user_interview_sessions',
 ];
 
 const CRITICAL_COLUMNS = {
+  career_readiness_history: [
+    'id',
+    'user_id',
+    'overall_score',
+    'overall_level',
+    'technical_score',
+    'project_score',
+    'resume_score',
+    'interview_score',
+    'trigger_activity',
+    'created_at',
+  ],
+  user_career_goals: [
+    'id',
+    'user_id',
+    'target_role',
+    'created_at',
+    'updated_at',
+  ],
+  user_learning_roadmaps: [
+    'id',
+    'user_id',
+    'target_role',
+    'status',
+    'roadmap_data',
+    'created_at',
+    'updated_at',
+  ],
+  user_interview_sessions: [
+    'id',
+    'user_id',
+    'target_role',
+    'questions_data',
+    'status',
+    'created_at',
+    'updated_at',
+  ],
+  student_profiles: [
+    'id',
+    'user_id',
+    'institution',
+    'degree',
+    'field_of_study',
+    'graduation_year',
+    'target_role',
+    'created_at',
+    'updated_at',
+  ],
+  guided_projects: [
+    'id',
+    'user_id',
+    'title',
+    'difficulty',
+    'target_role',
+    'tech_stack',
+    'status',
+    'created_at',
+    'updated_at',
+  ],
   resume_versions: [
     'id',
     'user_id',
@@ -116,6 +184,12 @@ const CRITICAL_COLUMNS = {
     'status',
     'resume_id',
     'applied_confirmed_at',
+    'cover_letter',
+    'tailored_summary',
+    'checklist_state',
+    'match_analysis',
+    'interview_date',
+    'outreach_message',
   ],
   users: [
     'id',
@@ -159,19 +233,31 @@ const CRITICAL_INDEXES = {
 };
 
 async function verifySchema() {
+  // 1. Strict pre-connection target validation (runs before opening any socket)
+  let target;
+  try {
+    target = assertStagingTargetSafe(postgresUrl, { actionDescription: 'schema verification' });
+  } catch (err) {
+    console.error(`\n❌ ${err.message}\n`);
+    process.exit(1);
+  }
+
   const client = new Client({
     connectionString: postgresUrl,
-    ssl: postgresUrl.includes('localhost') || postgresUrl.includes('127.0.0.1')
-      ? false
-      : { rejectUnauthorized: false },
+    ssl: target.isLocal ? false : true,
   });
 
   try {
     await client.connect();
+
+    // 2. Independent post-connection database identity verification
+    const identity = await verifyDatabaseIdentity(client);
+
     console.log('================================================================');
     console.log('SMART RESUME AI: POSTGRESQL SCHEMA VERIFICATION (READ-ONLY)');
     console.log('================================================================');
-    console.log(`Connected to: ${postgresUrl.replace(/:[^:@]+@/, ':****@')}`);
+    console.log(`Connected to: ${target.maskedUrl}`);
+    console.log(`Verified DB Identity: Database="${identity.database}" | User="${identity.user}" | IP="${identity.serverIp}"`);
     console.log('Verification mode: READ-ONLY (Zero writes / Zero modifications)\n');
 
     // Query information_schema for existing tables

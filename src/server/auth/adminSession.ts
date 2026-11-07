@@ -28,6 +28,24 @@ export function getAdminFromRequest(req: Request): { sub: string; email: string;
 }
 
 /**
+ * Asynchronously extracts and verifies the admin session from request cookies (sra_admin_session),
+ * safely verifying active status and session revocation in PostgreSQL.
+ */
+export async function getAdminFromRequestAsync(req: Request): Promise<{ sub: string; email: string; role: string } | null> {
+  try {
+    const cookieHeader = req.headers.get('cookie') || '';
+    const match = cookieHeader.match(/sra_admin_session=([^;]+)/);
+    if (!match || !match[1]) return null;
+
+    const token = decodeURIComponent(match[1].trim());
+    return await verifyAdminTokenAsync(token);
+  } catch (err) {
+    console.error('Error extracting admin session from request:', err);
+    return null;
+  }
+}
+
+/**
  * Server Component / Server Action helper to fetch currently authenticated admin.
  */
 export async function getAuthenticatedAdmin(): Promise<{ sub: string; email: string; role: string } | null> {

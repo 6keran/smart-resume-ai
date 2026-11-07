@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import {
   upsertLiveProctoringSession,
   getLiveProctoringSessionDetail,
-  verifyAdminToken,
+  verifyAdminTokenAsync,
 } from '@/server/db';
 import { getUserFromRequest } from '@/server/auth/userSession';
 import { getOrCreateVisitorId } from '@/lib/visitor';
@@ -30,7 +30,7 @@ export async function POST(req: Request) {
 
     const cookieStore = await cookies();
     const adminToken = cookieStore.get('sra_admin_session')?.value;
-    const admin = verifyAdminToken(adminToken);
+    const admin = await verifyAdminTokenAsync(adminToken);
     const user = await getUserFromRequest(req);
 
     const isAdmin = Boolean(admin && admin.role === 'ADMIN');
@@ -83,7 +83,7 @@ export async function GET(req: Request) {
 
     const cookieStore = await cookies();
     const adminToken = cookieStore.get('sra_admin_session')?.value;
-    const admin = verifyAdminToken(adminToken);
+    const admin = await verifyAdminTokenAsync(adminToken);
     const user = await getUserFromRequest(req);
 
     const isAdmin = Boolean(admin && admin.role === 'ADMIN');

@@ -16,6 +16,8 @@ const eslintConfig = defineConfig([
     "scripts/**",
     "test_*.js",
     "test_*.ts",
+    "test-results/**",
+    "coverage/**",
   ]),
   {
     rules: {

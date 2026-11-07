@@ -34,6 +34,44 @@ export function cleanHtml(raw: string = ''): string {
     .trim();
 }
 
+/** Normalize provider publication dates without inventing a date when none is available. */
+export function normalizePostedAt(rawDate?: string): string | undefined {
+  const value = rawDate?.trim();
+  if (!value) return undefined;
+
+  const parsed = new Date(value);
+  if (Number.isFinite(parsed.getTime())) return parsed.toISOString();
+
+  if (/^(today|just posted|just now)$/i.test(value)) return new Date().toISOString();
+  if (/^yesterday$/i.test(value)) return new Date(Date.now() - 86_400_000).toISOString();
+
+  const relative = value.match(/^(?:(\d+|a|an)\s+)?(minute|hour|day|week|month|year)s?\s+ago$/i);
+  if (!relative) return undefined;
+
+  const amount = relative[1] === 'a' || relative[1] === 'an' ? 1 : Number(relative[1] || 1);
+  const unit = relative[2].toLowerCase();
+  const unitMs: Record<string, number> = {
+    minute: 60_000,
+    hour: 3_600_000,
+    day: 86_400_000,
+    week: 604_800_000,
+    month: 2_592_000_000,
+    year: 31_536_000_000,
+  };
+
+  return new Date(Date.now() - amount * unitMs[unit]).toISOString();
+}
+
+export function isValidHttpUrl(value?: string): boolean {
+  if (!value) return false;
+  try {
+    const protocol = new URL(value).protocol;
+    return protocol === 'http:' || protocol === 'https:';
+  } catch {
+    return false;
+  }
+}
+
 /**
  * Detects workplace type (Remote, Hybrid, On-site) from job title, location, and description.
  */

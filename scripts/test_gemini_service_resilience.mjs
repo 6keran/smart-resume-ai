@@ -156,6 +156,46 @@ async function run() {
     assert.ok(out.includes('FALLBACK_OK'), 'Fallback should produce valid output on missing API key');
   });
 
+  // Test 7: Quota exhaustion should fall back without retry loops.
+  await test('7. Fallback behavior: Quota exhaustion returns deterministic ATS output', async () => {
+    const { execSync } = await import('node:child_process');
+    const out = execSync(`npx tsx scripts/test_gemini_fallback_child.mjs quota`, {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      timeout: 45_000,
+    });
+    assert.ok(out.includes('FALLBACK_OK:quota'), 'Quota failure should produce explicitly deterministic ATS output');
+  });
+
+  // Test 8: A hung provider request should time out and use deterministic output.
+  await test('8. Fallback behavior: Provider timeout returns deterministic ATS output', async () => {
+    const { execSync } = await import('node:child_process');
+    const out = execSync(`npx tsx scripts/test_gemini_fallback_child.mjs timeout`, {
+      cwd: process.cwd(),
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'ignore'],
+      timeout: 60_000,
+    });
+    assert.ok(out.includes('FALLBACK_OK:timeout'), 'Timed out provider should produce explicitly deterministic ATS output');
+  });
+
+  await test('9. Career intelligence quota failures use deterministic results', async () => {
+    const { execSync } = await import('node:child_process');
+    const out = execSync(`npx tsx scripts/test_career_intelligence_fallback_child.mjs quota`, {
+      cwd: process.cwd(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 30_000,
+    });
+    assert.ok(out.includes('CAREER_FALLBACK_OK:quota'));
+  });
+
+  await test('10. Career intelligence provider timeouts use deterministic results', async () => {
+    const { execSync } = await import('node:child_process');
+    const out = execSync(`npx tsx scripts/test_career_intelligence_fallback_child.mjs timeout`, {
+      cwd: process.cwd(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 35_000,
+    });
+    assert.ok(out.includes('CAREER_FALLBACK_OK:timeout'));
+  });
+
   console.log(`\n================================================================`);
   console.log(`SUCCESS: All ${passed}/${passed} Gemini model & fallback tests passed!`);
   console.log(`================================================================`);

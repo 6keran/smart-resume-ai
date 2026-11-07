@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { verifyAdminToken, updateFeedbackStatus } from '@/lib/db';
+import { verifyAdminTokenAsync, updateFeedbackStatus } from '@/lib/db';
 
 export async function PATCH(req: Request) {
   try {
     const cookieStore = await cookies();
     const token = cookieStore.get('sra_admin_session')?.value;
 
-    if (!verifyAdminToken(token)) {
+    if (!(await verifyAdminTokenAsync(token))) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 

@@ -28,9 +28,9 @@ export default async function UserCertificatesPage() {
   const certificates = await getUserCertificates(user.id);
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[var(--border-color)] gap-4">
+      <div className="bento-card p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
             Earned Certificates
@@ -41,7 +41,7 @@ export default async function UserCertificatesPage() {
         </div>
         <Link
           href="/skills"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-90 transition-all shadow-sm"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer"
         >
           <Award className="w-4 h-4" />
           <span>Earn Another Certificate</span>
@@ -72,7 +72,7 @@ export default async function UserCertificatesPage() {
           {certificates.map((cert) => (
             <div
               key={cert.id}
-              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 hover:bg-[var(--bg-secondary)] p-6 flex flex-col justify-between space-y-5 transition-all duration-200 hover:border-[var(--accent)]/40 hover:shadow-xl relative overflow-hidden"
+              className="bento-card p-6 flex flex-col justify-between space-y-5 transition-all duration-200 relative overflow-hidden"
             >
               {/* Corner Watermark */}
               <div className="absolute top-0 right-0 w-32 h-32 bg-[var(--accent)]/5 rounded-bl-full pointer-events-none -z-10" />

@@ -5,6 +5,7 @@ import { validateResumeDocument } from '@/lib/resumeValidator';
 import { recordResumeUpload, recordResumeAnalysis } from '@/lib/db';
 import { getOrCreateVisitorId } from '@/lib/visitor';
 import { getUserFromRequest } from '@/lib/userSession';
+import { performAdvancedResumeAudit } from '@/server/services/resumeIntelligence';
 
 export async function POST(req: Request) {
   try {
@@ -117,6 +118,21 @@ export async function POST(req: Request) {
       result.wordCount = extractedMeta.wordCount;
     }
 
+    // Run deterministic Advanced Resume Intelligence audit (section-level scores, evidence checks, readability)
+    try {
+      const advancedAudit = performAdvancedResumeAudit(resumeText, jobDescription, jobTitle, company);
+      result.sectionScores = advancedAudit.sectionScores;
+      result.evidenceConsistency = advancedAudit.evidenceConsistency;
+      result.duplicateContent = advancedAudit.duplicateContent;
+      result.readabilityMetrics = advancedAudit.readability;
+      result.missingInformationAlerts = advancedAudit.missingInformation;
+      if (advancedAudit.jobAlignment) {
+        result.jobAlignmentAnalysis = advancedAudit.jobAlignment;
+      }
+    } catch (auditErr) {
+      console.warn('[Resume Intelligence] Non-blocking audit error:', auditErr);
+    }
+
     // Persist real upload and analysis to database
     let createdResumeId: string | null = null;
     let assignedVisitorId: string | null = null;
@@ -147,11 +163,28 @@ export async function POST(req: Request) {
         missingKeywords: result.missingKeywords || [],
         recommendations: result.recommendations || [],
       });
+
+      if (user?.id) {
+        try {
+          const { recordStudentReadinessSnapshot } = await import('@/server/services/unifiedStudentContext');
+          await recordStudentReadinessSnapshot(
+            user.id,
+            'resume_analyzed',
+            `ATS score: ${result.overallAtsScore}/100`
+          );
+        } catch (snapErr) {
+          console.warn('[Resume Analysis] Non-blocking snapshot error:', snapErr);
+        }
+      }
     } catch (dbErr) {
       console.error('[DB Event Error] Failed to persist resume analysis:', dbErr);
     }
 
-    const response = NextResponse.json({ ...result, resumeId: createdResumeId });
+    const response = NextResponse.json({
+      ...result,
+      atsScore: result.overallAtsScore,
+      resumeId: createdResumeId,
+    });
     if (assignedVisitorId && !req.headers.get('cookie')?.includes('sra_visitor_id=')) {
       response.cookies.set('sra_visitor_id', assignedVisitorId, {
         path: '/',

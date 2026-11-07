@@ -64,7 +64,7 @@ export function A4ResumeDocument({
           ref={containerRef}
           id="resume-a4-document"
           data-testid="a4-resume-document"
-          className="relative a4-page bg-white text-slate-900 shadow-2xl transition-shadow select-text flex flex-col flex-1"
+          className="relative a4-page bg-white text-slate-900 shadow-[0_10px_35px_rgba(0,0,0,0.15)] border border-slate-200/60 rounded-[2px] transition-shadow select-text flex flex-col flex-1"
           style={{
             width: `${A4_WIDTH_PX}px`,
             minHeight: `${A4_PAGE_HEIGHT_PX}px`,
@@ -81,12 +81,12 @@ export function A4ResumeDocument({
             Array.from({ length: totalPages - 1 }).map((_, idx) => (
               <div
                 key={idx}
-                className="no-print absolute left-0 right-0 pointer-events-none flex items-center justify-between px-4 z-10"
+                className="no-print absolute left-0 right-0 pointer-events-none flex items-center justify-between px-6 z-10"
                 style={{ top: `${(idx + 1) * A4_PAGE_HEIGHT_PX}px` }}
               >
-                <div className="w-full border-t border-dashed border-rose-400 opacity-60 relative">
-                  <span className="absolute -top-2.5 right-4 bg-rose-500 text-white text-[9px] font-mono px-2 py-0.5 rounded shadow-sm">
-                    Page Break (Page {idx + 1} / Page {idx + 2})
+                <div className="w-full border-t border-dashed border-slate-400/50 relative">
+                  <span className="absolute -top-3 right-4 bg-slate-800 text-white text-[10px] font-medium px-2.5 py-0.5 rounded shadow-sm">
+                    Page {idx + 2} of {totalPages}
                   </span>
                 </div>
               </div>

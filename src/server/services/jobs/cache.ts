@@ -5,6 +5,11 @@ interface CacheEntry {
   timestamp: number;
 }
 
+export interface JobSearchCacheEntry {
+  jobs: NormalizedJob[];
+  cachedAt: string;
+}
+
 class JobSearchCache {
   private cache = new Map<string, CacheEntry>();
   private readonly TTL = 10 * 60 * 1000; // 10 minutes in milliseconds
@@ -16,6 +21,10 @@ class JobSearchCache {
   }
 
   get(provider: string, keywords = '', location = '', radius = 0, page?: number): NormalizedJob[] | null {
+    return this.getEntry(provider, keywords, location, radius, page)?.jobs || null;
+  }
+
+  getEntry(provider: string, keywords = '', location = '', radius = 0, page?: number): JobSearchCacheEntry | null {
     const key = this.generateKey(provider, keywords, location, radius, page);
     const entry = this.cache.get(key);
 
@@ -26,7 +35,10 @@ class JobSearchCache {
       return null;
     }
 
-    return entry.jobs;
+    return {
+      jobs: entry.jobs,
+      cachedAt: new Date(entry.timestamp).toISOString(),
+    };
   }
 
   set(provider: string, jobs: NormalizedJob[], keywords = '', location = '', radius = 0, page?: number): void {

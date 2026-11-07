@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import {
-  verifyAdminToken,
+  verifyAdminTokenAsync,
   getDb,
   hashPassword,
   createAdminUserRecord,
@@ -12,7 +12,7 @@ export async function GET(req: Request) {
     const cookieStore = await cookies();
     const token = cookieStore.get('sra_admin_session')?.value;
 
-    const admin = verifyAdminToken(token);
+    const admin = await verifyAdminTokenAsync(token);
     if (!admin || admin.role !== 'ADMIN') {
       return NextResponse.json(
         { message: 'Unauthorized. Administrator credentials required.' },
@@ -103,7 +103,7 @@ export async function POST(req: Request) {
     const cookieStore = await cookies();
     const token = cookieStore.get('sra_admin_session')?.value;
 
-    const admin = verifyAdminToken(token);
+    const admin = await verifyAdminTokenAsync(token);
     if (!admin || admin.role !== 'ADMIN') {
       return NextResponse.json(
         { message: 'Unauthorized. Administrator credentials required.' },

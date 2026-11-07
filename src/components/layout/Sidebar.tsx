@@ -14,7 +14,6 @@ import {
   ChevronRight,
   Wand2,
   Target,
-  Compass,
   BarChart3,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -34,6 +33,7 @@ export function Sidebar() {
     pathname?.startsWith('/dashboard') ||
     pathname === '/login' ||
     pathname === '/register' ||
+    pathname === '/faq' ||
     (pathname === '/' && !user)
   ) {
     return null;
@@ -44,7 +44,6 @@ export function Sidebar() {
     { label: 'ATS Score', href: '/ats-score', icon: BarChart3 },
     { label: 'Resume Analyzer', href: '/analyzer', icon: FileText },
     { label: 'Skill Assessments', href: '/skills', icon: BadgeCheck },
-    { label: 'Career Guidance', href: '/guidance', icon: Compass, badge: 'Coming Soon' },
     { label: 'Resume Builder', href: '/builder', icon: FileEdit },
     { label: 'Job Search', href: '/jobs', icon: BriefcaseBusiness },
     { label: 'Feedback', href: '/feedback', icon: MessageSquare },
@@ -114,11 +113,11 @@ export function Sidebar() {
                   href={item.href}
                   title={collapsed ? item.label : undefined}
                   className={cn(
-                    'w-full h-11 flex items-center rounded-xl text-[14px] font-medium transition-all duration-200 group relative select-none',
-                    collapsed ? 'justify-center px-0' : 'justify-start gap-3 px-3',
+                    'w-full h-10 flex items-center rounded-full text-[13.5px] font-medium transition-all duration-200 group relative select-none',
+                    collapsed ? 'justify-center px-0' : 'justify-start gap-3 px-3.5',
                     isActive
-                      ? 'bg-[var(--accent)] text-white shadow-[var(--shadow-sm)] font-semibold'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] active:scale-[0.99]',
+                      ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border-color)] shadow-xs font-semibold'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] active:scale-[0.99]',
                     'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-primary)]'
                   )}
                 >
@@ -126,20 +125,21 @@ export function Sidebar() {
                     <Icon
                       className={cn(
                         'w-[18px] h-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110',
-                        isActive ? 'text-white' : 'text-[var(--text-muted)] group-hover:text-[var(--text-primary)]'
+                        isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] group-hover:text-[var(--text-primary)]'
                       )}
                     />
                   </div>
                   {!collapsed && (
                     <span className="truncate flex-1 text-left leading-normal">{item.label}</span>
                   )}
-                  {!collapsed && item.badge && (
+                  {!collapsed && isActive && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)] shrink-0" />
+                  )}
+                  {!collapsed && item.badge && !isActive && (
                     <span
                       className={cn(
                         'text-[10px] px-2 py-0.5 rounded-md font-medium tracking-wide shrink-0',
-                        isActive
-                          ? 'bg-white/20 text-white'
-                          : 'bg-[var(--accent-subtle)] text-[var(--accent)]'
+                        'bg-[var(--accent-subtle)] text-[var(--accent)]'
                       )}
                     >
                       {item.badge}
@@ -169,11 +169,11 @@ export function Sidebar() {
                   href={item.href}
                   title={collapsed ? item.label : undefined}
                   className={cn(
-                    'w-full h-11 flex items-center rounded-xl text-[14px] font-medium transition-all duration-200 group relative select-none',
-                    collapsed ? 'justify-center px-0' : 'justify-start gap-3 px-3',
+                    'w-full h-10 flex items-center rounded-full text-[13.5px] font-medium transition-all duration-200 group relative select-none',
+                    collapsed ? 'justify-center px-0' : 'justify-start gap-3 px-3.5',
                     isActive
-                      ? 'bg-[var(--accent)] text-white shadow-[var(--shadow-sm)] font-semibold'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] active:scale-[0.99]',
+                      ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border-color)] shadow-xs font-semibold'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] active:scale-[0.99]',
                     'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-primary)]'
                   )}
                 >
@@ -181,12 +181,15 @@ export function Sidebar() {
                     <Icon
                       className={cn(
                         'w-[18px] h-[18px] shrink-0 transition-transform duration-200 group-hover:scale-110',
-                        isActive ? 'text-white' : 'text-[var(--text-muted)] group-hover:text-[var(--text-primary)]'
+                        isActive ? 'text-[var(--accent)]' : 'text-[var(--text-muted)] group-hover:text-[var(--text-primary)]'
                       )}
                     />
                   </div>
                   {!collapsed && (
                     <span className="truncate flex-1 text-left leading-normal">{item.label}</span>
+                  )}
+                  {!collapsed && isActive && (
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)] shrink-0" />
                   )}
                 </Link>
               );

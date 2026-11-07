@@ -260,11 +260,49 @@ runTest('Print CSS protects headings and entries across page breaks', () => {
   );
 });
 
+runTest('Print CSS preserves semantic template header layouts', () => {
+  const cssFile = fs.readFileSync(path.join(rootDir, 'src/app/globals.css'), 'utf-8');
+  const templateFile = fs.readFileSync(
+    path.join(rootDir, 'src/components/builder/templates/CompactOnePageTemplate.tsx'),
+    'utf-8'
+  );
+  assert.ok(
+    !cssFile.includes('#resume-a4-document header,'),
+    'Print styles must not force resume template headers to display:block'
+  );
+  assert.ok(
+    templateFile.includes('shrink-0 flex justify-between'),
+    'The compact template header must retain its flex layout'
+  );
+});
+
+runTest('PDF export has one clear action and explains the print dialog', () => {
+  const pageFile = fs.readFileSync(path.join(rootDir, 'src/app/builder/page.tsx'), 'utf-8');
+  assert.equal((pageFile.match(/id="btn-download-pdf"/g) || []).length, 1);
+  assert.ok(!pageFile.includes('<span>Print</span>'), 'A duplicate Print action must not be shown');
+  assert.ok(
+    pageFile.includes('Choose Save as PDF in the print dialog'),
+    'The export step must explain how to save the PDF from the browser print dialog'
+  );
+});
+
+runTest('A4 preview auto-fits container changes without overriding manual zoom', () => {
+  const pageFile = fs.readFileSync(path.join(rootDir, 'src/app/builder/page.tsx'), 'utf-8');
+  assert.ok(
+    pageFile.includes('new ResizeObserver(updateFitZoom)'),
+    'A4 preview zoom must be recalculated when its responsive viewport changes'
+  );
+  assert.ok(
+    pageFile.includes('if (autoFitZoomRef.current)'),
+    'Responsive changes must preserve user-selected zoom'
+  );
+});
+
 runTest('Download PDF forces persistence flush before triggering window.print()', () => {
   const pageFile = fs.readFileSync(path.join(rootDir, 'src/app/builder/page.tsx'), 'utf-8');
   assert.ok(
-    pageFile.includes('const handleGenerateOrPrint = async () => {'),
-    'handleGenerateOrPrint must be async'
+    pageFile.includes('const handleDownloadPdf = async () => {'),
+    'handleDownloadPdf must be async'
   );
   assert.ok(
     pageFile.includes('await saveActiveResume(resumeData, undefined, { force: true });'),

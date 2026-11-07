@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Sparkles,
+  FileText,
   Eye,
   EyeOff,
   Lock,
@@ -16,11 +16,9 @@ import {
   Wand2,
   BadgeCheck,
   Briefcase,
-  TrendingUp,
   ShieldCheck,
   X,
   HelpCircle,
-  CheckCircle2,
 } from 'lucide-react';
 import { useUserProfile } from '@/components/user/UserContext';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
@@ -31,32 +29,26 @@ const CAREER_JOURNEY = [
   {
     step: '01',
     title: 'ANALYZE',
-    desc: 'Instant ATS parsing & semantic keyword benchmarking',
+    desc: 'Review structure and keywords',
     icon: FileSearch,
   },
   {
     step: '02',
     title: 'IMPROVE',
-    desc: 'Action-driven bullet rewrites & impact metrics',
+    desc: 'Refine resume bullet wording',
     icon: Wand2,
   },
   {
     step: '03',
     title: 'VERIFY',
-    desc: 'Timed skill evaluations & verifiable certificates',
+    desc: 'Take a technical assessment',
     icon: BadgeCheck,
   },
   {
     step: '04',
     title: 'MATCH',
-    desc: 'Live vacancies aligned to your verified skillset',
+    desc: 'Compare your resume with openings',
     icon: Briefcase,
-  },
-  {
-    step: '05',
-    title: 'GROW',
-    desc: 'Structured interview prep & learning roadmaps',
-    icon: TrendingUp,
   },
 ];
 
@@ -172,71 +164,30 @@ function LoginForm() {
             href="/"
             className="inline-flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] rounded-xl"
           >
-            <div className="w-10 h-10 rounded-xl bg-[var(--accent)] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(79,143,247,0.35)] group-hover:scale-105 transition-transform duration-200">
-              <Sparkles className="w-5 h-5" />
+            <div className="w-10 h-10 rounded-xl bg-[var(--accent)] flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform duration-200">
+              <FileText className="w-5 h-5" />
             </div>
             <div className="flex flex-col leading-tight">
               <span className="font-extrabold tracking-tight text-base sm:text-lg text-[var(--text-primary)]">
                 SMART RESUME
               </span>
               <span className="text-[10px] tracking-widest font-bold text-[var(--accent)] uppercase">
-                CAREER AI
+                CAREER PLATFORM
               </span>
             </div>
           </Link>
 
           <div className="pt-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs font-semibold bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-secondary)] mb-3 shadow-[var(--shadow-glass)] backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-semibold bg-[var(--accent-subtle)] border border-[var(--border-color)] text-[var(--text-secondary)] mb-3 shadow-xs">
               <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
-              <span>CAREER INTELLIGENCE PLATFORM</span>
+              <span>CAREER WORKSPACE PLATFORM</span>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[var(--text-primary)] leading-[1.15]">
-              Build a smarter career{' '}
-              <span className="text-[var(--accent)]">
-                with AI.
-              </span>
+              Structured Career Workspace & Verification Platform.
             </h1>
             <p className="text-sm sm:text-base text-[var(--text-secondary)] mt-3 leading-relaxed max-w-xl">
-              Analyze your resume, optimize ATS match scores, verify technical skills, and unlock
-              opportunities tailored to your verified strengths.
+              Work on your resume, check it against a role, and explore job opportunities.
             </p>
-          </div>
-        </div>
-
-        {/* Product Visual Mockup Card */}
-        <div className="p-5 sm:p-6 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl shadow-[var(--shadow-glass)] space-y-4 max-w-xl relative overflow-hidden group hover:border-[var(--glass-border-hover)] transition-all">
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/30 to-transparent" />
-          <div className="flex items-center justify-between pb-3.5 border-b border-[var(--glass-border)]">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 rounded-xl bg-emerald-500/15 border border-emerald-500/30 text-emerald-500 flex items-center justify-center font-bold text-sm shadow-[0_0_12px_rgba(16,185,129,0.15)]">
-                92
-              </div>
-              <div>
-                <p className="text-sm font-bold text-[var(--text-primary)]">
-                  Senior Full-Stack Engineer
-                </p>
-                <p className="text-[11px] text-[var(--text-secondary)]">
-                  ATS Match Score: High Compatibility
-                </p>
-              </div>
-            </div>
-            <span className="px-2.5 py-1 rounded-lg text-[10px] font-bold bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-              Verified Skills Active
-            </span>
-          </div>
-
-          <div className="flex flex-wrap gap-2 pt-1">
-            {['TypeScript', 'Next.js', 'React 19', 'System Design', 'Cloud APIs', 'PostgreSQL'].map(
-              (skill) => (
-                <span
-                  key={skill}
-                  className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-medium bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] text-[var(--text-primary)] shadow-xs"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent)]" />
-                  {skill}
-                </span>
-              )
-            )}
           </div>
         </div>
 
@@ -284,21 +235,18 @@ function LoginForm() {
         transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         className="lg:col-span-5 w-full max-w-md mx-auto"
       >
-        <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg-elevated)] backdrop-blur-2xl p-7 sm:p-9 shadow-[var(--shadow-glass)] relative overflow-hidden transition-all duration-300">
-          {/* Top highlight gradient edge */}
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent" />
-
+        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-7 sm:p-9 shadow-xl relative overflow-hidden transition-all duration-300">
           {/* Mobile brand header (shown only when left hero is stacked) */}
-          <div className="lg:hidden flex items-center justify-center gap-2.5 mb-6 pb-4 border-b border-[var(--glass-border)]">
+          <div className="lg:hidden flex items-center justify-center gap-2.5 mb-6 pb-4 border-b border-[var(--border-color)]">
             <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-white shadow-sm">
-              <Sparkles className="w-4 h-4" />
+              <FileText className="w-4 h-4" />
             </div>
             <div className="flex flex-col text-left leading-tight">
               <span className="font-extrabold text-xs tracking-tight text-[var(--text-primary)]">
                 SMART RESUME
               </span>
               <span className="text-[9px] font-bold text-[var(--accent)] tracking-widest uppercase">
-                CAREER AI
+                CAREER PLATFORM
               </span>
             </div>
           </div>
@@ -418,8 +366,9 @@ function LoginForm() {
             {/* Submit Button */}
             <button
               type="submit"
+              data-magnetic="true"
               disabled={isLoading}
-              className="w-full mt-2 h-[44px] px-4 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-semibold text-sm shadow-[0_4px_16px_rgba(79,143,247,0.3)] hover:shadow-[0_6px_20px_rgba(79,143,247,0.4)] transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="btn-primary w-full mt-2 h-[44px] px-4 text-sm font-semibold shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 hover:shadow-lg transition-all"
             >
               {isLoading ? (
                 <>
@@ -448,7 +397,7 @@ function LoginForm() {
           {/* Create Account Link */}
           <Link
             href={`/register${safeFrom !== '/dashboard' ? `?from=${encodeURIComponent(safeFrom)}` : ''}`}
-            className="w-full py-2.5 px-4 rounded-xl border border-[var(--glass-border)] hover:border-[var(--accent)] text-[var(--text-primary)] font-medium text-sm transition-all flex items-center justify-center gap-2 bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] shadow-xs cursor-pointer"
+            className="btn-secondary w-full py-2.5 px-4 text-sm font-medium flex items-center justify-center gap-2 cursor-pointer"
           >
             <span>Create an account →</span>
           </Link>
@@ -529,10 +478,6 @@ function LoginForm() {
 export default function LoginPage() {
   return (
     <div className="min-h-screen w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 py-10 bg-[var(--bg-primary)] text-[var(--text-primary)] relative overflow-hidden">
-      {/* Ambient background glows for glassmorphism */}
-      <div className="absolute top-1/4 left-1/4 -translate-x-1/2 -translate-y-1/2 w-96 h-96 bg-[var(--accent)]/10 rounded-full blur-3xl pointer-events-none" />
-      <div className="absolute bottom-1/4 right-1/4 translate-x-1/2 translate-y-1/2 w-96 h-96 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-
       {/* Top Bar with Theme Toggle */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30 flex items-center gap-2">
         <div className="sm:hidden">
@@ -542,16 +487,6 @@ export default function LoginPage() {
           <ThemeToggle variant="segmented" />
         </div>
       </div>
-
-      {/* Subtle Background Grid Pattern */}
-      <div
-        className="absolute inset-0 opacity-[0.03] pointer-events-none"
-        style={{
-          backgroundImage:
-            'radial-gradient(circle at 1px 1px, currentColor 1px, transparent 0)',
-          backgroundSize: '32px 32px',
-        }}
-      />
 
       <Suspense
         fallback={

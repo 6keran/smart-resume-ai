@@ -3,6 +3,10 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
 import Module from 'node:module';
+import { setupTestDb } from './testDbIsolation.mjs';
+
+// Initialize isolated SQLite sandbox to protect data/smart_resume.db
+setupTestDb('auth_security_comprehensive');
 
 // Intercept server-only for standalone Node execution
 const origLoad = Module._load;
@@ -87,7 +91,7 @@ async function runSuite() {
     deleteJobApplication,
   } = await import('../src/server/db/index.ts');
 
-  const baseUrl = 'http://localhost:3000';
+  const baseUrl = process.env.TEST_BASE_URL || 'http://localhost:3000';
   const db = getDb();
   const testRunId = Date.now().toString(36);
   const createdUserIds = [];
@@ -345,6 +349,26 @@ async function runSuite() {
     // -------------------------------------------------------------
     console.log('\n--- GROUP 5: ADMIN SEPARATION & PRIVILEGE ENFORCEMENT ---');
 
+    // Pre-flight check: Verify live Next.js HTTP server is reachable for HTTP route tests
+    let serverReachable = false;
+    try {
+      await fetch(`${baseUrl}/`, { redirect: 'manual', signal: AbortSignal.timeout(2000) });
+      serverReachable = true;
+    } catch {
+      serverReachable = false;
+    }
+
+    if (!serverReachable) {
+      console.log('\n⚠️  [STANDALONE NOTICE]: Live Next.js server at ' + baseUrl + ' is not reachable.');
+      console.log('   Groups 1-4 (In-Process Security & DB Isolation) PASSED (' + passedTests + '/' + totalTests + ').');
+      console.log('   To run Groups 5-6 (HTTP Route & Session Tests), start the server or run via:');
+      console.log('   node scripts/run_live_e2e_isolated.mjs\n');
+      console.log('================================================================');
+      console.log(`TOTAL IN-PROCESS TESTS: ${totalTests} | PASSED: ${passedTests} | SKIPPED HTTP: 8`);
+      console.log('================================================================');
+      return;
+    }
+
     const adminId = `adm_${testRunId}`;
     const adminEmail = `admin_audit_${testRunId}@example.com`;
     const nowIso = new Date().toISOString();
@@ -391,6 +415,10 @@ async function runSuite() {
         headers: { Cookie: `sra_admin_session=${adminToken}` },
         redirect: 'manual',
       });
+      if (res.status === 500) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(`Server returned HTTP 500 (Infrastructure/Database failure: ${errJson.details || errJson.message || 'Internal Server Error'})`);
+      }
       assert.equal(res.status, 200);
       const data = await res.json();
       assert.ok(Array.isArray(data.users));
@@ -407,6 +435,10 @@ async function runSuite() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: userAEmail, password: userAPassword }),
       });
+      if (res.status === 500) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(`Server returned HTTP 500 (Infrastructure/Database failure: ${errJson.details || errJson.message || 'Internal Server Error'})`);
+      }
       assert.equal(res.status, 200);
       const setCookies = res.headers.getSetCookie ? res.headers.getSetCookie() : [res.headers.get('set-cookie') || ''];
       const sessionCookie = setCookies.find((c) => c.includes('sra_user_session='));

@@ -13,7 +13,7 @@ export function ThemeSelector() {
     {
       id: 'light',
       label: 'Light Mode',
-      desc: 'Clean white surfaces with high contrast dark typography and subtle borders.',
+      desc: 'Light surfaces with dark text.',
       icon: Sun,
       iconColor: 'text-amber-500',
       badgeBg: 'bg-amber-500/10 border-amber-500/20',
@@ -23,17 +23,17 @@ export function ThemeSelector() {
     {
       id: 'dark',
       label: 'Dark Mode',
-      desc: 'Refined dark slate surfaces designed for low eye strain and high readability.',
+      desc: 'Charcoal surfaces with high-contrast text.',
       icon: Moon,
-      iconColor: 'text-indigo-400',
-      badgeBg: 'bg-indigo-500/10 border-indigo-500/20',
-      previewBg: 'bg-[#0B0F17] border-[#232C3E] text-slate-100',
-      previewCard: 'bg-[#161D2B] border-[#232C3E] text-slate-200',
+      iconColor: 'text-[var(--accent)]',
+      badgeBg: 'bg-[var(--accent-subtle)] border-[var(--accent)]/20',
+      previewBg: 'bg-[#0B0D10] border-[#272C35] text-slate-100',
+      previewCard: 'bg-[#151920] border-[#272C35] text-slate-200',
     },
     {
       id: 'system',
       label: 'System Preference',
-      desc: 'Automatically synchronizes with your operating system light/dark schedule.',
+      desc: 'Follow your device appearance setting.',
       icon: Laptop,
       iconColor: 'text-blue-400',
       badgeBg: 'bg-blue-500/10 border-blue-500/20',
@@ -54,6 +54,7 @@ export function ThemeSelector() {
               key={opt.id}
               type="button"
               onClick={() => setTheme(opt.id)}
+              aria-pressed={isSelected}
               className={`p-4 rounded-xl border text-left flex flex-col justify-between transition-all duration-200 cursor-pointer relative overflow-hidden group ${
                 isSelected
                   ? 'border-[var(--accent)] bg-[var(--bg-card)] ring-2 ring-[var(--accent)]/30 shadow-md'

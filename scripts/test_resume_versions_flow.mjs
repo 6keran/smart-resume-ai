@@ -1,5 +1,9 @@
 import assert from 'node:assert';
 import Module from 'node:module';
+import { setupTestDb } from './testDbIsolation.mjs';
+
+// Initialize isolated SQLite sandbox to protect data/smart_resume.db
+setupTestDb('resume_versions_flow');
 
 // Intercept server-only check for test environment
 const origLoad = Module._load;

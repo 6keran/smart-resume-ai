@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
 import {
@@ -10,11 +10,11 @@ import {
   Building,
   DollarSign,
   Clock,
-  Sparkles,
   Filter,
   ArrowRight,
   ExternalLink,
   Target,
+  Globe,
   LocateFixed,
   AlertCircle,
   LayoutGrid,
@@ -36,10 +36,32 @@ import {
   FileEdit,
   Send,
   Loader2,
+  GraduationCap,
 } from 'lucide-react';
 import { useResume } from '@/context/ResumeContext';
 import { Job, JobSearchResponse, WorkplaceType, EmploymentType } from '@/types/jobs';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { JobSearchAutocomplete } from '@/components/jobs/JobSearchAutocomplete';
+import { buildNaukriSearchUrl } from '@/lib/jobs/naukriSearchUrl';
+
+function formatPostedDate(value?: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return null;
+
+  return new Intl.DateTimeFormat(undefined, {
+    month: 'short',
+    day: 'numeric',
+    year: date.getFullYear() !== new Date().getFullYear() ? 'numeric' : undefined,
+  }).format(date);
+}
+
+function formatSnapshotDate(value?: string): string | null {
+  if (!value) return null;
+  const date = new Date(value);
+  if (!Number.isFinite(date.getTime())) return null;
+  return new Intl.DateTimeFormat(undefined, { dateStyle: 'medium', timeStyle: 'short' }).format(date);
+}
 
 function JobSearchContent() {
   const router = useRouter();
@@ -124,10 +146,20 @@ function JobSearchContent() {
   const [hasSearched, setHasSearched] = useState(false);
   const [searchResponse, setSearchResponse] = useState<JobSearchResponse | null>(null);
   const [selectedJob, setSelectedJob] = useState<Job | null>(null);
-  const [showResumeMatchBreakdown, setShowResumeMatchBreakdown] = useState(false);
+  const jobDrawerRef = useRef<HTMLDivElement>(null);
+  const confirmDialogRef = useRef<HTMLDivElement>(null);
+  const returnFocusRef = useRef<HTMLElement | null>(null);
   const [geoLocating, setGeoLocating] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
-  const [lastUpdatedTime, setLastUpdatedTime] = useState<string | null>(null);
+  const [nlpPrompt, setNlpPrompt] = useState('');
+  const [isParsingNlp, setIsParsingNlp] = useState(false);
+  const [nlpExplanation, setNlpExplanation] = useState<string | null>(null);
+  const searchControllerRef = useRef<AbortController | null>(null);
+  const searchRequestIdRef = useRef(0);
+
+  useEffect(() => () => {
+    searchControllerRef.current?.abort();
+  }, []);
 
   // Body scroll lock & Escape key handling for slide-over drawer and confirm prompt
   useEffect(() => {
@@ -138,6 +170,33 @@ function JobSearchContent() {
         if (e.key === 'Escape') {
           if (showConfirmPrompt) setShowConfirmPrompt(false);
           else if (selectedJob) setSelectedJob(null);
+          return;
+        }
+
+        const activeDialog = showConfirmPrompt
+          ? confirmDialogRef.current
+          : selectedJob
+            ? jobDrawerRef.current
+            : null;
+        if (e.key === 'Tab' && activeDialog) {
+          const focusable = Array.from(
+            activeDialog.querySelectorAll<HTMLElement>(
+              'a[href], button:not([disabled]), input:not([disabled]), select:not([disabled]), textarea:not([disabled]), [tabindex]:not([tabindex="-1"])'
+            )
+          );
+          const first = focusable[0];
+          const last = focusable[focusable.length - 1];
+
+          if (!first || !last) {
+            e.preventDefault();
+            activeDialog.focus();
+          } else if (e.shiftKey && document.activeElement === first) {
+            e.preventDefault();
+            last.focus();
+          } else if (!e.shiftKey && document.activeElement === last) {
+            e.preventDefault();
+            first.focus();
+          }
         }
       };
       window.addEventListener('keydown', handleKeyDown);
@@ -145,6 +204,17 @@ function JobSearchContent() {
         document.body.style.overflow = prev;
         window.removeEventListener('keydown', handleKeyDown);
       };
+    }
+  }, [selectedJob, showConfirmPrompt]);
+
+  useEffect(() => {
+    if (showConfirmPrompt) {
+      confirmDialogRef.current?.querySelector<HTMLElement>('button:not([disabled])')?.focus();
+    } else if (selectedJob) {
+      jobDrawerRef.current?.focus();
+    } else {
+      returnFocusRef.current?.focus();
+      returnFocusRef.current = null;
     }
   }, [selectedJob, showConfirmPrompt]);
 
@@ -160,7 +230,23 @@ function JobSearchContent() {
 
   // Execute search against server API
   const performSearch = useCallback(
-    async (pageToLoad = 1, bypassCache = false) => {
+    async (
+      pageToLoad = 1,
+      bypassCache = false,
+      overrides: {
+        keywords?: string;
+        location?: string;
+        experienceLevel?: string;
+        employmentType?: string;
+        workplaceType?: string;
+        postedWithinDays?: number;
+      } = {}
+    ) => {
+      searchControllerRef.current?.abort();
+      const controller = new AbortController();
+      const requestId = ++searchRequestIdRef.current;
+      searchControllerRef.current = controller;
+
       setIsLoading(true);
       setHasSearched(true);
       setSearchError(null);
@@ -168,12 +254,12 @@ function JobSearchContent() {
 
       try {
         const payload = {
-          keywords: keywords.trim(),
-          location: location.trim(),
-          workplaceType: workMode !== 'any' ? workMode : undefined,
-          employmentType: jobType !== 'any' ? jobType : undefined,
-          experienceLevel: experienceLevel !== 'any' ? experienceLevel : undefined,
-          postedWithinDays: postedDays > 0 ? postedDays : undefined,
+          keywords: (overrides.keywords ?? keywords).trim(),
+          location: (overrides.location ?? location).trim(),
+          workplaceType: overrides.workplaceType === 'any' ? undefined : overrides.workplaceType ?? (workMode !== 'any' ? workMode : undefined),
+          employmentType: overrides.employmentType === 'any' ? undefined : overrides.employmentType ?? (jobType !== 'any' ? jobType : undefined),
+          experienceLevel: overrides.experienceLevel === 'any' ? undefined : overrides.experienceLevel ?? (experienceLevel !== 'any' ? experienceLevel : undefined),
+          postedWithinDays: overrides.postedWithinDays ?? (postedDays > 0 ? postedDays : undefined),
           sortBy: hasCandidateResume && sortBy === 'relevance' ? 'match' : sortBy,
           page: pageToLoad,
           limit: 12,
@@ -183,20 +269,20 @@ function JobSearchContent() {
           resumeYearsExp: resumeData?.candidateType === 'experienced' ? 5 : 1,
           candidateContext: hasCandidateResume
             ? {
-                skills: candidateSkills,
-                headline: resumeData?.personalInfo?.headline,
-                yearsOfExperience: resumeData?.candidateType === 'experienced' ? 5 : 1,
-                education: resumeData?.education?.map((e) => ({
-                  degree: e.degree,
-                  institution: e.institution,
-                })),
-                projects: resumeData?.projects?.map((p) => ({
-                  title: p.title,
-                  description: p.description,
-                  technologies: p.technologies || [],
-                })),
-                detectedKeywords: analysisResult?.detectedKeywords || [],
-              }
+              skills: candidateSkills,
+              headline: resumeData?.personalInfo?.headline,
+              yearsOfExperience: resumeData?.candidateType === 'experienced' ? 5 : 1,
+              education: resumeData?.education?.map((e) => ({
+                degree: e.degree,
+                institution: e.institution,
+              })),
+              projects: resumeData?.projects?.map((p) => ({
+                title: p.title,
+                description: p.description,
+                technologies: p.technologies || [],
+              })),
+              detectedKeywords: analysisResult?.detectedKeywords || [],
+            }
             : undefined,
         };
 
@@ -204,15 +290,17 @@ function JobSearchContent() {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify(payload),
+          signal: controller.signal,
         });
 
         if (res.ok) {
           const data: JobSearchResponse = await res.json();
+          if (requestId !== searchRequestIdRef.current) return;
           setSearchResponse(data);
           setSearchError(null);
-          setLastUpdatedTime(new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }));
         } else {
           const errData = await res.json().catch(() => ({}));
+          if (requestId !== searchRequestIdRef.current) return;
           setSearchError(errData.message || 'Live job search is temporarily unavailable. Please try again.');
           setSearchResponse({
             jobs: [],
@@ -225,6 +313,7 @@ function JobSearchContent() {
           });
         }
       } catch (err) {
+        if (controller.signal.aborted || requestId !== searchRequestIdRef.current) return;
         console.error('Job search failed:', err);
         setSearchError('Network error connecting to job search service. Please check your connection and retry.');
         setSearchResponse({
@@ -237,7 +326,10 @@ function JobSearchContent() {
           isConfigured: true,
         });
       } finally {
-        setIsLoading(false);
+        if (requestId === searchRequestIdRef.current) {
+          setIsLoading(false);
+          searchControllerRef.current = null;
+        }
       }
     },
     [
@@ -258,10 +350,12 @@ function JobSearchContent() {
   // Auto-trigger search if query params were passed from analyzer or URL
   useEffect(() => {
     if (initialQuery || initialLocation || fromAnalyzer) {
+      let searchKeywords = initialQuery;
       if (fromAnalyzer && !initialQuery && candidateSkills.length > 0) {
-        setKeywords(candidateSkills.slice(0, 3).join(', '));
+        searchKeywords = candidateSkills.slice(0, 3).join(', ');
+        setKeywords(searchKeywords);
       }
-      performSearch(1);
+      performSearch(1, false, { keywords: searchKeywords, location: initialLocation });
     }
   }, [initialQuery, initialLocation, fromAnalyzer]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -288,14 +382,14 @@ function JobSearchContent() {
               data.address?.city ||
               data.address?.town ||
               data.address?.state_district ||
-              data.address?.state ||
-              'Bengaluru';
-            setLocation(city);
+              data.address?.state;
+            if (city) setLocation(city);
+            else setGeoError('Could not identify a nearby location. Please enter it manually.');
           } else {
-            setLocation('Bengaluru');
+            setGeoError('Could not identify a nearby location. Please enter it manually.');
           }
         } catch {
-          setLocation('Bengaluru');
+          setGeoError('Could not identify a nearby location. Please enter it manually.');
         } finally {
           setGeoLocating(false);
         }
@@ -306,6 +400,71 @@ function JobSearchContent() {
       },
       { timeout: 8000 }
     );
+  };
+
+  // Natural Language AI Query Parser
+  const handleNlpSearch = async (overridePrompt?: string) => {
+    const promptText = (overridePrompt || nlpPrompt).trim();
+    if (!promptText) return;
+
+    setIsParsingNlp(true);
+    setNlpExplanation(null);
+
+    try {
+      const res = await fetch('/api/jobs/nlp-search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query: promptText }),
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (data.parsed) {
+          const { keywords: kw, location: loc, workplaceType: wp, experienceLevel: exp, contractType: ct, explanation } = data.parsed;
+
+          if (kw) setKeywords(kw);
+          if (loc !== undefined) setLocation(loc);
+
+          let newWp = 'any';
+          if (wp) {
+            const wpLower = String(wp).toLowerCase();
+            if (wpLower.includes('remote')) newWp = 'Remote';
+            else if (wpLower.includes('hybrid')) newWp = 'Hybrid';
+            else if (wpLower.includes('site') || wpLower.includes('office')) newWp = 'On-site';
+            setWorkMode(newWp);
+          }
+
+          let newExp = 'any';
+          if (exp) {
+            const expLower = String(exp).toLowerCase();
+            if (expLower.includes('entry') || expLower.includes('junior')) newExp = '0-1 years';
+            else if (expLower.includes('senior') || expLower.includes('lead')) newExp = '5+ years';
+            else if (expLower.includes('mid')) newExp = '3-5 years';
+            setExperienceLevel(newExp);
+          }
+
+          let newCt = 'any';
+          if (ct) {
+            newCt = ct;
+            setJobType(newCt);
+          }
+
+          setNlpExplanation(explanation);
+
+          performSearch(1, false, {
+            keywords: kw,
+            location: loc || '',
+            workplaceType: newWp,
+            experienceLevel: newExp,
+            employmentType: newCt,
+          });
+        }
+      }
+    } catch (err) {
+      console.error('NLP Search error:', err);
+    } finally {
+      setIsParsingNlp(false);
+    }
   };
 
   // Application Workflow Handlers
@@ -385,7 +544,24 @@ function JobSearchContent() {
       return;
     }
 
+    let listingOpened = false;
     try {
+      let safeUrl: URL;
+      try {
+        safeUrl = new URL(rawUrl);
+      } catch {
+        throw new Error('This listing does not provide a valid application URL.');
+      }
+      if (safeUrl.protocol !== 'https:' && safeUrl.protocol !== 'http:') {
+        throw new Error('This listing does not provide a valid application URL.');
+      }
+
+      // Open synchronously from the click so browser popup blockers do not suppress the provider page.
+      const listingWindow = window.open(safeUrl.toString(), '_blank');
+      if (!listingWindow) throw new Error('Your browser blocked the job listing. Allow pop-ups and try again.');
+      listingWindow.opener = null;
+      listingOpened = true;
+
       setApplyingJobId(job.id);
       const res = await fetch('/api/user/applications/apply', {
         method: 'POST',
@@ -396,7 +572,7 @@ function JobSearchContent() {
           company: job.company,
           location: job.location,
           source: job.source,
-          jobUrl: rawUrl,
+          jobUrl: safeUrl.toString(),
           descriptionSnippet: job.snippet,
           salary: job.salaryDisplay || job.salary,
         }),
@@ -407,22 +583,20 @@ function JobSearchContent() {
         throw new Error(data.message || 'Failed to initialize application');
       }
 
-      const externalUrl = data.externalUrl || rawUrl;
-      // Open original application page in new tab safely
-      window.open(externalUrl, '_blank', 'noopener,noreferrer');
-
       // Set pending state and open return prompt
       setPendingApplication({
         id: data.applicationId,
         jobTitle: job.title,
         company: job.company,
         source: job.source,
-        jobUrl: externalUrl,
+        jobUrl: data.externalUrl || safeUrl.toString(),
       });
       setShowConfirmPrompt(true);
     } catch (err: unknown) {
       const msg = err instanceof Error ? err.message : String(err);
-      alert(`Could not open application: ${msg}`);
+      alert(listingOpened
+        ? 'The job listing opened, but Smart Resume AI could not update application tracking. You can still apply on the source site.'
+        : `Could not open application: ${msg}`);
     } finally {
       setApplyingJobId(null);
     }
@@ -468,18 +642,25 @@ function JobSearchContent() {
   const jobs = searchResponse?.jobs || [];
   const totalJobs = searchResponse?.totalJobs || 0;
   const activeSources = searchResponse?.activeSources || [];
+  const liveSources = searchResponse?.liveSources || [];
   const unavailableSources = searchResponse?.unavailableSources || [];
+  const cachedSources = searchResponse?.cachedSources || [];
+  const cachedJobIds = new Set(searchResponse?.cachedJobIds || []);
+  const cachedAtBySource = searchResponse?.cachedAtBySource || {};
+  const unavailableSourceReasons = searchResponse?.unavailableSourceReasons || {};
+  const sourceCooldownUntil = searchResponse?.sourceCooldownUntil || {};
 
   return (
     <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8 text-left relative">
       {/* Toast Notification */}
       {confirmStatusMessage && (
-        <div className="fixed top-20 right-6 z-50 p-4 rounded-xl bg-slate-900 text-white shadow-2xl border border-slate-700 flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-200">
-          <CheckCircle2 className="w-5 h-5 text-emerald-400 shrink-0" />
-          <span className="text-xs font-semibold">{confirmStatusMessage}</span>
+        <div role="status" aria-live="polite" className="fixed top-20 right-6 z-50 glass-panel px-4 py-3 rounded-xl flex items-center gap-3 animate-fade-in text-xs font-semibold text-[var(--text-primary)]">
+          <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+          <span>{confirmStatusMessage}</span>
           <button
             onClick={() => setConfirmStatusMessage(null)}
-            className="p-1 rounded text-slate-400 hover:text-white"
+            aria-label="Dismiss notification"
+            className="p-1 rounded text-[var(--text-muted)] hover:text-[var(--text-primary)]"
           >
             <X className="w-3.5 h-3.5" />
           </button>
@@ -487,7 +668,7 @@ function JobSearchContent() {
       )}
 
       {/* Persistent Pending Application Banner */}
-      {pendingApplication && (
+      {pendingApplication && !showConfirmPrompt && (
         <div className="p-4 rounded-2xl bg-blue-600/10 border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
           <div className="flex items-start gap-3">
             <Send className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
@@ -505,19 +686,19 @@ function JobSearchContent() {
           <div className="flex items-center gap-2 shrink-0">
             <button
               onClick={() => handleConfirmApplication('Applied')}
-              className="px-3.5 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-sm"
+              className="btn-primary btn-sm text-xs font-semibold shadow-sm cursor-pointer"
             >
               Yes, I applied
             </button>
             <button
               onClick={() => handleConfirmApplication('Ready to apply')}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium transition-all"
+              className="btn-secondary btn-sm text-xs cursor-pointer"
             >
               Not yet
             </button>
             <button
               onClick={() => handleConfirmApplication('Saved')}
-              className="px-3 py-1.5 rounded-lg border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium transition-all"
+              className="btn-secondary btn-sm text-xs cursor-pointer"
             >
               Save for later
             </button>
@@ -533,7 +714,15 @@ function JobSearchContent() {
             if (e.target === e.currentTarget) setShowConfirmPrompt(false);
           }}
         >
-          <div className="w-full max-w-md rounded-2xl bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] shadow-[var(--shadow-glass-hover)] backdrop-blur-2xl p-6 space-y-5 animate-in fade-in zoom-in-95 duration-200 relative overflow-hidden">
+          <div
+            ref={confirmDialogRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="application-confirm-title"
+            aria-describedby="application-confirm-description"
+            tabIndex={-1}
+            className="w-full max-w-md rounded-2xl bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] shadow-[var(--shadow-glass-hover)] backdrop-blur-2xl p-6 space-y-5 animate-fade-in relative overflow-hidden focus:outline-none"
+          >
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent pointer-events-none" />
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
@@ -541,7 +730,7 @@ function JobSearchContent() {
                   <Send className="w-5 h-5" />
                 </div>
                 <div>
-                  <h3 className="text-base font-bold text-[var(--text-primary)]">
+                  <h3 id="application-confirm-title" className="text-base font-bold text-[var(--text-primary)]">
                     Did you apply for this job?
                   </h3>
                   <p className="text-xs text-[var(--text-secondary)] mt-0.5">
@@ -550,14 +739,16 @@ function JobSearchContent() {
                 </div>
               </div>
               <button
+                type="button"
                 onClick={() => setShowConfirmPrompt(false)}
+                aria-label="Close application confirmation"
                 className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p id="application-confirm-description" className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
               We opened the application page on <strong>{pendingApplication.source}</strong> in a new tab.
               Confirming your submission helps track your interview timeline and status accurately.
             </p>
@@ -565,7 +756,7 @@ function JobSearchContent() {
             <div className="pt-2 flex flex-col gap-2">
               <button
                 onClick={() => handleConfirmApplication('Applied')}
-                className="w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold transition-all shadow-md flex items-center justify-center gap-2 cursor-pointer"
+                className="btn-primary w-full text-xs font-semibold shadow-md flex items-center justify-center gap-2 cursor-pointer"
               >
                 <CheckCircle2 className="w-4 h-4" />
                 <span>Yes, I applied</span>
@@ -574,13 +765,13 @@ function JobSearchContent() {
               <div className="grid grid-cols-2 gap-2">
                 <button
                   onClick={() => handleConfirmApplication('Ready to apply')}
-                  className="py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium transition-all cursor-pointer"
+                  className="btn-secondary text-xs cursor-pointer"
                 >
                   Not yet
                 </button>
                 <button
                   onClick={() => handleConfirmApplication('Saved')}
-                  className="py-2.5 rounded-xl border border-slate-300 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/60 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-700 dark:text-slate-300 text-xs font-medium transition-all cursor-pointer"
+                  className="btn-secondary text-xs cursor-pointer"
                 >
                   Save for later
                 </button>
@@ -590,29 +781,22 @@ function JobSearchContent() {
         </div>
       )}
       {/* Top Section Header */}
-      <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 glass-card border border-[var(--glass-border)]">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-transparent rounded-full blur-3xl -z-10 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-tr from-cyan-500/10 via-blue-500/10 to-transparent rounded-full blur-3xl -z-10 pointer-events-none" />
-
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/20 backdrop-blur-md">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Live Market Intelligence</span>
-            </div>
-            <h1 className="text-2xl sm:text-3xl lg:text-4xl font-extrabold text-[var(--text-primary)] tracking-tight">
+      <div className="bento-card p-5 sm:p-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="space-y-1.5 max-w-2xl">
+            <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight">
               Job Search & Role Matcher
             </h1>
             <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
-              Search active verified openings across LinkedIn and major platforms. Compare job requirements directly against your resume with real-time match scoring.
+              Search active openings and compare role requirements directly against your resume qualifications.
             </p>
           </div>
 
           {/* Resume-Aware Status Indicator Dock */}
           {hasCandidateResume ? (
-            <div className="flex items-center gap-3 p-3.5 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)]/80 backdrop-blur-md shadow-sm shrink-0">
-              <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/15 text-[var(--accent)] flex items-center justify-center shrink-0">
-                <Sparkles className="w-5 h-5" />
+            <div className="flex items-center gap-3 p-3.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-sm shrink-0">
+              <div className="w-10 h-10 rounded-lg bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center shrink-0 border border-[var(--border-color)]">
+                <Target className="w-5 h-5" />
               </div>
               <div className="text-xs">
                 <span className="font-bold text-[var(--text-primary)] block">
@@ -639,7 +823,7 @@ function JobSearchContent() {
                   setKeywords(candidateSkills.slice(0, 3).join(', '));
                   performSearch(1);
                 }}
-                className="ml-auto px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white text-xs font-bold hover:opacity-95 transition-all shadow-md shadow-indigo-500/20 active:scale-95 cursor-pointer"
+                className="btn-primary btn-sm ml-auto"
               >
                 Match Roles
               </button>
@@ -647,17 +831,91 @@ function JobSearchContent() {
           ) : (
             <Link
               href="/analyzer"
-              className="inline-flex items-center gap-2 px-5 py-3 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] text-xs font-bold text-[var(--text-primary)] transition-all shadow-md backdrop-blur-md active:scale-95 shrink-0"
+              className="btn-secondary inline-flex items-center gap-2 text-xs font-semibold shadow-sm shrink-0"
             >
-              <Sparkles className="w-4 h-4 text-[var(--accent)]" />
+              <Target className="w-4 h-4 text-[var(--accent)]" />
               <span>Upload Resume for Match Score</span>
             </Link>
           )}
         </div>
       </div>
 
-      {/* Frosted Glass Search Controls Dock */}
-      <GlassCard className="p-6 sm:p-7 space-y-4 shadow-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl rounded-3xl relative overflow-hidden">
+      {/* Search Controls Dock */}
+      <GlassCard className="p-5 sm:p-6 space-y-4 shadow-sm border border-[var(--border-color)] bg-[var(--bg-card)] rounded-xl !overflow-visible">
+        {/* Natural Language Search Assistant */}
+        <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)]/60 border border-[var(--border-color)] space-y-2 text-left">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+            <div className="flex items-center gap-2">
+              <Search className="w-4 h-4 text-[var(--accent)]" />
+              <span className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
+                Natural Language Search
+              </span>
+            </div>
+            {nlpExplanation && (
+              <span className="text-[11px] text-[var(--accent)] font-medium">
+                ✓ {nlpExplanation}
+              </span>
+            )}
+          </div>
+
+          <div className="flex items-center gap-2">
+            <input
+              type="text"
+              value={nlpPrompt}
+              onChange={(e) => setNlpPrompt(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleNlpSearch();
+                }
+              }}
+              placeholder='Try "remote entry level react developer in new york" or "senior python backend hybrid"...'
+              className="flex-1 px-4 py-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-hidden focus:border-[var(--accent)] transition-colors"
+            />
+            <button
+              type="button"
+              onClick={() => handleNlpSearch()}
+              disabled={isParsingNlp || !nlpPrompt.trim()}
+              className="btn-primary text-xs py-2 px-5 rounded-lg inline-flex items-center gap-1.5 shrink-0 shadow-xs hover:shadow-md transition-all cursor-pointer"
+            >
+              {isParsingNlp ? (
+                <>
+                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                  <span>Parsing...</span>
+                </>
+              ) : (
+                <>
+                  <Search className="w-3.5 h-3.5" />
+                  <span>Search</span>
+                </>
+              )}
+            </button>
+          </div>
+
+          {/* Quick Natural Language Pill Prompts */}
+          <div className="flex flex-wrap items-center gap-1.5 pt-0.5 text-[11px]">
+            <span className="text-[var(--text-muted)] text-[10px] uppercase font-mono mr-1">Suggestions:</span>
+            {[
+              'Software Engineering Intern',
+              'Graduate Software Engineer',
+              'Remote Junior React Developer',
+              'Junior Data Analyst',
+            ].map((suggestion) => (
+              <button
+                key={suggestion}
+                type="button"
+                onClick={() => {
+                  setNlpPrompt(suggestion);
+                  handleNlpSearch(suggestion);
+                }}
+                className="px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-[var(--bg-card)] text-[var(--text-secondary)] border border-[var(--border-color)] hover:border-[var(--accent)] hover:text-[var(--accent)] transition-colors cursor-pointer"
+              >
+                {suggestion}
+              </button>
+            ))}
+          </div>
+        </div>
+
         <form
           onSubmit={(e) => {
             e.preventDefault();
@@ -666,32 +924,35 @@ function JobSearchContent() {
           className="grid grid-cols-1 md:grid-cols-12 gap-3"
         >
           {/* Job title / Keywords */}
-          <div className="relative md:col-span-5">
-            <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[var(--text-secondary)] pointer-events-none" />
-            <input
-              type="text"
-              value={keywords}
-              onChange={(e) => setKeywords(e.target.value)}
-              placeholder="Job title / keywords (e.g. Python Developer, React, Data Analyst)..."
-              className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs sm:text-sm focus:outline-none focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 transition-all duration-150"
-            />
-          </div>
+          <JobSearchAutocomplete
+            field="keywords"
+            label="Job title or skill"
+            value={keywords}
+            onChange={setKeywords}
+            onSelect={(value) => performSearch(1, false, { keywords: value })}
+            placeholder="Job title or skill"
+            leadingIcon={<Search className="h-4 w-4" />}
+            className="md:col-span-5"
+          />
 
           {/* Location */}
           <div className="relative md:col-span-4">
-            <MapPin className="w-4 h-4 absolute left-3.5 top-3.5 text-[var(--text-secondary)] pointer-events-none" />
-            <input
-              type="text"
+            <JobSearchAutocomplete
+              field="location"
+              label="Location"
               value={location}
-              onChange={(e) => setLocation(e.target.value)}
-              placeholder="Location (e.g. Bengaluru, India, Hyderabad, Mumbai, Remote)..."
-              className="w-full pl-10 pr-24 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs sm:text-sm focus:outline-none focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 transition-all duration-150"
+              onChange={setLocation}
+              onSelect={(value) => performSearch(1, false, { location: value })}
+              placeholder="City, region, country, or remote"
+              leadingIcon={<MapPin className="h-4 w-4" />}
+              className="pr-10 sm:pr-32"
             />
             <button
               type="button"
               onClick={handleUseMyLocation}
               title="Use my location"
-              className="absolute right-2 top-2 px-2.5 py-1 rounded-lg hover:bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--accent)] active:scale-95 transition-all duration-150 text-xs flex items-center gap-1 font-medium cursor-pointer"
+              aria-label="Use my location"
+              className="absolute right-2 top-2 z-10 px-2.5 py-1 rounded-lg hover:bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--accent)] active:scale-95 transition-all duration-150 text-xs flex items-center gap-1 font-medium cursor-pointer"
             >
               <LocateFixed className={`w-3.5 h-3.5 ${geoLocating ? 'animate-spin text-[var(--accent)]' : ''}`} />
               <span className="text-[10px] hidden sm:inline">Use my location</span>
@@ -702,8 +963,9 @@ function JobSearchContent() {
           <div className="md:col-span-3 flex gap-2">
             <button
               type="submit"
+              data-magnetic="true"
               disabled={isLoading}
-              className="w-full inline-flex items-center justify-center gap-2 h-[44px] px-6 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 text-white text-xs sm:text-sm font-bold hover:opacity-95 transition-all duration-150 shadow-lg shadow-indigo-500/25 active:scale-95 disabled:opacity-50 cursor-pointer"
+              className="btn-ink-pill w-full !h-[44px] px-6 text-xs sm:text-sm font-bold disabled:opacity-50 shadow-sm hover:shadow-md transition-all"
             >
               {isLoading ? (
                 <>
@@ -724,6 +986,58 @@ function JobSearchContent() {
 
         {/* Detailed Specification Filter Row */}
         <div className="flex flex-wrap items-center justify-between gap-3 pt-3 border-t border-[var(--border-color)] text-xs">
+          {/* Student & Fresher Quick Toggles */}
+          <div className="flex flex-wrap items-center gap-2 w-full pb-2 border-b border-[var(--border-color)]">
+            <span className="text-[11px] font-bold text-[var(--accent)] flex items-center gap-1 uppercase tracking-wider mr-1">
+              <GraduationCap className="w-3.5 h-3.5" /> Early Career:
+            </span>
+            <button
+              type="button"
+              onClick={() => {
+                const next = jobType === 'Internship' ? 'any' : 'Internship';
+                setJobType(next);
+                performSearch(1, false, { employmentType: next === 'any' ? 'all' : next });
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${jobType === 'Internship'
+                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                  : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)]'
+                }`}
+            >
+              <GraduationCap className="w-3.5 h-3.5" />
+              <span>Internships</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const next = experienceLevel === 'Fresher' ? 'any' : 'Fresher';
+                setExperienceLevel(next);
+                performSearch(1, false, { experienceLevel: next === 'any' ? 'all' : next });
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${experienceLevel === 'Fresher'
+                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                  : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)]'
+                }`}
+            >
+              <Briefcase className="w-3.5 h-3.5" />
+              <span>Entry-Level & Graduate</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                const next = workMode === 'Remote' ? 'any' : 'Remote';
+                setWorkMode(next);
+                performSearch(1, false, { workplaceType: next === 'any' ? 'all' : next });
+              }}
+              className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${workMode === 'Remote'
+                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                  : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)]'
+                }`}
+            >
+              <Globe className="w-3.5 h-3.5" />
+              <span>Remote Friendly</span>
+            </button>
+          </div>
+
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[var(--text-secondary)] font-semibold flex items-center gap-1">
               <Filter className="w-3.5 h-3.5" /> Filters:
@@ -754,6 +1068,7 @@ function JobSearchContent() {
               <option value="Part-time">Part-time</option>
               <option value="Contract">Contract</option>
               <option value="Internship">Internship</option>
+              <option value="Temporary">Temporary</option>
             </select>
 
             {/* Work Mode Filter */}
@@ -797,47 +1112,41 @@ function JobSearchContent() {
 
           {/* Grid / List View Toggle & Refresh */}
           <div className="flex items-center gap-2">
-            {lastUpdatedTime && (
-              <span className="text-[11px] text-[var(--text-secondary)] hidden sm:inline">
-                Last updated: {lastUpdatedTime}
-              </span>
-            )}
-
             {hasSearched && (
               <button
                 type="button"
                 onClick={() => performSearch(currentPage, true)}
                 disabled={isLoading}
                 title="Refresh fresh listings from sources"
-                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] text-[var(--text-primary)] active:scale-95 transition-all duration-150 font-medium text-xs disabled:opacity-50 cursor-pointer"
+                className="btn-secondary btn-sm inline-flex items-center gap-1 font-medium text-xs disabled:opacity-50 cursor-pointer"
               >
                 <RotateCw className={`w-3.5 h-3.5 ${isLoading ? 'animate-spin' : ''}`} />
                 <span className="hidden sm:inline">Refresh</span>
               </button>
             )}
 
-            <div className="flex items-center gap-1 border border-[var(--glass-border)] rounded-xl p-1 bg-[var(--glass-bg)]">
+            <div className="flex items-center gap-1 border border-[var(--glass-border)] rounded-full p-1 bg-[var(--glass-bg)]">
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
-                className={`p-1.5 rounded-lg active:scale-95 transition-all duration-150 cursor-pointer ${
-                  viewMode === 'grid'
+                aria-label="Grid view"
+                aria-pressed={viewMode === 'grid'}
+                className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${viewMode === 'grid'
                     ? 'bg-[var(--accent)] text-white shadow-xs'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                }`}
-                title="Grid View"
+                  }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
               </button>
               <button
                 type="button"
                 onClick={() => setViewMode('list')}
-                className={`p-1.5 rounded-lg active:scale-95 transition-all duration-150 cursor-pointer ${
-                  viewMode === 'list'
+                aria-label="List view"
+                aria-pressed={viewMode === 'list'}
+                className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${viewMode === 'list'
                     ? 'bg-[var(--accent)] text-white shadow-xs'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                }`}
-                title="List View"
+                  }`}
               >
                 <List className="w-3.5 h-3.5" />
               </button>
@@ -847,15 +1156,26 @@ function JobSearchContent() {
       </GlassCard>
 
       {/* Provider Status / Partial Results Notice */}
-      {hasSearched && (
+      {hasSearched && (activeSources.length > 0 || unavailableSources.length > 0) && (
         <div className="flex flex-wrap items-center gap-2 text-xs">
           {activeSources.map((src) => (
             <span
               key={src}
-              className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-semibold"
+              className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border font-semibold ${liveSources.includes(src)
+                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/20'
+                  : cachedSources.includes(src)
+                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/20'
+                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/20'
+                }`}
             >
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              {src} results available
+              {liveSources.includes(src)
+                ? <CheckCircle2 className="w-3.5 h-3.5" />
+                : <Clock className="w-3.5 h-3.5" />}
+              {src} · {liveSources.includes(src) && cachedSources.includes(src)
+                ? 'live + cached'
+                : liveSources.includes(src)
+                  ? 'live'
+                  : 'cached'}
             </span>
           ))}
 
@@ -864,23 +1184,29 @@ function JobSearchContent() {
             const isLinkedIn = src.toLowerCase().includes('linkedin');
             const isAdzuna = src.toLowerCase().includes('adzuna');
             const isJooble = src.toLowerCase().includes('jooble');
+            const retryAt = formatSnapshotDate(sourceCooldownUntil[src]);
+            const unavailableReason = unavailableSourceReasons[src];
 
             let message = `${src} search is temporarily unavailable`;
             let fallbackUrl: string | null = null;
             let fallbackLabel = `Search on ${src} ↗`;
 
             if (isNaukri) {
-              message = 'Naukri temporarily protected by automated challenge';
-              fallbackUrl = `https://www.naukri.com/${encodeURIComponent(keywords || 'software-developer')}-jobs-in-${encodeURIComponent(location || 'india')}`;
+              message = unavailableReason === 'challenge'
+                ? `Naukri requires CAPTCHA verification. Requests are paused${retryAt ? ` until ${retryAt}` : ''}.`
+                : unavailableReason === 'restricted'
+                  ? `Naukri access is restricted. Requests are paused${retryAt ? ` until ${retryAt}` : ''}.`
+                  : 'Naukri is temporarily unavailable.';
+              fallbackUrl = buildNaukriSearchUrl(keywords.trim() || 'software developer', location.trim() || 'india');
               fallbackLabel = 'Search on Naukri ↗';
             } else if (isLinkedIn) {
               message = 'LinkedIn search temporarily rate limited';
               fallbackUrl = `https://www.linkedin.com/jobs/search?keywords=${encodeURIComponent(keywords || 'developer')}&location=${encodeURIComponent(location || 'India')}`;
               fallbackLabel = 'Search on LinkedIn ↗';
             } else if (isAdzuna) {
-              message = 'Adzuna API credentials not configured or limit reached';
+              message = 'Adzuna is temporarily unavailable';
             } else if (isJooble) {
-              message = 'Jooble API credentials not configured or limit reached';
+              message = 'Jooble is temporarily unavailable';
             }
 
             return (
@@ -903,52 +1229,92 @@ function JobSearchContent() {
               </div>
             );
           })}
+
+          {unavailableSources.length > 0 && (
+            <button
+              type="button"
+              onClick={() => performSearch(currentPage, true)}
+              disabled={isLoading}
+              className="inline-flex items-center gap-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] px-3 py-1.5 font-semibold text-[var(--text-primary)] transition-colors hover:bg-[var(--bg-secondary)] disabled:opacity-50"
+            >
+              <RotateCw className={`h-3.5 w-3.5 ${isLoading ? 'animate-spin' : ''}`} />
+              {Object.keys(sourceCooldownUntil).length > 0 ? 'Retry available sources' : 'Retry sources'}
+            </button>
+          )}
+          {cachedSources.length > 0 && (
+            <span className="text-[11px] text-[var(--text-muted)]">
+              Cached snapshots: {cachedSources.map((source) => {
+                const timestamp = cachedAtBySource[source] || (cachedSources.length === 1 ? searchResponse?.cachedAt : undefined);
+                const formattedTimestamp = formatSnapshotDate(timestamp);
+                return `${source}${formattedTimestamp ? ` · ${formattedTimestamp}` : ''}`;
+              }).join(' | ')}
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Query Typo Correction / Location Alias Notice */}
+      {hasSearched && (searchResponse?.correctionApplied || searchResponse?.locationWasCorrected) && (
+        <div className="p-3.5 rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent)]/20 flex flex-wrap items-center justify-between gap-3 text-xs text-[var(--text-primary)] animate-fade-in">
+          <div className="flex items-center gap-2">
+            <Compass className="w-4 h-4 text-[var(--accent)] shrink-0" />
+            <span>
+              {searchResponse?.correctionApplied && searchResponse?.correctedKeywords && (
+                <>
+                  Showing results for <strong className="font-bold text-[var(--accent)]">{searchResponse.correctedKeywords}</strong>
+                  {searchResponse.originalKeywords && searchResponse.originalKeywords.toLowerCase().trim() !== searchResponse.correctedKeywords.toLowerCase().trim() && (
+                    <span className="text-[var(--text-secondary)] ml-1">
+                      (corrected from &quot;<em>{searchResponse.originalKeywords}</em>&quot;)
+                    </span>
+                  )}
+                </>
+              )}
+              {searchResponse?.locationWasCorrected && searchResponse?.correctedLocation && (
+                <span className="ml-1.5">
+                  • Location corrected to <strong className="font-bold text-[var(--accent)]">{searchResponse.correctedLocation}</strong>
+                  {searchResponse.originalLocation && searchResponse.originalLocation.toLowerCase().trim() !== searchResponse.correctedLocation.toLowerCase().trim() && (
+                    <span className="text-[var(--text-secondary)] ml-1">
+                      (from &quot;<em>{searchResponse.originalLocation}</em>&quot;)
+                    </span>
+                  )}
+                </span>
+              )}
+            </span>
+          </div>
+          {searchResponse?.locationAliasApplied && searchResponse?.correctedLocation && !searchResponse?.locationWasCorrected && (
+            <span className="text-[11px] text-[var(--text-secondary)] bg-[var(--bg-secondary)] px-2.5 py-1 rounded-lg border border-[var(--border-color)]">
+              Location mapped to <strong>{searchResponse.correctedLocation}</strong> area
+            </span>
+          )}
+        </div>
+      )}
+
+      {/* Fallback to Original Query Notice */}
+      {hasSearched && searchResponse?.fallbackToOriginalUsed && (
+        <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 flex items-center gap-2.5 text-xs text-[var(--text-primary)] animate-fade-in">
+          <AlertCircle className="w-4 h-4 text-amber-400 shrink-0" />
+          <span>
+            Suggested correction &quot;{searchResponse.correctedKeywords}&quot; returned no listings. Showing results for your original query: <strong>{searchResponse.searchKeywords}</strong>.
+          </span>
         </div>
       )}
 
       {/* STATE 1: Initial Discovery State */}
       {!hasSearched && !isLoading && (
-        <div className="p-10 sm:p-14 rounded-3xl border border-[var(--glass-border)] bg-[var(--glass-bg)]/80 backdrop-blur-xl text-center space-y-6 shadow-xl relative overflow-hidden">
-          <div className="absolute top-0 right-1/4 w-72 h-72 bg-blue-500/10 rounded-full blur-3xl -z-10 pointer-events-none" />
-          <div className="absolute bottom-0 left-1/4 w-72 h-72 bg-purple-500/10 rounded-full blur-3xl -z-10 pointer-events-none" />
-
-          <div className="relative w-16 h-16 mx-auto">
-            <div className="absolute inset-0 bg-[var(--accent)]/20 rounded-full blur-xl" />
-            <div className="relative w-16 h-16 rounded-2xl bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--border-color)] flex items-center justify-center shadow-lg">
-              <Compass className="w-8 h-8" />
+        <div className="p-8 sm:p-12 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-center space-y-5 shadow-xs relative overflow-hidden">
+          <div className="relative w-14 h-14 mx-auto">
+            <div className="relative w-14 h-14 rounded-xl bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--border-color)] flex items-center justify-center shadow-xs">
+              <Compass className="w-7 h-7" />
             </div>
           </div>
 
-          <div className="space-y-2">
-            <h2 className="text-xl sm:text-2xl lg:text-3xl font-black text-[var(--text-primary)]">
-              Discover Thousands of Verified Opportunities
+          <div className="space-y-1.5">
+            <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)]">
+              Find your next role
             </h2>
             <p className="text-xs sm:text-sm text-[var(--text-secondary)] max-w-lg mx-auto leading-relaxed">
-              Explore active listings from LinkedIn and top corporate career portals with real-time ATS match scoring and qualification alignment.
+              Search by title or skill, choose a location, and compare results with your resume.
             </p>
-          </div>
-
-          <div className="pt-2 flex flex-wrap items-center justify-center gap-2.5 text-xs">
-            <span className="font-semibold text-[var(--text-secondary)] mr-1">Recommended searches:</span>
-            {[
-              { q: 'Python Developer', loc: 'Bengaluru' },
-              { q: 'React Developer', loc: 'Hyderabad' },
-              { q: 'Data Analyst', loc: 'Bengaluru' },
-              { q: 'Full Stack Engineer', loc: 'Pune' },
-              { q: 'Cloud Engineer', loc: 'Remote' },
-            ].map((s) => (
-              <button
-                key={`${s.q}-${s.loc}`}
-                onClick={() => {
-                  setKeywords(s.q);
-                  setLocation(s.loc);
-                  performSearch(1);
-                }}
-                className="px-3.5 py-2 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--glass-bg-elevated)] text-[var(--text-primary)] transition-all font-semibold shadow-xs cursor-pointer active:scale-95"
-              >
-                {s.q} · <span className="text-[var(--text-secondary)] font-normal">{s.loc}</span>
-              </button>
-            ))}
           </div>
         </div>
       )}
@@ -1019,47 +1385,50 @@ function JobSearchContent() {
           </div>
           <div className="space-y-2">
             <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)]">
-              No matching jobs found.
+              {unavailableSources.length > 0 ? 'Job sources could not be reached.' : 'No matching jobs found.'}
             </h3>
             <p className="text-xs sm:text-sm text-[var(--text-secondary)] max-w-md mx-auto leading-relaxed">
-              We couldn&apos;t find matching opportunities for &quot;{keywords || 'all roles'}&quot; in &quot;{location || 'specified location'}&quot;.
+              {unavailableSources.length > 0
+                ? Object.keys(sourceCooldownUntil).length > 0
+                  ? 'A source is paused after a provider restriction. Retry the available sources or adjust your search.'
+                  : 'Retry the unavailable sources, or adjust your search and try again.'
+                : `No listings matched ${keywords ? `“${keywords}”` : 'your role search'}${location ? ` in “${location}”` : ''}.`}
             </p>
-            <div className="p-3 rounded-xl bg-[var(--bg-secondary)] text-left text-xs max-w-sm mx-auto space-y-1 text-[var(--text-secondary)]">
-              <span className="font-bold text-[var(--text-primary)] block">Try:</span>
-              <p>• another location (e.g. Bengaluru, Hyderabad, Mumbai, Remote)</p>
-              <p>• broader keywords (e.g. &quot;Developer&quot; or &quot;Engineer&quot;)</p>
-              <p>• fewer filters (set experience or work mode to &quot;Any&quot;)</p>
-            </div>
+            {searchResponse?.suggestion && searchResponse.suggestion.toLowerCase() !== keywords.toLowerCase().trim() && (
+              <div className="p-2.5 rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent)]/20 text-xs inline-flex items-center gap-1.5">
+                <Compass className="w-3.5 h-3.5 text-[var(--accent)]" />
+                <span>Did you mean: </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setKeywords(searchResponse.suggestion!);
+                    performSearch(1);
+                  }}
+                  className="font-bold text-[var(--accent)] underline hover:opacity-80 cursor-pointer"
+                >
+                  {searchResponse.suggestion}
+                </button>
+              </div>
+            )}
           </div>
           <div className="pt-2 flex flex-wrap items-center justify-center gap-2 text-xs">
             <button
-              onClick={() => {
-                setLocation('Bengaluru');
-                performSearch(1);
-              }}
-              className="px-3.5 py-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:border-[var(--accent)] font-semibold"
-            >
-              Try Bengaluru
-            </button>
-            <button
-              onClick={() => {
-                setWorkMode('Remote');
-                performSearch(1);
-              }}
-              className="px-3.5 py-1.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] text-[var(--text-primary)] hover:border-[var(--accent)] font-semibold"
-            >
-              Try Remote
-            </button>
-            <button
+              type="button"
               onClick={() => {
                 setWorkMode('any');
                 setJobType('any');
                 setExperienceLevel('any');
-                performSearch(1);
+                setPostedDays(0);
+                performSearch(1, false, {
+                  workplaceType: 'any',
+                  employmentType: 'any',
+                  experienceLevel: 'any',
+                  postedWithinDays: 0,
+                });
               }}
-              className="px-3.5 py-1.5 rounded-lg bg-[var(--accent)] text-white font-bold"
+              className="rounded-lg bg-[var(--accent)] px-3.5 py-2 font-semibold text-white transition-opacity hover:opacity-90"
             >
-              Reset filters
+              Clear filters and retry
             </button>
           </div>
         </GlassCard>
@@ -1073,9 +1442,6 @@ function JobSearchContent() {
             <div className="flex items-center gap-2">
               <span className="font-bold text-[var(--text-primary)] text-sm">
                 {totalJobs} opportunities found
-              </span>
-              <span className="px-2 py-0.5 rounded-md bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[10px] font-semibold text-[var(--accent)]">
-                Active Sources: {activeSources.join(' + ') || 'LinkedIn'}
               </span>
             </div>
             <span>Page {searchResponse?.page || 1} of {searchResponse?.totalPages || 1}</span>
@@ -1099,36 +1465,46 @@ function JobSearchContent() {
                   <div className="flex items-center justify-between gap-2">
                     <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)]">
                       <ShieldCheck className="w-3 h-3 text-[var(--accent)]" />
-                      SOURCE: {job.source}
+                      {job.source}
+                      {cachedJobIds.has(job.id) && <span className="text-amber-500">· Cached</span>}
                     </span>
 
                     {job.matchScore !== undefined && (
                       <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold ${
-                          job.matchScore >= 80
+                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold ${job.matchScore >= 80
                             ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
                             : job.matchScore >= 65
-                            ? 'bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30'
-                            : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
-                        }`}
+                              ? 'bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30'
+                              : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                          }`}
                       >
-                        <Sparkles className="w-3 h-3" />
+                        <Target className="w-3 h-3" />
                         {job.matchScore}% Match
                       </span>
                     )}
                   </div>
 
+                  {formatPostedDate(job.postedAt) && (
+                    <p className="flex items-center gap-1 text-[11px] text-[var(--text-muted)]">
+                      <Clock className="h-3 w-3" />
+                      Posted {formatPostedDate(job.postedAt)}
+                    </p>
+                  )}
+
                   {/* Title & Company */}
                   <div>
-                    <h3
+                    <button
+                      type="button"
                       onClick={() => {
+                        returnFocusRef.current = document.activeElement instanceof HTMLElement
+                          ? document.activeElement
+                          : null;
                         setSelectedJob(job);
-                        setShowResumeMatchBreakdown(false);
                       }}
-                      className="text-base font-bold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors cursor-pointer line-clamp-2"
+                      className="text-left text-base font-bold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] rounded-sm line-clamp-2"
                     >
                       {job.title}
-                    </h3>
+                    </button>
                     <p className="text-xs text-[var(--text-secondary)] font-semibold flex items-center gap-1 mt-1">
                       <Building className="w-3.5 h-3.5 text-[var(--accent)]" />
                       {job.company}
@@ -1182,22 +1558,20 @@ function JobSearchContent() {
                 {/* Card Actions: View Job, Prepare Resume, Save, & Apply */}
                 <div className="pt-4 mt-4 border-t border-[var(--border-color)] flex flex-wrap items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedJob(job);
-                        setShowResumeMatchBreakdown(false);
-                      }}
-                      className="inline-flex items-center gap-1 text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
+                    <Link
+                      href={`/apply-assistant?title=${encodeURIComponent(job.title)}&company=${encodeURIComponent(job.company)}&location=${encodeURIComponent(job.location || '')}&jobUrl=${encodeURIComponent(job.applyUrl || job.sourceUrl || '')}`}
+                      title="Job Application Preparation Studio"
+                      className="btn-ghost btn-sm h-8 px-2.5 inline-flex items-center gap-1 text-xs text-[var(--accent)] hover:text-white hover:bg-[var(--accent)] cursor-pointer"
                     >
-                      View
-                    </button>
+                      <Send className="w-3.5 h-3.5" />
+                      <span>Apply Assistant</span>
+                    </Link>
 
                     <button
                       type="button"
                       onClick={() => handlePrepareResume(job)}
                       title="Prepare & Tailor Resume for this Job"
-                      className="inline-flex items-center gap-1 text-xs font-medium text-[var(--text-secondary)] hover:text-blue-500 transition-colors"
+                      className="btn-ghost btn-sm h-8 px-2.5 inline-flex items-center gap-1 text-xs cursor-pointer"
                     >
                       <FileEdit className="w-3.5 h-3.5" />
                       <span>Prepare</span>
@@ -1208,11 +1582,10 @@ function JobSearchContent() {
                       onClick={() => handleSaveJob(job)}
                       disabled={savingJobId === job.id}
                       title={savedJobIds.has(job.id) ? "Remove from Saved Jobs" : "Save to Application Tracker"}
-                      className={`inline-flex items-center gap-1 text-xs font-medium transition-colors cursor-pointer ${
-                        savedJobIds.has(job.id)
-                          ? 'text-emerald-500 font-semibold'
-                          : 'text-[var(--text-secondary)] hover:text-emerald-400'
-                      }`}
+                      className={`btn-sm h-8 px-2.5 inline-flex items-center gap-1 text-xs transition-colors cursor-pointer ${savedJobIds.has(job.id)
+                          ? 'btn-secondary text-emerald-500 font-semibold'
+                          : 'btn-ghost text-[var(--text-secondary)] hover:text-emerald-400'
+                        }`}
                     >
                       <Bookmark className={`w-3.5 h-3.5 ${savedJobIds.has(job.id) ? 'fill-current' : ''}`} />
                       <span>{savedJobIds.has(job.id) ? 'Saved' : 'Save'}</span>
@@ -1223,7 +1596,7 @@ function JobSearchContent() {
                     type="button"
                     onClick={() => handleApplyClick(job)}
                     disabled={applyingJobId === job.id}
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs font-bold shadow-sm transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                    className="btn-primary btn-sm inline-flex items-center gap-1.5 text-xs shadow-sm cursor-pointer disabled:opacity-50"
                   >
                     {applyingJobId === job.id ? (
                       <Loader2 className="w-3 h-3 animate-spin" />
@@ -1246,7 +1619,7 @@ function JobSearchContent() {
                 type="button"
                 disabled={currentPage <= 1 || isLoading}
                 onClick={() => performSearch(currentPage - 1)}
-                className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-xs font-semibold text-[var(--text-primary)] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="btn-secondary btn-sm inline-flex items-center gap-1 text-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="w-3.5 h-3.5" /> Previous
               </button>
@@ -1257,7 +1630,7 @@ function JobSearchContent() {
                 type="button"
                 disabled={currentPage >= searchResponse.totalPages || isLoading}
                 onClick={() => performSearch(currentPage + 1)}
-                className="inline-flex items-center gap-1 px-3.5 py-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-xs font-semibold text-[var(--text-primary)] disabled:opacity-40 disabled:cursor-not-allowed transition-all"
+                className="btn-secondary btn-sm inline-flex items-center gap-1 text-xs cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 Next <ChevronRight className="w-3.5 h-3.5" />
               </button>
@@ -1274,16 +1647,24 @@ function JobSearchContent() {
             if (e.target === e.currentTarget) setSelectedJob(null);
           }}
         >
-          <div className="w-full max-w-2xl h-full bg-[var(--glass-bg-elevated)] border-l border-[var(--glass-border)] backdrop-blur-2xl p-6 sm:p-8 flex flex-col justify-between overflow-y-auto shadow-2xl space-y-6 relative">
+          <div
+            ref={jobDrawerRef}
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="job-detail-title"
+            tabIndex={-1}
+            className="w-full max-w-2xl h-full bg-[var(--glass-bg-elevated)] border-l border-[var(--glass-border)] backdrop-blur-2xl p-6 sm:p-8 flex flex-col justify-between overflow-y-auto shadow-2xl space-y-6 relative focus:outline-none"
+          >
             <div className="space-y-6">
               {/* Drawer Top Header */}
               <div className="flex items-start justify-between gap-4 pb-4 border-b border-[var(--glass-border)]">
                 <div>
                   <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[var(--bg-secondary)] text-[var(--accent)] mb-2">
                     <ShieldCheck className="w-3.5 h-3.5" />
-                    Verified Provider: {selectedJob.source}
+                    Source: {selectedJob.source}
+                    {cachedJobIds.has(selectedJob.id) && <span className="text-amber-500">· Cached</span>}
                   </div>
-                  <h2 className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)]">
+                  <h2 id="job-detail-title" className="text-xl sm:text-2xl font-extrabold text-[var(--text-primary)]">
                     {selectedJob.title}
                   </h2>
                   <p className="text-sm font-semibold text-[var(--text-secondary)] flex items-center gap-1.5 mt-1">
@@ -1294,6 +1675,7 @@ function JobSearchContent() {
                 <button
                   type="button"
                   onClick={() => setSelectedJob(null)}
+                  aria-label="Close job details"
                   className="p-1.5 rounded-xl hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                 >
                   <X className="w-5 h-5" />
@@ -1330,31 +1712,12 @@ function JobSearchContent() {
                 </div>
               </div>
 
-              {/* Action: Match with my resume button */}
-              {hasCandidateResume && (
-                <div className="flex items-center justify-between p-3.5 rounded-xl bg-[var(--accent)]/10 border border-[var(--accent)]/20">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[var(--accent)]" />
-                    <span className="text-xs font-bold text-[var(--text-primary)]">
-                      Compare role with your uploaded resume
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setShowResumeMatchBreakdown((prev) => !prev)}
-                    className="px-3 py-1 rounded-lg bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] transition-all"
-                  >
-                    {showResumeMatchBreakdown ? 'Hide Match' : 'Match with my resume'}
-                  </button>
-                </div>
-              )}
-
-              {/* Specification 11: Transparent Resume Match Breakdown Display */}
-              {(showResumeMatchBreakdown || selectedJob.matchScore !== undefined) && selectedJob.matchBreakdown && (
+              {/* Resume match details are shown when the search API returned a score. */}
+              {selectedJob.matchScore !== undefined && selectedJob.matchBreakdown && (
                 <div className="p-5 rounded-2xl border border-[var(--accent)]/30 bg-[var(--accent)]/5 space-y-4">
                   <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
                     <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider flex items-center gap-1.5">
-                      <Sparkles className="w-4 h-4" />
+                      <Target className="w-4 h-4" />
                       Resume Match
                     </span>
                     <span className="text-lg font-black text-[var(--accent)]">
@@ -1371,7 +1734,7 @@ function JobSearchContent() {
                       {[
                         { label: 'Skills', val: selectedJob.matchBreakdown.skills, icon: Target },
                         { label: 'Experience', val: selectedJob.matchBreakdown.experience, icon: Calendar },
-                        { label: 'Keywords', val: selectedJob.matchBreakdown.keywords, icon: Sparkles },
+                        { label: 'Keywords', val: selectedJob.matchBreakdown.keywords, icon: KeyRound },
                         { label: 'Projects', val: selectedJob.matchBreakdown.projects, icon: FolderGit2 },
                         { label: 'Education', val: selectedJob.matchBreakdown.education, icon: BookOpen },
                       ].map((item) => (
@@ -1412,7 +1775,7 @@ function JobSearchContent() {
                   {selectedJob.partialSkills && selectedJob.partialSkills.length > 0 && (
                     <div className="space-y-1 pt-1">
                       <span className="text-[11px] font-bold text-[var(--accent)] uppercase tracking-wider flex items-center gap-1">
-                        <Sparkles className="w-3.5 h-3.5" /> Partial matches:
+                        <AlertCircle className="w-3.5 h-3.5" /> Partial matches:
                       </span>
                       <div className="flex flex-wrap gap-1.5">
                         {selectedJob.partialSkills.map((sk) => (
@@ -1486,9 +1849,8 @@ function JobSearchContent() {
                   onClick={() => handleSaveJob(selectedJob)}
                   disabled={savingJobId === selectedJob.id}
                   title={savedJobIds.has(selectedJob.id) ? "Remove from Saved Jobs" : "Save to Application Tracker"}
-                  className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-xs font-semibold transition-all cursor-pointer ${
-                    savedJobIds.has(selectedJob.id) ? 'text-emerald-500 border-emerald-500/30' : 'text-[var(--text-secondary)]'
-                  }`}
+                  className={`btn-secondary btn-sm inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${savedJobIds.has(selectedJob.id) ? 'text-emerald-500 border-emerald-500/30' : 'text-[var(--text-secondary)]'
+                    }`}
                 >
                   <Bookmark className={`w-3.5 h-3.5 ${savedJobIds.has(selectedJob.id) ? 'fill-current' : ''}`} />
                   <span>{savedJobIds.has(selectedJob.id) ? 'Saved' : 'Save Job'}</span>
@@ -1497,18 +1859,26 @@ function JobSearchContent() {
                 <button
                   type="button"
                   onClick={() => handlePrepareResume(selectedJob)}
-                  className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl border border-blue-500/30 bg-blue-500/10 hover:bg-blue-500/20 text-blue-600 dark:text-blue-400 text-xs font-semibold transition-all"
+                  className="btn-secondary btn-sm inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer"
                 >
                   <FileEdit className="w-3.5 h-3.5" />
                   <span>Prepare & Tailor Resume</span>
                 </button>
+
+                <Link
+                  href={`/apply-assistant?title=${encodeURIComponent(selectedJob.title)}&company=${encodeURIComponent(selectedJob.company)}&location=${encodeURIComponent(selectedJob.location || '')}&jobUrl=${encodeURIComponent(selectedJob.applyUrl || selectedJob.sourceUrl || '')}`}
+                  className="btn-secondary btn-sm inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer text-[var(--accent)] border-[var(--accent)]/30 hover:bg-[var(--accent)] hover:text-white"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span>Apply Assistant</span>
+                </Link>
               </div>
 
               <button
                 type="button"
                 onClick={() => handleApplyClick(selectedJob)}
                 disabled={applyingJobId === selectedJob.id}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-xs sm:text-sm font-bold shadow-lg transition-all active:scale-95 disabled:opacity-50 cursor-pointer"
+                className="btn-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 px-6 text-xs sm:text-sm font-bold shadow-md disabled:opacity-50 cursor-pointer"
               >
                 {applyingJobId === selectedJob.id ? (
                   <Loader2 className="w-4 h-4 animate-spin" />

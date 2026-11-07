@@ -30,7 +30,7 @@ export interface NormalizedJob {
   employmentType: EmploymentType;
   experienceLevel: ExperienceLevel;
   workplaceType: WorkplaceType;
-  postedAt: string; // ISO string
+  postedAt?: string; // ISO date when supplied by the provider
   updatedAt?: string;
   applyUrl: string;
   sourceUrl: string;
@@ -47,6 +47,15 @@ export interface NormalizedJob {
   partialSkills?: string[];
   missingSkills?: string[];
   matchReason?: string;
+  isRealListing?: boolean;
+  isExpired?: boolean;
+  eligibility?: {
+    isEligible: boolean;
+    fresherEligible: boolean;
+    educationEligible: boolean;
+    summary: string;
+    details: string[];
+  };
 }
 
 // User-specified Job interface alias
@@ -90,10 +99,25 @@ export interface JobSearchResponse {
   totalPages: number;
   configuredProviders: string[];
   activeSources: string[];
+  liveSources?: string[];
+  cachedSources?: string[];
   unavailableSources?: string[];
+  cachedAtBySource?: Record<string, string>;
+  cachedJobIds?: string[];
+  unavailableSourceReasons?: Record<string, 'challenge' | 'restricted' | 'error'>;
+  sourceCooldownUntil?: Record<string, string>;
   isConfigured: boolean;
   searchLocation?: string;
   searchKeywords?: string;
+  originalKeywords?: string;
+  correctedKeywords?: string;
+  correctionApplied?: boolean;
+  originalLocation?: string;
+  correctedLocation?: string;
+  locationAliasApplied?: boolean;
+  locationWasCorrected?: boolean;
+  fallbackToOriginalUsed?: boolean;
+  suggestion?: string;
   cachedAt?: string;
   lastUpdated?: string;
 }

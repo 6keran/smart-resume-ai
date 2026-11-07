@@ -6,14 +6,14 @@ import {
   getResumeVersions,
   getResumeVersion,
   restoreResumeVersion,
-  verifyAdminToken,
+  verifyAdminTokenAsync,
 } from '@/lib/db';
 
 export async function GET(req: Request) {
   try {
     const cookieStore = await cookies();
     const adminToken = cookieStore.get('sra_admin_session')?.value;
-    const admin = verifyAdminToken(adminToken);
+    const admin = await verifyAdminTokenAsync(adminToken);
     const isAdmin = Boolean(admin && admin.role === 'ADMIN');
     const user = await getUserFromRequest(req);
 
@@ -57,7 +57,7 @@ export async function POST(req: Request) {
   try {
     const cookieStore = await cookies();
     const adminToken = cookieStore.get('sra_admin_session')?.value;
-    const admin = verifyAdminToken(adminToken);
+    const admin = await verifyAdminTokenAsync(adminToken);
     const isAdmin = Boolean(admin && admin.role === 'ADMIN');
     const user = await getUserFromRequest(req);
 
@@ -131,7 +131,7 @@ export async function PUT(req: Request) {
   try {
     const cookieStore = await cookies();
     const adminToken = cookieStore.get('sra_admin_session')?.value;
-    const admin = verifyAdminToken(adminToken);
+    const admin = await verifyAdminTokenAsync(adminToken);
     const isAdmin = Boolean(admin && admin.role === 'ADMIN');
     const user = await getUserFromRequest(req);
 

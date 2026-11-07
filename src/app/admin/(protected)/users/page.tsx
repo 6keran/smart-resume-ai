@@ -268,13 +268,10 @@ export default function AdminUsersPage() {
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-6 text-left animate-fade-in">
       {/* Header */}
-      <div className="relative overflow-hidden rounded-3xl p-6 sm:p-8 glass-card border border-[var(--glass-border)]">
-        <div className="absolute top-0 right-0 w-80 h-80 bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-transparent rounded-full blur-3xl -z-10 pointer-events-none" />
-        <div className="absolute bottom-0 left-0 w-72 h-72 bg-gradient-to-tr from-cyan-500/10 via-blue-500/10 to-transparent rounded-full blur-3xl -z-10 pointer-events-none" />
-
+      <div className="relative overflow-hidden rounded-xl p-6 sm:p-8 glass-card border border-[var(--border-color)]">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-5">
           <div className="space-y-1.5">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/20 backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-semibold bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/20 backdrop-blur-md">
               <Users className="w-3.5 h-3.5" />
               <span>Enterprise User Administration</span>
             </div>
@@ -293,7 +290,7 @@ export default function AdminUsersPage() {
                 setAddError(null);
                 setShowAddModal(true);
               }}
-              className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-gradient-to-r from-blue-600 via-indigo-600 to-purple-600 hover:opacity-95 text-white text-xs font-bold transition-all shadow-lg shadow-indigo-500/25 active:scale-95 cursor-pointer"
+              className="btn-primary h-10 px-4 text-xs"
             >
               <UserPlus className="w-3.5 h-3.5" />
               <span>Add User</span>
@@ -391,7 +388,7 @@ export default function AdminUsersPage() {
       </div>
 
       {/* Users Table Card */}
-      <GlassCard className="overflow-hidden border border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-xl rounded-3xl shadow-xl p-0">
+      <GlassCard className="overflow-hidden border border-[var(--border-color)] bg-[var(--card-bg)] rounded-xl shadow-sm p-0">
         {loading ? (
           <div className="p-12 text-center text-xs text-[var(--text-secondary)] flex flex-col items-center justify-center gap-2">
             <RefreshCw className="w-5 h-5 text-[var(--accent)] animate-spin" />

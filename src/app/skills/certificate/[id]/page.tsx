@@ -4,7 +4,6 @@ import {
   ArrowLeft,
   ShieldCheck,
   Award,
-  Sparkles,
   AlertCircle,
 } from 'lucide-react';
 import { getCertificateByCode } from '@/lib/db';
@@ -26,7 +25,7 @@ export default async function CertificatePage({
   if (!cert) {
     return (
       <div className="min-h-screen py-16 px-4 max-w-xl mx-auto text-center space-y-6">
-        <div className="rounded-3xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/60 p-10 backdrop-blur-xl shadow-xl space-y-4">
+        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/60 p-10 backdrop-blur-xl shadow-xl space-y-4">
           <div className="w-14 h-14 rounded-2xl bg-amber-500/10 text-amber-400 mx-auto flex items-center justify-center">
             <AlertCircle className="w-7 h-7" />
           </div>
@@ -98,14 +97,14 @@ export default async function CertificatePage({
           {/* Certificate Header */}
           <div className="space-y-4">
             <div className="flex items-center justify-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-indigo-600 flex items-center justify-center text-white shadow-md">
-                <Sparkles className="w-7 h-7" />
+              <div className="w-12 h-12 rounded-xl bg-[var(--accent)] flex items-center justify-center text-white shadow-md">
+                <Award className="w-7 h-7" />
               </div>
               <div className="text-left leading-tight">
                 <span className="font-extrabold tracking-wider text-base text-slate-900 block">
                   SMART RESUME AI
                 </span>
-                <span className="text-[10px] tracking-widest font-semibold text-indigo-600 uppercase">
+                <span className="text-[10px] tracking-widest font-semibold text-[var(--accent)] uppercase">
                   Career Intelligence Platform
                 </span>
               </div>

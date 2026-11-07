@@ -70,6 +70,18 @@ export async function POST(req: Request) {
       salary,
     });
 
+    try {
+      const { recordStudentReadinessSnapshot, clearStudentContextCache } = await import('@/server/services/unifiedStudentContext');
+      clearStudentContextCache(user.id);
+      await recordStudentReadinessSnapshot(
+        user.id,
+        'application_submitted',
+        `Tracked job application: ${jobTitle} at ${company}`
+      );
+    } catch (snapErr) {
+      console.warn('[createJobApplication] Non-blocking snapshot error:', snapErr);
+    }
+
     return NextResponse.json({
       success: true,
       message: 'Job application created.',
@@ -130,6 +142,11 @@ export async function PUT(req: Request) {
       salary,
     });
 
+    try {
+      const { clearStudentContextCache } = await import('@/server/services/unifiedStudentContext');
+      clearStudentContextCache(user.id);
+    } catch {}
+
     return NextResponse.json({
       success: true,
       message: 'Job application updated.',
@@ -168,6 +185,11 @@ export async function DELETE(req: Request) {
           { status: 404 }
         );
       }
+
+      try {
+        const { clearStudentContextCache } = await import('@/server/services/unifiedStudentContext');
+        clearStudentContextCache(user.id);
+      } catch {}
 
       return NextResponse.json({
         success: true,

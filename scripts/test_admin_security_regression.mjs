@@ -3,6 +3,10 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
 import Module from 'node:module';
+import { setupTestDb } from './testDbIsolation.mjs';
+
+// Initialize isolated SQLite sandbox to protect data/smart_resume.db
+setupTestDb('admin_security_regression');
 
 // Intercept server-only for standalone Node execution
 const origLoad = Module._load;
@@ -82,9 +86,19 @@ async function runSuite() {
     getAdminJobApplications,
   } = await import('../src/server/db/index.ts');
 
-  const baseUrl = 'http://localhost:3000';
+  const baseUrl = process.env.TEST_BASE_URL || 'http://localhost:3000';
   const db = getDb();
   const testRunId = Date.now().toString(36);
+
+  // Pre-flight check: Verify live Next.js HTTP server is reachable
+  try {
+    await fetch(`${baseUrl}/`, { redirect: 'manual', signal: AbortSignal.timeout(2000) });
+  } catch (err) {
+    console.error(`\n❌ [PRE-FLIGHT ERROR] HTTP server at ${baseUrl} is not reachable.`);
+    console.error(`   To run this live HTTP test suite, ensure the Next.js server is running`);
+    console.error(`   or execute the automated isolated runner: node scripts/run_live_e2e_isolated.mjs\n`);
+    process.exit(1);
+  }
 
   try {
     // -------------------------------------------------------------

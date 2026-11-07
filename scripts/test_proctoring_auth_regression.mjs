@@ -25,7 +25,7 @@ function loadEnv() {
 loadEnv();
 
 const secret = process.env.ADMIN_SESSION_SECRET || 'smart_resume_ai_super_secret_admin_jwt_key_2026_dev_fallback';
-const BASE_URL = 'http://localhost:3000';
+const BASE_URL = process.env.TEST_BASE_URL || 'http://localhost:3000';
 
 function makeToken(payload) {
   const data = Buffer.from(JSON.stringify(payload)).toString('base64url');
