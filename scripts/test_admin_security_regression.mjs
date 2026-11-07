@@ -3,6 +3,10 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
 import Module from 'node:module';
+import { setupTestDb } from './testDbIsolation.mjs';
+
+// Initialize isolated SQLite sandbox to protect data/smart_resume.db
+setupTestDb('admin_security_regression');
 
 // Intercept server-only for standalone Node execution
 const origLoad = Module._load;
@@ -82,7 +86,7 @@ async function runSuite() {
     getAdminJobApplications,
   } = await import('../src/server/db/index.ts');
 
-  const baseUrl = 'http://localhost:3000';
+  const baseUrl = process.env.TEST_BASE_URL || 'http://localhost:3000';
   const db = getDb();
   const testRunId = Date.now().toString(36);
 

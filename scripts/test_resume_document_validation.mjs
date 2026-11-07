@@ -7,6 +7,17 @@ Module._load = function (id, ...args) {
   if (id === 'server-only') {
     return {};
   }
+  // Keep this API validation suite isolated from both local and remote databases.
+  if (id === '@/server/db') {
+    return {
+      recordResumeUpload: async () => null,
+      recordResumeAnalysis: async () => undefined,
+      recordJobMatchEvent: async () => undefined,
+    };
+  }
+  if (id === '@/server/auth/visitor') {
+    return { getOrCreateVisitorId: async () => '' };
+  }
   return origLoad.apply(this, [id, ...args]);
 };
 
@@ -444,6 +455,7 @@ I have done some coding in Python and built a few small web pages using HTML. Lo
     body: JSON.stringify({
       resumeText: docInvalidInvoice,
       jobTitle: 'Software Engineer',
+      jobDescription: 'Build and maintain software applications with a collaborative engineering team.',
     }),
   });
 

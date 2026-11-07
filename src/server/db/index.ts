@@ -4,6 +4,13 @@ import { SEED_SKILLS, INITIAL_ASSESSMENT_QUESTIONS } from './seedQuestions';
 import { getDb as getDbFromAdapter, getActiveTx, type DatabaseClient } from './adapter';
 import { isClientDraftResumeId } from '@/types/resume';
 
+function skillSlug(name: string): string {
+  const normalizedName = name.trim().toLowerCase();
+  // Keep the legacy C++ slug stable while giving C# its own unique catalog key.
+  if (normalizedName === 'c#') return 'c-sharp';
+  return normalizedName.replace(/[^a-z0-9]+/g, '-');
+}
+
 export type { DatabaseClient };
 export { isClientDraftResumeId };
 
@@ -53,6 +60,14 @@ export function getAdminSessionSecret(): string | null {
 }
 
 export const getValidatedSessionSecret = getAdminSessionSecret;
+
+export async function closeDb(): Promise<void> {
+  if (dbInstance?.close) {
+    await dbInstance.close();
+  }
+  dbInstance = null;
+  isInitialized = false;
+}
 
 /**
  * Returns the active database instance (PostgreSQL on Vercel/production, SQLite in local development).
@@ -203,6 +218,25 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_job_searches_date ON job_searches(searched_at);
   `);
 
+  // 7b. Job Search Results Table
+  dbInstance.exec(`
+    CREATE TABLE IF NOT EXISTS job_search_results (
+      id TEXT PRIMARY KEY,
+      search_id TEXT NOT NULL,
+      job_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      company TEXT NOT NULL,
+      location TEXT,
+      salary TEXT,
+      description TEXT,
+      url TEXT NOT NULL,
+      source TEXT NOT NULL,
+      posted_at TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_jsr_search ON job_search_results(search_id);
+  `);
+
   // 8. Job Matches Table
   dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS job_matches (
@@ -216,8 +250,11 @@ export function getDb(): DatabaseClient {
       matched_skills TEXT,
       partial_skills TEXT,
       missing_skills TEXT,
-      created_at TEXT NOT NULL
+      created_at TEXT NOT NULL,
+      user_id TEXT
     );
+    CREATE INDEX IF NOT EXISTS idx_job_matches_resume ON job_matches(resume_id);
+    CREATE INDEX IF NOT EXISTS idx_job_matches_user ON job_matches(user_id);
   `);
 
   // 9. Feedback Table
@@ -490,6 +527,129 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_lps_last_hb ON live_proctoring_sessions(last_heartbeat_at);
   `);
 
+  // 23. User Career Goals
+  dbInstance.exec(`
+    CREATE TABLE IF NOT EXISTS user_career_goals (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL UNIQUE,
+      target_role TEXT NOT NULL,
+      target_industry TEXT,
+      experience_level TEXT,
+      preferred_location TEXT,
+      target_salary TEXT,
+      skills_summary TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_ucg_user ON user_career_goals(user_id);
+  `);
+
+  // 24. User Learning Roadmaps
+  dbInstance.exec(`
+    CREATE TABLE IF NOT EXISTS user_learning_roadmaps (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      target_role TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'active',
+      roadmap_data TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_ulr_user ON user_learning_roadmaps(user_id);
+  `);
+
+  // 25. User Interview Sessions
+  dbInstance.exec(`
+    CREATE TABLE IF NOT EXISTS user_interview_sessions (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      target_role TEXT NOT NULL,
+      job_title TEXT,
+      company TEXT,
+      questions_data TEXT NOT NULL,
+      answers_data TEXT,
+      overall_score INTEGER,
+      overall_feedback TEXT,
+      status TEXT NOT NULL DEFAULT 'in_progress',
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_uis_user ON user_interview_sessions(user_id);
+  `);
+
+  // 26. Student Profiles Table (Centralized Student & Fresher Career Profile)
+  dbInstance.exec(`
+    CREATE TABLE IF NOT EXISTS student_profiles (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL UNIQUE,
+      institution TEXT NOT NULL,
+      degree TEXT NOT NULL,
+      field_of_study TEXT NOT NULL,
+      graduation_year INTEGER NOT NULL,
+      graduation_month TEXT,
+      current_semester TEXT,
+      cgpa TEXT,
+      student_type TEXT DEFAULT 'college_student',
+      target_role TEXT NOT NULL DEFAULT 'Graduate Software Engineer',
+      target_work_type TEXT DEFAULT 'both',
+      preferred_locations TEXT,
+      projects_data TEXT,
+      coursework TEXT,
+      achievements TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_sp_user ON student_profiles(user_id);
+  `);
+
+  // 27. Guided Projects Table (AI Project Mentor & Milestone Tracker)
+  dbInstance.exec(`
+    CREATE TABLE IF NOT EXISTS guided_projects (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      title TEXT NOT NULL,
+      difficulty TEXT NOT NULL DEFAULT 'Intermediate',
+      target_role TEXT NOT NULL DEFAULT 'Graduate Software Engineer',
+      tech_stack TEXT NOT NULL DEFAULT '[]',
+      problem_statement TEXT,
+      real_world_use_case TEXT,
+      architecture_overview TEXT,
+      database_design TEXT,
+      estimated_complexity TEXT,
+      resume_value TEXT,
+      specification_json TEXT,
+      milestones_json TEXT,
+      current_milestone INTEGER DEFAULT 1,
+      progress_percent INTEGER DEFAULT 0,
+      status TEXT DEFAULT 'in_progress',
+      github_url TEXT,
+      live_url TEXT,
+      resume_bullets_json TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_guided_proj_user ON guided_projects(user_id);
+    CREATE INDEX IF NOT EXISTS idx_guided_proj_status ON guided_projects(status);
+  `);
+
+  // 28. Career Readiness History Table (Dated Readiness Snapshots)
+  dbInstance.exec(`
+    CREATE TABLE IF NOT EXISTS career_readiness_history (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      overall_score INTEGER NOT NULL,
+      overall_level TEXT NOT NULL,
+      technical_score INTEGER NOT NULL,
+      project_score INTEGER NOT NULL,
+      resume_score INTEGER NOT NULL,
+      interview_score INTEGER NOT NULL,
+      trigger_activity TEXT NOT NULL,
+      activity_detail TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_crh_user ON career_readiness_history(user_id, created_at DESC);
+  `);
+
   // Safe column migrations to associate activity with user_id and expand users table
   const migrateColumns = [
     'ALTER TABLE visitors ADD COLUMN user_id TEXT;',
@@ -510,6 +670,12 @@ export function getDb(): DatabaseClient {
     'ALTER TABLE job_applications ADD COLUMN applied_confirmed_at TEXT;',
     'ALTER TABLE job_applications ADD COLUMN description_snippet TEXT;',
     'ALTER TABLE job_applications ADD COLUMN salary TEXT;',
+    'ALTER TABLE job_applications ADD COLUMN cover_letter TEXT;',
+    'ALTER TABLE job_applications ADD COLUMN tailored_summary TEXT;',
+    'ALTER TABLE job_applications ADD COLUMN checklist_state TEXT;',
+    'ALTER TABLE job_applications ADD COLUMN match_analysis TEXT;',
+    'ALTER TABLE job_applications ADD COLUMN interview_date TEXT;',
+    'ALTER TABLE job_applications ADD COLUMN outreach_message TEXT;',
     'ALTER TABLE resumes ADD COLUMN resume_data TEXT;',
     'ALTER TABLE admin_users ADD COLUMN session_token TEXT;',
   ];
@@ -569,7 +735,7 @@ export function verifyPassword(password: string, storedHash: string): boolean {
   }
 }
 
-export function createSessionToken(userOrAdmin: { id: string; email: string; role: string }): string {
+export function createSessionToken(userOrAdmin: { id?: string; sub?: string; email: string; role: string }): string {
   const secret = getAdminSessionSecret();
   if (!secret) {
     throw new Error(
@@ -577,8 +743,13 @@ export function createSessionToken(userOrAdmin: { id: string; email: string; rol
     );
   }
 
+  const sub = userOrAdmin.id || userOrAdmin.sub;
+  if (!sub) {
+    throw new Error('Session token creation failed: user id or sub is required.');
+  }
+
   const payload = {
-    sub: userOrAdmin.id,
+    sub,
     email: userOrAdmin.email,
     role: userOrAdmin.role,
     iat: Date.now(),
@@ -810,7 +981,7 @@ function ensureSeedQuestionsAndSkills(db: DatabaseClient) {
 
       const now = new Date().toISOString();
       for (const s of SEED_SKILLS) {
-        const slug = s.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const slug = skillSlug(s.name);
         const skillId = `skl_${slug}`;
         insertSkill.run(skillId, s.name, slug, s.category, s.description, now, now);
         insertConfig.run(`cfg_${slug}`, slug, now, now);
@@ -831,7 +1002,7 @@ function ensureSeedQuestionsAndSkills(db: DatabaseClient) {
 
       const now = new Date().toISOString();
       INITIAL_ASSESSMENT_QUESTIONS.forEach((q, idx) => {
-        const slug = q.skill.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+        const slug = skillSlug(q.skill);
         const qId = `qst_${slug}_${idx + 1}`;
         const correctLetter = `Option ${String.fromCharCode(65 + q.correct_answer_index)}`;
         insertQ.run(
@@ -2521,7 +2692,49 @@ export async function getDetailedAnalytics() {
     LIMIT 6
   `).all() as Array<{ skill: string; count: number }>;
 
+  // Student Career Funnel Progression
+  const totalRegisteredUsers = ((await db.prepare('SELECT COUNT(*) as c FROM users').get()) as { c: number }).c;
+  const withProfileCount = ((await db.prepare('SELECT COUNT(DISTINCT user_id) as c FROM student_profiles').get()) as { c: number }).c;
+  const withResumeCount = ((await db.prepare('SELECT COUNT(DISTINCT user_id) as c FROM resumes WHERE user_id IS NOT NULL').get()) as { c: number }).c;
+  const withVerifiedSkillCount = ((await db.prepare("SELECT COUNT(DISTINCT user_id) as c FROM verified_skills WHERE status = 'VERIFIED'").get()) as { c: number }).c;
+  const withInterviewSessionCount = ((await db.prepare('SELECT COUNT(DISTINCT user_id) as c FROM user_interview_sessions').get()) as { c: number }).c;
+  const withJobApplicationCount = ((await db.prepare('SELECT COUNT(DISTINCT user_id) as c FROM job_applications').get()) as { c: number }).c;
+
+  // Career Readiness Distribution
+  const readinessDistribution = {
+    novice: ((await db.prepare("SELECT COUNT(DISTINCT user_id) as c FROM career_readiness_history WHERE overall_level = 'Novice'").get()) as { c: number })?.c || 0,
+    developing: ((await db.prepare("SELECT COUNT(DISTINCT user_id) as c FROM career_readiness_history WHERE overall_level = 'Developing'").get()) as { c: number })?.c || 0,
+    competitive: ((await db.prepare("SELECT COUNT(DISTINCT user_id) as c FROM career_readiness_history WHERE overall_level = 'Competitive'").get()) as { c: number })?.c || 0,
+    careerReady: ((await db.prepare("SELECT COUNT(DISTINCT user_id) as c FROM career_readiness_history WHERE overall_level = 'Career Ready'").get()) as { c: number })?.c || 0,
+    totalSnapshots: ((await db.prepare('SELECT COUNT(*) as c FROM career_readiness_history').get()) as { c: number })?.c || 0,
+  };
+
+  // Guided Projects Telemetry
+  const projectStats = {
+    totalGuidedProjects: ((await db.prepare('SELECT COUNT(*) as c FROM guided_projects').get()) as { c: number })?.c || 0,
+    completedProjects: ((await db.prepare("SELECT COUNT(*) as c FROM guided_projects WHERE status = 'completed'").get()) as { c: number })?.c || 0,
+    inProgressProjects: ((await db.prepare("SELECT COUNT(*) as c FROM guided_projects WHERE status = 'in_progress'").get()) as { c: number })?.c || 0,
+  };
+
+  const aiServiceHealth = {
+    geminiConfigured: Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY),
+    geminiStatus: Boolean(process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY) ? 'configured' : 'deterministic_fallback',
+    deterministicAtsStatus: 'healthy',
+    jobSearchProviders: ['Adzuna', 'Jooble', 'LinkedIn', 'Naukri'],
+  };
+
   return {
+    studentFunnel: {
+      totalRegisteredUsers,
+      withProfileCount,
+      withResumeCount,
+      withVerifiedSkillCount,
+      withInterviewSessionCount,
+      withJobApplicationCount,
+    },
+    readinessDistribution,
+    projectStats,
+    aiServiceHealth,
     resumeAnalytics: {
       totalResumes,
       pdfCount,
@@ -2696,7 +2909,7 @@ export async function createQuestion(data: {
   is_active?: boolean;
 }): Promise<string> {
   const db = getDb();
-  const slug = data.skill.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const slug = skillSlug(data.skill);
   const id = `qst_${slug}_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
   const now = new Date().toISOString();
 
@@ -2752,7 +2965,7 @@ export async function updateQuestion(
 
   const now = new Date().toISOString();
   const skill = data.skill || existing.skill_name;
-  const slug = skill.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const slug = skillSlug(skill);
   const questionText = data.question_text !== undefined ? data.question_text : existing.question_text;
   const questionType = data.question_type !== undefined ? data.question_type : existing.question_type;
   const difficulty = data.difficulty !== undefined ? data.difficulty : existing.difficulty;
@@ -2906,7 +3119,7 @@ export async function updateSkill(id: string, data: { name?: string; category?: 
   const name = data.name || existing.name;
   const category = data.category || existing.category;
   const description = data.description !== undefined ? data.description : existing.description;
-  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const slug = skillSlug(name);
 
   const res = await db.prepare(`
     UPDATE skills_catalog
@@ -2987,7 +3200,7 @@ export async function startAssessmentAttempt(skillName: string, visitorId?: stri
   startedAt?: string;
 }> {
   const db = getDb();
-  const slug = skillName.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const slug = skillSlug(skillName);
 
   // Verify skill exists and is active
   const skillRow = (await db.prepare('SELECT * FROM skills_catalog WHERE slug = ? OR LOWER(name) = ?').get(slug, skillName.toLowerCase())) as any;
@@ -3001,7 +3214,7 @@ export async function startAssessmentAttempt(skillName: string, visitorId?: stri
 
   // Get config
   const config = await db.prepare('SELECT * FROM assessment_configs WHERE skill_slug = ?').get(slug) as any;
-  const requiredCount = config?.questions_count || 10;
+  const configuredCount = config?.questions_count || 10;
   const passPercentage = config?.pass_percentage || 70;
   const timeLimitMinutes = config?.time_limit_minutes || 20;
 
@@ -3012,13 +3225,15 @@ export async function startAssessmentAttempt(skillName: string, visitorId?: stri
     ORDER BY RANDOM()
   `).all(slug) as any[];
 
-  if (activeQuestions.length < requiredCount) {
+  if (activeQuestions.length === 0) {
     return {
       success: false,
       error: 'insufficient_questions',
-      message: `${skillName} assessment is currently unavailable because only ${activeQuestions.length} active questions are available. Please contact the administrator.`,
+      message: `${skillName} assessment is currently unavailable because no active questions are available. Please contact the administrator.`,
     };
   }
+
+  const requiredCount = Math.min(configuredCount, activeQuestions.length);
 
   const selectedQuestions = activeQuestions.slice(0, requiredCount);
   const attemptId = `att_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
@@ -3221,7 +3436,7 @@ export async function submitAssessmentAttempt(data: {
   }
 
   const totalQuestions = snapshots.length || attempt.total_questions || 10;
-  const slug = attempt.skill.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const slug = skillSlug(attempt.skill);
   const config = await db.prepare('SELECT * FROM assessment_configs WHERE skill_slug = ?').get(slug) as any;
   const passPercentage = config?.pass_percentage || 70;
   const passingScore = Math.ceil(totalQuestions * (passPercentage / 100));
@@ -3325,6 +3540,19 @@ export async function submitAssessmentAttempt(data: {
       userName,
     },
   });
+
+  if (attempt.user_id) {
+    try {
+      const { recordStudentReadinessSnapshot } = await import('@/server/services/unifiedStudentContext');
+      await recordStudentReadinessSnapshot(
+        attempt.user_id,
+        'assessment_completed',
+        `${passed ? 'Passed' : 'Completed'} ${attempt.skill} assessment (${Math.round((score / totalQuestions) * 100)}%)`
+      );
+    } catch (snapErr) {
+      console.warn('[Assessment Attempt] Non-blocking snapshot error:', snapErr);
+    }
+  }
 
   return {
     id: data.attemptId,
@@ -3455,37 +3683,35 @@ export async function getAssessmentAttemptDetail(attemptId: string) {
 export async function getUserDashboardData(userId: string) {
   const db = getDb();
 
-  // 1. Resumes count
-  const resumesCount = ((await db.prepare('SELECT COUNT(*) as c FROM resumes WHERE user_id = ?').get(userId)) as any)?.c || 0;
+  // 1-10. Consolidated single-query metrics aggregation
+  const counts = (await db.prepare(`
+    SELECT
+      (SELECT COUNT(*) FROM resumes WHERE user_id = ?) as resumes_count,
+      (SELECT COUNT(*) FROM resume_analyses WHERE user_id = ?) as analyses_count,
+      (SELECT AVG(ats_score) FROM resume_analyses WHERE user_id = ?) as avg_ats_score,
+      (SELECT COUNT(*) FROM resume_improvements WHERE user_id = ?) as improvements_count,
+      (SELECT COUNT(*) FROM job_applications WHERE user_id = ? AND status = 'Applied') as jobs_applied_count,
+      (SELECT COUNT(*) FROM job_applications WHERE user_id = ?) as total_applications,
+      (SELECT COUNT(*) FROM job_matches WHERE user_id = ?) as job_matches_count,
+      (SELECT COUNT(*) FROM verified_skills WHERE user_id = ? AND status = 'VERIFIED') as verified_skills_count,
+      (SELECT COUNT(*) FROM assessments WHERE user_id = ? AND status = 'COMPLETED') as assessments_count,
+      (SELECT COUNT(*) FROM certificates WHERE user_id = ?) as certificates_count,
+      (SELECT COUNT(*) FROM course_progress WHERE user_id = ? AND status = 'Completed') as courses_completed_count
+  `).get(
+    userId, userId, userId, userId, userId, userId, userId, userId, userId, userId, userId
+  )) as any;
 
-  // 2. Analyses count
-  const analysesCount = ((await db.prepare('SELECT COUNT(*) as c FROM resume_analyses WHERE user_id = ?').get(userId)) as any)?.c || 0;
-
-  // 3. Average ATS score
-  const avgAtsRow = (await db.prepare('SELECT AVG(ats_score) as avg_score FROM resume_analyses WHERE user_id = ?').get(userId)) as any;
-  const avgAtsScore = avgAtsRow?.avg_score ? Math.round(avgAtsRow.avg_score * 10) / 10 : 0;
-
-  // 4. Improvements count
-  const improvementsCount = ((await db.prepare('SELECT COUNT(*) as c FROM resume_improvements WHERE user_id = ?').get(userId)) as any)?.c || 0;
-
-  // 5. Jobs Applied
-  const jobsAppliedCount = ((await db.prepare("SELECT COUNT(*) as c FROM job_applications WHERE user_id = ? AND status = 'Applied'").get(userId)) as any)?.c || 0;
-  const totalApplications = ((await db.prepare('SELECT COUNT(*) as c FROM job_applications WHERE user_id = ?').get(userId)) as any)?.c || 0;
-
-  // 6. Job Matches
-  const jobMatchesCount = ((await db.prepare('SELECT COUNT(*) as c FROM job_matches WHERE user_id = ?').get(userId)) as any)?.c || 0;
-
-  // 7. Verified Skills
-  const verifiedSkillsCount = ((await db.prepare("SELECT COUNT(*) as c FROM verified_skills WHERE user_id = ? AND status = 'VERIFIED'").get(userId)) as any)?.c || 0;
-
-  // 8. Assessments Completed
-  const assessmentsCount = ((await db.prepare("SELECT COUNT(*) as c FROM assessments WHERE user_id = ? AND status = 'COMPLETED'").get(userId)) as any)?.c || 0;
-
-  // 9. Certificates Earned
-  const certificatesCount = ((await db.prepare('SELECT COUNT(*) as c FROM certificates WHERE user_id = ?').get(userId)) as any)?.c || 0;
-
-  // 10. Courses Completed
-  const coursesCompletedCount = ((await db.prepare("SELECT COUNT(*) as c FROM course_progress WHERE user_id = ? AND status = 'Completed'").get(userId)) as any)?.c || 0;
+  const resumesCount = counts?.resumes_count || 0;
+  const analysesCount = counts?.analyses_count || 0;
+  const avgAtsScore = counts?.avg_ats_score ? Math.round(counts.avg_ats_score * 10) / 10 : 0;
+  const improvementsCount = counts?.improvements_count || 0;
+  const jobsAppliedCount = counts?.jobs_applied_count || 0;
+  const totalApplications = counts?.total_applications || 0;
+  const jobMatchesCount = counts?.job_matches_count || 0;
+  const verifiedSkillsCount = counts?.verified_skills_count || 0;
+  const assessmentsCount = counts?.assessments_count || 0;
+  const certificatesCount = counts?.certificates_count || 0;
+  const coursesCompletedCount = counts?.courses_completed_count || 0;
 
   // Resume Progress Section (per resume: latest score, previous score, improvement)
   const resumes = await db.prepare(`
@@ -3526,11 +3752,19 @@ export async function getUserDashboardData(userId: string) {
 
   // Recent job applications
   const recentApplications = await db.prepare(`
-    SELECT id, job_title, company, location, status, applied_at
+    SELECT id, job_title, company, location, status, applied_at, created_at, job_url
     FROM job_applications
     WHERE user_id = ?
     ORDER BY applied_at DESC, created_at DESC
-    LIMIT 4
+    LIMIT 8
+  `).all(userId) as any[];
+
+  // Application activity timeline (all applications for the user across time)
+  const applicationTimeline = await db.prepare(`
+    SELECT id, applied_at, status, created_at
+    FROM job_applications
+    WHERE user_id = ?
+    ORDER BY applied_at ASC, created_at ASC
   `).all(userId) as any[];
 
   // Recent assessments
@@ -3551,6 +3785,10 @@ export async function getUserDashboardData(userId: string) {
     LIMIT 4
   `).all(userId) as any[];
 
+  const studentProfile = await getStudentProfile(userId);
+  const timeline = await getStudentCareerTimeline(userId);
+  const achievements = await getStudentAchievements(userId);
+
   return JSON.parse(
     JSON.stringify({
       metrics: {
@@ -3568,10 +3806,351 @@ export async function getUserDashboardData(userId: string) {
       },
       resumeProgress,
       recentApplications,
+      applicationTimeline,
       recentAssessments,
       recentImprovements,
+      studentProfile,
+      timeline,
+      achievements,
     })
   );
+}
+
+export async function getStudentCareerTimeline(
+  userId: string,
+  limit = 20
+): Promise<Array<{
+  id: string;
+  type: string;
+  title: string;
+  description: string;
+  timestamp: string;
+  badge?: string;
+  href?: string;
+  meta?: Record<string, any>;
+}>> {
+  if (!userId) return [];
+  const db = getDb();
+  const events: Array<{
+    id: string;
+    type: string;
+    title: string;
+    description: string;
+    timestamp: string;
+    badge?: string;
+    href?: string;
+    meta?: Record<string, any>;
+  }> = [];
+
+  try {
+    // 1. Student Profile
+    const sp = (await db
+      .prepare('SELECT id, target_role, degree, institution, created_at, updated_at FROM student_profiles WHERE user_id = ?')
+      .get(userId)) as any;
+    if (sp) {
+      events.push({
+        id: `ev_prof_${sp.id}`,
+        type: 'profile_completed',
+        title: 'Student Career Profile Set',
+        description: `Profile established for ${sp.target_role || 'Software Role'} (${sp.degree || 'Degree'} at ${sp.institution || 'University'}).`,
+        timestamp: sp.updated_at || sp.created_at,
+        badge: 'Profile',
+        href: '/dashboard/profile',
+      });
+    }
+
+    // 2. Resume Analyses
+    const analyses = (await db
+      .prepare(`
+        SELECT a.id, a.ats_score, a.analyzed_at, r.filename
+        FROM resume_analyses a
+        LEFT JOIN resumes r ON a.resume_id = r.id
+        WHERE a.user_id = ?
+        ORDER BY a.analyzed_at DESC
+        LIMIT 6
+      `)
+      .all(userId)) as any[];
+    for (const a of analyses) {
+      events.push({
+        id: `ev_anl_${a.id}`,
+        type: 'resume_analyzed',
+        title: 'Resume ATS Audit Completed',
+        description: `Analyzed "${a.filename || 'Resume Document'}" with ${Math.round(a.ats_score)}/100 ATS alignment.`,
+        timestamp: a.analyzed_at,
+        badge: `${Math.round(a.ats_score)} ATS`,
+        href: '/dashboard/resumes',
+        meta: { atsScore: a.ats_score },
+      });
+    }
+
+    // 3. Proctored Assessments
+    const assessments = (await db
+      .prepare(`
+        SELECT id, skill, score, total_questions, passed, completed_at, created_at
+        FROM assessments
+        WHERE user_id = ? AND status IN ('passed', 'completed', 'failed')
+        ORDER BY completed_at DESC, created_at DESC
+        LIMIT 6
+      `)
+      .all(userId)) as any[];
+    for (const asm of assessments) {
+      const percentage = asm.total_questions > 0 ? Math.round((asm.score / asm.total_questions) * 100) : 0;
+      events.push({
+        id: `ev_asm_${asm.id}`,
+        type: 'assessment_completed',
+        title: `${asm.passed ? 'Verified Assessment Passed' : 'Skill Assessment Completed'}: ${asm.skill}`,
+        description: `Scored ${asm.score}/${asm.total_questions} (${percentage}%) on proctored technical evaluation.`,
+        timestamp: asm.completed_at || asm.created_at,
+        badge: asm.passed ? 'Passed' : 'Completed',
+        href: '/skills',
+        meta: { skill: asm.skill, passed: Boolean(asm.passed), score: asm.score },
+      });
+    }
+
+    // 4. Guided Capstones
+    const projects = (await db
+      .prepare(`
+        SELECT id, title, current_milestone, progress_percent, status, created_at, updated_at
+        FROM guided_projects
+        WHERE user_id = ?
+        ORDER BY updated_at DESC
+        LIMIT 6
+      `)
+      .all(userId)) as any[];
+    for (const p of projects) {
+      if (p.status === 'completed' || p.progress_percent >= 100) {
+        events.push({
+          id: `ev_prj_comp_${p.id}`,
+          type: 'project_completed',
+          title: `Capstone Completed: ${p.title}`,
+          description: `Finished all project milestones with verified architecture and code implementation.`,
+          timestamp: p.updated_at || p.created_at,
+          badge: 'Completed',
+          href: `/projects?id=${p.id}`,
+        });
+      } else if (p.progress_percent > 0) {
+        events.push({
+          id: `ev_prj_prog_${p.id}`,
+          type: 'project_milestone',
+          title: `Project Milestone Advanced: ${p.title}`,
+          description: `Advanced to milestone ${p.current_milestone || 1} with ${p.progress_percent}% completion.`,
+          timestamp: p.updated_at || p.created_at,
+          badge: `${p.progress_percent}%`,
+          href: `/projects?id=${p.id}`,
+        });
+      } else {
+        events.push({
+          id: `ev_prj_init_${p.id}`,
+          type: 'project_milestone',
+          title: `Capstone Started: ${p.title}`,
+          description: `Initialized milestone blueprint and architecture specification.`,
+          timestamp: p.created_at,
+          badge: 'Started',
+          href: `/projects?id=${p.id}`,
+        });
+      }
+    }
+
+    // 5. Interview Sessions
+    const interviews = (await db
+      .prepare(`
+        SELECT id, target_role, overall_score, status, created_at, updated_at
+        FROM user_interview_sessions
+        WHERE user_id = ?
+        ORDER BY updated_at DESC
+        LIMIT 6
+      `)
+      .all(userId)) as any[];
+    for (const inv of interviews) {
+      events.push({
+        id: `ev_int_${inv.id}`,
+        type: 'interview_completed',
+        title: `AI Mock Interview: ${inv.target_role || 'Technical Role'}`,
+        description: inv.status === 'completed' && inv.overall_score
+          ? `Completed full mock interview with AI evaluation score of ${inv.overall_score}/100.`
+          : `Practiced realistic technical interview questions with STAR feedback.`,
+        timestamp: inv.updated_at || inv.created_at,
+        badge: inv.overall_score ? `${inv.overall_score}/100` : 'Interview',
+        href: '/interview-prep',
+        meta: { score: inv.overall_score },
+      });
+    }
+
+    // 6. Job Applications
+    const applications = (await db
+      .prepare(`
+        SELECT id, job_title, company, status, applied_at, created_at
+        FROM job_applications
+        WHERE user_id = ?
+        ORDER BY applied_at DESC, created_at DESC
+        LIMIT 6
+      `)
+      .all(userId)) as any[];
+    for (const app of applications) {
+      events.push({
+        id: `ev_app_${app.id}`,
+        type: 'job_applied',
+        title: `Application Tracked: ${app.company}`,
+        description: `${app.job_title} — stage updated to "${app.status}".`,
+        timestamp: app.applied_at || app.created_at,
+        badge: app.status,
+        href: '/dashboard/applications',
+        meta: { company: app.company, status: app.status },
+      });
+    }
+
+    // 7. Verified Certificates
+    const certs = (await db
+      .prepare(`
+        SELECT id, skill, score, total_questions, certificate_code, issue_date, created_at
+        FROM certificates
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+        LIMIT 6
+      `)
+      .all(userId)) as any[];
+    for (const c of certs) {
+      events.push({
+        id: `ev_cert_${c.id}`,
+        type: 'certificate_earned',
+        title: `Certificate Earned: ${c.skill}`,
+        description: `Official credential issued (${c.certificate_code}) with verified proctored score.`,
+        timestamp: c.issue_date || c.created_at,
+        badge: 'Verified',
+        href: '/dashboard/certificates',
+        meta: { certificateCode: c.certificate_code },
+      });
+    }
+  } catch (err) {
+    console.warn('[getStudentCareerTimeline] Error compiling timeline:', err);
+  }
+
+  // Sort chronologically descending
+  events.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+  return events.slice(0, limit);
+}
+
+export async function getStudentAchievements(userId: string): Promise<Array<{
+  id: string;
+  type: string;
+  title: string;
+  subtitle: string;
+  date: string;
+  badge: string;
+  href?: string;
+}>> {
+  if (!userId) return [];
+  const db = getDb();
+  const achievements: Array<{
+    id: string;
+    type: string;
+    title: string;
+    subtitle: string;
+    date: string;
+    badge: string;
+    href?: string;
+  }> = [];
+
+  try {
+    // 1. Certificates
+    const certs = (await db
+      .prepare(`
+        SELECT id, skill, score, total_questions, certificate_code, issue_date, created_at
+        FROM certificates
+        WHERE user_id = ?
+        ORDER BY created_at DESC
+      `)
+      .all(userId)) as any[];
+    for (const c of certs) {
+      const pct = c.total_questions > 0 ? Math.round((c.score / c.total_questions) * 100) : 0;
+      achievements.push({
+        id: `ach_cert_${c.id}`,
+        type: 'certificate',
+        title: `${c.skill} Certified`,
+        subtitle: `Proctored verification badge (${pct}% score) • ${c.certificate_code}`,
+        date: c.issue_date || c.created_at,
+        badge: 'Verified Skill',
+        href: '/dashboard/certificates',
+      });
+    }
+
+    // 2. Completed Guided Projects
+    const compProjects = (await db
+      .prepare(`
+        SELECT id, title, tech_stack, updated_at, created_at
+        FROM guided_projects
+        WHERE user_id = ? AND (status = 'completed' OR progress_percent >= 100)
+        ORDER BY updated_at DESC
+      `)
+      .all(userId)) as any[];
+    for (const p of compProjects) {
+      let stackStr = '';
+      try {
+        const stack = JSON.parse(p.tech_stack || '[]');
+        stackStr = Array.isArray(stack) ? stack.slice(0, 3).join(', ') : '';
+      } catch {}
+      achievements.push({
+        id: `ach_prj_${p.id}`,
+        type: 'project',
+        title: `${p.title} Finished`,
+        subtitle: `All milestones completed and verified${stackStr ? ` (${stackStr})` : ''}`,
+        date: p.updated_at || p.created_at,
+        badge: 'Capstone Evidence',
+        href: `/projects?id=${p.id}`,
+      });
+    }
+
+    // 3. Top ATS Score >= 75
+    const topAts = (await db
+      .prepare(`
+        SELECT a.id, a.ats_score, a.analyzed_at, r.filename
+        FROM resume_analyses a
+        LEFT JOIN resumes r ON a.resume_id = r.id
+        WHERE a.user_id = ? AND a.ats_score >= 75
+        ORDER BY a.ats_score DESC, a.analyzed_at DESC
+        LIMIT 1
+      `)
+      .get(userId)) as any;
+    if (topAts) {
+      achievements.push({
+        id: `ach_ats_${topAts.id}`,
+        type: 'ats_milestone',
+        title: 'ATS Target Benchmark Met',
+        subtitle: `Achieved ${Math.round(topAts.ats_score)}/100 recruiter parser score on ${topAts.filename || 'resume'}`,
+        date: topAts.analyzed_at,
+        badge: `${Math.round(topAts.ats_score)} ATS`,
+        href: '/dashboard/resumes',
+      });
+    }
+
+    // 4. Interview Mastery >= 70
+    const topInt = (await db
+      .prepare(`
+        SELECT id, target_role, overall_score, updated_at, created_at
+        FROM user_interview_sessions
+        WHERE user_id = ? AND overall_score >= 70
+        ORDER BY overall_score DESC, updated_at DESC
+        LIMIT 1
+      `)
+      .get(userId)) as any;
+    if (topInt) {
+      achievements.push({
+        id: `ach_int_${topInt.id}`,
+        type: 'interview_mastery',
+        title: 'Interview Fluency Milestone',
+        subtitle: `Demonstrated ${topInt.overall_score}/100 fluency on ${topInt.target_role || 'technical'} mock interview`,
+        date: topInt.updated_at || topInt.created_at,
+        badge: `${topInt.overall_score}/100`,
+        href: '/interview-prep',
+      });
+    }
+  } catch (err) {
+    console.warn('[getStudentAchievements] Error compiling achievements:', err);
+  }
+
+  // Sort by date descending
+  achievements.sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime());
+  return achievements;
 }
 
 export async function getUserResumes(userId: string) {
@@ -3706,6 +4285,14 @@ export async function getUserJobApplications(userId: string) {
     notes: r.notes,
     resumeId: r.resume_id,
     appliedConfirmedAt: r.applied_confirmed_at,
+    descriptionSnippet: r.description_snippet || null,
+    salary: r.salary || null,
+    coverLetter: r.cover_letter || null,
+    tailoredSummary: r.tailored_summary || null,
+    checklistState: r.checklist_state || null,
+    matchAnalysis: r.match_analysis || null,
+    interviewDate: r.interview_date || null,
+    outreachMessage: r.outreach_message || null,
     createdAt: r.created_at,
     updatedAt: r.updated_at,
     user_id: r.user_id,
@@ -3715,9 +4302,67 @@ export async function getUserJobApplications(userId: string) {
     applied_at: r.applied_at,
     resume_id: r.resume_id,
     applied_confirmed_at: r.applied_confirmed_at,
+    description_snippet: r.description_snippet || null,
+    cover_letter: r.cover_letter || null,
+    tailored_summary: r.tailored_summary || null,
+    checklist_state: r.checklist_state || null,
+    match_analysis: r.match_analysis || null,
+    interview_date: r.interview_date || null,
+    outreach_message: r.outreach_message || null,
     created_at: r.created_at,
     updated_at: r.updated_at,
   }));
+}
+
+export async function getJobApplicationById(userId: string, applicationId: string) {
+  if (!userId || !applicationId) return null;
+  const db = getDb();
+  const r = (await db
+    .prepare('SELECT * FROM job_applications WHERE id = ? AND user_id = ?')
+    .get(applicationId, userId)) as any;
+  if (!r) return null;
+
+  return {
+    id: r.id,
+    userId: r.user_id,
+    jobId: r.job_id,
+    jobTitle: r.job_title,
+    company: r.company,
+    location: r.location,
+    source: r.source,
+    jobUrl: r.job_url,
+    appliedAt: r.applied_at,
+    status: r.status,
+    notes: r.notes,
+    resumeId: r.resume_id,
+    appliedConfirmedAt: r.applied_confirmed_at,
+    descriptionSnippet: r.description_snippet || null,
+    salary: r.salary || null,
+    coverLetter: r.cover_letter || null,
+    tailoredSummary: r.tailored_summary || null,
+    checklistState: r.checklist_state || null,
+    matchAnalysis: r.match_analysis || null,
+    interviewDate: r.interview_date || null,
+    outreachMessage: r.outreach_message || null,
+    createdAt: r.created_at,
+    updatedAt: r.updated_at,
+    user_id: r.user_id,
+    job_id: r.job_id,
+    job_title: r.job_title,
+    job_url: r.job_url,
+    applied_at: r.applied_at,
+    resume_id: r.resume_id,
+    applied_confirmed_at: r.applied_confirmed_at,
+    description_snippet: r.description_snippet || null,
+    cover_letter: r.cover_letter || null,
+    tailored_summary: r.tailored_summary || null,
+    checklist_state: r.checklist_state || null,
+    match_analysis: r.match_analysis || null,
+    interview_date: r.interview_date || null,
+    outreach_message: r.outreach_message || null,
+    created_at: r.created_at,
+    updated_at: r.updated_at,
+  };
 }
 
 export async function createJobApplication(userId: string, data: {
@@ -3734,6 +4379,12 @@ export async function createJobApplication(userId: string, data: {
   appliedConfirmedAt?: string;
   descriptionSnippet?: string;
   salary?: string;
+  coverLetter?: string;
+  tailoredSummary?: string;
+  checklistState?: string;
+  matchAnalysis?: string;
+  interviewDate?: string;
+  outreachMessage?: string;
 }) {
   const db = getDb();
   const cleanTitle = data.jobTitle.trim();
@@ -3769,12 +4420,36 @@ export async function createJobApplication(userId: string, data: {
     const newNotes = data.notes !== undefined ? data.notes : existing.notes;
     const newConfirmedAt = data.appliedConfirmedAt !== undefined ? data.appliedConfirmedAt : existing.applied_confirmed_at;
     const newJobUrl = data.jobUrl || existing.job_url;
+    const newCoverLetter = data.coverLetter !== undefined ? data.coverLetter : existing.cover_letter;
+    const newTailoredSummary = data.tailoredSummary !== undefined ? data.tailoredSummary : existing.tailored_summary;
+    const newChecklistState = data.checklistState !== undefined ? data.checklistState : existing.checklist_state;
+    const newMatchAnalysis = data.matchAnalysis !== undefined ? data.matchAnalysis : existing.match_analysis;
+    const newInterviewDate = data.interviewDate !== undefined ? data.interviewDate : existing.interview_date;
+    const newOutreachMessage = data.outreachMessage !== undefined ? data.outreachMessage : existing.outreach_message;
 
     await db.prepare(`
       UPDATE job_applications
-      SET status = ?, applied_at = ?, resume_id = ?, notes = ?, applied_confirmed_at = ?, job_url = ?, updated_at = ?
+      SET status = ?, applied_at = ?, resume_id = ?, notes = ?, applied_confirmed_at = ?, job_url = ?,
+          cover_letter = ?, tailored_summary = ?, checklist_state = ?, match_analysis = ?,
+          interview_date = ?, outreach_message = ?, updated_at = ?
       WHERE id = ? AND user_id = ?
-    `).run(newStatus, newAppliedAt, newResumeId, newNotes, newConfirmedAt, newJobUrl, now, existing.id, userId);
+    `).run(
+      newStatus,
+      newAppliedAt,
+      newResumeId,
+      newNotes,
+      newConfirmedAt,
+      newJobUrl,
+      newCoverLetter || null,
+      newTailoredSummary || null,
+      newChecklistState || null,
+      newMatchAnalysis || null,
+      newInterviewDate || null,
+      newOutreachMessage || null,
+      now,
+      existing.id,
+      userId
+    );
 
     return {
       id: existing.id,
@@ -3790,6 +4465,12 @@ export async function createJobApplication(userId: string, data: {
       notes: newNotes,
       resumeId: newResumeId,
       appliedConfirmedAt: newConfirmedAt,
+      coverLetter: newCoverLetter || null,
+      tailoredSummary: newTailoredSummary || null,
+      checklistState: newChecklistState || null,
+      matchAnalysis: newMatchAnalysis || null,
+      interviewDate: newInterviewDate || null,
+      outreachMessage: newOutreachMessage || null,
       createdAt: existing.created_at,
       updatedAt: now,
     };
@@ -3803,8 +4484,9 @@ export async function createJobApplication(userId: string, data: {
     INSERT INTO job_applications (
       id, user_id, job_id, job_title, company, location, source,
       job_url, applied_at, status, notes, resume_id, applied_confirmed_at,
-      description_snippet, salary, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      description_snippet, salary, cover_letter, tailored_summary, checklist_state,
+      match_analysis, interview_date, outreach_message, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id,
     userId,
@@ -3821,6 +4503,12 @@ export async function createJobApplication(userId: string, data: {
     data.appliedConfirmedAt || (status === 'Applied' ? now : null),
     data.descriptionSnippet?.trim() || null,
     data.salary?.trim() || null,
+    data.coverLetter || null,
+    data.tailoredSummary || null,
+    data.checklistState || null,
+    data.matchAnalysis || null,
+    data.interviewDate || null,
+    data.outreachMessage || null,
     now,
     now
   );
@@ -3841,6 +4529,12 @@ export async function createJobApplication(userId: string, data: {
     appliedConfirmedAt: data.appliedConfirmedAt || (status === 'Applied' ? now : null),
     descriptionSnippet: data.descriptionSnippet || null,
     salary: data.salary || null,
+    coverLetter: data.coverLetter || null,
+    tailoredSummary: data.tailoredSummary || null,
+    checklistState: data.checklistState || null,
+    matchAnalysis: data.matchAnalysis || null,
+    interviewDate: data.interviewDate || null,
+    outreachMessage: data.outreachMessage || null,
     createdAt: now,
     updatedAt: now,
   };
@@ -3859,6 +4553,12 @@ export async function updateJobApplication(userId: string, applicationId: string
   appliedConfirmedAt?: string;
   descriptionSnippet?: string;
   salary?: string;
+  coverLetter?: string;
+  tailoredSummary?: string;
+  checklistState?: string;
+  matchAnalysis?: string;
+  interviewDate?: string;
+  outreachMessage?: string;
 }) {
   const db = getDb();
   const existing = await db.prepare('SELECT * FROM job_applications WHERE id = ? AND user_id = ?').get(applicationId, userId) as any;
@@ -3881,6 +4581,12 @@ export async function updateJobApplication(userId: string, applicationId: string
         applied_confirmed_at = COALESCE(?, applied_confirmed_at),
         description_snippet = COALESCE(?, description_snippet),
         salary = COALESCE(?, salary),
+        cover_letter = COALESCE(?, cover_letter),
+        tailored_summary = COALESCE(?, tailored_summary),
+        checklist_state = COALESCE(?, checklist_state),
+        match_analysis = COALESCE(?, match_analysis),
+        interview_date = COALESCE(?, interview_date),
+        outreach_message = COALESCE(?, outreach_message),
         updated_at = ?
     WHERE id = ? AND user_id = ?
   `).run(
@@ -3896,12 +4602,18 @@ export async function updateJobApplication(userId: string, applicationId: string
     data.appliedConfirmedAt !== undefined ? data.appliedConfirmedAt : null,
     data.descriptionSnippet !== undefined ? data.descriptionSnippet.trim() : null,
     data.salary !== undefined ? data.salary.trim() : null,
+    data.coverLetter !== undefined ? data.coverLetter : null,
+    data.tailoredSummary !== undefined ? data.tailoredSummary : null,
+    data.checklistState !== undefined ? data.checklistState : null,
+    data.matchAnalysis !== undefined ? data.matchAnalysis : null,
+    data.interviewDate !== undefined ? data.interviewDate : null,
+    data.outreachMessage !== undefined ? data.outreachMessage : null,
     now,
     applicationId,
     userId
   );
 
-  return await db.prepare('SELECT * FROM job_applications WHERE id = ? AND user_id = ?').get(applicationId, userId);
+  return await getJobApplicationById(userId, applicationId);
 }
 
 export async function confirmJobApplication(userId: string, applicationId: string, status: string, resumeId?: string) {
@@ -4012,6 +4724,12 @@ export async function runDatabaseMigrations(dbClient?: DatabaseClient): Promise<
     { table: 'job_applications', column: 'applied_confirmed_at', type: 'TEXT' },
     { table: 'job_applications', column: 'description_snippet', type: 'TEXT' },
     { table: 'job_applications', column: 'salary', type: 'TEXT' },
+    { table: 'job_applications', column: 'cover_letter', type: 'TEXT' },
+    { table: 'job_applications', column: 'tailored_summary', type: 'TEXT' },
+    { table: 'job_applications', column: 'checklist_state', type: 'TEXT' },
+    { table: 'job_applications', column: 'match_analysis', type: 'TEXT' },
+    { table: 'job_applications', column: 'interview_date', type: 'TEXT' },
+    { table: 'job_applications', column: 'outreach_message', type: 'TEXT' },
     { table: 'resumes', column: 'user_id', type: 'TEXT' },
     { table: 'resumes', column: 'resume_data', type: 'TEXT' },
   ];
@@ -4024,6 +4742,130 @@ export async function runDatabaseMigrations(dbClient?: DatabaseClient): Promise<
     } catch {
       // In SQLite: duplicate column name, in Postgres: already exists
       skipped.push(`${col.table}.${col.column} already exists`);
+    }
+  }
+
+  // 4. Ensure career intelligence tables
+  const careerTables = [
+    {
+      name: 'user_career_goals',
+      sql: `CREATE TABLE IF NOT EXISTS user_career_goals (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL UNIQUE,
+        target_role TEXT NOT NULL,
+        target_industry TEXT,
+        experience_level TEXT,
+        preferred_location TEXT,
+        target_salary TEXT,
+        skills_summary TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );`,
+    },
+    {
+      name: 'user_learning_roadmaps',
+      sql: `CREATE TABLE IF NOT EXISTS user_learning_roadmaps (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        target_role TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        roadmap_data TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );`,
+    },
+    {
+      name: 'user_interview_sessions',
+      sql: `CREATE TABLE IF NOT EXISTS user_interview_sessions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        target_role TEXT NOT NULL,
+        job_title TEXT,
+        company TEXT,
+        questions_data TEXT NOT NULL,
+        answers_data TEXT,
+        overall_score INTEGER,
+        overall_feedback TEXT,
+        status TEXT NOT NULL DEFAULT 'in_progress',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );`,
+    },
+    {
+      name: 'student_profiles',
+      sql: `CREATE TABLE IF NOT EXISTS student_profiles (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL UNIQUE,
+        institution TEXT NOT NULL,
+        degree TEXT NOT NULL,
+        field_of_study TEXT NOT NULL,
+        graduation_year INTEGER NOT NULL,
+        graduation_month TEXT,
+        current_semester TEXT,
+        cgpa TEXT,
+        student_type TEXT DEFAULT 'college_student',
+        target_role TEXT NOT NULL DEFAULT 'Graduate Software Engineer',
+        target_work_type TEXT DEFAULT 'both',
+        preferred_locations TEXT,
+        projects_data TEXT,
+        coursework TEXT,
+        achievements TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );`,
+    },
+    {
+      name: 'guided_projects',
+      sql: `CREATE TABLE IF NOT EXISTS guided_projects (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        difficulty TEXT NOT NULL DEFAULT 'Intermediate',
+        target_role TEXT NOT NULL DEFAULT 'Graduate Software Engineer',
+        tech_stack TEXT NOT NULL DEFAULT '[]',
+        problem_statement TEXT,
+        real_world_use_case TEXT,
+        architecture_overview TEXT,
+        database_design TEXT,
+        estimated_complexity TEXT,
+        resume_value TEXT,
+        specification_json TEXT,
+        milestones_json TEXT,
+        current_milestone INTEGER DEFAULT 1,
+        progress_percent INTEGER DEFAULT 0,
+        status TEXT DEFAULT 'in_progress',
+        github_url TEXT,
+        live_url TEXT,
+        resume_bullets_json TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );`,
+    },
+  ];
+
+  for (const t of careerTables) {
+    try {
+      await db.exec(t.sql);
+      applied.push(`CREATE TABLE IF NOT EXISTS ${t.name}`);
+    } catch (err: any) {
+      skipped.push(`${t.name}: ${err?.message}`);
+    }
+  }
+
+  const careerIndexes = [
+    'CREATE INDEX IF NOT EXISTS idx_ucg_user ON user_career_goals(user_id);',
+    'CREATE INDEX IF NOT EXISTS idx_ulr_user ON user_learning_roadmaps(user_id);',
+    'CREATE INDEX IF NOT EXISTS idx_uis_user ON user_interview_sessions(user_id);',
+    'CREATE INDEX IF NOT EXISTS idx_sp_user ON student_profiles(user_id);',
+    'CREATE INDEX IF NOT EXISTS idx_guided_proj_user ON guided_projects(user_id);',
+    'CREATE INDEX IF NOT EXISTS idx_guided_proj_status ON guided_projects(status);',
+  ];
+  for (const idxSql of careerIndexes) {
+    try {
+      await db.exec(idxSql);
+      applied.push(idxSql.split('ON')[0].trim());
+    } catch (err: any) {
+      skipped.push(`${idxSql}: ${err?.message}`);
     }
   }
 
@@ -4516,6 +5358,19 @@ export async function saveUserResume(
   }
 
   const updatedRow = (await db.prepare('SELECT * FROM resumes WHERE id = ? AND user_id = ?').get(targetResumeId, userId)) as any;
+
+  try {
+    const { recordStudentReadinessSnapshot, clearStudentContextCache } = await import('@/server/services/unifiedStudentContext');
+    clearStudentContextCache(userId);
+    await recordStudentReadinessSnapshot(
+      userId,
+      'resume_created',
+      `Resume saved: ${suggestedFilename || 'Primary Resume'}`
+    );
+  } catch (snapErr) {
+    console.warn('[saveUserResumeData] Non-blocking snapshot error:', snapErr);
+  }
+
   return {
     ...updatedRow,
     resumeData: parsedIncoming,
@@ -5760,6 +6615,1119 @@ export async function endLiveProctoringSession(assessmentId: string, status: 'co
 
   return { success: true, timestamp: now };
 }
+
+// ============================================================================
+// CAREER INTELLIGENCE PERSISTENCE HELPERS
+// ============================================================================
+
+export interface UserCareerGoalRecord {
+  id: string;
+  user_id: string;
+  target_role: string;
+  target_industry?: string | null;
+  experience_level?: string | null;
+  preferred_location?: string | null;
+  target_salary?: string | null;
+  skills_summary?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export async function getUserCareerGoal(userId: string): Promise<UserCareerGoalRecord | null> {
+  if (!userId) return null;
+  const db = getDb();
+  const row = (await db
+    .prepare('SELECT * FROM user_career_goals WHERE user_id = ?')
+    .get(userId)) as UserCareerGoalRecord | undefined;
+  return row || null;
+}
+
+export async function upsertUserCareerGoal(
+  userId: string,
+  data: {
+    targetRole: string;
+    targetIndustry?: string | null;
+    experienceLevel?: string | null;
+    preferredLocation?: string | null;
+    targetSalary?: string | null;
+    skillsSummary?: string[] | null;
+  }
+): Promise<UserCareerGoalRecord> {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const existing = await getUserCareerGoal(userId);
+
+  const skillsSummaryJson = Array.isArray(data.skillsSummary)
+    ? JSON.stringify(data.skillsSummary)
+    : null;
+
+  if (existing) {
+    await db
+      .prepare(`
+        UPDATE user_career_goals
+        SET target_role = ?,
+            target_industry = ?,
+            experience_level = ?,
+            preferred_location = ?,
+            target_salary = ?,
+            skills_summary = COALESCE(?, skills_summary),
+            updated_at = ?
+        WHERE user_id = ?
+      `)
+      .run(
+        data.targetRole.trim(),
+        data.targetIndustry?.trim() || null,
+        data.experienceLevel?.trim() || null,
+        data.preferredLocation?.trim() || null,
+        data.targetSalary?.trim() || null,
+        skillsSummaryJson,
+        now,
+        userId
+      );
+
+    return {
+      ...existing,
+      target_role: data.targetRole.trim(),
+      target_industry: data.targetIndustry?.trim() || null,
+      experience_level: data.experienceLevel?.trim() || null,
+      preferred_location: data.preferredLocation?.trim() || null,
+      target_salary: data.targetSalary?.trim() || null,
+      skills_summary: skillsSummaryJson ?? existing.skills_summary,
+      updated_at: now,
+    };
+  } else {
+    const id = `goal_${crypto.randomUUID()}`;
+    await db
+      .prepare(`
+        INSERT INTO user_career_goals (
+          id, user_id, target_role, target_industry, experience_level,
+          preferred_location, target_salary, skills_summary, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+      .run(
+        id,
+        userId,
+        data.targetRole.trim(),
+        data.targetIndustry?.trim() || null,
+        data.experienceLevel?.trim() || null,
+        data.preferredLocation?.trim() || null,
+        data.targetSalary?.trim() || null,
+        skillsSummaryJson,
+        now,
+        now
+      );
+
+    return {
+      id,
+      user_id: userId,
+      target_role: data.targetRole.trim(),
+      target_industry: data.targetIndustry?.trim() || null,
+      experience_level: data.experienceLevel?.trim() || null,
+      preferred_location: data.preferredLocation?.trim() || null,
+      target_salary: data.targetSalary?.trim() || null,
+      skills_summary: skillsSummaryJson,
+      created_at: now,
+      updated_at: now,
+    };
+  }
+}
+
+// ============================================================================
+// STUDENT CAREER PROFILE PERSISTENCE HELPERS
+// ============================================================================
+
+export interface StudentProject {
+  id?: string;
+  title: string;
+  description?: string;
+  role?: string;
+  techStack: string[];
+  repoUrl?: string;
+  liveUrl?: string;
+  highlights?: string[];
+  bullets?: string[];
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface StudentProfileRecord {
+  id: string;
+  user_id: string;
+  institution: string;
+  degree: string;
+  field_of_study: string;
+  graduation_year: number;
+  graduation_month?: string | null;
+  current_semester?: string | null;
+  cgpa?: string | null;
+  student_type: string;
+  target_role: string;
+  target_work_type: string;
+  preferred_locations?: string | null;
+  projects_data?: string | null;
+  coursework?: string | null;
+  achievements?: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface StudentProfileDTO {
+  id: string;
+  userId: string;
+  institution: string;
+  degree: string;
+  fieldOfStudy: string;
+  graduationYear: number;
+  graduationMonth?: string | null;
+  currentSemester?: string | null;
+  cgpa?: string | null;
+  studentType: 'college_student' | 'recent_graduate' | 'fresher';
+  targetRole: string;
+  targetWorkType: 'internship' | 'full_time' | 'both';
+  preferredLocations: string[];
+  projects: StudentProject[];
+  coursework: string[];
+  achievements: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+function safeParseJsonStringArray(str?: string | null): string[] {
+  if (!str) return [];
+  try {
+    const parsed = JSON.parse(str);
+    return Array.isArray(parsed) ? parsed.map((x) => String(x).trim()).filter(Boolean) : [];
+  } catch {
+    return [];
+  }
+}
+
+function safeParseStudentProjects(str?: string | null): StudentProject[] {
+  if (!str) return [];
+  try {
+    const parsed = JSON.parse(str);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.map((p: any) => ({
+      id: String(p.id || `proj_${Math.random().toString(36).slice(2, 9)}`),
+      title: String(p.title || '').trim(),
+      description: String(p.description || '').trim(),
+      role: p.role ? String(p.role).trim() : undefined,
+      techStack: Array.isArray(p.techStack) ? p.techStack.map((t: any) => String(t).trim()).filter(Boolean) : [],
+      repoUrl: p.repoUrl ? String(p.repoUrl).trim() : undefined,
+      liveUrl: p.liveUrl ? String(p.liveUrl).trim() : undefined,
+      highlights: Array.isArray(p.highlights) ? p.highlights.map((h: any) => String(h).trim()).filter(Boolean) : [],
+      startDate: p.startDate ? String(p.startDate).trim() : undefined,
+      endDate: p.endDate ? String(p.endDate).trim() : undefined,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function getStudentProfile(userId: string): Promise<StudentProfileDTO | null> {
+  if (!userId) return null;
+  const db = getDb();
+  const row = (await db
+    .prepare('SELECT * FROM student_profiles WHERE user_id = ?')
+    .get(userId)) as StudentProfileRecord | undefined;
+
+  if (!row) return null;
+
+  return {
+    id: row.id,
+    userId: row.user_id,
+    institution: row.institution || '',
+    degree: row.degree || '',
+    fieldOfStudy: row.field_of_study || '',
+    graduationYear: Number(row.graduation_year) || new Date().getFullYear(),
+    graduationMonth: row.graduation_month || null,
+    currentSemester: row.current_semester || null,
+    cgpa: row.cgpa || null,
+    studentType: (['college_student', 'recent_graduate', 'fresher'].includes(row.student_type)
+      ? row.student_type
+      : 'college_student') as StudentProfileDTO['studentType'],
+    targetRole: row.target_role || 'Graduate Software Engineer',
+    targetWorkType: (['internship', 'full_time', 'both'].includes(row.target_work_type)
+      ? row.target_work_type
+      : 'both') as StudentProfileDTO['targetWorkType'],
+    preferredLocations: safeParseJsonStringArray(row.preferred_locations),
+    projects: safeParseStudentProjects(row.projects_data),
+    coursework: safeParseJsonStringArray(row.coursework),
+    achievements: safeParseJsonStringArray(row.achievements),
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function upsertStudentProfile(
+  userId: string,
+  data: Partial<Omit<StudentProfileDTO, 'id' | 'userId' | 'createdAt' | 'updatedAt'>>
+): Promise<StudentProfileDTO> {
+  if (!userId) throw new Error('User ID is required to upsert student profile.');
+  const db = getDb();
+  const now = new Date().toISOString();
+  const existing = await getStudentProfile(userId);
+
+  const institution = (data.institution !== undefined ? data.institution : (existing?.institution || '')).trim();
+  const degree = (data.degree !== undefined ? data.degree : (existing?.degree || '')).trim();
+  const fieldOfStudy = (data.fieldOfStudy !== undefined ? data.fieldOfStudy : (existing?.fieldOfStudy || '')).trim();
+  const graduationYear = Number(
+    data.graduationYear !== undefined
+      ? data.graduationYear
+      : (existing?.graduationYear || new Date().getFullYear())
+  );
+  const graduationMonth = (data.graduationMonth !== undefined ? data.graduationMonth : (existing?.graduationMonth || null))?.trim() || null;
+  const currentSemester = (data.currentSemester !== undefined ? data.currentSemester : (existing?.currentSemester || null))?.trim() || null;
+  const cgpa = data.cgpa !== undefined && data.cgpa !== null ? String(data.cgpa).trim() : (existing?.cgpa || null);
+  const studentType = (data.studentType || existing?.studentType || 'college_student') as StudentProfileDTO['studentType'];
+  const targetRole = (data.targetRole || existing?.targetRole || 'Graduate Software Engineer').trim();
+  const targetWorkType = (data.targetWorkType || existing?.targetWorkType || 'both') as StudentProfileDTO['targetWorkType'];
+
+  const preferredLocations = Array.isArray(data.preferredLocations)
+    ? data.preferredLocations
+    : existing?.preferredLocations || [];
+  const projects = Array.isArray(data.projects)
+    ? data.projects
+    : existing?.projects || [];
+  const coursework = Array.isArray(data.coursework)
+    ? data.coursework
+    : existing?.coursework || [];
+  const achievements = Array.isArray(data.achievements)
+    ? data.achievements
+    : existing?.achievements || [];
+
+  const preferredLocationsJson = JSON.stringify(preferredLocations);
+  const projectsJson = JSON.stringify(projects);
+  const courseworkJson = JSON.stringify(coursework);
+  const achievementsJson = JSON.stringify(achievements);
+
+  if (existing) {
+    await db
+      .prepare(`
+        UPDATE student_profiles
+        SET institution = ?,
+            degree = ?,
+            field_of_study = ?,
+            graduation_year = ?,
+            graduation_month = ?,
+            current_semester = ?,
+            cgpa = ?,
+            student_type = ?,
+            target_role = ?,
+            target_work_type = ?,
+            preferred_locations = ?,
+            projects_data = ?,
+            coursework = ?,
+            achievements = ?,
+            updated_at = ?
+        WHERE user_id = ?
+      `)
+      .run(
+        institution,
+        degree,
+        fieldOfStudy,
+        graduationYear,
+        graduationMonth,
+        currentSemester,
+        cgpa,
+        studentType,
+        targetRole,
+        targetWorkType,
+        preferredLocationsJson,
+        projectsJson,
+        courseworkJson,
+        achievementsJson,
+        now,
+        userId
+      );
+  } else {
+    const id = `sp_${crypto.randomUUID()}`;
+    await db
+      .prepare(`
+        INSERT INTO student_profiles (
+          id, user_id, institution, degree, field_of_study,
+          graduation_year, graduation_month, current_semester, cgpa,
+          student_type, target_role, target_work_type, preferred_locations,
+          projects_data, coursework, achievements, created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+      .run(
+        id,
+        userId,
+        institution,
+        degree,
+        fieldOfStudy,
+        graduationYear,
+        graduationMonth,
+        currentSemester,
+        cgpa,
+        studentType,
+        targetRole,
+        targetWorkType,
+        preferredLocationsJson,
+        projectsJson,
+        courseworkJson,
+        achievementsJson,
+        now,
+        now
+      );
+  }
+
+  // Keep user_career_goals in sync so legacy interfaces reflect targetRole & fresher level
+  try {
+    await upsertUserCareerGoal(userId, {
+      targetRole,
+      experienceLevel: 'Fresher / Entry Level',
+      preferredLocation: preferredLocations[0] || null,
+    });
+  } catch {}
+
+  const updated = await getStudentProfile(userId);
+  if (!updated) {
+    throw new Error('Failed to retrieve updated student profile.');
+  }
+  return updated;
+}
+
+export async function getUserActiveRoadmap(userId: string, targetRole?: string) {
+  if (!userId) return null;
+  const db = getDb();
+  let row: any;
+  if (targetRole && targetRole.trim()) {
+    row = await db
+      .prepare('SELECT * FROM user_learning_roadmaps WHERE user_id = ? AND LOWER(target_role) = LOWER(?) ORDER BY updated_at DESC LIMIT 1')
+      .get(userId, targetRole.trim());
+  } else {
+    row = await db
+      .prepare("SELECT * FROM user_learning_roadmaps WHERE user_id = ? AND status = 'active' ORDER BY updated_at DESC LIMIT 1")
+      .get(userId);
+  }
+
+  if (!row) return null;
+  try {
+    return {
+      ...row,
+      roadmap_data: JSON.parse(row.roadmap_data),
+    };
+  } catch {
+    return null;
+  }
+}
+
+export async function saveUserRoadmap(userId: string, targetRole: string, roadmapData: any) {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const id = `rdm_${crypto.randomUUID()}`;
+  const dataString = JSON.stringify(roadmapData);
+
+  // Set any previous active roadmaps for this user to superseded
+  try {
+    await db.prepare("UPDATE user_learning_roadmaps SET status = 'superseded', updated_at = ? WHERE user_id = ? AND status = 'active'").run(now, userId);
+  } catch {}
+
+  await db
+    .prepare(`
+      INSERT INTO user_learning_roadmaps (
+        id, user_id, target_role, status, roadmap_data, created_at, updated_at
+      ) VALUES (?, ?, ?, 'active', ?, ?, ?)
+    `)
+    .run(id, userId, targetRole.trim(), dataString, now, now);
+
+  return {
+    id,
+    user_id: userId,
+    target_role: targetRole.trim(),
+    status: 'active',
+    roadmap_data: roadmapData,
+    created_at: now,
+    updated_at: now,
+  };
+}
+
+export async function updateRoadmapStep(
+  userId: string,
+  roadmapId: string,
+  milestoneIndex: number,
+  stepIndex: number,
+  completed: boolean
+) {
+  const db = getDb();
+  const row = (await db
+    .prepare('SELECT * FROM user_learning_roadmaps WHERE id = ? AND user_id = ?')
+    .get(roadmapId, userId)) as any;
+
+  if (!row) return { success: false, error: 'Roadmap not found.' };
+
+  try {
+    const data = JSON.parse(row.roadmap_data);
+    if (data.milestones && data.milestones[milestoneIndex]?.steps?.[stepIndex]) {
+      data.milestones[milestoneIndex].steps[stepIndex].completed = completed;
+    }
+    const now = new Date().toISOString();
+    await db
+      .prepare('UPDATE user_learning_roadmaps SET roadmap_data = ?, updated_at = ? WHERE id = ?')
+      .run(JSON.stringify(data), now, roadmapId);
+
+    return { success: true, roadmap: { ...row, roadmap_data: data, updated_at: now } };
+  } catch (err: any) {
+    return { success: false, error: err?.message || 'Failed to update step.' };
+  }
+}
+
+export async function createInterviewSession(
+  userId: string,
+  data: {
+    targetRole: string;
+    jobTitle?: string | null;
+    company?: string | null;
+    questions: any[];
+  }
+) {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const id = `int_${crypto.randomUUID()}`;
+
+  await db
+    .prepare(`
+      INSERT INTO user_interview_sessions (
+        id, user_id, target_role, job_title, company, questions_data,
+        answers_data, overall_score, overall_feedback, status, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, NULL, NULL, 'in_progress', ?, ?)
+    `)
+    .run(
+      id,
+      userId,
+      data.targetRole.trim(),
+      data.jobTitle?.trim() || null,
+      data.company?.trim() || null,
+      JSON.stringify(data.questions),
+      JSON.stringify([]),
+      now,
+      now
+    );
+
+  return {
+    id,
+    user_id: userId,
+    target_role: data.targetRole.trim(),
+    job_title: data.jobTitle || null,
+    company: data.company || null,
+    questions: data.questions,
+    answers: [],
+    overall_score: null,
+    overall_feedback: null,
+    status: 'in_progress',
+    created_at: now,
+  };
+}
+
+export async function getUserInterviewSessions(userId: string) {
+  if (!userId) return [];
+  const db = getDb();
+  const rows = (await db
+    .prepare('SELECT * FROM user_interview_sessions WHERE user_id = ? ORDER BY created_at DESC LIMIT 20')
+    .all(userId)) as any[];
+
+  return rows.map((r) => {
+    let questions = [];
+    let answers = [];
+    try { questions = JSON.parse(r.questions_data); } catch {}
+    try { answers = JSON.parse(r.answers_data || '[]'); } catch {}
+    return {
+      ...r,
+      questions,
+      answers,
+    };
+  });
+}
+
+export async function getInterviewSession(userId: string, sessionId: string) {
+  const db = getDb();
+  const row = (await db
+    .prepare('SELECT * FROM user_interview_sessions WHERE id = ? AND user_id = ?')
+    .get(sessionId, userId)) as any;
+
+  if (!row) return null;
+  let questions = [];
+  let answers = [];
+  try { questions = JSON.parse(row.questions_data); } catch {}
+  try { answers = JSON.parse(row.answers_data || '[]'); } catch {}
+
+  return {
+    ...row,
+    questions,
+    answers,
+  };
+}
+
+export async function saveInterviewSessionAnswer(
+  userId: string,
+  sessionId: string,
+  questionIndex: number,
+  answerData: {
+    answer: string;
+    score: number;
+    feedback: string;
+    strengths?: string[];
+    improvements?: string[];
+    modelAnswer?: string;
+  }
+) {
+  const db = getDb();
+  const session = await getInterviewSession(userId, sessionId);
+  if (!session) return { success: false, error: 'Session not found.' };
+
+  const answers = Array.isArray(session.answers) ? [...session.answers] : [];
+  answers[questionIndex] = {
+    ...answerData,
+    submittedAt: new Date().toISOString(),
+  };
+
+  const now = new Date().toISOString();
+  await db
+    .prepare('UPDATE user_interview_sessions SET answers_data = ?, updated_at = ? WHERE id = ? AND user_id = ?')
+    .run(JSON.stringify(answers), now, sessionId, userId);
+
+  return { success: true, answers };
+}
+
+export async function completeInterviewSession(
+  userId: string,
+  sessionId: string,
+  overallScore: number,
+  overallFeedback: string
+) {
+  const db = getDb();
+  const now = new Date().toISOString();
+
+  await db
+    .prepare(`
+      UPDATE user_interview_sessions
+      SET overall_score = ?,
+          overall_feedback = ?,
+          status = 'completed',
+          updated_at = ?
+      WHERE id = ? AND user_id = ?
+    `)
+    .run(Math.round(overallScore), overallFeedback, now, sessionId, userId);
+
+  try {
+    const { recordStudentReadinessSnapshot } = await import('@/server/services/unifiedStudentContext');
+    await recordStudentReadinessSnapshot(
+      userId,
+      'interview_completed',
+      `Mock Interview completed: Score ${Math.round(overallScore)}/100`
+    );
+  } catch (snapErr) {
+    console.warn('[completeInterviewSession] Non-blocking snapshot error:', snapErr);
+  }
+
+  return { success: true, timestamp: now };
+}
+
+// ============================================================================
+// GUIDED PROJECTS & AI PROJECT MENTOR
+// ============================================================================
+
+export interface GuidedProjectDTO {
+  id: string;
+  userId: string;
+  title: string;
+  difficulty: 'Beginner' | 'Intermediate' | 'Advanced';
+  targetRole: string;
+  techStack: string[];
+  problemStatement: string;
+  realWorldUseCase: string;
+  architectureOverview: string;
+  databaseDesign: string;
+  estimatedComplexity: string;
+  resumeValue: string;
+  specification: any;
+  milestones: any[];
+  currentMilestone: number;
+  progressPercent: number;
+  status: 'in_progress' | 'completed' | 'paused';
+  githubUrl?: string | null;
+  liveUrl?: string | null;
+  resumeBullets: string[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+function mapGuidedProjectRow(row: any): GuidedProjectDTO {
+  let techStack: string[] = [];
+  let specification: any = null;
+  let milestones: any[] = [];
+  let resumeBullets: string[] = [];
+
+  try { techStack = JSON.parse(row.tech_stack || '[]'); } catch {}
+  try { specification = JSON.parse(row.specification_json || '{}'); } catch {}
+  try { milestones = JSON.parse(row.milestones_json || '[]'); } catch {}
+  try { resumeBullets = JSON.parse(row.resume_bullets_json || '[]'); } catch {}
+
+  return {
+    id: row.id,
+    userId: row.user_id,
+    title: row.title,
+    difficulty: (row.difficulty as any) || 'Intermediate',
+    targetRole: row.target_role || 'Graduate Software Engineer',
+    techStack,
+    problemStatement: row.problem_statement || '',
+    realWorldUseCase: row.real_world_use_case || '',
+    architectureOverview: row.architecture_overview || '',
+    databaseDesign: row.database_design || '',
+    estimatedComplexity: row.estimated_complexity || '',
+    resumeValue: row.resume_value || '',
+    specification,
+    milestones,
+    currentMilestone: Number(row.current_milestone) || 1,
+    progressPercent: Number(row.progress_percent) || 0,
+    status: (row.status as any) || 'in_progress',
+    githubUrl: row.github_url || null,
+    liveUrl: row.live_url || null,
+    resumeBullets,
+    createdAt: row.created_at,
+    updatedAt: row.updated_at,
+  };
+}
+
+export async function createGuidedProject(
+  userId: string,
+  data: Partial<GuidedProjectDTO>
+): Promise<GuidedProjectDTO> {
+  const db = getDb();
+  const id = `gproj_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+  const now = new Date().toISOString();
+
+  const title = (data.title || 'Portfolio Software Project').trim();
+  const difficulty = data.difficulty || 'Intermediate';
+  const targetRole = (data.targetRole || 'Graduate Software Engineer').trim();
+  const techStack = Array.isArray(data.techStack) ? data.techStack : [];
+  const problemStatement = data.problemStatement || '';
+  const realWorldUseCase = data.realWorldUseCase || '';
+  const architectureOverview = data.architectureOverview || '';
+  const databaseDesign = data.databaseDesign || '';
+  const estimatedComplexity = data.estimatedComplexity || '2-3 weeks';
+  const resumeValue = data.resumeValue || '';
+  const specification = data.specification || {};
+  const milestones = Array.isArray(data.milestones) ? data.milestones : [];
+  const currentMilestone = Number(data.currentMilestone) || 1;
+  const progressPercent = Number(data.progressPercent) || 0;
+  const status = data.status || 'in_progress';
+  const githubUrl = data.githubUrl || null;
+  const liveUrl = data.liveUrl || null;
+  const resumeBullets = Array.isArray(data.resumeBullets) ? data.resumeBullets : [];
+
+  await db
+    .prepare(`
+      INSERT INTO guided_projects (
+        id, user_id, title, difficulty, target_role, tech_stack,
+        problem_statement, real_world_use_case, architecture_overview, database_design,
+        estimated_complexity, resume_value, specification_json, milestones_json,
+        current_milestone, progress_percent, status, github_url, live_url,
+        resume_bullets_json, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+    .run(
+      id,
+      userId,
+      title,
+      difficulty,
+      targetRole,
+      JSON.stringify(techStack),
+      problemStatement,
+      realWorldUseCase,
+      architectureOverview,
+      databaseDesign,
+      estimatedComplexity,
+      resumeValue,
+      JSON.stringify(specification),
+      JSON.stringify(milestones),
+      currentMilestone,
+      progressPercent,
+      status,
+      githubUrl,
+      liveUrl,
+      JSON.stringify(resumeBullets),
+      now,
+      now
+    );
+
+  const created = await getGuidedProjectById(id, userId);
+  if (!created) throw new Error('Failed to create guided project');
+
+  try {
+    const { recordStudentReadinessSnapshot, clearStudentContextCache } = await import('@/server/services/unifiedStudentContext');
+    clearStudentContextCache(userId);
+    await recordStudentReadinessSnapshot(
+      userId,
+      'project_started',
+      `Started guided capstone project: ${created.title}`
+    );
+  } catch (snapErr) {
+    console.warn('[createGuidedProject] Non-blocking snapshot error:', snapErr);
+  }
+
+  return created;
+}
+
+export async function getGuidedProjectById(
+  id: string,
+  userId: string
+): Promise<GuidedProjectDTO | null> {
+  if (!id || !userId) return null;
+  const db = getDb();
+  const row = (await db
+    .prepare('SELECT * FROM guided_projects WHERE id = ? AND user_id = ?')
+    .get(id, userId)) as any;
+  if (!row) return null;
+  return mapGuidedProjectRow(row);
+}
+
+export async function getUserGuidedProjects(
+  userId: string
+): Promise<GuidedProjectDTO[]> {
+  if (!userId) return [];
+  const db = getDb();
+  const rows = (await db
+    .prepare('SELECT * FROM guided_projects WHERE user_id = ? ORDER BY updated_at DESC')
+    .all(userId)) as any[];
+  return (rows || []).map(mapGuidedProjectRow);
+}
+
+export async function updateGuidedProject(
+  id: string,
+  userId: string,
+  updates: Partial<GuidedProjectDTO>
+): Promise<GuidedProjectDTO | null> {
+  if (!id || !userId) return null;
+  const db = getDb();
+  const existing = await getGuidedProjectById(id, userId);
+  if (!existing) return null;
+
+  const now = new Date().toISOString();
+  const title = updates.title !== undefined ? updates.title : existing.title;
+  const difficulty = updates.difficulty !== undefined ? updates.difficulty : existing.difficulty;
+  const targetRole = updates.targetRole !== undefined ? updates.targetRole : existing.targetRole;
+  const techStack = updates.techStack !== undefined ? updates.techStack : existing.techStack;
+  const problemStatement = updates.problemStatement !== undefined ? updates.problemStatement : existing.problemStatement;
+  const realWorldUseCase = updates.realWorldUseCase !== undefined ? updates.realWorldUseCase : existing.realWorldUseCase;
+  const architectureOverview = updates.architectureOverview !== undefined ? updates.architectureOverview : existing.architectureOverview;
+  const databaseDesign = updates.databaseDesign !== undefined ? updates.databaseDesign : existing.databaseDesign;
+  const estimatedComplexity = updates.estimatedComplexity !== undefined ? updates.estimatedComplexity : existing.estimatedComplexity;
+  const resumeValue = updates.resumeValue !== undefined ? updates.resumeValue : existing.resumeValue;
+  const specification = updates.specification !== undefined ? updates.specification : existing.specification;
+  const milestones = updates.milestones !== undefined ? updates.milestones : existing.milestones;
+  const currentMilestone = updates.currentMilestone !== undefined ? updates.currentMilestone : existing.currentMilestone;
+  const progressPercent = updates.progressPercent !== undefined ? updates.progressPercent : existing.progressPercent;
+  const status = updates.status !== undefined ? updates.status : existing.status;
+  const githubUrl = updates.githubUrl !== undefined ? updates.githubUrl : existing.githubUrl;
+  const liveUrl = updates.liveUrl !== undefined ? updates.liveUrl : existing.liveUrl;
+  const resumeBullets = updates.resumeBullets !== undefined ? updates.resumeBullets : existing.resumeBullets;
+
+  await db
+    .prepare(`
+      UPDATE guided_projects
+      SET title = ?,
+          difficulty = ?,
+          target_role = ?,
+          tech_stack = ?,
+          problem_statement = ?,
+          real_world_use_case = ?,
+          architecture_overview = ?,
+          database_design = ?,
+          estimated_complexity = ?,
+          resume_value = ?,
+          specification_json = ?,
+          milestones_json = ?,
+          current_milestone = ?,
+          progress_percent = ?,
+          status = ?,
+          github_url = ?,
+          live_url = ?,
+          resume_bullets_json = ?,
+          updated_at = ?
+      WHERE id = ? AND user_id = ?
+    `)
+    .run(
+      title,
+      difficulty,
+      targetRole,
+      JSON.stringify(techStack),
+      problemStatement,
+      realWorldUseCase,
+      architectureOverview,
+      databaseDesign,
+      estimatedComplexity,
+      resumeValue,
+      JSON.stringify(specification),
+      JSON.stringify(milestones),
+      currentMilestone,
+      progressPercent,
+      status,
+      githubUrl,
+      liveUrl,
+      JSON.stringify(resumeBullets),
+      now,
+      id,
+      userId
+    );
+
+  if (
+    updates.currentMilestone !== undefined ||
+    updates.progressPercent !== undefined ||
+    updates.status === 'completed'
+  ) {
+    try {
+      const { recordStudentReadinessSnapshot } = await import('@/server/services/unifiedStudentContext');
+      await recordStudentReadinessSnapshot(
+        userId,
+        updates.status === 'completed' ? 'project_completed' : 'project_milestone_completed',
+        `Project: ${title} (${updates.status === 'completed' ? 'Completed' : `Milestone ${currentMilestone}, ${progressPercent}%`})`
+      );
+    } catch (snapErr) {
+      console.warn('[updateGuidedProject] Non-blocking snapshot error:', snapErr);
+    }
+  }
+
+  return getGuidedProjectById(id, userId);
+}
+
+export async function deleteGuidedProject(
+  id: string,
+  userId: string
+): Promise<boolean> {
+  if (!id || !userId) return false;
+  const db = getDb();
+  const res = (await db
+    .prepare('DELETE FROM guided_projects WHERE id = ? AND user_id = ?')
+    .run(id, userId)) as any;
+  return Boolean(res && Number(res.changes) > 0);
+}
+
+export async function importGuidedProjectToProfileAndResume(
+  userId: string,
+  projectId: string
+): Promise<{ success: boolean; studentProfileUpdated: boolean; resumeUpdated: boolean; projectTitle: string }> {
+  const project = await getGuidedProjectById(projectId, userId);
+  if (!project) throw new Error('Guided project not found or unauthorized.');
+
+  const db = getDb();
+  let studentProfileUpdated = false;
+  let resumeUpdated = false;
+
+  // 1. Update Student Profile Portfolio
+  try {
+    const sp = await getStudentProfile(userId);
+    const bullets = project.resumeBullets && project.resumeBullets.length > 0
+      ? project.resumeBullets
+      : [project.problemStatement || project.title];
+
+    const studentProj: StudentProject = {
+      id: `proj_${project.id}`,
+      title: project.title,
+      description: project.problemStatement || project.realWorldUseCase || project.title,
+      role: project.targetRole,
+      techStack: project.techStack,
+      repoUrl: project.githubUrl || undefined,
+      liveUrl: project.liveUrl || undefined,
+      highlights: bullets,
+    };
+
+    const existingProjects = sp?.projects ? [...sp.projects] : [];
+    const filtered = existingProjects.filter((p) => p.title.toLowerCase() !== project.title.toLowerCase());
+    const updatedProjects = [studentProj, ...filtered];
+
+    await upsertStudentProfile(userId, {
+      projects: updatedProjects,
+    });
+    studentProfileUpdated = true;
+  } catch (err) {
+    console.warn('[importGuidedProject] Student profile update error:', err);
+  }
+
+  // 2. Update Latest Resume (for Resume Builder & A4 PDF)
+  try {
+    const resumeRow = (await db
+      .prepare('SELECT id, resume_data FROM resumes WHERE user_id = ? ORDER BY created_at DESC LIMIT 1')
+      .get(userId)) as any;
+
+    if (resumeRow?.resume_data) {
+      const parsed = JSON.parse(resumeRow.resume_data);
+      const existingResProjects = Array.isArray(parsed.projects) ? parsed.projects : [];
+      const newProjItem = {
+        id: `res_proj_${project.id}`,
+        title: project.title,
+        description: project.problemStatement || project.title,
+        technologies: project.techStack,
+        link: project.liveUrl || project.githubUrl || undefined,
+        bullets: project.resumeBullets && project.resumeBullets.length > 0 ? project.resumeBullets : undefined,
+      };
+
+      const filteredRes = existingResProjects.filter((p: any) => (p.title || '').toLowerCase() !== project.title.toLowerCase());
+      parsed.projects = [newProjItem, ...filteredRes];
+
+      await db
+        .prepare('UPDATE resumes SET resume_data = ? WHERE id = ?')
+        .run(JSON.stringify(parsed), resumeRow.id);
+      resumeUpdated = true;
+    }
+  } catch (err) {
+    console.warn('[importGuidedProject] Resume data update error:', err);
+  }
+
+  return {
+    success: true,
+    studentProfileUpdated,
+    resumeUpdated,
+    projectTitle: project.title,
+  };
+}
+
+// ==========================================
+// 28. CAREER READINESS HISTORY (SNAPSHOTS)
+// ==========================================
+
+export interface ReadinessSnapshotRecord {
+  id: string;
+  userId: string;
+  overallScore: number;
+  overallLevel: string;
+  technicalScore: number;
+  projectScore: number;
+  resumeScore: number;
+  interviewScore: number;
+  triggerActivity: string;
+  activityDetail: string | null;
+  createdAt: string;
+}
+
+export interface ReadinessSnapshotInput {
+  overallScore: number;
+  overallLevel: string;
+  technicalScore: number;
+  projectScore: number;
+  resumeScore: number;
+  interviewScore: number;
+  triggerActivity: string;
+  activityDetail?: string | null;
+}
+
+export async function recordReadinessSnapshot(
+  userId: string,
+  data: ReadinessSnapshotInput
+): Promise<ReadinessSnapshotRecord | null> {
+  if (!userId) return null;
+  const db = getDb();
+
+  try {
+    // Deduplication check: check if the user already has a snapshot within the last 2 minutes with identical score and trigger
+    const recent = (await db
+      .prepare(
+        'SELECT * FROM career_readiness_history WHERE user_id = ? ORDER BY created_at DESC LIMIT 1'
+      )
+      .get(userId)) as any;
+
+    if (recent) {
+      const recentTime = new Date(recent.created_at).getTime();
+      const elapsedMinutes = (Date.now() - recentTime) / 60000;
+      if (
+        elapsedMinutes < 2 &&
+        recent.overall_score === Math.round(data.overallScore) &&
+        recent.trigger_activity === data.triggerActivity
+      ) {
+        return {
+          id: recent.id,
+          userId: recent.user_id,
+          overallScore: recent.overall_score,
+          overallLevel: recent.overall_level,
+          technicalScore: recent.technical_score,
+          projectScore: recent.project_score,
+          resumeScore: recent.resume_score,
+          interviewScore: recent.interview_score,
+          triggerActivity: recent.trigger_activity,
+          activityDetail: recent.activity_detail,
+          createdAt: recent.created_at,
+        };
+      }
+    }
+
+    const id = `crh_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const now = new Date().toISOString();
+
+    await db
+      .prepare(`
+        INSERT INTO career_readiness_history (
+          id, user_id, overall_score, overall_level, technical_score,
+          project_score, resume_score, interview_score, trigger_activity,
+          activity_detail, created_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `)
+      .run(
+        id,
+        userId,
+        Math.round(data.overallScore),
+        data.overallLevel,
+        Math.round(data.technicalScore),
+        Math.round(data.projectScore),
+        Math.round(data.resumeScore),
+        Math.round(data.interviewScore),
+        data.triggerActivity,
+        data.activityDetail || null,
+        now
+      );
+
+    return {
+      id,
+      userId,
+      overallScore: Math.round(data.overallScore),
+      overallLevel: data.overallLevel,
+      technicalScore: Math.round(data.technicalScore),
+      projectScore: Math.round(data.projectScore),
+      resumeScore: Math.round(data.resumeScore),
+      interviewScore: Math.round(data.interviewScore),
+      triggerActivity: data.triggerActivity,
+      activityDetail: data.activityDetail || null,
+      createdAt: now,
+    };
+  } catch (err) {
+    console.warn('[recordReadinessSnapshot] Error inserting snapshot:', err);
+    return null;
+  }
+}
+
+export async function getUserReadinessHistory(
+  userId: string,
+  limit = 15
+): Promise<ReadinessSnapshotRecord[]> {
+  if (!userId) return [];
+  const db = getDb();
+  try {
+    const rows = (await db
+      .prepare(
+        'SELECT * FROM career_readiness_history WHERE user_id = ? ORDER BY created_at DESC LIMIT ?'
+      )
+      .all(userId, limit)) as any[];
+
+    return (rows || []).map((r) => ({
+      id: r.id,
+      userId: r.user_id,
+      overallScore: r.overall_score,
+      overallLevel: r.overall_level,
+      technicalScore: r.technical_score,
+      projectScore: r.project_score,
+      resumeScore: r.resume_score,
+      interviewScore: r.interview_score,
+      triggerActivity: r.trigger_activity,
+      activityDetail: r.activity_detail || null,
+      createdAt: r.created_at,
+    }));
+  } catch (err) {
+    console.warn('[getUserReadinessHistory] Error querying history:', err);
+    return [];
+  }
+}
+
 
 
 

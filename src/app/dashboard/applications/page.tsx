@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect, Suspense } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import {
   Send,
@@ -20,6 +21,7 @@ import {
   X,
   FileText,
   Bookmark,
+  Sparkles,
 } from 'lucide-react';
 
 interface JobApplication {
@@ -261,7 +263,7 @@ function ApplicationsContent() {
   return (
     <div className="space-y-6 animate-fade-in text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[var(--border-color)] gap-4">
+      <div className="bento-card p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
             Job Applications
@@ -270,26 +272,35 @@ function ApplicationsContent() {
             Track, update, and manage every stage of your job hunt ({applications.length} total records).
           </p>
         </div>
-        <button
-          onClick={openCreateModal}
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-90 transition-all shadow-sm cursor-pointer"
-        >
-          <Plus className="w-4 h-4" />
-          <span>Add Application</span>
-        </button>
+        <div className="flex items-center gap-2 shrink-0">
+          <Link
+            href="/apply-assistant"
+            className="px-3.5 py-1.5 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-white transition-all text-xs font-semibold inline-flex items-center gap-1.5"
+          >
+            <Sparkles className="w-4 h-4" />
+            <span>AI Apply Studio</span>
+          </Link>
+          <button
+            onClick={openCreateModal}
+            className="btn-primary btn-sm inline-flex items-center gap-2 text-xs font-semibold shadow-sm cursor-pointer shrink-0"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Add Application</span>
+          </button>
+        </div>
       </div>
 
       {/* Filter & Search Bar */}
       <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-[var(--bg-secondary)]/80 p-3.5 rounded-2xl border border-[var(--border-color)]">
         {/* Search */}
         <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
           <input
             type="text"
             placeholder="Search by job title, company, or city..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-9 pr-3 py-1.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 focus:outline-none focus:border-[var(--accent)]"
+            className="w-full pl-10 pr-3 py-2 rounded-full bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 focus:outline-none focus:border-[var(--accent)]"
           />
         </div>
 
@@ -305,7 +316,7 @@ function ApplicationsContent() {
               <button
                 key={st}
                 onClick={() => setFilterStatus(st)}
-                className={`px-3 py-1 rounded-xl text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                   filterStatus === st
                     ? 'bg-[var(--accent)] text-white shadow-sm'
                     : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)]'
@@ -355,7 +366,7 @@ function ApplicationsContent() {
           {filteredApplications.map((app) => (
             <div
               key={app.id}
-              className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 hover:bg-[var(--bg-secondary)] p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-200 hover:border-[var(--accent)]/30"
+              className="bento-card p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-200"
             >
               <div className="min-w-0 space-y-1.5 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
@@ -440,6 +451,24 @@ function ApplicationsContent() {
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 )}
+
+                <Link
+                  href={`/apply-assistant?id=${app.id}`}
+                  className="px-2.5 py-1.5 rounded-xl border border-[var(--accent)]/40 bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-white transition-all cursor-pointer inline-flex items-center gap-1.5 text-xs font-semibold"
+                  title="Open AI Job Application Assistant Studio"
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">AI Assistant</span>
+                </Link>
+
+                <Link
+                  href={`/interview-prep?role=${encodeURIComponent(app.job_title)}&company=${encodeURIComponent(app.company)}`}
+                  className="px-2.5 py-1.5 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20 transition-all cursor-pointer inline-flex items-center gap-1.5 text-xs font-semibold"
+                  title={`Practice AI Mock Interview for ${app.job_title} at ${app.company}`}
+                >
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Prep Interview</span>
+                </Link>
 
                 <button
                   onClick={() => openEditModal(app)}
@@ -608,14 +637,14 @@ function ApplicationsContent() {
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 rounded-xl border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
+                  className="btn-secondary btn-sm text-xs cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="px-5 py-2 rounded-xl bg-[var(--accent)] text-white font-semibold hover:opacity-90 disabled:opacity-50 transition-all cursor-pointer flex items-center gap-1.5"
+                  className="btn-primary btn-sm text-xs font-semibold shadow-sm cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
                 >
                   {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                   <span>{editingApp ? 'Save Changes' : 'Create Application'}</span>

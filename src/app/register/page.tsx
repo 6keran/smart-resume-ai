@@ -4,7 +4,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
-  Sparkles,
+  FileText,
   Eye,
   EyeOff,
   Lock,
@@ -17,7 +17,6 @@ import {
   Wand2,
   BadgeCheck,
   Briefcase,
-  TrendingUp,
   ShieldCheck,
 } from 'lucide-react';
 import { useUserProfile } from '@/components/user/UserContext';
@@ -28,32 +27,26 @@ const PLATFORM_HIGHLIGHTS = [
   {
     step: '01',
     title: 'ANALYZE',
-    desc: 'Instant ATS parsing & semantic keyword benchmarking',
+    desc: 'Review resume structure and keywords',
     icon: FileSearch,
   },
   {
     step: '02',
     title: 'IMPROVE',
-    desc: 'Action-driven bullet rewrites & impact metrics',
+    desc: 'Refine resume bullet wording',
     icon: Wand2,
   },
   {
     step: '03',
     title: 'VERIFY',
-    desc: 'Timed skill evaluations & verifiable certificates',
+    desc: 'Take a technical assessment',
     icon: BadgeCheck,
   },
   {
     step: '04',
     title: 'MATCH',
-    desc: 'Live vacancies aligned to your verified skillset',
+    desc: 'Search openings and review matches',
     icon: Briefcase,
-  },
-  {
-    step: '05',
-    title: 'GROW',
-    desc: 'Structured interview prep & learning roadmaps',
-    icon: TrendingUp,
   },
 ];
 
@@ -180,7 +173,7 @@ function RegisterForm() {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="lg:col-span-7 flex flex-col justify-between space-y-8"
+        className="hidden lg:flex lg:col-span-7 flex-col justify-between space-y-8"
       >
         {/* Brand Header */}
         <div className="space-y-4">
@@ -188,33 +181,29 @@ function RegisterForm() {
             href="/"
             className="inline-flex items-center gap-3 group focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] rounded-xl"
           >
-            <div className="w-11 h-11 rounded-xl bg-[var(--accent)] flex items-center justify-center text-white shadow-[0_4px_16px_rgba(79,143,247,0.35)] group-hover:scale-105 transition-transform duration-200">
-              <Sparkles className="w-5 h-5" />
+            <div className="w-11 h-11 rounded-xl bg-[var(--accent)] flex items-center justify-center text-white shadow-sm group-hover:scale-105 transition-transform duration-200">
+              <FileText className="w-5 h-5" />
             </div>
             <div className="flex flex-col leading-tight">
               <span className="font-extrabold tracking-tight text-base sm:text-lg text-[var(--text-primary)]">
                 SMART RESUME
               </span>
               <span className="text-[10px] tracking-widest font-bold text-[var(--accent)] uppercase">
-                CAREER AI
+                CAREER PLATFORM
               </span>
             </div>
           </Link>
 
           <div className="pt-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-xl text-xs font-semibold bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-secondary)] mb-3 shadow-[var(--shadow-glass)] backdrop-blur-md">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-semibold bg-[var(--accent-subtle)] border border-[var(--border-color)] text-[var(--text-secondary)] mb-3 shadow-xs">
               <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
-              <span>CAREER INTELLIGENCE PLATFORM</span>
+              <span>CAREER WORKSPACE PLATFORM</span>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[var(--text-primary)] leading-[1.15]">
-              Start building your{' '}
-              <span className="text-[var(--accent)]">
-                smarter career.
-              </span>
+              Structured Career Workspace & Verification Platform.
             </h1>
             <p className="text-sm sm:text-base text-[var(--text-secondary)] mt-3 leading-relaxed max-w-xl">
-              Create your account to unlock automated ATS resume optimization, verified skill
-              credentials, and tailored job recommendations.
+              Save your resumes, analysis results, and application history in one account.
             </p>
           </div>
         </div>
@@ -255,23 +244,6 @@ function RegisterForm() {
           </div>
         </div>
 
-        {/* Bottom Feature Pill Bar */}
-        <div className="hidden sm:flex items-center gap-3 pt-2 text-[11px] font-medium text-[var(--text-secondary)]">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-[0_0_6px_rgba(16,185,129,0.5)]" />
-            100% Free Candidate Account
-          </span>
-          <span className="opacity-40">•</span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_6px_rgba(79,143,247,0.5)]" />
-            Private & Encrypted Data
-          </span>
-          <span className="opacity-40">•</span>
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-[var(--glass-bg)] border border-[var(--glass-border)] backdrop-blur-xs">
-            <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-            Direct Dashboard Access
-          </span>
-        </div>
       </motion.div>
 
       {/* RIGHT COLUMN: Elevated Glass Register Card (~45%) */}
@@ -281,21 +253,18 @@ function RegisterForm() {
         transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         className="lg:col-span-5 w-full max-w-md mx-auto"
       >
-        <div className="rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg-elevated)] backdrop-blur-2xl p-7 sm:p-9 shadow-[var(--shadow-glass)] relative overflow-hidden transition-all duration-300">
-          {/* Top highlight gradient edge */}
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent" />
-
+        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-7 sm:p-9 shadow-xl relative overflow-hidden transition-all duration-300">
           {/* Mobile brand header */}
-          <div className="lg:hidden flex items-center justify-center gap-2.5 mb-6 pb-4 border-b border-[var(--glass-border)]">
+          <div className="lg:hidden flex items-center justify-center gap-2.5 mb-6 pb-4 border-b border-[var(--border-color)]">
             <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-white shadow-sm">
-              <Sparkles className="w-4 h-4" />
+              <FileText className="w-4 h-4" />
             </div>
             <div className="flex flex-col text-left leading-tight">
               <span className="font-extrabold text-xs tracking-tight text-[var(--text-primary)]">
                 SMART RESUME
               </span>
               <span className="text-[9px] font-bold text-[var(--accent)] tracking-widest uppercase">
-                CAREER AI
+                CAREER PLATFORM
               </span>
             </div>
           </div>
@@ -482,8 +451,9 @@ function RegisterForm() {
             {/* Submit Button */}
             <button
               type="submit"
+              data-magnetic="true"
               disabled={isLoading}
-              className="w-full mt-2 h-[44px] px-4 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-semibold text-sm shadow-[0_4px_16px_rgba(79,143,247,0.3)] hover:shadow-[0_6px_20px_rgba(79,143,247,0.4)] transition-all duration-200 flex items-center justify-center gap-2 active:scale-[0.99] disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+              className="btn-primary w-full mt-2 h-[44px] px-4 text-sm font-semibold shadow-md flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50 hover:shadow-lg transition-all"
             >
               {isLoading ? (
                 <>
@@ -512,7 +482,7 @@ function RegisterForm() {
           {/* Sign In Link */}
           <Link
             href={`/login${safeFrom !== '/dashboard' ? `?from=${encodeURIComponent(safeFrom)}` : ''}`}
-            className="w-full py-2.5 px-4 rounded-xl border border-[var(--glass-border)] hover:border-[var(--accent)] text-[var(--text-primary)] font-medium text-sm transition-all flex items-center justify-center gap-2 bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] shadow-xs cursor-pointer"
+            className="btn-secondary w-full py-2.5 px-4 text-sm font-medium flex items-center justify-center gap-2 cursor-pointer"
           >
             <span>Sign in →</span>
           </Link>

@@ -5,25 +5,21 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import {
   LayoutDashboard,
+  FileEdit,
   FileText,
-  FileCheck2,
-  Wand2,
   Briefcase,
-  Send,
-  BadgeCheck,
   Award,
-  BookOpen,
+  Send,
   User,
-  LogOut,
+  Settings,
   ChevronLeft,
   ChevronRight,
-  ExternalLink,
-  Compass,
-  FileEdit,
-  FileSearch,
-  Bookmark,
-  CheckCircle2,
+  LogOut,
   BarChart3,
+  Wand2,
+  FileSearch,
+  Sparkles,
+  Code2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserProfile } from '@/components/user/UserContext';
@@ -42,52 +38,45 @@ export function UserDashboardSidebar({ user }: UserDashboardSidebarProps) {
   const [collapsed, setCollapsed] = useState(false);
   const { logout } = useUserProfile();
 
-  const primaryNavItems = [
-    { label: 'Dashboard', href: '/dashboard', icon: LayoutDashboard },
-    { label: 'ATS Resume Score', href: '/ats-score', icon: BarChart3 },
+  const primaryNavItems: Array<{ label: string; href: string; icon: any; badge?: string }> = [
+    { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
     { label: 'Resume Builder', href: '/builder', icon: FileEdit },
-    { label: 'Resume Analyzer', href: '/analyzer', icon: FileSearch },
-    { label: 'AI Resume Improver', href: '/improver', icon: Wand2 },
-    { label: 'Job Finder', href: '/jobs', icon: Briefcase },
-  ];
-
-  const trackingNavItems = [
+    { label: 'Project Mentor', href: '/projects', icon: Code2, badge: 'AI' },
+    { label: 'My Resumes', href: '/dashboard/resumes', icon: FileText },
+    { label: 'Job Search', href: '/jobs', icon: Briefcase },
+    { label: 'Skill Assessment', href: '/skills', icon: Award },
+    { label: 'Apply Assistant', href: '/apply-assistant', icon: Sparkles, badge: 'AI' },
     { label: 'Application Tracker', href: '/dashboard/applications', icon: Send },
-    { label: 'Saved Jobs', href: '/dashboard/applications?status=Saved', icon: Bookmark },
-    { label: 'Applied Jobs', href: '/dashboard/applications?status=Applied', icon: CheckCircle2 },
+    { label: 'Profile & Settings', href: '/dashboard/profile', icon: User },
   ];
 
-  const libraryNavItems: { label: string; href: string; icon: any; badge?: string }[] = [
-    { label: 'Resume Library', href: '/dashboard/resumes', icon: FileText },
-    { label: 'Verified Skills', href: '/dashboard/skills', icon: BadgeCheck },
-    { label: 'Career Guidance', href: '/guidance', icon: Compass, badge: 'Coming Soon' },
-    { label: 'Profile & Settings', href: '/dashboard/profile', icon: User },
+  const aiToolItems: Array<{ label: string; href: string; icon: any; badge?: string }> = [
+    { label: 'ATS Score', href: '/ats-score', icon: BarChart3 },
+    { label: 'AI Phrasing Improver', href: '/improver', icon: Wand2 },
+    { label: 'Resume Analyzer', href: '/analyzer', icon: FileSearch },
   ];
 
   return (
     <aside
       data-no-print="true"
       className={cn(
-        'hidden md:flex flex-col glass-sidebar transition-[width] duration-200 cubic-bezier(0.16, 1, 0.3, 1) relative z-30 shrink-0 h-screen sticky top-0 no-print select-none',
+        'hidden md:flex flex-col bg-[var(--bg-secondary)] border-r border-[var(--border-color)] transition-[width] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] relative z-30 shrink-0 h-screen sticky top-0 no-print select-none',
         collapsed ? 'w-20' : 'w-64'
       )}
     >
       {/* Brand Header */}
-      <div className="h-16 flex items-center justify-between px-4 border-b border-[var(--glass-border)] shrink-0">
-        <Link href="/dashboard" className="flex items-center overflow-hidden min-w-0">
-          {!collapsed ? (
+      <div className="h-16 flex items-center justify-between px-4 border-b border-[var(--border-color)] shrink-0">
+        <Link href="/dashboard" className="flex items-center gap-3 overflow-hidden min-w-0">
+          <div className="w-8 h-8 rounded-lg bg-[var(--accent)] text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          {!collapsed && (
             <div className="flex flex-col min-w-0">
-              <span className="font-bold text-[16px] tracking-tight text-[var(--text-primary)] leading-tight whitespace-nowrap">
+              <span className="font-bold text-sm tracking-tight text-[var(--text-primary)] leading-tight whitespace-nowrap">
                 Smart Resume
               </span>
-              <span className="text-[11px] text-[var(--accent)] font-semibold tracking-wide uppercase whitespace-nowrap opacity-85">
-                Career Dashboard
-              </span>
-            </div>
-          ) : (
-            <div className="w-8 flex items-center justify-center">
-              <span className="font-bold text-[17px] text-[var(--accent)] tracking-tight">
-                SR
+              <span className="text-[10px] text-[var(--accent)] font-mono font-semibold tracking-wider uppercase whitespace-nowrap">
+                Career AI
               </span>
             </div>
           )}
@@ -96,10 +85,10 @@ export function UserDashboardSidebar({ user }: UserDashboardSidebarProps) {
 
       {/* Navigation Links */}
       <div className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
-        {/* Core Career Workspace */}
-        <div className="space-y-1.5">
+        {/* Core Navigation */}
+        <div className="space-y-1">
           {!collapsed && (
-            <p className="px-3 text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2 select-none">
+            <p className="px-3 text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 select-none">
               Workspace
             </p>
           )}
@@ -108,7 +97,7 @@ export function UserDashboardSidebar({ user }: UserDashboardSidebarProps) {
             const isActive =
               item.href === '/dashboard'
                 ? pathname === '/dashboard'
-                : pathname === item.href || pathname?.startsWith(item.href + '/');
+                : pathname === item.href || (item.href !== '/dashboard' && pathname?.startsWith(item.href));
 
             return (
               <Link
@@ -116,77 +105,45 @@ export function UserDashboardSidebar({ user }: UserDashboardSidebarProps) {
                 href={item.href}
                 title={collapsed ? item.label : undefined}
                 className={cn(
-                  'w-full h-11 flex items-center rounded-xl text-sm font-medium transition-all duration-150 active:scale-[0.99] group relative select-none',
-                  collapsed ? 'justify-center px-0' : 'justify-start gap-3 px-3',
+                  'w-full h-9 flex items-center rounded-full text-xs font-medium transition-all duration-150 relative select-none',
+                  collapsed ? 'justify-center px-0' : 'justify-start gap-2.5 px-3.5',
                   isActive
-                    ? 'bg-[var(--glass-bg-elevated)] text-[var(--accent)] border border-[var(--glass-border)] shadow-[var(--shadow-xs)] font-bold'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]'
+                    ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] font-semibold border border-[var(--border-color)] shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]'
                 )}
               >
-                <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                  <Icon
-                    className={cn(
-                      'w-4.5 h-4.5 shrink-0 transition-transform duration-150 group-hover:scale-105',
-                      isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]'
-                    )}
-                  />
-                </div>
-                {!collapsed && <span className="truncate flex-1 text-left leading-normal">{item.label}</span>}
+                <Icon
+                  className={cn(
+                    'w-4 h-4 shrink-0 transition-transform duration-150',
+                    isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
+                  )}
+                />
+                {!collapsed && (
+                  <span className="truncate flex-1 text-left leading-normal">
+                    {item.label}
+                  </span>
+                )}
+                {!collapsed && item.badge && (
+                  <span className="text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/30 mr-1">
+                    {item.badge}
+                  </span>
+                )}
+                {!collapsed && isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0 shadow-[0_0_6px_var(--accent)]" />
+                )}
               </Link>
             );
           })}
         </div>
 
-        {/* Application Tracking */}
-        <div className="pt-3 border-t border-[var(--glass-border)] space-y-1.5">
+        {/* AI & Optimization Tools */}
+        <div className="pt-3 border-t border-[var(--border-color)] space-y-1">
           {!collapsed && (
-            <p className="px-3 text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2 select-none">
-              Applications
+            <p className="px-3.5 text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase tracking-wider mb-2 select-none">
+              AI Tools
             </p>
           )}
-          {trackingNavItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = pathname === '/dashboard/applications' && (
-              item.href.includes('status=')
-                ? pathname.includes(item.href)
-                : !item.href.includes('status=')
-            );
-
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                title={collapsed ? item.label : undefined}
-                className={cn(
-                  'w-full h-11 flex items-center rounded-xl text-sm font-medium transition-all duration-150 active:scale-[0.99] group relative select-none',
-                  collapsed ? 'justify-center px-0' : 'justify-start gap-3 px-3',
-                  isActive
-                    ? 'bg-[var(--glass-bg-elevated)] text-[var(--accent)] border border-[var(--glass-border)] shadow-[var(--shadow-xs)] font-bold'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]'
-                )}
-              >
-                <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                  <Icon
-                    className={cn(
-                      'w-4.5 h-4.5 shrink-0 transition-transform duration-150 group-hover:scale-105',
-                      isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]'
-                    )}
-                  />
-                </div>
-                {!collapsed && <span className="truncate flex-1 text-left leading-normal">{item.label}</span>}
-              </Link>
-            );
-          })}
-        </div>
-
-        {/* Career Library & Account */}
-        <div className="pt-3 border-t border-[var(--glass-border)] space-y-1.5">
-          {!collapsed && (
-            <p className="px-3 text-[11px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider mb-2 select-none">
-              Library & Settings
-            </p>
-          )}
-          {libraryNavItems.map((item) => {
+          {aiToolItems.map((item) => {
             const Icon = item.icon;
             const isActive = pathname === item.href || pathname?.startsWith(item.href + '/');
 
@@ -196,26 +153,31 @@ export function UserDashboardSidebar({ user }: UserDashboardSidebarProps) {
                 href={item.href}
                 title={collapsed ? item.label : undefined}
                 className={cn(
-                  'w-full h-11 flex items-center rounded-xl text-sm font-medium transition-all duration-150 active:scale-[0.99] group relative select-none',
-                  collapsed ? 'justify-center px-0' : 'justify-start gap-3 px-3',
+                  'w-full h-9 flex items-center rounded-full text-xs font-medium transition-all duration-150 relative select-none',
+                  collapsed ? 'justify-center px-0' : 'justify-start gap-2.5 px-3.5',
                   isActive
-                    ? 'bg-[var(--glass-bg-elevated)] text-[var(--accent)] border border-[var(--glass-border)] shadow-[var(--shadow-xs)] font-bold'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)]'
+                    ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] font-semibold border border-[var(--border-color)] shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]'
                 )}
               >
-                <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                  <Icon
-                    className={cn(
-                      'w-4.5 h-4.5 shrink-0 transition-transform duration-150 group-hover:scale-105',
-                      isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)] group-hover:text-[var(--text-primary)]'
-                    )}
-                  />
-                </div>
-                {!collapsed && <span className="truncate flex-1 text-left leading-normal">{item.label}</span>}
+                <Icon
+                  className={cn(
+                    'w-3.5 h-3.5 shrink-0',
+                    isActive ? 'text-[var(--accent)]' : 'text-[var(--text-secondary)]'
+                  )}
+                />
+                {!collapsed && (
+                  <span className="truncate flex-1 text-left leading-normal">
+                    {item.label}
+                  </span>
+                )}
                 {!collapsed && item.badge && (
-                  <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-amber-500/10 text-amber-500 dark:text-amber-400 border border-amber-500/20 shrink-0">
+                  <span className="text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/30 mr-1">
                     {item.badge}
                   </span>
+                )}
+                {!collapsed && isActive && (
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0 shadow-[0_0_6px_var(--accent)]" />
                 )}
               </Link>
             );
@@ -223,18 +185,19 @@ export function UserDashboardSidebar({ user }: UserDashboardSidebarProps) {
         </div>
       </div>
 
-      {/* User Footer Profile, Theme Toggle & Collapse Toggle */}
-      <div className="p-3 border-t border-[var(--glass-border)] bg-[var(--glass-bg)]/50 backdrop-blur-md space-y-2">
-        {/* Theme Toggle Row */}
-        <div className={cn('flex items-center', collapsed ? 'justify-center' : 'justify-between px-1 py-0.5')}>
+      {/* User Footer Profile & Appearance Toggle */}
+      <div className="p-3 border-t border-[var(--border-color)] bg-[var(--bg-secondary)] space-y-2">
+        {/* Appearance Row */}
+        <div className={cn('flex items-center', collapsed ? 'justify-center' : 'justify-between px-1.5 py-0.5')}>
           {!collapsed && (
-            <span className="text-[11px] font-medium text-[var(--text-secondary)]">Appearance</span>
+            <span className="text-[11px] font-medium text-[var(--text-secondary)]">Theme</span>
           )}
           <ThemeToggle variant={collapsed ? 'icon' : 'default'} />
         </div>
 
-        <div className={cn('flex items-center gap-2.5 px-2 py-2 rounded-xl bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] shadow-xs')}>
-          <div className="w-8 h-8 rounded-lg bg-[var(--accent)]/15 text-[var(--accent)] font-bold text-xs flex items-center justify-center shrink-0 border border-[var(--accent)]/25">
+        {/* Profile Card */}
+        <div className="flex items-center gap-2.5 p-2 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-xs">
+          <div className="w-7 h-7 rounded-full bg-[var(--accent)] text-white font-bold text-xs flex items-center justify-center shrink-0">
             {user.name.charAt(0).toUpperCase()}
           </div>
           {!collapsed && (
@@ -242,8 +205,8 @@ export function UserDashboardSidebar({ user }: UserDashboardSidebarProps) {
               <p className="text-xs font-semibold text-[var(--text-primary)] truncate">
                 {user.name}
               </p>
-              <p className="text-[10px] text-[var(--text-secondary)] truncate">
-                {user.email || 'Candidate Account'}
+              <p className="text-[10px] text-[var(--text-muted)] truncate">
+                {user.email || 'Candidate'}
               </p>
             </div>
           )}
@@ -251,17 +214,20 @@ export function UserDashboardSidebar({ user }: UserDashboardSidebarProps) {
             <button
               onClick={() => logout()}
               title="Sign Out"
-              className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--color-error)] hover:bg-[var(--color-error)]/10 active:scale-95 transition-all duration-150 cursor-pointer"
+              aria-label="Sign Out"
+              className="p-1 rounded-full text-[var(--text-muted)] hover:text-rose-400 hover:bg-rose-400/10 transition-colors cursor-pointer"
             >
               <LogOut className="w-3.5 h-3.5" />
             </button>
           )}
         </div>
 
+        {/* Collapse Toggle */}
         <button
           onClick={() => setCollapsed(!collapsed)}
-          className="w-full flex items-center justify-center py-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-lg hover:bg-[var(--glass-bg)] active:scale-95 transition-all duration-150 cursor-pointer"
+          className="w-full flex items-center justify-center py-1.5 text-xs text-[var(--text-secondary)] hover:text-[var(--text-primary)] rounded-full hover:bg-[var(--bg-card)] transition-colors cursor-pointer"
           title={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
+          aria-label={collapsed ? 'Expand Sidebar' : 'Collapse Sidebar'}
         >
           {collapsed ? <ChevronRight className="w-4 h-4" /> : <ChevronLeft className="w-4 h-4" />}
         </button>

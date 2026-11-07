@@ -12,7 +12,6 @@ import {
   ArrowRight,
   ArrowLeft,
   Loader2,
-  Sparkles,
   AlertCircle,
   KeyRound,
 } from 'lucide-react';
@@ -85,8 +84,8 @@ function AdminLoginForm() {
         </div>
 
         <div className="flex items-center justify-center gap-1.5 mb-2">
-          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-xl text-[11px] font-extrabold tracking-wider uppercase bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)]">
-            <Sparkles className="w-3 h-3 text-[var(--accent)]" />
+          <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-md text-[11px] font-extrabold tracking-wider uppercase bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)]">
+            <ShieldCheck className="w-3 h-3 text-[var(--accent)]" />
             Smart Resume AI
           </span>
         </div>

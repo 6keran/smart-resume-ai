@@ -41,7 +41,7 @@ export function TemplateCard({
     <div
       id={`template-card-${template.id}`}
       data-template-id={template.id}
-      className={`group relative flex flex-col justify-between rounded-2xl border transition-all duration-200 overflow-hidden hover:-translate-y-1 active:scale-[0.99] ${
+      className={`group relative flex flex-col justify-between rounded-2xl border transition-all duration-200 overflow-hidden hover:-translate-y-1 active:scale-[0.99] before:pointer-events-none before:absolute before:top-0 before:left-4 before:right-4 before:h-[1px] before:bg-gradient-to-r before:from-transparent before:via-white/20 before:to-transparent ${
         isSelected
           ? 'border-[var(--accent)] bg-[var(--accent-subtle)] ring-2 ring-[var(--accent)]/30 shadow-[var(--shadow-glass-hover)] -translate-y-0.5'
           : 'border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] hover:border-[var(--glass-border-hover)] hover:shadow-[var(--shadow-glass-hover)] backdrop-blur-xl'
@@ -63,7 +63,7 @@ export function TemplateCard({
 
           {template.isVisualLayout ? (
             <span
-              className="inline-flex items-center gap-1 text-[9px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2 py-0.5 rounded shrink-0"
+              className="inline-flex items-center gap-1 text-[9px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full shrink-0"
               title="Visual layout for creative tech & portfolios. Single-column recommended for ATS-strict portals."
             >
               <AlertCircle className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
@@ -71,7 +71,7 @@ export function TemplateCard({
             </span>
           ) : template.isAtsFriendly ? (
             <span
-              className="inline-flex items-center gap-1 text-[9px] font-semibold text-[var(--color-success)] bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 px-2 py-0.5 rounded shrink-0"
+              className="inline-flex items-center gap-1 text-[9px] font-semibold text-[var(--color-success)] bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 px-2.5 py-0.5 rounded-full shrink-0"
               title="100% compliant single-column layout for Applicant Tracking Systems"
             >
               <ShieldCheck className="w-3 h-3 text-[var(--color-success)] shrink-0" />
@@ -79,7 +79,7 @@ export function TemplateCard({
             </span>
           ) : (
             <span
-              className="inline-flex items-center gap-1 text-[9px] font-semibold text-[var(--accent)] bg-[var(--accent-subtle)] border border-[var(--border-color)] px-2 py-0.5 rounded shrink-0"
+              className="inline-flex items-center gap-1 text-[9px] font-semibold text-[var(--accent)] bg-[var(--accent-subtle)] border border-[var(--border-color)] px-2.5 py-0.5 rounded-full shrink-0"
             >
               Portfolio Design
             </span>
@@ -97,7 +97,7 @@ export function TemplateCard({
           id={`template-preview-${template.id}`}
           ref={containerRef}
           onClick={() => onSelect(template.id)}
-          className="relative w-full aspect-[210/297] rounded-lg overflow-hidden border border-slate-300 dark:border-slate-800 bg-white shadow-sm cursor-pointer select-none group-hover:shadow-md transition-shadow"
+          className="relative w-full aspect-[210/297] rounded-xl overflow-hidden border border-slate-300 dark:border-slate-800 bg-white shadow-sm cursor-pointer select-none group-hover:shadow-md transition-shadow"
           title={`Click to select ${template.name}`}
         >
           {/* Scaled Live Renderer */}
@@ -128,7 +128,7 @@ export function TemplateCard({
           id={`btn-preview-template-${template.id}`}
           type="button"
           onClick={() => onPreview(template.id)}
-          className="flex-1 py-1.5 px-2.5 rounded-xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] text-[var(--text-primary)] text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs active:scale-95"
+          className="btn-secondary btn-sm flex-1 h-8 px-2.5 text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer shadow-xs active:scale-95"
           title="Full Preview of this template"
         >
           <Eye className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
@@ -139,10 +139,10 @@ export function TemplateCard({
           id={`btn-select-template-${template.id}`}
           type="button"
           onClick={() => onSelect(template.id)}
-          className={`flex-1 py-1.5 px-2.5 rounded-xl text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer active:scale-95 ${
+          className={`btn-sm flex-1 h-8 px-2.5 rounded-full text-[11px] font-semibold flex items-center justify-center gap-1 transition-all cursor-pointer active:scale-95 ${
             isSelected
-              ? 'bg-emerald-600 text-white shadow-sm'
-              : 'bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white shadow-sm hover:shadow-[0_4px_12px_rgba(79,143,247,0.3)]'
+              ? 'bg-emerald-600 hover:bg-emerald-500 text-white shadow-sm'
+              : 'btn-primary'
           }`}
           title="Select this template"
         >

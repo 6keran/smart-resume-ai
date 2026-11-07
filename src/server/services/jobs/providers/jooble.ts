@@ -5,6 +5,8 @@ import {
   detectExperienceLevel,
   detectWorkplaceType,
   extractSkills,
+  isValidHttpUrl,
+  normalizePostedAt,
 } from '../normalize';
 
 interface JoobleJobItem {
@@ -64,7 +66,7 @@ export class JoobleProvider implements JobProvider {
     const resultOnPage = Math.min(params.limit || 20, 50);
 
     const payload: Record<string, unknown> = {
-      keywords: params.keywords?.trim() || 'Software Engineer',
+      keywords: params.keywords?.trim() || '',
       page,
       resultOnPage,
     };
@@ -100,16 +102,17 @@ export class JoobleProvider implements JobProvider {
       clearTimeout(timeoutId);
 
       if (!res.ok) {
-        console.warn(`[Jooble Provider] HTTP ${res.status} response from Jooble API.`);
-        return [];
+        throw new Error(`Jooble returned status ${res.status}.`);
       }
 
       const data: JoobleApiResponse = await res.json();
-      const rawJobs = data.jobs || [];
+      const rawJobs = (data.jobs || []).filter((item) =>
+        item?.id !== undefined && Boolean(item.title?.trim()) && isValidHttpUrl(item.link)
+      );
 
       return rawJobs.map((item) => {
         const title = cleanHtml(item.title);
-        const company = cleanHtml(item.company || 'Hiring Organization');
+        const company = cleanHtml(item.company || 'Company not listed');
         const locationStr = cleanHtml(item.location || params.location || 'India');
         const description = cleanHtml(item.snippet || '');
         const snippet = description.slice(0, 240);
@@ -132,7 +135,7 @@ export class JoobleProvider implements JobProvider {
           employmentType: employment,
           experienceLevel: expLevel,
           workplaceType: workplace,
-          postedAt: item.updated || new Date().toISOString(),
+          postedAt: normalizePostedAt(item.updated),
           applyUrl: item.link || '',
           sourceUrl: item.link || '',
           skills,
@@ -145,7 +148,7 @@ export class JoobleProvider implements JobProvider {
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       console.warn('[Jooble Provider] Error during job retrieval:', errorMsg);
-      return [];
+      throw new Error(`Jooble search unavailable: ${errorMsg}`);
     }
   }
 }

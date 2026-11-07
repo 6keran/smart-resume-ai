@@ -195,7 +195,36 @@ export interface ResumeAnalysisResult {
   company?: string;
   matchedSkills?: MatchedSkillItem[];
   missingSkills?: string[];
+  // Provenance / attribution
+  analysisEngine?: 'gemini' | 'deterministic-ats';
+  engineDisplayName?: string;
   resumeId?: string | null;
+  // Advanced Resume Intelligence additions
+  sectionScores?: Record<string, { score: number; status: 'excellent' | 'adequate' | 'needs_work' | 'missing'; feedback: string[] }> | any;
+  evidenceConsistency?: {
+    totalSkillsCount: number;
+    backedSkillsCount: number;
+    unbackedSkills: Array<{ skill: string; isBackedByEvidence: boolean; warning?: string }>;
+    consistencyScore: number;
+  };
+  duplicateContent?: Array<{ type: string; text: string; count: number; suggestion: string }>;
+  readabilityMetrics?: {
+    averageBulletWordCount: number;
+    optimalWordCountRatio: number;
+    passiveVoiceInstances: string[];
+    metricDensityPercentage: number;
+    readabilityLevel: string;
+  };
+  missingInformationAlerts?: Array<{ field: string; importance: 'critical' | 'recommended'; message: string }>;
+  jobAlignmentAnalysis?: {
+    jobTitle?: string;
+    company?: string;
+    alignmentScore: number;
+    matchedSkills: string[];
+    missingCriticalKeywords: string[];
+    missingPreferredKeywords: string[];
+    recommendedInsertionPoints: Array<{ keyword: string; targetSection: string; suggestedContext: string }>;
+  };
 }
 
 export interface ImprovementItem {

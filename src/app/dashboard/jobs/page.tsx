@@ -71,9 +71,9 @@ export default function UserJobMatchesPage() {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[var(--border-color)] gap-4">
+      <div className="bento-card p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
             Job Matches
@@ -84,7 +84,7 @@ export default function UserJobMatchesPage() {
         </div>
         <Link
           href="/jobs"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-90 transition-all shadow-sm"
+          className="btn-primary btn-sm inline-flex items-center gap-2 text-xs font-semibold shadow-sm shrink-0 cursor-pointer"
         >
           <Search className="w-4 h-4" />
           <span>Search Live Postings</span>
@@ -134,7 +134,7 @@ export default function UserJobMatchesPage() {
             return (
               <div
                 key={item.id}
-                className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 hover:bg-[var(--bg-secondary)] p-5 sm:p-6 transition-all duration-200 space-y-4"
+                className="bento-card p-5 sm:p-6 transition-all duration-200 space-y-4"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-3 border-b border-[var(--border-color)] gap-3">
                   <div className="space-y-1">
@@ -175,10 +175,10 @@ export default function UserJobMatchesPage() {
                     <button
                       onClick={() => handleMarkApplied(item)}
                       disabled={isApplied}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
+                      className={`btn-sm inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer ${
                         isApplied
-                          ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 cursor-default'
-                          : 'bg-[var(--accent)] hover:opacity-90 text-white shadow-sm'
+                          ? 'btn-secondary text-emerald-400 border border-emerald-500/20 cursor-default'
+                          : 'btn-primary shadow-sm'
                       }`}
                     >
                       {isApplied ? (
@@ -208,7 +208,7 @@ export default function UserJobMatchesPage() {
                         {item.matchedSkills.map((s) => (
                           <span
                             key={s}
-                            className="px-2 py-0.5 rounded-md bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[11px]"
+                            className="px-2.5 py-0.5 rounded-full bg-emerald-500/10 text-emerald-300 border border-emerald-500/20 text-[11px]"
                           >
                             {s}
                           </span>
@@ -227,7 +227,7 @@ export default function UserJobMatchesPage() {
                         {item.missingSkills.map((s) => (
                           <span
                             key={s}
-                            className="px-2 py-0.5 rounded-md bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[11px]"
+                            className="px-2.5 py-0.5 rounded-full bg-amber-500/10 text-amber-300 border border-amber-500/20 text-[11px]"
                           >
                             {s}
                           </span>

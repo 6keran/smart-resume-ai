@@ -1,4 +1,6 @@
 import 'server-only';
+import { appendFileSync } from 'node:fs';
+import path from 'node:path';
 import { GoogleGenAI } from '@google/genai';
 import {
   ResumeAnalysisResult,
@@ -10,6 +12,51 @@ import { JobMatchResult, SkillMatchDetail } from '@/types/jobs';
 
 // Safe server-side accessor for Gemini API key
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
+const e2eGeminiTelemetryPath = process.env.E2E_GEMINI_TELEMETRY_PATH;
+const e2eGlobal = globalThis as typeof globalThis & { __sraGeminiObserverInstalled?: boolean };
+export function recordGeminiProviderStatus(service: string, provider: 'Gemini' | 'deterministic', model?: string): void {
+  if (process.env.PLAYWRIGHT_TEST !== '1' || process.env.E2E_LIVE_GEMINI !== '1' || !e2eGeminiTelemetryPath) return;
+  try {
+    appendFileSync(path.resolve(e2eGeminiTelemetryPath), JSON.stringify({
+      type: 'provider-status',
+      timestamp: new Date().toISOString(),
+      service,
+      provider,
+      model: provider === 'Gemini' ? model || null : null,
+    }) + '\n');
+  } catch {}
+}
+if (process.env.PLAYWRIGHT_TEST === '1' && process.env.E2E_LIVE_GEMINI === '1' && e2eGeminiTelemetryPath && !e2eGlobal.__sraGeminiObserverInstalled) {
+  const originalFetch = globalThis.fetch.bind(globalThis);
+  e2eGlobal.__sraGeminiObserverInstalled = true;
+  let requestCounter = 0;
+  globalThis.fetch = async (input: RequestInfo | URL, init?: RequestInit): Promise<Response> => {
+    let targetUrl: URL | null = null;
+    try {
+      targetUrl = new URL(typeof input === 'string' ? input : input instanceof URL ? input.href : input.url);
+    } catch {}
+    if (targetUrl?.hostname !== 'generativelanguage.googleapis.com') return originalFetch(input, init);
+
+    const model = targetUrl.pathname.match(/\/models\/([^/:]+):/)?.[1] || 'unknown';
+    const requestId = `${Date.now()}-${++requestCounter}`;
+    const startedAt = Date.now();
+    const record = (phase: 'started' | 'completed', status: number | null, outcome: string) => {
+      try {
+        appendFileSync(path.resolve(e2eGeminiTelemetryPath), JSON.stringify({ timestamp: new Date().toISOString(), requestId, phase, model, status, outcome, durationMs: Date.now() - startedAt }) + '\n');
+      } catch {}
+    };
+    record('started', null, 'pending');
+    try {
+      const response = await originalFetch(input, init);
+      record('completed', response.status, response.ok ? 'success' : 'http_error');
+      return response;
+    } catch (error) {
+      record('completed', null, 'network_error');
+      throw error;
+    }
+  };
+}
+
 export const PRIMARY_GEMINI_MODEL = 'gemini-3.5-flash';
 export const CANDIDATE_GEMINI_MODELS = [
   'gemini-3.5-flash',
@@ -29,6 +76,52 @@ if (GEMINI_API_KEY) {
   console.info(
     '[Smart Resume AI] GEMINI_API_KEY is not configured in .env.local. The platform is using its built-in high-precision deterministic ATS analysis engine. Add GEMINI_API_KEY to enable live Gemini 3.5 Flash analysis.'
   );
+}
+
+/**
+ * Live Gemini model discovery and capability probe.
+ * Queries the Google GenAI API endpoint dynamically to discover active supported models
+ * rather than assuming static fallback identifiers.
+ */
+let cachedDiscoveredModels: string[] | null = null;
+let lastModelProbeTimestamp = 0;
+const MODEL_PROBE_CACHE_TTL_MS = 60 * 60 * 1000; // 1-hour cache
+
+export async function probeAvailableGeminiModels(forceRefresh = false): Promise<string[]> {
+  const now = Date.now();
+  if (!forceRefresh && cachedDiscoveredModels && now - lastModelProbeTimestamp < MODEL_PROBE_CACHE_TTL_MS) {
+    return cachedDiscoveredModels;
+  }
+
+  if (!aiClient) {
+    return [...CANDIDATE_GEMINI_MODELS];
+  }
+
+  try {
+    const pager = await aiClient.models.list();
+    const discovered: string[] = [];
+    for await (const m of pager) {
+      if (m.name) {
+        const cleanName = m.name.replace(/^models\//, '');
+        if (cleanName.includes('gemini') || cleanName.includes('flash')) {
+          discovered.push(cleanName);
+        }
+      }
+    }
+
+    if (discovered.length > 0) {
+      cachedDiscoveredModels = discovered;
+      lastModelProbeTimestamp = now;
+      return discovered;
+    }
+  } catch (err: unknown) {
+    const errorMsg = err instanceof Error ? err.message : String(err);
+    console.warn(`[Gemini Probe] Live model discovery failed: ${errorMsg.slice(0, 150)}. Using candidate list.`);
+  }
+
+  cachedDiscoveredModels = [...CANDIDATE_GEMINI_MODELS];
+  lastModelProbeTimestamp = now;
+  return cachedDiscoveredModels;
 }
 
 /**
@@ -71,7 +164,7 @@ async function callGeminiWithRetry<T>(
   operation: (client: GoogleGenAI, model: string) => Promise<T>,
   maxRetries = 1,
   timeoutMs = 12000
-): Promise<T | null> {
+): Promise<{ data: T; model: string } | null> {
   if (!aiClient) return null;
 
   for (const model of CANDIDATE_GEMINI_MODELS) {
@@ -81,7 +174,8 @@ async function callGeminiWithRetry<T>(
         const timeoutPromise = new Promise<never>((_, reject) =>
           setTimeout(() => reject(new Error(`Timeout after ${timeoutMs}ms on ${model}`)), timeoutMs)
         );
-        return await Promise.race([operation(aiClient, model), timeoutPromise]);
+        const data = await Promise.race([operation(aiClient, model), timeoutPromise]);
+        return { data, model };
       } catch (err: unknown) {
         attempt++;
         const errorStr = String(err);
@@ -287,7 +381,7 @@ CRITICAL RULES:
   "summaryFeedback": string
 }`;
 
-    const rawResponse = await callGeminiWithRetry(async (client, model) => {
+    const rawCall = await callGeminiWithRetry(async (client, model) => {
       const response = await client.models.generateContent({
         model,
         contents: prompt,
@@ -299,12 +393,22 @@ CRITICAL RULES:
       return response.text;
     });
 
-    if (rawResponse) {
-      const parsed = safeJsonParse<ResumeAnalysisResult & { topSuggestions?: unknown[]; weaknesses?: unknown[] }>(rawResponse);
-      if (parsed && typeof parsed.overallAtsScore === 'number') {
+    if (rawCall && rawCall.data) {
+      const parsed = safeJsonParse<ResumeAnalysisResult & { topSuggestions?: unknown[]; weaknesses?: unknown[]; atsScore?: unknown }>(rawCall.data);
+      if (parsed && (typeof parsed.overallAtsScore === 'number' || typeof parsed.atsScore === 'number')) {
+        const rawScore = Number(parsed.overallAtsScore ?? parsed.atsScore) || 0;
+        const overallAtsScore = Math.min(100, Math.max(0, Math.round(rawScore)));
+        const keywordMatchScore = Math.min(100, Math.max(0, Math.round(Number(parsed.keywordMatchScore ?? overallAtsScore) || overallAtsScore)));
+        const formattingScore = Math.min(100, Math.max(0, Math.round(Number(parsed.formattingScore ?? overallAtsScore) || overallAtsScore)));
+        const contentScore = Math.min(100, Math.max(0, Math.round(Number(parsed.contentScore ?? overallAtsScore) || overallAtsScore)));
+        const sectionScore = Math.min(100, Math.max(0, Math.round(Number(parsed.sectionScore ?? overallAtsScore) || overallAtsScore)));
+        const readabilityScore = Math.min(100, Math.max(0, Math.round(Number(parsed.readabilityScore ?? 75) || 75)));
+        const bulletStrengthScore = Math.min(100, Math.max(0, Math.round(Number(parsed.bulletStrengthScore ?? 80) || 80)));
+        const wordCount = Math.max(1, Math.round(Number(parsed.wordCount) || resumeText.split(/\s+/).filter(Boolean).length));
+
         const rawList = Array.isArray(parsed.topSuggestions) && parsed.topSuggestions.length > 0
           ? parsed.topSuggestions
-          : parsed.weaknesses || [];
+          : Array.isArray(parsed.weaknesses) ? parsed.weaknesses : [];
         const topSuggestions = validateAndRankSuggestions(rawList, resumeText, jobDescription);
 
         // Derive weaknesses and recommendations for backwards compatibility
@@ -342,18 +446,39 @@ CRITICAL RULES:
         const allStandardSections = ['Work Experience', 'Education', 'Skills', 'Projects', 'Professional Summary', 'Contact Information'];
         const missingSections: string[] = allStandardSections.filter((s) => !detectedSections.includes(s));
 
+        const usedModelDisplay = rawCall.model.includes('3.8')
+          ? 'Gemini 3.8 Flash'
+          : rawCall.model.includes('3.5')
+          ? 'Gemini 3.5 Flash'
+          : 'Gemini Flash';
+
+        recordGeminiProviderStatus('ATS resume analysis', 'Gemini', rawCall.model);
         return {
           ...parsed,
+          overallAtsScore,
+          keywordMatchScore,
+          formattingScore,
+          contentScore,
+          sectionScore,
+          readabilityScore,
+          bulletStrengthScore,
+          wordCount,
           isJobSpecific: jdProvided,
           jobTitle: targetRole,
           company: targetCompany,
-          bulletStrengthScore: typeof parsed.bulletStrengthScore === 'number' ? parsed.bulletStrengthScore : 82,
           missingSections: Array.isArray(parsed.missingSections) && parsed.missingSections.length > 0 ? parsed.missingSections : missingSections,
           detectedSections: Array.isArray(parsed.detectedSections) && parsed.detectedSections.length > 0 ? parsed.detectedSections : detectedSections,
+          detectedKeywords: Array.isArray(parsed.detectedKeywords) ? parsed.detectedKeywords : [],
+          missingKeywords: Array.isArray(parsed.missingKeywords) ? parsed.missingKeywords : [],
+          strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [],
           topSuggestions,
           weaknesses,
           recommendations,
-          wordCount: parsed.wordCount || resumeText.split(/\s+/).filter(Boolean).length,
+          analysisEngine: 'gemini',
+          engineDisplayName: usedModelDisplay,
+          summaryFeedback: typeof parsed.summaryFeedback === 'string' && parsed.summaryFeedback.trim()
+            ? parsed.summaryFeedback.trim()
+            : `ATS analysis completed via ${usedModelDisplay}. Overall ATS compatibility rated at ${overallAtsScore}%.`,
           analyzedAt: new Date().toISOString(),
         };
       } else {
@@ -363,6 +488,7 @@ CRITICAL RULES:
   }
 
   // Deterministic algorithmic ATS intelligence engine fallback
+  recordGeminiProviderStatus('ATS resume analysis', 'deterministic');
   return generateDeterministicAtsAnalysis(resumeText, jobDescription, targetRole, targetCompany);
 }
 
@@ -774,16 +900,17 @@ Return ONLY a valid JSON object:
         return response.text;
       });
 
-      if (rawResponse) {
+      if (rawResponse && rawResponse.data) {
         const parsed = safeJsonParse<{
           improvedContent?: string;
           reasoning?: string;
           metricImpact?: string;
-        }>(rawResponse);
+        }>(rawResponse.data);
 
         if (parsed?.improvedContent && typeof parsed.improvedContent === 'string' && parsed.improvedContent.trim()) {
           const validation = validateContentPreservation(trimmed, parsed.improvedContent.trim());
           if (validation.isValid) {
+            recordGeminiProviderStatus('Resume improver', 'Gemini', rawResponse.model);
             return {
               improvedContent: parsed.improvedContent.trim(),
               reasoning:
@@ -804,6 +931,7 @@ Return ONLY a valid JSON object:
   }
 
   // Safe, fact-preserving deterministic rewrite
+  recordGeminiProviderStatus('Resume improver', 'deterministic');
   return deterministicImproveContent(trimmed, sectionName);
 }
 
@@ -858,11 +986,19 @@ Return ONLY valid JSON:
       return response.text;
     });
 
-    if (rawResponse) {
-      const parsed = safeJsonParse<JobMatchResult>(rawResponse);
+    if (rawResponse && rawResponse.data) {
+      const parsed = safeJsonParse<JobMatchResult>(rawResponse.data);
       if (parsed && typeof parsed.overallMatchScore === 'number') {
+        const overall = Math.min(100, Math.max(0, Math.round(Number(parsed.overallMatchScore) || 0)));
+        recordGeminiProviderStatus('Job match', 'Gemini', rawResponse.model);
         return {
           ...parsed,
+          overallMatchScore: overall,
+          skillsMatchScore: Math.min(100, Math.max(0, Math.round(Number(parsed.skillsMatchScore ?? overall) || overall))),
+          experienceMatchScore: Math.min(100, Math.max(0, Math.round(Number(parsed.experienceMatchScore ?? overall) || overall))),
+          educationMatchScore: Math.min(100, Math.max(0, Math.round(Number(parsed.educationMatchScore ?? overall) || overall))),
+          keywordMatchScore: Math.min(100, Math.max(0, Math.round(Number(parsed.keywordMatchScore ?? overall) || overall))),
+          projectRelevanceScore: Math.min(100, Math.max(0, Math.round(Number(parsed.projectRelevanceScore ?? overall) || overall))),
           analyzedAt: new Date().toISOString(),
         };
       }
@@ -870,6 +1006,7 @@ Return ONLY valid JSON:
   }
 
   // Deterministic job matcher fallback
+  recordGeminiProviderStatus('Job match', 'deterministic');
   return generateDeterministicJobMatch(resumeText, jobTitle, company, jobDescription);
 }
 
@@ -1324,6 +1461,8 @@ export function generateDeterministicAtsAnalysis(
     recommendations,
     topSuggestions,
     summaryFeedback,
+    analysisEngine: 'deterministic-ats',
+    engineDisplayName: 'Rule-Based ATS Engine (Deterministic)',
     analyzedAt: new Date().toISOString(),
   };
 }
@@ -1331,7 +1470,7 @@ export function generateDeterministicAtsAnalysis(
 /**
  * Deterministic algorithmic Job Match fallback.
  */
-function generateDeterministicJobMatch(
+export function generateDeterministicJobMatch(
   resumeText: string,
   jobTitle: string,
   company: string,
@@ -1580,14 +1719,15 @@ Return ONLY valid JSON matching this schema:
       return response.text;
     });
 
-    if (rawResponse) {
+    if (rawResponse && rawResponse.data) {
       const parsed = safeJsonParse<{
         tailoredSummary?: string;
         suggestedBullets?: Array<{ original: string; tailored: string; impactReason: string }>;
         recommendedSkills?: string[];
-      }>(rawResponse);
+      }>(rawResponse.data);
 
       if (parsed?.tailoredSummary) {
+        recordGeminiProviderStatus('Resume tailoring', 'Gemini', rawResponse.model);
         return {
           tailoredSummary: parsed.tailoredSummary,
           suggestedBullets: parsed.suggestedBullets || [],
@@ -1600,6 +1740,7 @@ Return ONLY valid JSON matching this schema:
   }
 
   // High precision deterministic tailoring fallback
+  recordGeminiProviderStatus('Resume tailoring', 'deterministic');
   const firstBullet = bulletsToTailor[0] ? bulletsToTailor[0].replace(/^[•\-*\d.]+\s*/, '') : '';
   const secondBullet = bulletsToTailor[1] ? bulletsToTailor[1].replace(/^[•\-*\d.]+\s*/, '') : '';
 

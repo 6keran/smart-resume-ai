@@ -2,6 +2,7 @@ import { DatabaseSync } from 'node:sqlite';
 import pg from 'pg';
 import path from 'node:path';
 import fs from 'node:fs';
+import { assertStagingTargetSafe, verifyDatabaseIdentity, maskDatabaseUrl } from './dbSecurityGate.mjs';
 
 const { Pool, types } = pg;
 types.setTypeParser(20, (val) => parseInt(val, 10));
@@ -30,10 +31,10 @@ function loadEnv() {
 
 loadEnv();
 
-const postgresUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL;
+const postgresUrl = process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.NEON_DATABASE_URL;
 
 if (!postgresUrl) {
-  console.error('\n❌ ERROR: POSTGRES_URL or DATABASE_URL environment variable is required.');
+  console.error('\n❌ ERROR: POSTGRES_URL, DATABASE_URL, or NEON_DATABASE_URL environment variable is required.');
   console.error('\nUsage:');
   console.error('  # Using inline environment variable:');
   console.error('  POSTGRES_URL="postgres://username:password@hostname:5432/dbname?sslmode=require" node scripts/migrate_sqlite_to_postgres.mjs\n');
@@ -48,20 +49,7 @@ if (!fs.existsSync(sqliteDbPath)) {
   process.exit(1);
 }
 
-console.log('====================================================');
-console.log('SMART RESUME AI: SQLITE -> POSTGRESQL DATA MIGRATION');
-console.log('====================================================');
-console.log(`Source SQLite:   ${sqliteDbPath}`);
-console.log(`Target Postgres: ${postgresUrl.replace(/:[^:@]+@/, ':****@')}`);
-console.log('====================================================\n');
 
-const sqliteDb = new DatabaseSync(sqliteDbPath);
-const pool = new Pool({
-  connectionString: postgresUrl,
-  ssl: postgresUrl.includes('localhost') || postgresUrl.includes('127.0.0.1')
-    ? false
-    : { rejectUnauthorized: false },
-});
 
 const TABLE_SCHEMAS = [
   {
@@ -414,6 +402,27 @@ const TABLE_SCHEMAS = [
     `,
   },
   {
+    name: 'job_search_results',
+    conflictKey: 'id',
+    sql: `
+      CREATE TABLE IF NOT EXISTS job_search_results (
+        id TEXT PRIMARY KEY,
+        search_id TEXT NOT NULL,
+        job_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        company TEXT NOT NULL,
+        location TEXT,
+        salary TEXT,
+        description TEXT,
+        url TEXT NOT NULL,
+        source TEXT NOT NULL,
+        posted_at TEXT,
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_jsr_search ON job_search_results(search_id);
+    `,
+  },
+  {
     name: 'job_matches',
     conflictKey: 'id',
     sql: `
@@ -431,6 +440,8 @@ const TABLE_SCHEMAS = [
         created_at TEXT NOT NULL,
         user_id TEXT
       );
+      CREATE INDEX IF NOT EXISTS idx_job_matches_resume ON job_matches(resume_id);
+      CREATE INDEX IF NOT EXISTS idx_job_matches_user ON job_matches(user_id);
     `,
   },
   {
@@ -496,6 +507,39 @@ const TABLE_SCHEMAS = [
     `,
   },
   {
+    name: 'live_proctoring_sessions',
+    conflictKey: 'id',
+    sql: `
+      CREATE TABLE IF NOT EXISTS live_proctoring_sessions (
+        id TEXT PRIMARY KEY,
+        assessment_id TEXT UNIQUE NOT NULL,
+        user_id TEXT,
+        candidate_name TEXT NOT NULL,
+        candidate_email TEXT,
+        skill TEXT NOT NULL,
+        status TEXT NOT NULL,
+        camera_status TEXT NOT NULL,
+        stream_health TEXT NOT NULL DEFAULT 'unknown',
+        frame_rate REAL DEFAULT 0,
+        resolution TEXT DEFAULT 'unknown',
+        consent_given INTEGER DEFAULT 0,
+        consent_timestamp TEXT,
+        started_at TEXT,
+        last_heartbeat_at TEXT NOT NULL,
+        completed_at TEXT,
+        signaling_offer TEXT,
+        signaling_answer TEXT,
+        candidate_ice_candidates TEXT,
+        admin_ice_candidates TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_lps_assessment ON live_proctoring_sessions(assessment_id);
+      CREATE INDEX IF NOT EXISTS idx_lps_status ON live_proctoring_sessions(status);
+      CREATE INDEX IF NOT EXISTS idx_lps_last_hb ON live_proctoring_sessions(last_heartbeat_at);
+    `,
+  },
+  {
     name: 'audit_events',
     conflictKey: 'id',
     sql: `
@@ -511,11 +555,174 @@ const TABLE_SCHEMAS = [
       CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_events(created_at);
     `,
   },
+  {
+    name: 'student_profiles',
+    conflictKey: 'id',
+    sql: `
+      CREATE TABLE IF NOT EXISTS student_profiles (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL UNIQUE,
+        institution TEXT NOT NULL,
+        degree TEXT NOT NULL,
+        field_of_study TEXT NOT NULL,
+        graduation_year INTEGER NOT NULL,
+        graduation_month TEXT,
+        current_semester TEXT,
+        cgpa TEXT,
+        student_type TEXT DEFAULT 'college_student',
+        target_role TEXT NOT NULL DEFAULT 'Graduate Software Engineer',
+        target_work_type TEXT DEFAULT 'both',
+        preferred_locations TEXT,
+        projects_data TEXT,
+        coursework TEXT,
+        achievements TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_sp_user ON student_profiles(user_id);
+    `,
+  },
+  {
+    name: 'guided_projects',
+    conflictKey: 'id',
+    sql: `
+      CREATE TABLE IF NOT EXISTS guided_projects (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        title TEXT NOT NULL,
+        difficulty TEXT NOT NULL DEFAULT 'Intermediate',
+        target_role TEXT NOT NULL DEFAULT 'Graduate Software Engineer',
+        tech_stack TEXT NOT NULL DEFAULT '[]',
+        problem_statement TEXT,
+        real_world_use_case TEXT,
+        architecture_overview TEXT,
+        database_design TEXT,
+        estimated_complexity TEXT,
+        resume_value TEXT,
+        specification_json TEXT,
+        milestones_json TEXT,
+        current_milestone INTEGER DEFAULT 1,
+        progress_percent INTEGER DEFAULT 0,
+        status TEXT DEFAULT 'in_progress',
+        github_url TEXT,
+        live_url TEXT,
+        resume_bullets_json TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_guided_proj_user ON guided_projects(user_id);
+      CREATE INDEX IF NOT EXISTS idx_guided_proj_status ON guided_projects(status);
+    `,
+  },
+  {
+    name: 'career_readiness_history',
+    conflictKey: 'id',
+    sql: `
+      CREATE TABLE IF NOT EXISTS career_readiness_history (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        overall_score INTEGER NOT NULL,
+        overall_level TEXT NOT NULL,
+        technical_score INTEGER NOT NULL,
+        project_score INTEGER NOT NULL,
+        resume_score INTEGER NOT NULL,
+        interview_score INTEGER NOT NULL,
+        trigger_activity TEXT NOT NULL,
+        activity_detail TEXT,
+        created_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_crh_user ON career_readiness_history(user_id, created_at DESC);
+    `,
+  },
+  {
+    name: 'user_career_goals',
+    conflictKey: 'id',
+    sql: `
+      CREATE TABLE IF NOT EXISTS user_career_goals (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL UNIQUE,
+        target_role TEXT NOT NULL,
+        target_industry TEXT,
+        experience_level TEXT,
+        preferred_location TEXT,
+        target_salary TEXT,
+        skills_summary TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_ucg_user ON user_career_goals(user_id);
+    `,
+  },
+  {
+    name: 'user_learning_roadmaps',
+    conflictKey: 'id',
+    sql: `
+      CREATE TABLE IF NOT EXISTS user_learning_roadmaps (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        target_role TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'active',
+        roadmap_data TEXT NOT NULL,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_ulr_user ON user_learning_roadmaps(user_id);
+    `,
+  },
+  {
+    name: 'user_interview_sessions',
+    conflictKey: 'id',
+    sql: `
+      CREATE TABLE IF NOT EXISTS user_interview_sessions (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        target_role TEXT NOT NULL,
+        job_title TEXT,
+        company TEXT,
+        questions_data TEXT NOT NULL,
+        answers_data TEXT,
+        overall_score INTEGER,
+        overall_feedback TEXT,
+        status TEXT NOT NULL DEFAULT 'in_progress',
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL
+      );
+      CREATE INDEX IF NOT EXISTS idx_uis_user ON user_interview_sessions(user_id);
+    `,
+  },
 ];
 
 async function runMigration() {
-  const client = await pool.connect();
+  // 1. Strict pre-connection target validation (runs before opening any socket or database)
+  let target;
   try {
+    target = assertStagingTargetSafe(postgresUrl, { actionDescription: 'data migration' });
+  } catch (err) {
+    console.error(`\n❌ ${err.message}\n`);
+    process.exit(1);
+  }
+
+  console.log('====================================================');
+  console.log('SMART RESUME AI: SQLITE -> POSTGRESQL DATA MIGRATION');
+  console.log('====================================================');
+  console.log(`Source SQLite:   ${sqliteDbPath}`);
+  console.log(`Target Postgres: ${target.maskedUrl}`);
+  console.log('====================================================\n');
+
+  const sqliteDb = new DatabaseSync(sqliteDbPath);
+  const pool = new Pool({
+    connectionString: postgresUrl,
+    ssl: target.isLocal ? false : true,
+  });
+
+  let client;
+  try {
+    client = await pool.connect();
+
+    // 2. Independent post-connection database identity verification
+    const identity = await verifyDatabaseIdentity(client);
+    console.log(`Verified DB Identity: Database="${identity.database}" | User="${identity.user}" | IP="${identity.serverIp}"\n`);
+
     console.log('[Step 1/3] Creating PostgreSQL tables and indexes...');
     for (const t of TABLE_SCHEMAS) {
       await client.query(t.sql);
@@ -528,8 +735,25 @@ async function runMigration() {
       'ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS applied_confirmed_at TEXT',
       'ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS description_snippet TEXT',
       'ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS salary TEXT',
+      'ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS cover_letter TEXT',
+      'ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS tailored_summary TEXT',
+      'ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS checklist_state TEXT',
+      'ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS match_analysis TEXT',
+      'ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS interview_date TEXT',
+      'ALTER TABLE job_applications ADD COLUMN IF NOT EXISTS outreach_message TEXT',
       'ALTER TABLE resumes ADD COLUMN IF NOT EXISTS resume_data TEXT',
+      'ALTER TABLE resume_improvements ADD COLUMN IF NOT EXISTS resume_id TEXT',
+      'ALTER TABLE resume_improvements ADD COLUMN IF NOT EXISTS category TEXT',
+      'ALTER TABLE resume_improvements ADD COLUMN IF NOT EXISTS before_text TEXT',
+      'ALTER TABLE resume_improvements ADD COLUMN IF NOT EXISTS after_text TEXT',
+      'ALTER TABLE resume_versions ADD COLUMN IF NOT EXISTS resume_id TEXT',
+      'ALTER TABLE resume_versions ADD COLUMN IF NOT EXISTS version_number INTEGER DEFAULT 1',
+      'ALTER TABLE resume_versions ADD COLUMN IF NOT EXISTS resume_data TEXT',
+      'ALTER TABLE resume_versions ADD COLUMN IF NOT EXISTS change_summary TEXT',
+      'ALTER TABLE admin_users ADD COLUMN IF NOT EXISTS session_token TEXT',
       'CREATE INDEX IF NOT EXISTS idx_users_lower_email ON users(LOWER(email))',
+      'CREATE INDEX IF NOT EXISTS idx_improvements_resume ON resume_improvements(resume_id)',
+      'CREATE INDEX IF NOT EXISTS idx_improvements_user_created ON resume_improvements(user_id, created_at DESC)',
     ];
     for (const ddl of columnReconciliations) {
       await client.query(ddl);
@@ -621,13 +845,20 @@ async function runMigration() {
     }
 
     if (allMatched) {
-      console.log('\n🎉 SUCCESS: All 22 tables migrated and verified with 100% integrity!');
+      console.log(`\n🎉 SUCCESS: All ${TABLE_SCHEMAS.length} tables migrated and verified with 100% integrity!`);
     } else {
       console.log('\n⚠️ NOTICE: Some table counts differ (possibly due to pre-existing rows in Postgres). Please review above table.');
     }
   } finally {
-    client.release();
+    if (client) {
+      try {
+        client.release();
+      } catch {}
+    }
     await pool.end();
+    try {
+      sqliteDb.close();
+    } catch {}
   }
 }
 

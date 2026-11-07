@@ -59,6 +59,32 @@ interface RealStatsData {
 }
 
 interface DetailedData {
+  studentFunnel?: {
+    totalRegisteredUsers: number;
+    withProfileCount: number;
+    withResumeCount: number;
+    withVerifiedSkillCount: number;
+    withInterviewSessionCount: number;
+    withJobApplicationCount: number;
+  };
+  readinessDistribution?: {
+    novice: number;
+    developing: number;
+    competitive: number;
+    careerReady: number;
+    totalSnapshots: number;
+  };
+  projectStats?: {
+    totalGuidedProjects: number;
+    completedProjects: number;
+    inProgressProjects: number;
+  };
+  aiServiceHealth?: {
+    geminiConfigured: boolean;
+    geminiStatus: string;
+    deterministicAtsStatus: string;
+    jobSearchProviders: string[];
+  };
   resumeAnalytics: {
     totalResumes: number;
     pdfCount: number;
@@ -152,6 +178,32 @@ export default function AdminDashboardPage() {
   };
 
   const d = details || {
+    studentFunnel: {
+      totalRegisteredUsers: 0,
+      withProfileCount: 0,
+      withResumeCount: 0,
+      withVerifiedSkillCount: 0,
+      withInterviewSessionCount: 0,
+      withJobApplicationCount: 0,
+    },
+    readinessDistribution: {
+      novice: 0,
+      developing: 0,
+      competitive: 0,
+      careerReady: 0,
+      totalSnapshots: 0,
+    },
+    projectStats: {
+      totalGuidedProjects: 0,
+      completedProjects: 0,
+      inProgressProjects: 0,
+    },
+    aiServiceHealth: {
+      geminiConfigured: false,
+      geminiStatus: 'deterministic_fallback',
+      deterministicAtsStatus: 'healthy',
+      jobSearchProviders: ['Adzuna', 'Jooble', 'LinkedIn', 'Naukri'],
+    },
     resumeAnalytics: {
       totalResumes: 0,
       pdfCount: 0,
@@ -331,6 +383,146 @@ export default function AdminDashboardPage() {
             </GlassCard>
           </Link>
         </div>
+      </div>
+
+      {/* Student Career Funnel & Platform Intelligence Telemetry */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+        {/* Student Progression Funnel (7 cols) */}
+        <GlassCard className="lg:col-span-7 p-6 flex flex-col justify-between space-y-4">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">
+                  Student Career Funnel
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                  End-to-end student progression from account registration to job application.
+                </p>
+              </div>
+              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30">
+                Candidate Pipeline
+              </span>
+            </div>
+
+            {/* Funnel Steps */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+              {[
+                { label: 'Registered', count: d.studentFunnel?.totalRegisteredUsers || 0, sub: 'Total students' },
+                { label: 'Profile Setup', count: d.studentFunnel?.withProfileCount || 0, sub: 'Target role set' },
+                { label: 'Resume on File', count: d.studentFunnel?.withResumeCount || 0, sub: 'Parsed documents' },
+                { label: 'Skill Verified', count: d.studentFunnel?.withVerifiedSkillCount || 0, sub: 'Proctored passes' },
+                { label: 'Interviewed', count: d.studentFunnel?.withInterviewSessionCount || 0, sub: 'AI mock sessions' },
+                { label: 'Applied', count: d.studentFunnel?.withJobApplicationCount || 0, sub: 'Tracked pipeline' },
+              ].map((step, idx) => (
+                <div key={step.label} className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+                  <div className="flex items-center justify-between text-[10px] font-mono text-[var(--text-muted)]">
+                    <span>STEP {idx + 1}</span>
+                  </div>
+                  <div className="text-xl font-black text-[var(--text-primary)] mt-1">
+                    {step.count}
+                  </div>
+                  <div className="text-xs font-semibold text-[var(--text-primary)] mt-0.5">
+                    {step.label}
+                  </div>
+                  <div className="text-[10px] text-[var(--text-muted)] mt-0.5">
+                    {step.sub}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Guided Projects & Milestones Summary */}
+          <div className="pt-3 border-t border-[var(--border-color)] flex items-center justify-between text-xs text-[var(--text-secondary)]">
+            <span>
+              Guided Capstones: <strong className="text-[var(--text-primary)]">{d.projectStats?.totalGuidedProjects || 0}</strong> total ({d.projectStats?.inProgressProjects || 0} active, {d.projectStats?.completedProjects || 0} completed)
+            </span>
+            <Link href="/admin/users" className="text-[var(--accent)] font-semibold hover:underline flex items-center gap-1">
+              <span>View Candidates</span>
+              <ArrowUpRight className="w-3 h-3" />
+            </Link>
+          </div>
+        </GlassCard>
+
+        {/* AI Reliability & Readiness Distribution (5 cols) */}
+        <GlassCard className="lg:col-span-5 p-6 flex flex-col justify-between space-y-4">
+          <div>
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-base font-bold text-[var(--text-primary)]">
+                  AI Service Reliability
+                </h3>
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                  LLM providers, deterministic fallbacks, and readiness distribution.
+                </p>
+              </div>
+              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-emerald-500/15 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span>Operational</span>
+              </span>
+            </div>
+
+            {/* AI Providers & Status */}
+            <div className="space-y-2 text-xs">
+              <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-[var(--text-primary)]">Gemini 2.5 Flash</p>
+                  <p className="text-[10px] text-[var(--text-muted)]">Core career LLM provider</p>
+                </div>
+                <span className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                  d.aiServiceHealth?.geminiConfigured
+                    ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/25'
+                    : 'bg-amber-500/10 text-amber-400 border-amber-500/25'
+                }`}>
+                  {d.aiServiceHealth?.geminiConfigured ? 'Configured (Live)' : 'Deterministic Fallback'}
+                </span>
+              </div>
+
+              <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-between">
+                <div>
+                  <p className="font-bold text-[var(--text-primary)]">Deterministic ATS Engine</p>
+                  <p className="text-[10px] text-[var(--text-muted)]">Advanced resume intelligence & scoring</p>
+                </div>
+                <span className="px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/25">
+                  Active (0ms SLA)
+                </span>
+              </div>
+            </div>
+
+            {/* Readiness Distribution */}
+            <div className="mt-4 pt-3 border-t border-[var(--border-color)]">
+              <span className="text-[10px] font-bold uppercase tracking-wider text-[var(--text-muted)] block mb-2">
+                Career Readiness Distribution
+              </span>
+              <div className="grid grid-cols-4 gap-2 text-center text-xs">
+                <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
+                  <span className="text-sm font-extrabold text-[var(--text-primary)] block">
+                    {d.readinessDistribution?.novice || 0}
+                  </span>
+                  <span className="text-[9px] text-[var(--text-muted)] block">Novice</span>
+                </div>
+                <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
+                  <span className="text-sm font-extrabold text-blue-400 block">
+                    {d.readinessDistribution?.developing || 0}
+                  </span>
+                  <span className="text-[9px] text-[var(--text-muted)] block">Developing</span>
+                </div>
+                <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
+                  <span className="text-sm font-extrabold text-amber-400 block">
+                    {d.readinessDistribution?.competitive || 0}
+                  </span>
+                  <span className="text-[9px] text-[var(--text-muted)] block">Competitive</span>
+                </div>
+                <div className="p-2 rounded-lg bg-[var(--bg-secondary)]">
+                  <span className="text-sm font-extrabold text-emerald-400 block">
+                    {d.readinessDistribution?.careerReady || 0}
+                  </span>
+                  <span className="text-[9px] text-[var(--text-muted)] block">Job Ready</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </GlassCard>
       </div>
 
       {/* Two Column Section: Real ATS History Chart + Real Skill Assessment Performance Chart */}

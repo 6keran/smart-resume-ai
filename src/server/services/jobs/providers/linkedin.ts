@@ -5,6 +5,8 @@ import {
   detectExperienceLevel,
   detectWorkplaceType,
   extractSkills,
+  isValidHttpUrl,
+  normalizePostedAt,
 } from '../normalize';
 
 export class LinkedInProvider implements JobProvider {
@@ -219,13 +221,13 @@ export class LinkedInProvider implements JobProvider {
         if (idFromUrl) jobId = idFromUrl[1];
       }
 
-      if (title && company) {
+      if (title && company && jobId && isValidHttpUrl(cleanUrl)) {
         cards.push({
-          jobId: jobId || `li_${Math.random().toString(36).substring(2, 9)}`,
+          jobId,
           title,
           company,
           location: loc,
-          url: cleanUrl || rawUrl || `https://www.linkedin.com/jobs/search?keywords=${encodeURIComponent(title)}`,
+          url: cleanUrl,
           date: dateMatch ? dateMatch[1] : undefined,
           logoUrl: logoMatch ? logoMatch[1].replace(/&amp;/g, '&') : undefined,
         });
@@ -316,7 +318,7 @@ export class LinkedInProvider implements JobProvider {
     const empType = detectEmploymentType(raw.employmentType || desc);
     const expLevel = detectExperienceLevel(raw.seniority || desc, raw.title);
 
-    const postedDate = raw.date ? new Date(raw.date).toISOString() : new Date().toISOString();
+    const postedDate = normalizePostedAt(raw.date);
 
     return {
       id: `li_${raw.jobId}`,

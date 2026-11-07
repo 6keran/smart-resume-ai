@@ -3,6 +3,10 @@ import crypto from 'node:crypto';
 import path from 'node:path';
 import fs from 'node:fs';
 import Module from 'node:module';
+import { setupTestDb } from './testDbIsolation.mjs';
+
+// Initialize isolated SQLite sandbox to protect data/smart_resume.db
+setupTestDb('auth_security_comprehensive');
 
 // Intercept server-only for standalone Node execution
 const origLoad = Module._load;
@@ -87,7 +91,7 @@ async function runSuite() {
     deleteJobApplication,
   } = await import('../src/server/db/index.ts');
 
-  const baseUrl = 'http://localhost:3000';
+  const baseUrl = process.env.TEST_BASE_URL || 'http://localhost:3000';
   const db = getDb();
   const testRunId = Date.now().toString(36);
   const createdUserIds = [];
@@ -391,6 +395,10 @@ async function runSuite() {
         headers: { Cookie: `sra_admin_session=${adminToken}` },
         redirect: 'manual',
       });
+      if (res.status === 500) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(`Server returned HTTP 500 (Infrastructure/Database failure: ${errJson.details || errJson.message || 'Internal Server Error'})`);
+      }
       assert.equal(res.status, 200);
       const data = await res.json();
       assert.ok(Array.isArray(data.users));
@@ -407,6 +415,10 @@ async function runSuite() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ email: userAEmail, password: userAPassword }),
       });
+      if (res.status === 500) {
+        const errJson = await res.json().catch(() => ({}));
+        throw new Error(`Server returned HTTP 500 (Infrastructure/Database failure: ${errJson.details || errJson.message || 'Internal Server Error'})`);
+      }
       assert.equal(res.status, 200);
       const setCookies = res.headers.getSetCookie ? res.headers.getSetCookie() : [res.headers.get('set-cookie') || ''];
       const sessionCookie = setCookies.find((c) => c.includes('sra_user_session='));

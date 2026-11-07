@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { updateLiveProctoringHeartbeat, getLiveProctoringSessionDetail, verifyAdminToken } from '@/server/db';
+import { updateLiveProctoringHeartbeat, getLiveProctoringSessionDetail, verifyAdminTokenAsync } from '@/server/db';
 import { getUserFromRequest } from '@/server/auth/userSession';
 
 export async function POST(req: Request) {
@@ -21,7 +21,7 @@ export async function POST(req: Request) {
 
     const cookieStore = await cookies();
     const adminToken = cookieStore.get('sra_admin_session')?.value;
-    const admin = verifyAdminToken(adminToken);
+    const admin = await verifyAdminTokenAsync(adminToken);
     const user = await getUserFromRequest(req);
 
     const isAdmin = Boolean(admin && admin.role === 'ADMIN');

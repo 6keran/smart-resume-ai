@@ -27,9 +27,9 @@ export default async function UserAssessmentsPage() {
   const assessments = await getUserAssessments(user.id);
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[var(--border-color)] gap-4">
+      <div className="bento-card p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
             My Assessments
@@ -40,7 +40,7 @@ export default async function UserAssessmentsPage() {
         </div>
         <Link
           href="/skills"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-90 transition-all shadow-sm"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer"
         >
           <FileCheck2 className="w-4 h-4" />
           <span>Take New Assessment</span>
@@ -80,7 +80,7 @@ export default async function UserAssessmentsPage() {
             return (
               <div
                 key={a.id}
-                className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 hover:bg-[var(--bg-secondary)] p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-200 hover:border-[var(--accent)]/30"
+                className="bento-card p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-200"
               >
                 <div className="flex items-center gap-3.5">
                   <div
@@ -165,8 +165,8 @@ export default async function UserAssessmentsPage() {
                     </Link>
                   ) : (
                     <Link
-                      href="/skills"
-                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-[var(--accent)] text-xs font-semibold text-[var(--text-primary)] hover:text-[var(--accent)] transition-all"
+                      href={`/skills/assess/${encodeURIComponent(a.skill)}`}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-[var(--accent)] text-xs font-semibold text-[var(--text-primary)] hover:text-[var(--accent)] transition-all cursor-pointer"
                     >
                       <span>Retake</span>
                     </Link>

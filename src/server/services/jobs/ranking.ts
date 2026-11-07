@@ -25,9 +25,42 @@ export function rankJobsWithResume(
   const candidateSkills = (params.resumeSkills || []).map((s) => s.trim()).filter(Boolean);
   const context = params.candidateContext;
 
-  // If no resume context provided, return jobs as is
+  // If no resume context provided, ensure freshness and eligibility metadata are still populated
   if (candidateSkills.length === 0 && !context) {
-    return jobs;
+    return jobs.map((job) => {
+      const jobSkills = job.skills.length > 0 ? job.skills : extractSkills(job.title, job.description);
+      let isExpired = false;
+      if (job.postedAt) {
+        const postDate = new Date(job.postedAt).getTime();
+        if (!isNaN(postDate)) {
+          const daysOld = (Date.now() - postDate) / (1000 * 60 * 60 * 24);
+          if (daysOld > 60) isExpired = true;
+        }
+      }
+      const fresherFriendly =
+        job.experienceLevel === 'Fresher' ||
+        job.experienceLevel === 'Entry' ||
+        /\b(fresher|intern|entry level|graduate|college|trainee|0-1|0-2)\b/i.test(`${job.title} ${job.description}`);
+
+      return {
+        ...job,
+        skills: jobSkills,
+        isRealListing: true,
+        isExpired,
+        eligibility: {
+          isEligible: Boolean(fresherFriendly),
+          fresherEligible: Boolean(fresherFriendly),
+          educationEligible: true,
+          summary: fresherFriendly
+            ? 'Early career opportunity suitable for freshers and college students.'
+            : 'Compare your background with listed qualifications.',
+          details: [
+            fresherFriendly ? 'Eligible for early career / fresh graduates' : 'Higher experience preferred',
+          ],
+        },
+        matchReason: `Active opening in ${job.location || 'specified location'}. Upload or build your resume to compute matching criteria.`,
+      };
+    });
   }
 
   const candidateSkillsLower = new Set(candidateSkills.map((s) => s.toLowerCase()));
@@ -193,6 +226,38 @@ export function rankJobsWithResume(
       matchReason = `Relevant role in ${job.location}. Compare your background with listed requirements.`;
     }
 
+    // 10. Student Eligibility & Freshness Verification
+    const fresherFriendly =
+      job.experienceLevel === 'Fresher' ||
+      job.experienceLevel === 'Entry' ||
+      /\b(fresher|intern|entry level|graduate|college|trainee|0-1|0-2)\b/i.test(`${job.title} ${job.description}`);
+    const educationEligible = eduScore >= 75;
+    const isEligible = Boolean(fresherFriendly && educationEligible);
+
+    let isExpired = false;
+    if (job.postedAt) {
+      const postDate = new Date(job.postedAt).getTime();
+      if (!isNaN(postDate)) {
+        const daysOld = (Date.now() - postDate) / (1000 * 60 * 60 * 24);
+        if (daysOld > 60) isExpired = true;
+      }
+    }
+
+    const eligibility = {
+      isEligible,
+      fresherEligible: Boolean(fresherFriendly),
+      educationEligible,
+      summary: isEligible
+        ? 'You meet the qualifications and experience profile for this opening.'
+        : !fresherFriendly
+        ? 'Position typically requests higher prior work experience.'
+        : 'Verify specific degree requirements in listing.',
+      details: [
+        fresherFriendly ? 'Eligible for early career / fresh graduates' : 'Higher experience preferred',
+        educationEligible ? 'Academic degree matches discipline' : 'Verify degree specialization',
+      ],
+    };
+
     return {
       ...job,
       skills: jobSkills,
@@ -202,6 +267,9 @@ export function rankJobsWithResume(
       partialSkills,
       missingSkills,
       matchReason,
+      isRealListing: true,
+      isExpired,
+      eligibility,
     };
   });
 

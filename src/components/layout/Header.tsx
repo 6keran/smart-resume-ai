@@ -18,10 +18,11 @@ import {
   Target,
   Home,
   User,
-  Compass,
   LogOut,
   Sparkles,
   BarChart3,
+  HelpCircle,
+  Code2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserProfile } from '@/components/user/UserContext';
@@ -33,13 +34,14 @@ export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, openModal, logout } = useUserProfile();
 
-  // If in full assessment screen, admin console, user dashboard, or auth pages, hide standard header
+  // If in full assessment screen, admin console, user dashboard, auth pages, or public landing page, hide standard header
   if (
     pathname?.startsWith('/skills/assess/') ||
     pathname?.startsWith('/admin') ||
     pathname?.startsWith('/dashboard') ||
     pathname === '/login' ||
-    pathname === '/register'
+    pathname === '/register' ||
+    (pathname === '/' && !user)
   ) {
     return null;
   }
@@ -58,16 +60,22 @@ export function Header() {
         return 'Resume Improver';
       case '/builder':
         return 'Resume Builder';
+      case '/projects':
+        return 'Project Mentor';
       case '/skills':
         return 'Skill Assessments';
       case '/job-match':
         return 'Job Match';
       case '/jobs':
         return 'Job Search';
+      case '/apply-assistant':
+        return 'Application Assistant';
       case '/guidance':
         return 'Career Guidance';
       case '/feedback':
         return 'Feedback';
+      case '/faq':
+        return 'Frequently Asked Questions';
       default:
         if (pathname?.startsWith('/skills/certificate/')) return 'Skill Certificate';
         return 'Smart Resume AI';
@@ -78,10 +86,12 @@ export function Header() {
     { label: 'Home', href: '/', icon: Home },
     { label: 'ATS Score', href: '/ats-score', icon: BarChart3 },
     { label: 'Resume Analyzer', href: '/analyzer', icon: FileText },
+    { label: 'Project Mentor', href: '/projects', icon: Code2, badge: 'New' },
+    { label: 'Apply Assistant', href: '/apply-assistant', icon: Sparkles, badge: 'AI' },
     { label: 'Skill Assessments', href: '/skills', icon: BadgeCheck },
-    { label: 'Career Guidance', href: '/guidance', icon: Compass, badge: 'Coming Soon' },
     { label: 'Resume Builder', href: '/builder', icon: FileEdit },
     { label: 'Job Search', href: '/jobs', icon: BriefcaseBusiness },
+    { label: 'FAQ', href: '/faq', icon: HelpCircle },
     { label: 'Feedback', href: '/feedback', icon: MessageSquare },
   ];
 
@@ -141,32 +151,14 @@ export function Header() {
                 href="#workflow"
                 className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors"
               >
-                How It Works
+                Workflow
               </a>
-              <Link
-                href="/ats-score"
+              <a
+                href="#ai-assistant"
                 className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors"
               >
-                ATS Score
-              </Link>
-              <Link
-                href="/analyzer"
-                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors"
-              >
-                ATS Audit
-              </Link>
-              <Link
-                href="/builder"
-                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors"
-              >
-                A4 Builder
-              </Link>
-              <Link
-                href="/jobs"
-                className="px-3 py-1.5 rounded-xl text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors"
-              >
-                Job Search
-              </Link>
+                AI Assistant
+              </a>
             </nav>
           )}
         </div>
@@ -187,53 +179,45 @@ export function Header() {
                 href="/dashboard"
                 title={`Dashboard (${user.name})`}
                 aria-label={`Dashboard (${user.name})`}
-                className="inline-flex items-center gap-1.5 p-1.5 sm:px-2.5 lg:px-3 sm:py-1.5 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] hover:border-[var(--glass-border-hover)] text-xs text-[var(--text-primary)] transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-[var(--shadow-xs)] group shrink-0"
+                className="inline-flex items-center gap-1.5 p-1.5 sm:px-3 sm:py-1 rounded-full bg-[var(--glass-bg)] border border-[var(--glass-border)] hover:border-[var(--glass-border-hover)] text-xs text-[var(--text-primary)] transition-all duration-200 active:scale-[0.98] cursor-pointer shadow-[var(--shadow-xs)] group shrink-0"
               >
-                <div className="w-6 h-6 sm:w-5 sm:h-5 rounded-lg bg-[var(--accent)]/12 text-[var(--accent)] font-semibold text-[11px] sm:text-[10px] flex items-center justify-center border border-[var(--accent)]/20 shrink-0">
+                <div className="w-5 h-5 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] font-semibold text-[10px] flex items-center justify-center border border-[var(--accent)]/20 shrink-0">
                   {user.name.charAt(0).toUpperCase()}
                 </div>
-                <span className="font-medium text-xs max-w-[90px] lg:max-w-[120px] truncate text-[var(--text-primary)] hidden sm:inline">
+                <span className="font-semibold text-xs max-w-[90px] lg:max-w-[120px] truncate text-[var(--text-primary)] hidden sm:inline">
                   {user.name}
                 </span>
-                <span className="text-[10px] font-medium px-1.5 py-0.5 rounded-md bg-[var(--accent-subtle)] text-[var(--accent)] hidden lg:inline">
+                <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent-subtle)] text-[var(--accent)] hidden lg:inline">
                   Dashboard
                 </span>
               </Link>
               <button
                 type="button"
                 onClick={() => logout()}
-                className="p-2 sm:px-2.5 sm:py-1.5 rounded-xl border border-[var(--glass-border)] text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--color-error)] hover:border-[var(--color-error)]/30 transition-all duration-200 active:scale-95 cursor-pointer"
+                className="btn-icon btn-icon-sm rounded-full text-xs font-medium text-[var(--text-secondary)] hover:text-[var(--color-error)] hover:border-[var(--color-error)]/30 transition-all duration-200 cursor-pointer"
                 title="Sign Out"
                 aria-label="Sign Out"
               >
-                <LogOut className="w-4 h-4 md:hidden text-[var(--text-secondary)]" />
-                <span className="hidden md:inline">Sign Out</span>
+                <LogOut className="w-3.5 h-3.5" />
               </button>
             </div>
           ) : (
-            <div className="flex items-center gap-1.5 sm:gap-2">
+            <div className="flex items-center gap-2">
               <Link
                 href="/login"
-                className="px-2.5 sm:px-3.5 py-1.5 rounded-xl border border-[var(--glass-border)] text-xs font-medium text-[var(--text-primary)] hover:bg-[var(--glass-bg)] active:scale-[0.98] transition-all duration-200"
+                className="btn-secondary text-xs h-8 px-3.5"
               >
                 Sign In
               </Link>
               <Link
                 href="/register"
-                className="hidden sm:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] transition-all duration-200 shadow-[var(--shadow-sm)] active:scale-95"
+                className="btn-primary text-xs h-8 px-4 hidden sm:inline-flex"
               >
                 Get Started
               </Link>
             </div>
           )}
 
-          <Link
-            href="/analyzer"
-            className="hidden lg:inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] hover:border-[var(--glass-border-hover)] text-xs font-medium text-[var(--text-primary)] transition-all duration-200 active:scale-[0.98] shadow-[var(--shadow-xs)]"
-          >
-            <FileText className="w-3.5 h-3.5 text-[var(--accent)]" />
-            Analyze Resume
-          </Link>
         </div>
       </header>
 

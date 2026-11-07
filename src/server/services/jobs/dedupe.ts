@@ -60,7 +60,7 @@ export function deduplicateJobs(jobs: NormalizedJob[]): NormalizedJob[] {
     if (seenFingerprints.has(fingerprint)) {
       const existing = seenFingerprints.get(fingerprint)!;
       // If the incoming job has salary information or longer description, replace existing
-      if ((!existing.salaryMin && job.salaryMin) || (job.description.length > existing.description.length)) {
+      if ((!existing.salaryMin && job.salaryMin) || ((job.description?.length || 0) > (existing.description?.length || 0))) {
         seenFingerprints.set(fingerprint, job);
       }
     } else {

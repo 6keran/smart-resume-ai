@@ -21,7 +21,7 @@ import {
   Play,
   RotateCcw,
   BookOpen,
-  Sparkles,
+  Target,
   ExternalLink,
 } from 'lucide-react';
 import { SupportedSkill, AssessmentAttempt, ProctoringEvent, ProctoringEventType } from '@/types/skills';
@@ -45,10 +45,40 @@ interface ExamQuestion {
 
 type AssessmentStage = 'readiness' | 'testing' | 'result';
 
+const ALL_SUPPORTED_SKILLS: SupportedSkill[] = [
+  'Python',
+  'Java',
+  'JavaScript',
+  'SQL',
+  'React',
+  'C++',
+  'C#',
+  'Machine Learning',
+  'Data Analysis',
+  'Git',
+  'AWS',
+];
+
+export function normalizeSupportedSkill(raw: string | undefined | null): SupportedSkill {
+  if (!raw) return 'Python';
+  const decoded = decodeURIComponent(raw).trim();
+  const directMatch = ALL_SUPPORTED_SKILLS.find(
+    (s) => s.toLowerCase() === decoded.toLowerCase()
+  );
+  if (directMatch) return directMatch;
+  if (/^c\+\+|cpp$/i.test(decoded)) return 'C++';
+  if (/^c\#|csharp|cs$/i.test(decoded)) return 'C#';
+  if (/^js$/i.test(decoded)) return 'JavaScript';
+  if (/^ml|machine[-_ ]?learning$/i.test(decoded)) return 'Machine Learning';
+  if (/^data[-_ ]?analysis$/i.test(decoded)) return 'Data Analysis';
+  return 'Python';
+}
+
 export default function AssessmentRunnerPage() {
   const params = useParams();
   const router = useRouter();
-  const skillParam = decodeURIComponent((params?.skill as string) || 'Python') as SupportedSkill;
+  const rawSkill = (params?.skill as string) || 'Python';
+  const skillParam = normalizeSupportedSkill(rawSkill);
   const { recordAssessmentResult } = useCareer();
 
   // Lifecycle Stage
@@ -1044,7 +1074,7 @@ export default function AssessmentRunnerPage() {
           </div>
 
           {/* Main Readiness Card */}
-          <GlassCard className="p-6 sm:p-8 space-y-6 text-left" glow>
+          <GlassCard variant="bento" className="p-6 sm:p-8 space-y-6 text-left" glow>
             <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[var(--border-color)] gap-3">
               <div>
                 <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[var(--accent)]/15 text-[var(--accent)] mb-2">
@@ -1140,11 +1170,11 @@ export default function AssessmentRunnerPage() {
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-xs text-indigo-300 leading-relaxed space-y-1">
-                <p className="font-semibold text-indigo-200">
+              <div className="p-3.5 rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent)]/20 text-xs text-[var(--text-secondary)] leading-relaxed space-y-1">
+                <p className="font-semibold text-[var(--text-primary)]">
                   Candidate Consent & Camera Proctoring Notice:
                 </p>
-                <p className="text-[11px] text-indigo-200/80">
+                <p className="text-[11px] text-[var(--text-secondary)]">
                   By starting this examination, you acknowledge and consent that your camera feed is streamed in real-time to the administrator proctoring console for skill authentication. Audio is strictly disabled. Video media tracks are stopped and released immediately when your assessment concludes.
                 </p>
               </div>
@@ -1196,7 +1226,7 @@ export default function AssessmentRunnerPage() {
                       type="button"
                       onClick={handleEnableCamera}
                       disabled={cameraLoading || measuringFrames}
-                      className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-bold shadow-md shadow-[var(--accent)]/20 transition-all hover:scale-105 active:scale-95 disabled:opacity-50"
+                      className="btn-primary btn-sm inline-flex items-center gap-2 text-xs font-semibold shadow-md cursor-pointer disabled:opacity-50"
                     >
                       <Camera className="w-4 h-4" />
                       <span>Enable Camera & Verify Frames</span>
@@ -1252,7 +1282,7 @@ export default function AssessmentRunnerPage() {
                   <button
                     type="button"
                     onClick={handleStartAssessment}
-                    className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-lg bg-rose-500 text-white text-xs font-bold hover:bg-rose-600 transition-colors shadow-sm"
+                    className="btn-destructive btn-sm inline-flex items-center gap-1.5 text-xs font-semibold shadow-sm cursor-pointer"
                   >
                     <RotateCcw className="w-3.5 h-3.5" />
                     <span>Retry Fullscreen Activation</span>
@@ -1285,7 +1315,7 @@ export default function AssessmentRunnerPage() {
                 type="button"
                 onClick={handleStartAssessment}
                 disabled={!cameraActive || !rulesAccepted || startLoading}
-                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs sm:text-sm shadow-lg shadow-emerald-500/25 transition-all hover:scale-105 active:scale-95 disabled:opacity-40 disabled:hover:scale-100 disabled:cursor-not-allowed"
+                className="btn-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 text-xs sm:text-sm font-semibold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
               >
                 {startLoading ? (
                   <>
@@ -1505,7 +1535,7 @@ export default function AssessmentRunnerPage() {
                         type="button"
                         onClick={() => !isPaused && setCurrentIndex(idx)}
                         disabled={isPaused}
-                        className={`w-8 h-8 rounded-lg text-xs font-bold transition-all ${
+                        className={`w-8 h-8 rounded-full text-xs font-bold transition-all cursor-pointer ${
                           isCurr
                             ? 'bg-[var(--accent)] text-white ring-2 ring-[var(--accent)]'
                             : isAnswered
@@ -1524,7 +1554,7 @@ export default function AssessmentRunnerPage() {
                     type="button"
                     onClick={() => setCurrentIndex((prev) => Math.max(prev - 1, 0))}
                     disabled={currentIndex === 0 || isPaused}
-                    className="px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-xs font-semibold disabled:opacity-40"
+                    className="btn-secondary btn-sm text-xs cursor-pointer disabled:opacity-40"
                   >
                     Previous
                   </button>
@@ -1534,7 +1564,7 @@ export default function AssessmentRunnerPage() {
                       type="button"
                       onClick={() => setCurrentIndex((prev) => Math.min(prev + 1, questions.length - 1))}
                       disabled={isPaused}
-                      className="px-5 py-2 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold shadow-md flex items-center gap-1 disabled:opacity-40"
+                      className="btn-primary btn-sm flex items-center gap-1 text-xs cursor-pointer disabled:opacity-40 shadow-sm"
                     >
                       Next
                       <ChevronRight className="w-4 h-4" />
@@ -1544,7 +1574,7 @@ export default function AssessmentRunnerPage() {
                       type="button"
                       onClick={handleSubmitTest}
                       disabled={isSubmitting || isPaused}
-                      className="px-6 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-bold shadow-lg shadow-emerald-500/30 disabled:opacity-50"
+                      className="btn-primary btn-sm bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold shadow-md disabled:opacity-50 cursor-pointer"
                     >
                       {isSubmitting ? 'Grading...' : `Submit Assessment (${answeredCount}/${questions.length})`}
                     </button>
@@ -1660,7 +1690,7 @@ export default function AssessmentRunnerPage() {
       {/* ========================================================================= */}
       {stage === 'result' && attemptResult && (
         <div className="w-full max-w-3xl mx-auto space-y-6 text-left py-8 animate-fade-in">
-          <GlassCard className="p-8 text-center space-y-6" glow>
+          <GlassCard variant="bento" className="p-8 text-center space-y-6" glow>
             <div className="flex justify-center">
               <ScoreRing
                 score={
@@ -1844,7 +1874,7 @@ export default function AssessmentRunnerPage() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
                     <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] space-y-2">
                       <h4 className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
-                        <BookOpen className="w-3.5 h-3.5 text-indigo-400" />
+                        <BookOpen className="w-3.5 h-3.5 text-[var(--accent)]" />
                         Essential Concepts to Review
                       </h4>
                       <ul className="list-disc list-outside ml-4 space-y-1 text-[11px] text-[var(--text-secondary)]">
@@ -1856,7 +1886,7 @@ export default function AssessmentRunnerPage() {
 
                     <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] space-y-2">
                       <h4 className="text-xs font-bold text-[var(--text-primary)] flex items-center gap-1.5">
-                        <Sparkles className="w-3.5 h-3.5 text-amber-400" />
+                        <Target className="w-3.5 h-3.5 text-[var(--accent)]" />
                         Recruiter Exam Retake Tips
                       </h4>
                       <ul className="list-disc list-outside ml-4 space-y-1 text-[11px] text-[var(--text-secondary)]">

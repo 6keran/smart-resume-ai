@@ -1,4 +1,5 @@
 import assert from 'node:assert';
+import fs from 'node:fs';
 
 console.log('================================================================');
 console.log('SMART RESUME AI: CHATBOT VISIBILITY, AUTH & DRAG LOGIC TEST SUITE');
@@ -32,6 +33,10 @@ function isExcludedRoute(pathname) {
     pathname?.startsWith('/forgot-password') ||
     pathname?.startsWith('/reset-password') ||
     pathname?.startsWith('/admin') ||
+    pathname?.startsWith('/skills/assess') ||
+    pathname?.startsWith('/skills/certificate') ||
+    pathname?.startsWith('/assessment') ||
+    pathname?.startsWith('/assessments') ||
     pathname === '/privacy' ||
     pathname === '/terms'
   );
@@ -59,6 +64,17 @@ test('Admin pages are completely excluded', () => {
   assert.strictEqual(isExcludedRoute('/admin/proctoring'), true);
 });
 
+test('Assessment routes are completely excluded (instructions, testing, questions, results)', () => {
+  assert.strictEqual(isExcludedRoute('/skills/assess'), true);
+  assert.strictEqual(isExcludedRoute('/skills/assess/react'), true);
+  assert.strictEqual(isExcludedRoute('/skills/assess/python'), true);
+  assert.strictEqual(isExcludedRoute('/skills/assess/TypeScript'), true);
+  assert.strictEqual(isExcludedRoute('/skills/assess/System%20Design'), true);
+  assert.strictEqual(isExcludedRoute('/skills/certificate/cert_123'), true);
+  assert.strictEqual(isExcludedRoute('/assessment'), true);
+  assert.strictEqual(isExcludedRoute('/assessments'), true);
+});
+
 test('Public legal pages (privacy, terms) are excluded', () => {
   assert.strictEqual(isExcludedRoute('/privacy'), true);
   assert.strictEqual(isExcludedRoute('/terms'), true);
@@ -67,13 +83,13 @@ test('Public legal pages (privacy, terms) are excluded', () => {
 test('Protected candidate pages are ALLOWED (not excluded)', () => {
   assert.strictEqual(isExcludedRoute('/dashboard'), false);
   assert.strictEqual(isExcludedRoute('/dashboard/resumes'), false);
+  assert.strictEqual(isExcludedRoute('/dashboard/skills'), false);
   assert.strictEqual(isExcludedRoute('/builder'), false);
   assert.strictEqual(isExcludedRoute('/analyzer'), false);
   assert.strictEqual(isExcludedRoute('/improver'), false);
   assert.strictEqual(isExcludedRoute('/job-match'), false);
   assert.strictEqual(isExcludedRoute('/jobs'), false);
   assert.strictEqual(isExcludedRoute('/skills'), false);
-  assert.strictEqual(isExcludedRoute('/skills/assess/react'), false);
 });
 
 // -------------------------------------------------------------------------
@@ -271,6 +287,65 @@ test('Launcher in Bottom-Left quadrant: panel opens UPWARDS and LEFT-ALIGNED', (
 test('Mobile screens use responsive full sheet instead of manual absolute offsets', () => {
   const panel = computePanelStyle({ x: 100, y: 500 }, 375, 812);
   assert.strictEqual(panel.mobile, true);
+});
+
+// -------------------------------------------------------------------------
+// TEST GROUP 6: Open Panel Drag Controls
+// -------------------------------------------------------------------------
+console.log('\n--- TEST GROUP 6: OPEN PANEL DRAG CONTROLS ---');
+
+const chatbotSource = fs.readFileSync('src/components/chat/CareerChatbot.tsx', 'utf8');
+const PANEL_MARGIN = 8;
+
+function clampOpenPanelPosition(x, y, width, height, viewportWidth, viewportHeight) {
+  const maxX = Math.max(PANEL_MARGIN, viewportWidth - width - PANEL_MARGIN);
+  const maxY = Math.max(PANEL_MARGIN, viewportHeight - height - PANEL_MARGIN);
+  return {
+    x: clamp(x, PANEL_MARGIN, maxX),
+    y: clamp(y, PANEL_MARGIN, maxY),
+  };
+}
+
+test('Alex identity is not present in the chatbot source', () => {
+  assert.ok(!chatbotSource.includes('Alex'), 'The chatbot source must not contain Alex');
+});
+
+test('Header drag handlers use pointer capture and requestAnimationFrame', () => {
+  assert.ok(chatbotSource.includes('const handlePanelPointerDown'), 'Header must start a panel pointer drag');
+  assert.ok(chatbotSource.includes('const handlePanelPointerMove'), 'Header must handle panel pointer movement');
+  assert.ok(chatbotSource.includes('window.requestAnimationFrame'), 'Panel movement must be frame-throttled');
+  assert.ok(chatbotSource.includes('setPointerCapture'), 'Drag must capture the active pointer');
+  assert.ok(chatbotSource.includes('releasePointerCapture'), 'Drag must release the active pointer');
+  assert.ok(chatbotSource.includes('onPointerDown={handlePanelPointerDown}'), 'Header must wire its drag start handler');
+});
+
+test('Header controls and the confirmation dialog are excluded from dragging', () => {
+  assert.ok(
+    chatbotSource.includes("target.closest('button, a, input, textarea, select, [data-chat-no-drag=\"true\"]')"),
+    'Interactive header descendants must not initiate dragging'
+  );
+  assert.ok(chatbotSource.includes('data-chat-no-drag="true"'), 'The clear-confirmation dialog must not initiate dragging');
+});
+
+test('Open chat panel remains entirely within desktop and mobile viewports', () => {
+  assert.deepStrictEqual(
+    clampOpenPanelPosition(-200, -100, 460, 620, 1440, 900),
+    { x: 8, y: 8 }
+  );
+  assert.deepStrictEqual(
+    clampOpenPanelPosition(2000, 2000, 460, 620, 1440, 900),
+    { x: 972, y: 272 }
+  );
+  assert.deepStrictEqual(
+    clampOpenPanelPosition(600, 900, 359, 560, 375, 812),
+    { x: 8, y: 244 }
+  );
+});
+
+test('Viewport changes re-clamp an already moved panel', () => {
+  assert.ok(chatbotSource.includes('const currentPanelPosition = panelPositionRef.current'));
+  assert.ok(chatbotSource.includes('setPanelPosition(nextPosition)'));
+  assert.ok(chatbotSource.includes('clampPanelPosition('));
 });
 
 // -------------------------------------------------------------------------

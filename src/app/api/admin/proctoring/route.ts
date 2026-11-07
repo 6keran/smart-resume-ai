@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
 import {
-  verifyAdminToken,
+  verifyAdminTokenAsync,
   getProctoringSummary,
   recordProctoringEvent,
   getDb,
@@ -10,7 +10,7 @@ import {
 async function checkAdminAuth() {
   const cookieStore = await cookies();
   const token = cookieStore.get('sra_admin_session')?.value;
-  return Boolean(verifyAdminToken(token));
+  return Boolean(await verifyAdminTokenAsync(token));
 }
 
 export async function GET() {

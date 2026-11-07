@@ -29,9 +29,9 @@ export default async function UserSkillsPage() {
   const unverifiedSkills = skills.filter((s) => s.status !== 'VERIFIED');
 
   return (
-    <div className="space-y-6 animate-fade-in">
+    <div className="space-y-6 animate-fade-in text-left">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[var(--border-color)] gap-4">
+      <div className="bento-card p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
             Skill Badges
@@ -42,7 +42,7 @@ export default async function UserSkillsPage() {
         </div>
         <Link
           href="/skills"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-90 transition-all shadow-sm"
+          className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)] transition-all shadow-sm active:scale-95 shrink-0 cursor-pointer"
         >
           <Sparkles className="w-4 h-4" />
           <span>Take a Skill Assessment</span>
@@ -74,7 +74,7 @@ export default async function UserSkillsPage() {
             {verifiedSkills.map((s) => (
               <div
                 key={s.skillId}
-                className="rounded-2xl border border-emerald-500/25 bg-emerald-500/5 p-5 space-y-3 relative overflow-hidden"
+                className="bento-card p-5 space-y-3 relative overflow-hidden"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-center gap-2.5">
@@ -157,8 +157,8 @@ export default async function UserSkillsPage() {
                   Pass Mark: 70%
                 </span>
                 <Link
-                  href="/skills"
-                  className="px-3 py-1.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-90 transition-all flex items-center gap-1"
+                  href={`/skills/assess/${encodeURIComponent(s.skillName)}`}
+                  className="px-3 py-1.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-90 transition-all flex items-center gap-1 cursor-pointer"
                 >
                   <span>Start Test</span>
                   <ArrowRight className="w-3 h-3" />

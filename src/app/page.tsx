@@ -2,7 +2,7 @@ import React from 'react';
 import { getAuthenticatedUser } from '@/lib/userSession';
 import { getUserDashboardData } from '@/lib/db';
 import { DashboardContent } from '@/components/dashboard/DashboardContent';
-import LandingPage from '@/components/landing/LandingPage';
+import LandingPage from '@/components/landing/ProfessionalLandingPage';
 
 export const metadata = {
   title: 'Smart Resume AI | Home',

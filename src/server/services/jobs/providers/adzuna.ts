@@ -5,7 +5,9 @@ import {
   detectExperienceLevel,
   detectWorkplaceType,
   extractSkills,
+  isValidHttpUrl,
   formatSalary,
+  normalizePostedAt,
 } from '../normalize';
 
 interface AdzunaJobItem {
@@ -139,16 +141,17 @@ export class AdzunaProvider implements JobProvider {
       clearTimeout(timeoutId);
 
       if (!res.ok) {
-        console.warn(`[Adzuna Provider] HTTP ${res.status} response from Adzuna API.`);
-        return [];
+        throw new Error(`Adzuna returned status ${res.status}.`);
       }
 
       const data: AdzunaApiResponse = await res.json();
-      const rawResults = data.results || [];
+      const rawResults = (data.results || []).filter((item) =>
+        item?.id !== undefined && Boolean(item.title?.trim()) && isValidHttpUrl(item.redirect_url)
+      );
 
       return rawResults.map((item) => {
         const title = cleanHtml(item.title);
-        const company = cleanHtml(item.company?.display_name || 'Technology Company');
+        const company = cleanHtml(item.company?.display_name || 'Company not listed');
         const locationStr = cleanHtml(item.location?.display_name || params.location || 'India');
         const description = cleanHtml(item.description || '');
         const snippet = description.slice(0, 240);
@@ -180,7 +183,7 @@ export class AdzunaProvider implements JobProvider {
           employmentType: employment,
           experienceLevel: expLevel,
           workplaceType: workplace,
-          postedAt: item.created || new Date().toISOString(),
+          postedAt: normalizePostedAt(item.created),
           applyUrl: item.redirect_url || '',
           sourceUrl: item.redirect_url || '',
           skills,
@@ -193,7 +196,7 @@ export class AdzunaProvider implements JobProvider {
     } catch (err: unknown) {
       const errorMsg = err instanceof Error ? err.message : String(err);
       console.warn('[Adzuna Provider] Error during job retrieval:', errorMsg);
-      return [];
+      throw new Error(`Adzuna search unavailable: ${errorMsg}`);
     }
   }
 }

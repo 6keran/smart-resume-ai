@@ -80,7 +80,7 @@ export function UserProfileModal() {
 
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">
-            <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[var(--accent)] to-cyan-500 flex items-center justify-center shadow-lg shadow-[var(--accent)]/20 shrink-0">
+            <div className="w-10 h-10 rounded-lg bg-[var(--accent)] text-white flex items-center justify-center shadow-sm shrink-0">
               <Sparkles className="w-5 h-5 text-white" />
             </div>
             <div>
@@ -149,7 +149,7 @@ export function UserProfileModal() {
             <button
               type="submit"
               disabled={isSubmitting || !name.trim()}
-              className="w-full mt-2 py-3 px-4 rounded-xl bg-gradient-to-r from-[var(--accent)] to-cyan-500 hover:opacity-95 active:scale-[0.99] text-white text-sm font-semibold flex items-center justify-center gap-2 shadow-lg shadow-[var(--accent)]/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="btn-primary w-full mt-2 !h-11 text-sm disabled:opacity-50"
             >
               {isSubmitting ? (
                 <>

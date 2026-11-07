@@ -38,8 +38,20 @@ export function getActiveTx(): DatabaseClient | undefined {
 let dbClientInstance: DatabaseClient | null = null;
 let postgresPoolInstance: pg.Pool | null = null;
 
-const DB_DIR = path.join(process.cwd(), 'data');
-const DB_PATH = path.join(DB_DIR, 'smart_resume.db');
+export function resolveSqliteDbPath(): string {
+  const isPlaywrightTest = process.env.PLAYWRIGHT_TEST === '1';
+  const testDatabasePath = isPlaywrightTest
+    ? process.env.PLAYWRIGHT_TEST_DB_PATH
+    : undefined;
+  if (isPlaywrightTest && !testDatabasePath) {
+    throw new Error('[Smart Resume AI] PLAYWRIGHT_TEST requires PLAYWRIGHT_TEST_DB_PATH to protect application data.');
+  }
+  return testDatabasePath
+    ? path.resolve(testDatabasePath)
+    : (process.env.STAGING_DB_PATH || process.env.SQLITE_PATH
+        ? path.resolve(process.env.STAGING_DB_PATH || process.env.SQLITE_PATH!)
+        : path.join(process.cwd(), 'data', 'smart_resume.db'));
+}
 
 /**
  * Converts SQLite SQL string to PostgreSQL syntax:
@@ -228,16 +240,17 @@ export function getDb(): DatabaseClient {
     return dbClientInstance;
   }
 
-  const postgresUrl = (process.env.POSTGRES_URL || process.env.DATABASE_URL || '').trim();
+  const postgresUrl = (process.env.POSTGRES_URL || process.env.DATABASE_URL || process.env.NEON_DATABASE_URL || '').trim();
   const isVercel = Boolean(process.env.VERCEL) || Boolean(process.env.AWS_LAMBDA_FUNCTION_NAME);
   const isProduction = process.env.NODE_ENV === 'production' || isVercel;
   const dbProvider = (process.env.DB_PROVIDER || '').trim().toLowerCase();
   const forcePostgres = dbProvider === 'postgres' || process.env.FORCE_POSTGRES === 'true';
+  const isPlaywrightTest = process.env.PLAYWRIGHT_TEST === '1';
 
   // Determine whether PostgreSQL should be used:
-  // 1. Mandatory in production / Vercel serverless.
+  // 1. Mandatory in production / Vercel serverless (unless explicitly overridden with DB_PROVIDER=sqlite).
   // 2. Used in local development ONLY if explicitly configured via DB_PROVIDER=postgres or FORCE_POSTGRES=true.
-  const shouldUsePostgres = isProduction || forcePostgres;
+  const shouldUsePostgres = !isPlaywrightTest && dbProvider !== 'sqlite' && (isProduction || forcePostgres);
 
   if (shouldUsePostgres) {
     if (!postgresUrl) {
@@ -247,22 +260,32 @@ export function getDb(): DatabaseClient {
       throw new Error(errorMsg);
     }
 
-    if (!postgresPoolInstance) {
-      postgresPoolInstance = new Pool({
+    const globalForPg = globalThis as unknown as {
+      __sra_pg_pool?: pg.Pool;
+    };
+
+    if (!globalForPg.__sra_pg_pool) {
+      const configuredMax = Number(process.env.PG_MAX_CONNECTIONS);
+      const poolMax = Number.isFinite(configuredMax) && configuredMax > 0
+        ? Math.min(configuredMax, 20)
+        : (isVercel ? 5 : 10);
+
+      globalForPg.__sra_pg_pool = new Pool({
         connectionString: postgresUrl,
-        max: 10,
-        idleTimeoutMillis: 30000,
+        max: poolMax,
+        idleTimeoutMillis: isVercel ? 10000 : 30000,
         connectionTimeoutMillis: 10000,
         ssl: postgresUrl.includes('localhost') || postgresUrl.includes('127.0.0.1')
           ? false
-          : { rejectUnauthorized: false },
+          : true,
       });
 
-      postgresPoolInstance.on('error', (err) => {
+      globalForPg.__sra_pg_pool.on('error', (err) => {
         console.error('[Smart Resume AI] PostgreSQL Pool error:', err.message);
       });
     }
 
+    postgresPoolInstance = globalForPg.__sra_pg_pool;
     const pool = postgresPoolInstance;
 
     dbClientInstance = {
@@ -327,7 +350,14 @@ export function getDb(): DatabaseClient {
         }
       },
       async close() {
-        if (postgresPoolInstance) {
+        const globalForPg = globalThis as unknown as {
+          __sra_pg_pool?: pg.Pool;
+        };
+        if (globalForPg.__sra_pg_pool) {
+          await globalForPg.__sra_pg_pool.end();
+          delete globalForPg.__sra_pg_pool;
+          postgresPoolInstance = null;
+        } else if (postgresPoolInstance) {
           await postgresPoolInstance.end();
           postgresPoolInstance = null;
         }
@@ -338,15 +368,17 @@ export function getDb(): DatabaseClient {
   }
 
   // Local development fallback: SQLite
+  const dbPath = resolveSqliteDbPath();
+  const dbDir = path.dirname(dbPath);
   try {
-    if (!fs.existsSync(DB_DIR)) {
-      fs.mkdirSync(DB_DIR, { recursive: true });
+    if (!fs.existsSync(dbDir)) {
+      fs.mkdirSync(dbDir, { recursive: true });
     }
   } catch (err: any) {
     console.warn('[Smart Resume AI] Could not create local data directory:', err?.message);
   }
 
-  const sqliteDb = new DatabaseSync(DB_PATH);
+  const sqliteDb = new DatabaseSync(dbPath);
 
   try {
     sqliteDb.exec('PRAGMA journal_mode = WAL;');

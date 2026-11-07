@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono } from 'next/font/google';
+import { Geist, Geist_Mono, Newsreader } from 'next/font/google';
 import Script from 'next/script';
+import { MotionConfig } from 'framer-motion';
 import './globals.css';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { ResumeProvider } from '@/context/ResumeContext';
@@ -20,6 +21,13 @@ const geistMono = Geist_Mono({
   subsets: ['latin'],
 });
 
+const newsreader = Newsreader({
+  variable: '--font-serif',
+  subsets: ['latin'],
+  style: ['normal', 'italic'],
+  display: 'swap',
+});
+
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
@@ -29,7 +37,7 @@ export const viewport: Viewport = {
 export const metadata: Metadata = {
   title: 'Smart Resume AI | Turn Your Resume Into Your Next Opportunity',
   description:
-    'AI-powered resume intelligence for analyzing, improving, building, verifying and matching your career profile.',
+    'Structured career workspace for resume building, ATS auditing, skill verification, and application tracking.',
   keywords: [
     'Smart Resume AI',
     'Resume Analyzer',
@@ -56,7 +64,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
+    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
       <body className="min-h-screen flex bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased font-sans transition-colors duration-250" suppressHydrationWarning>
         <Script
           id="smart-resume-theme-init"
@@ -64,21 +72,22 @@ export default function RootLayout({
           strategy="beforeInteractive"
         />
         <ThemeProvider>
-          <ResumeProvider>
-            <CareerProvider>
-              <UserProvider>
-                <div className="ambient-glow no-print" data-no-print="true" aria-hidden="true" />
-                <div className="flex w-full min-h-screen relative z-[1]">
-                  <Sidebar />
-                  <div className="flex-1 flex flex-col min-w-0">
-                    <Header />
-                    <main className="flex-1 w-full">{children}</main>
+          <MotionConfig reducedMotion="user">
+            <ResumeProvider>
+              <CareerProvider>
+                <UserProvider>
+                  <div className="flex w-full min-h-screen relative z-[1]">
+                    <Sidebar />
+                    <div className="flex-1 flex flex-col min-w-0">
+                      <Header />
+                      <main className="flex-1 w-full">{children}</main>
+                    </div>
                   </div>
-                </div>
-                <CareerChatbot />
-              </UserProvider>
-            </CareerProvider>
-          </ResumeProvider>
+                  <CareerChatbot />
+                </UserProvider>
+              </CareerProvider>
+            </ResumeProvider>
+          </MotionConfig>
         </ThemeProvider>
       </body>
     </html>

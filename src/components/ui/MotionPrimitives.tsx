@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useRef, useEffect, useState, type ReactNode, type CSSProperties } from 'react';
+import React, { useRef, useEffect, useState, useSyncExternalStore, type ReactNode, type CSSProperties } from 'react';
 import {
   motion,
   AnimatePresence,
   useInView,
-  useReducedMotion,
   type Variants,
   type UseInViewOptions,
 } from 'framer-motion';
@@ -26,6 +25,30 @@ import {
   transition as motionTransition,
   getReducedMotionVariants,
 } from '@/lib/motion';
+
+const REDUCED_MOTION_QUERY = '(prefers-reduced-motion: reduce)';
+
+function subscribeToReducedMotion(onChange: () => void) {
+  const mediaQuery = window.matchMedia(REDUCED_MOTION_QUERY);
+  mediaQuery.addEventListener('change', onChange);
+  return () => mediaQuery.removeEventListener('change', onChange);
+}
+
+function getReducedMotionSnapshot() {
+  return window.matchMedia(REDUCED_MOTION_QUERY).matches;
+}
+
+function getServerReducedMotionSnapshot() {
+  return false;
+}
+
+function usePrefersReducedMotion() {
+  return useSyncExternalStore(
+    subscribeToReducedMotion,
+    getReducedMotionSnapshot,
+    getServerReducedMotionSnapshot,
+  );
+}
 
 // ─── ScrollReveal ───────────────────────────────────────────────────
 // Reveals children when they enter the viewport. Uses IntersectionObserver.
@@ -57,7 +80,7 @@ export function ScrollReveal({
 }: ScrollRevealProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once, margin, amount });
-  const prefersReduced = useReducedMotion();
+  const prefersReduced = usePrefersReducedMotion();
 
   const dirVariants: Record<string, Variants> = {
     up: fadeUp,
@@ -107,7 +130,7 @@ export function StaggerGroup({
 }: StaggerGroupProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once, margin, amount: 0.08 });
-  const prefersReduced = useReducedMotion();
+  const prefersReduced = usePrefersReducedMotion();
 
   const variants = prefersReduced
     ? getReducedMotionVariants(hero ? heroStagger : staggerContainer)
@@ -136,7 +159,7 @@ interface StaggerChildProps {
 }
 
 export function StaggerChild({ children, className, style }: StaggerChildProps) {
-  const prefersReduced = useReducedMotion();
+  const prefersReduced = usePrefersReducedMotion();
   const variants = prefersReduced
     ? getReducedMotionVariants(staggerItem)
     : staggerItem;
@@ -164,7 +187,7 @@ export function AnimatedCard({
   style,
   onClick,
 }: AnimatedCardProps) {
-  const prefersReduced = useReducedMotion();
+  const prefersReduced = usePrefersReducedMotion();
 
   if (prefersReduced) {
     return (
@@ -326,7 +349,7 @@ export function AnimatedTabPanel({
   tabKey,
   className,
 }: AnimatedTabPanelProps) {
-  const prefersReduced = useReducedMotion();
+  const prefersReduced = usePrefersReducedMotion();
   const variants = prefersReduced
     ? getReducedMotionVariants(tabPanel)
     : tabPanel;
@@ -366,7 +389,7 @@ export function AnimatedCounter({
   const [displayValue, setDisplayValue] = useState(value);
   const ref = useRef<HTMLSpanElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.1 });
-  const prefersReduced = useReducedMotion();
+  const prefersReduced = usePrefersReducedMotion();
 
   useEffect(() => {
     if (!isInView || prefersReduced) {
@@ -405,7 +428,7 @@ interface PageTransitionProps {
 }
 
 export function PageTransition({ children, className }: PageTransitionProps) {
-  const prefersReduced = useReducedMotion();
+  const prefersReduced = usePrefersReducedMotion();
 
   return (
     <motion.div
@@ -437,7 +460,7 @@ export function TextReveal({
 }: TextRevealProps) {
   const ref = useRef<HTMLSpanElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.5 });
-  const prefersReduced = useReducedMotion();
+  const prefersReduced = usePrefersReducedMotion();
 
   const parts = splitBy === 'word' ? text.split(' ') : text.split('');
 
@@ -484,15 +507,26 @@ export function AnimatedProgressBar({
 }: ProgressBarProps) {
   const ref = useRef<HTMLDivElement>(null);
   const isInView = useInView(ref, { once: true, amount: 0.5 });
-  const percent = Math.min((value / max) * 100, 100);
+  const prefersReduced = usePrefersReducedMotion();
+  const safeMax = Math.max(0, max);
+  const boundedValue = Math.min(Math.max(0, value), safeMax);
+  const percent = safeMax > 0 ? (boundedValue / safeMax) * 100 : 0;
+  const targetWidth = `${percent}%`;
 
   return (
-    <div ref={ref} className={`w-full h-2 rounded-full bg-[var(--bg-secondary)] overflow-hidden ${className || ''}`}>
+    <div
+      ref={ref}
+      role="progressbar"
+      aria-valuemin={0}
+      aria-valuemax={safeMax}
+      aria-valuenow={boundedValue}
+      className={`w-full h-2 rounded-full bg-[var(--bg-secondary)] overflow-hidden ${className || ''}`}
+    >
       <motion.div
         className={`h-full rounded-full ${barClassName || 'bg-[var(--accent)]'}`}
-        initial={{ width: '0%' }}
-        animate={isInView ? { width: `${percent}%` } : { width: '0%' }}
-        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1], delay: 0.2 }}
+        initial={{ width: prefersReduced ? targetWidth : '0%' }}
+        animate={isInView || prefersReduced ? { width: targetWidth } : { width: '0%' }}
+        transition={prefersReduced ? { duration: 0 } : { duration: 0.55, ease: [0.16, 1, 0.3, 1], delay: 0.12 }}
       />
     </div>
   );

@@ -89,15 +89,17 @@ export default function JobMatchPage() {
   return (
     <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
       {/* Header */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[var(--border-color)] pb-6">
-        <div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight">
-            Job Match Analysis
-          </h1>
-          <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
-            Compare your active resume against job descriptions to identify matching qualifications and keyword gaps.
-          </p>
+      <div className="bento-card p-6 sm:p-8 text-left space-y-2">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent)]/15 border border-[var(--accent)]/30 text-xs font-semibold text-[var(--accent)]">
+          <Target className="w-3.5 h-3.5" />
+          <span>Role Alignment Scanner</span>
         </div>
+        <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight">
+          Job Match Analysis
+        </h1>
+        <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed max-w-2xl">
+          Compare your active resume against job descriptions to identify matching qualifications and keyword gaps.
+        </p>
       </div>
 
       {/* Advisory Disclaimer */}
@@ -130,7 +132,7 @@ export default function JobMatchPage() {
       )}
 
       {/* Input Form Card */}
-      <GlassCard className="p-6 text-left space-y-4">
+      <GlassCard variant="bento" className="p-6 sm:p-8 text-left space-y-4">
         <form onSubmit={handleRunMatch} className="space-y-4 text-xs">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
@@ -205,7 +207,7 @@ export default function JobMatchPage() {
             <button
               type="submit"
               disabled={isLoading}
-              className="inline-flex items-center gap-2 px-6 py-2.5 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white font-semibold text-xs sm:text-sm shadow-md active:scale-95 transition-all disabled:opacity-50"
+              className="btn-primary px-6 py-2.5 text-xs sm:text-sm font-semibold shadow-sm transition-all disabled:opacity-50 cursor-pointer flex items-center gap-2"
             >
               <Sparkles className="w-4 h-4" />
               {isLoading ? 'Analyzing Match...' : 'Compare Against My Resume'}
@@ -227,7 +229,7 @@ export default function JobMatchPage() {
         <div className="space-y-8 text-left animate-fade-in">
           {/* Top Score Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <GlassCard className="md:col-span-2 flex flex-col sm:flex-row items-center justify-between p-6 gap-6" glow>
+            <GlassCard variant="bento" className="md:col-span-2 flex flex-col sm:flex-row items-center justify-between p-6 gap-6" glow>
               <div className="space-y-2 text-left">
                 <span className="text-[10px] font-bold text-[var(--accent)] uppercase tracking-wider">
                   Overall Candidate Fit
@@ -241,7 +243,7 @@ export default function JobMatchPage() {
                 <div className="pt-2">
                   <Link
                     href="/improver"
-                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[var(--accent)] text-white text-xs font-semibold hover:bg-[var(--accent-hover)]"
+                    className="btn-primary btn-sm inline-flex items-center gap-1.5 text-xs font-semibold shadow-sm"
                   >
                     Optimize For This Role
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -257,19 +259,19 @@ export default function JobMatchPage() {
               />
             </GlassCard>
 
-            <GlassCard className="flex flex-col items-center justify-center p-5 text-center">
+            <GlassCard variant="bento" className="flex flex-col items-center justify-center p-5 text-center">
               <ScoreRing score={matchResult.skillsMatchScore} size={90} strokeWidth={7} showPercentage />
               <span className="mt-2 text-xs font-bold text-[var(--text-primary)]">Skills Match</span>
               <span className="text-[10px] text-[var(--text-secondary)]">Required Technologies</span>
             </GlassCard>
 
-            <GlassCard className="flex flex-col items-center justify-center p-5 text-center">
+            <GlassCard variant="bento" className="flex flex-col items-center justify-center p-5 text-center">
               <ScoreRing score={matchResult.experienceMatchScore} size={90} strokeWidth={7} showPercentage />
               <span className="mt-2 text-xs font-bold text-[var(--text-primary)]">Experience Match</span>
               <span className="text-[10px] text-[var(--text-secondary)]">Seniority & Tenure</span>
             </GlassCard>
 
-            <GlassCard className="flex flex-col items-center justify-center p-5 text-center">
+            <GlassCard variant="bento" className="flex flex-col items-center justify-center p-5 text-center">
               <ScoreRing score={matchResult.keywordMatchScore} size={90} strokeWidth={7} showPercentage />
               <span className="mt-2 text-xs font-bold text-[var(--text-primary)]">Keyword Density</span>
               <span className="text-[10px] text-[var(--text-secondary)]">ATS Filter Match</span>
@@ -279,7 +281,7 @@ export default function JobMatchPage() {
           {/* Detailed Skill Classification (Matched, Partial, Missing) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Matched */}
-            <GlassCard className="p-5 space-y-3">
+            <GlassCard variant="bento" className="p-5 space-y-3">
               <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-color)]">
                 <CheckCircle2 className="w-4 h-4 text-emerald-400" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-400">
@@ -306,7 +308,7 @@ export default function JobMatchPage() {
             </GlassCard>
 
             {/* Partial */}
-            <GlassCard className="p-5 space-y-3">
+            <GlassCard variant="bento" className="p-5 space-y-3">
               <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-color)]">
                 <HelpCircle className="w-4 h-4 text-amber-400" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-amber-400">
@@ -337,7 +339,7 @@ export default function JobMatchPage() {
             </GlassCard>
 
             {/* Missing */}
-            <GlassCard className="p-5 space-y-3">
+            <GlassCard variant="bento" className="p-5 space-y-3">
               <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-color)]">
                 <AlertCircle className="w-4 h-4 text-rose-400" />
                 <h4 className="text-xs font-bold uppercase tracking-wider text-rose-400">
@@ -366,7 +368,7 @@ export default function JobMatchPage() {
 
           {/* Key Strengths & Gaps */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <GlassCard className="p-6 space-y-3">
+            <GlassCard variant="bento" className="p-6 space-y-3">
               <h4 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
                 <TrendingUp className="w-4 h-4 text-emerald-400" />
                 Key Profile Strengths
@@ -381,7 +383,7 @@ export default function JobMatchPage() {
               </ul>
             </GlassCard>
 
-            <GlassCard className="p-6 space-y-3">
+            <GlassCard variant="bento" className="p-6 space-y-3">
               <h4 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
                 <AlertCircle className="w-4 h-4 text-amber-400" />
                 Actionable Gap Recommendations

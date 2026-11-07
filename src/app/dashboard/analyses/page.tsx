@@ -6,9 +6,6 @@ import {
   CheckCircle2,
   AlertCircle,
   Clock,
-  Sparkles,
-  ArrowRight,
-  TrendingUp,
 } from 'lucide-react';
 import { getAuthenticatedUser } from '@/lib/userSession';
 import { getUserAnalyses } from '@/lib/db';
@@ -38,13 +35,6 @@ export default async function UserAnalysesPage() {
             Historical ATS scoring, keyword benchmarks, and section audits ({analyses.length} total).
           </p>
         </div>
-        <Link
-          href="/analyzer"
-          className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-90 transition-all shadow-sm"
-        >
-          <Sparkles className="w-4 h-4" />
-          <span>New Resume Scan</span>
-        </Link>
       </div>
 
       {analyses.length === 0 ? (
@@ -55,16 +45,9 @@ export default async function UserAnalysesPage() {
           <h3 className="text-base font-semibold text-[var(--text-primary)]">
             No analyses conducted yet
           </h3>
-          <p className="text-xs text-[var(--text-secondary)] max-w-sm mx-auto mt-1 mb-6">
-            Upload or paste your resume to trigger an instant ATS evaluation, keyword score breakdown, and actionable suggestions.
+          <p className="text-xs text-[var(--text-secondary)] max-w-sm mx-auto mt-1">
+            Upload a resume to get an ATS score and keyword feedback.
           </p>
-          <Link
-            href="/analyzer"
-            className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-90 transition-all shadow-md shadow-[var(--accent)]/20"
-          >
-            <span>Scan First Resume</span>
-            <ArrowRight className="w-4 h-4" />
-          </Link>
         </div>
       ) : (
         <div className="space-y-4">
@@ -75,15 +58,15 @@ export default async function UserAnalysesPage() {
             return (
               <div
                 key={anl.id}
-                className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 hover:bg-[var(--bg-secondary)] p-5 sm:p-6 transition-all duration-200"
+                className="bento-card p-5 sm:p-6 transition-all duration-200"
               >
-                <div className="flex flex-col lg:flex-row lg:items-center justify-between pb-4 border-b border-[var(--border-color)] gap-4">
+                <div className="flex flex-col lg:flex-row lg:items-center justify-between pb-4 border-b border-[var(--glass-border)] gap-4">
                   <div>
                     <div className="flex items-center gap-2.5 mb-1.5">
                       <h3 className="text-base font-bold text-[var(--text-primary)]">
                         {anl.resumeFilename}
                       </h3>
-                      <span className="uppercase text-[9px] font-bold px-2 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-secondary)]">
+                      <span className="uppercase text-[9px] font-bold px-2 py-0.5 rounded bg-[var(--glass-bg)] border border-[var(--glass-border)] text-[var(--text-secondary)]">
                         {anl.fileType}
                       </span>
                     </div>
@@ -94,7 +77,7 @@ export default async function UserAnalysesPage() {
                   </div>
 
                   <div className="flex items-center gap-4">
-                    <div className="flex items-center gap-3 bg-[var(--bg-card)] px-4 py-2 rounded-xl border border-[var(--border-color)]">
+                    <div className="flex items-center gap-3 bg-[var(--glass-bg)] px-4 py-2 rounded-xl border border-[var(--glass-border)] shadow-xs">
                       <div>
                         <span className="text-[10px] font-semibold uppercase text-[var(--text-secondary)] block">
                           ATS Score
@@ -107,7 +90,7 @@ export default async function UserAnalysesPage() {
                           {anl.atsScore}/100
                         </span>
                       </div>
-                      <div className="h-8 w-px bg-[var(--border-color)] mx-1" />
+                      <div className="h-8 w-px bg-[var(--glass-border)] mx-1" />
                       <div>
                         <span className="text-[10px] font-semibold uppercase text-[var(--text-secondary)] block">
                           Keyword
@@ -139,7 +122,7 @@ export default async function UserAnalysesPage() {
                 {/* Keywords breakdown */}
                 <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   {anl.detectedKeywords && anl.detectedKeywords.length > 0 && (
-                    <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]">
+                    <div className="p-3.5 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)]">
                       <span className="font-semibold text-emerald-400 flex items-center gap-1.5 mb-2">
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         <span>Detected Keywords ({anl.detectedKeywords.length})</span>
@@ -158,7 +141,7 @@ export default async function UserAnalysesPage() {
                   )}
 
                   {anl.missingKeywords && anl.missingKeywords.length > 0 && (
-                    <div className="p-3.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)]">
+                    <div className="p-3.5 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)]">
                       <span className="font-semibold text-amber-400 flex items-center gap-1.5 mb-2">
                         <AlertCircle className="w-3.5 h-3.5" />
                         <span>Recommended Keywords ({anl.missingKeywords.length})</span>
