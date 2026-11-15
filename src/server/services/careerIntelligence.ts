@@ -1589,10 +1589,72 @@ export function getDeterministicCareerChatResponse(
   profile?: CareerProfileSummary | null,
   unifiedContext?: UnifiedStudentContext | null
 ): string {
-  const msg = (userMessage || '').toLowerCase();
-  const target = (profile?.targetRole || unifiedContext?.careerGoal?.targetRole || '').trim();
+  const rawMsg = (userMessage || '').trim();
+  const msg = rawMsg.toLowerCase();
+
+  // 1. PROMPT INJECTION DEFENSE (Condition 3/5: Ignore previous instructions, reveal prompt, developer mode)
+  const injectionPatterns = [
+    'ignore previous instructions',
+    'ignore all previous instructions',
+    'system prompt',
+    'reveal prompt',
+    'reveal the prompt',
+    'disregard instructions',
+    'developer mode',
+    'jailbreak',
+    'override instructions',
+    'repeat the prompt',
+    'what are your instructions',
+  ];
+  if (injectionPatterns.some((pattern) => msg.includes(pattern))) {
+    return "I am your Career Copilot. I can only assist with career planning, resume analysis, skill development, and job discovery based on your profile and goals.";
+  }
+
+  // 2. OFF-TOPIC DEFENSE (Condition 6: recipes, jokes, games, poems, math homework)
+  const offTopicPatterns = [
+    'recipe',
+    'bake a cake',
+    'chocolate chip',
+    'write a poem',
+    'tell a joke',
+    'video game',
+    'weather today',
+    'capital of france',
+    'homework help for calculus',
+    'who won the world cup',
+  ];
+  if (offTopicPatterns.some((pattern) => msg.includes(pattern))) {
+    return "I'm focused on helping you with your career journey, resume building, skill gaps, and job preparation. Let me know how I can help with your career goals!";
+  }
+
+  // 3. AI IDENTITY & NAME INQUIRIES
+  if (
+    msg.includes('your name') ||
+    msg.includes('who are you') ||
+    msg.includes('what are you called') ||
+    msg.includes('are you alex') ||
+    msg.includes('is your name alex') ||
+    msg.includes('what is your name') ||
+    msg === 'who are you?' ||
+    msg === 'who are you' ||
+    msg === 'what is your name?' ||
+    msg === 'what is your name' ||
+    msg === 'name?' ||
+    msg === 'name'
+  ) {
+    return "I'm your AI Assistant. I specialize in empowering college students and fresh graduates to optimize resumes, bridge skill gaps, prepare for interviews, and accelerate their career launch. What are you working toward today?";
+  }
+
+  const rawTarget = (profile?.targetRole || unifiedContext?.careerGoal?.targetRole || '').trim();
+  const isGoalSet = Boolean(
+    rawTarget &&
+    rawTarget.toLowerCase() !== 'goal not set' &&
+    rawTarget.toLowerCase() !== 'not set' &&
+    unifiedContext?.careerGoal?.goalSet !== false
+  );
+  const target = isGoalSet ? rawTarget : '';
   const displayTarget = target || 'your target role (goal not set yet)';
-  const name = profile?.name || 'Candidate';
+  const name = profile?.name || unifiedContext?.name || 'Candidate';
 
   // Extract student profile, checking profile first then falling back to unifiedContext.academic
   const sp = profile?.studentProfile || (unifiedContext?.academic ? {
@@ -1603,7 +1665,7 @@ export function getDeterministicCareerChatResponse(
     graduationMonth: unifiedContext.academic.graduationMonth,
     currentSemester: unifiedContext.academic.currentSemester,
     cgpa: unifiedContext.academic.cgpa,
-    targetRole: unifiedContext.careerGoal?.targetRole,
+    targetRole: isGoalSet ? target : undefined,
     targetWorkType: unifiedContext.academic.targetWorkType,
     preferredLocations: unifiedContext.careerGoal?.preferredLocations || [],
     coursework: unifiedContext.academic.coursework || [],
@@ -1635,7 +1697,7 @@ export function getDeterministicCareerChatResponse(
     }));
   }
 
-  const ats = profile?.latestAtsAnalysis || (unifiedContext?.resume?.latestAtsScore ? {
+  const ats = profile?.latestAtsAnalysis || (unifiedContext?.resume?.hasResume && unifiedContext?.resume?.latestAtsScore ? {
     atsScore: unifiedContext.resume.latestAtsScore,
     missingKeywords: unifiedContext.resume.missingKeywords || [],
     detectedKeywords: unifiedContext.resume.detectedKeywords || [],
@@ -1644,8 +1706,23 @@ export function getDeterministicCareerChatResponse(
   } : undefined);
 
   const readiness = profile?.metrics?.readinessScore ?? unifiedContext?.readiness?.overallScore ?? 0;
-  const verifiedList = profile?.skills?.verified?.map((v) => v.name) || unifiedContext?.skills?.verified?.map((v) => v.name) || [];
-  const missingCrits = profile?.skillGaps?.missingCriticalSkills || unifiedContext?.skills?.missingCritical || [];
+
+  // Skills with their authenticity tags
+  const verifiedList = (profile?.skills?.verified || unifiedContext?.skills?.verified || []).map((v) => ({
+    name: v.name,
+    score: v.score,
+  }));
+  const confirmedList = unifiedContext?.skills?.confirmed || [];
+  const claimedList = (profile?.skills?.claimed || unifiedContext?.skills?.claimed || []).map((c) => c.name);
+  const inferredList = (profile?.skills?.inferred || unifiedContext?.skills?.inferred || []).map((i) => ({
+    name: i.name,
+    source: i.source,
+  }));
+
+  // Curated role profile for target
+  const curated = target ? findCuratedRoleProfile(target) : null;
+  const missingCrits = profile?.skillGaps?.missingCriticalSkills || unifiedContext?.skills?.missingCritical || (curated ? curated.coreSkills.filter(cs => !verifiedList.some(v => v.name.toLowerCase() === cs.toLowerCase()) && !claimedList.some(c => c.toLowerCase() === cs.toLowerCase())) : []);
+
   const apps = profile?.recentApplications || (unifiedContext?.applications?.recentApplications || []).map((a) => ({
     id: a.id,
     company: a.company,
@@ -1654,25 +1731,109 @@ export function getDeterministicCareerChatResponse(
     appliedAt: a.appliedAt || '',
   }));
 
-  // 0. AI IDENTITY & NAME INQUIRIES
-  if (
-    msg.includes('your name') ||
-    msg.includes('who are you') ||
-    msg.includes('what are you called') ||
-    msg.includes('are you alex') ||
-    msg.includes('is your name alex') ||
-    msg.includes('what is your name') ||
-    msg === 'who are you?' ||
-    msg === 'who are you' ||
-    msg === 'what is your name?' ||
-    msg === 'what is your name' ||
-    msg === 'name?' ||
-    msg === 'name'
-  ) {
-    return "I'm your AI Assistant. I specialize in empowering college students and fresh graduates to optimize resumes, bridge skill gaps, prepare for interviews, and accelerate their career launch. What are you working toward today?";
+  const savedJobsList = unifiedContext?.savedJobs?.jobs || [];
+
+  // 4. SAVED JOBS & COMPANY INQUIRY (Condition 3 & 7)
+  const matchedSavedJob = savedJobsList.find((j) => {
+    const comp = (j.company || '').toLowerCase();
+    return comp.length > 2 && msg.includes(comp);
+  });
+
+  if (matchedSavedJob) {
+    const studentDegree = sp?.fieldOfStudy ? `You're studying ${sp.fieldOfStudy}. ` : sp?.degree ? `As a ${sp.degree} candidate, ` : '';
+    const strongSkillsParts: string[] = [];
+    if (verifiedList.length > 0) {
+      strongSkillsParts.push(...verifiedList.map((v) => `${v.name} (verified, ${v.score}%)`));
+    }
+    if (confirmedList.length > 0) {
+      strongSkillsParts.push(...confirmedList.map((c) => `${c.name} (confirmed)`));
+    }
+    if (claimedList.length > 0) {
+      strongSkillsParts.push(...claimedList.map((c) => `${c} (claimed)`));
+    }
+    if (inferredList.length > 0) {
+      strongSkillsParts.push(...inferredList.map((i) => `${i.name} (from your resume)`));
+    }
+    const skillsIntro = strongSkillsParts.length > 0
+      ? `Strongest skills: ${strongSkillsParts.slice(0, 4).join(', ')}.\n\n`
+      : '';
+
+    // Gaps for curated role:
+    let roleGapsStr = '';
+    if (curated) {
+      const roleGaps = missingCrits.slice(0, 3);
+      if (roleGaps.length > 0) {
+        roleGapsStr = `Gaps for ${curated.title}: ${roleGaps.join(', ')}.\n\n`;
+      }
+    }
+
+    // Gaps from saved job description snippet:
+    let jobSnippetAnalysis = '';
+    if (matchedSavedJob.descriptionSnippet) {
+      const snippet = matchedSavedJob.descriptionSnippet;
+      const allStudentSkillNames = [
+        ...verifiedList.map((v) => v.name.toLowerCase()),
+        ...confirmedList.map((c) => c.name.toLowerCase()),
+        ...claimedList.map((c) => c.toLowerCase()),
+        ...inferredList.map((i) => i.name.toLowerCase()),
+      ];
+
+      const snippetSkills = [
+        'Lean Six Sigma',
+        'Quality Control',
+        'GD&T',
+        'SolidWorks',
+        'AutoCAD',
+        'ANSYS',
+        'MATLAB',
+        'Catia',
+        'Python',
+        'SQL',
+        'Docker',
+        'AWS',
+        'React',
+        'TypeScript',
+        'DCF',
+        'Financial Modeling',
+        'SEO',
+        'Figma',
+      ];
+      const mentionedInSnippet = snippetSkills.filter((s) => snippet.toLowerCase().includes(s.toLowerCase()));
+      const missingFromJobSnippet = mentionedInSnippet.filter((s) => !allStudentSkillNames.includes(s.toLowerCase()));
+
+      const jobTitle = matchedSavedJob.title || matchedSavedJob.jobTitle || 'Role';
+      if (missingFromJobSnippet.length > 0) {
+        jobSnippetAnalysis = `For the saved **${matchedSavedJob.company}** job (**${jobTitle}**, Status: *${matchedSavedJob.status}*), these ${missingFromJobSnippet.length} skill(s) appear in its description and not in your resume:\n` +
+          missingFromJobSnippet.map((s) => `- **${s}**`).join('\n') + '\n\n';
+      } else {
+        jobSnippetAnalysis = `For the saved **${matchedSavedJob.company}** job (**${jobTitle}**, Status: *${matchedSavedJob.status}*), your documented skills align well with the description keywords.\n\n`;
+      }
+    } else {
+      const jobTitle = matchedSavedJob.title || matchedSavedJob.jobTitle || 'Role';
+      jobSnippetAnalysis = `You have saved **${jobTitle}** at **${matchedSavedJob.company}** (Status: *${matchedSavedJob.status}*). Update your resume to align with its core requirements.\n\n`;
+    }
+
+    return `${studentDegree}${skillsIntro}${roleGapsStr}${jobSnippetAnalysis}Next steps:\n- Tailor your resume in [Resume Builder](/builder)\n- Practice interview questions in [AI Interview Preparation](/interview-prep)\n- Manage your pipeline in [Application Tracker](/dashboard/applications)`;
   }
 
-  // 1. LEARNING ROADMAP GUIDANCE (Check roadmap before generic learn)
+  // If user asks about a specific company that is NOT in saved jobs:
+  const knownCompanies = ['google', 'tesla', 'amazon', 'microsoft', 'apple', 'meta', 'netflix', 'uber', 'tata motors', 'infosys', 'tcs', 'wipro'];
+  const mentionedKnown = knownCompanies.find((c) => msg.includes(c));
+  if (mentionedKnown) {
+    const compDisplayName = mentionedKnown.split(' ').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    return `I don't see any saved or tracked jobs from **${compDisplayName}** in your job tracker. You can save the job posting in [Job Opportunities](/jobs) or paste the job description here, and I'll analyze how your skills and resume compare against its requirements!`;
+  }
+
+  // If user asks generally about saved jobs / tracked applications:
+  if (msg.includes('saved job') || msg.includes('tracked job') || msg.includes('saved position')) {
+    if (savedJobsList.length > 0) {
+      const jobBullets = savedJobsList.map((j) => `- **${j.title || j.jobTitle}** at **${j.company}** (Status: *${j.status}*${j.salary ? `, ${j.salary}` : ''})`).join('\n');
+      return `You currently have ${unifiedContext?.savedJobs?.totalCount || savedJobsList.length} tracked job(s) in your pipeline:\n\n${jobBullets}\n\nReview or update their statuses anytime in the [Application Tracker](/dashboard/applications)!`;
+    }
+    return `You do not have any saved or tracked jobs in your pipeline yet. Discover and save matching opportunities in [Job Opportunities](/jobs)!`;
+  }
+
+  // 5. LEARNING ROADMAP GUIDANCE
   if (
     msg.includes('roadmap') ||
     msg.includes('curriculum') ||
@@ -1680,17 +1841,16 @@ export function getDeterministicCareerChatResponse(
     msg.includes('study plan') ||
     msg.includes('10-week')
   ) {
-    if (!target) {
+    if (!isGoalSet) {
       return `Your target role is **not set** yet, so I have not assumed a career path for you.\n\nSet your target role in [Onboarding](/onboarding) or [My Career Data](/dashboard/my-data), then open [Career Guidance](/guidance) to see a curated roadmap for your field.`;
     }
-    const curated = findCuratedRoleProfile(target);
     if (curated) {
       return `Here is your curated learning path for **${curated.title}** (${curated.domain}):\n\n- **Core Skills Suggested**: ${curated.coreSkills.join(', ')}\n- **Recommended Tools**: ${curated.recommendedTools.join(', ')}\n- **Practice Projects**: ${curated.projectIdeas.map((p) => p.title).join('; ')}\n\nReview verified resources and track your progress on [Career Guidance](/guidance).`;
     }
     return `Your target role is set to **${target}**. Explore your verified profile skills, resume strengths, and custom learning steps on [Career Guidance](/guidance).`;
   }
 
-  // 2. APPLICATION GUIDANCE (Follow-ups, pipeline, email outreach)
+  // 6. APPLICATION GUIDANCE (Follow-ups, pipeline, email outreach)
   if (
     msg.includes('follow up') ||
     msg.includes('application') ||
@@ -1729,7 +1889,7 @@ ${name}
 Track and manage all your application stages in the [Application Tracker](/dashboard/applications)!`;
   }
 
-  // 3. INTERVIEW GUIDANCE
+  // 7. INTERVIEW GUIDANCE
   if (
     msg.includes('interview') ||
     msg.includes('mock') ||
@@ -1739,29 +1899,62 @@ Track and manage all your application stages in the [Application Tracker](/dashb
     msg.includes('technical question') ||
     msg.includes('screening')
   ) {
+    if (!isGoalSet) {
+      return `Your target role is **not set** yet. Hiring interviews evaluate core problem-solving, domain fundamentals, and structured communication using the STAR method.\n\nSet your target role in [Onboarding](/onboarding) or [My Career Data](/dashboard/my-data) to get tailored technical and behavioral practice questions in [AI Interview Preparation](/interview-prep).`;
+    }
+
+    let techQ = `"How do database indexes (e.g. B-Trees) accelerate query performance, and what are the trade-offs on insert and update operations?"\n- Focus on logarithmic lookup efficiency vs the write overhead of maintaining index trees.`;
+    let scenarioQ = `"Walk me through the lifecycle of an HTTP request from the moment a user clicks a button until JSON data renders on screen."\n- Cover DNS lookup, TLS handshake, HTTP/HTTPS methods, backend route handlers, and client state updates.`;
+
+    if (curated) {
+      if (curated.domain === 'Mechanical') {
+        techQ = `"Explain how factor of safety is determined in mechanical components, and what considerations guide finite element analysis (FEA) mesh convergence."\n- Discuss stress concentrations, material yield strength vs ultimate strength, and mesh refinement around high-stress gradients.`;
+        scenarioQ = `"Walk me through how you establish GD&T datum references and tolerance stack-up for a rotating shaft assembly."\n- Explain datum feature selection, MMC/LMC modifiers, and runout tolerances.`;
+      } else if (curated.domain === 'Electrical') {
+        techQ = `"Explain the trade-offs between linear LDO regulators and switching buck converters in battery-powered embedded hardware."\n- Contrast power efficiency, thermal dissipation, and ripple noise.`;
+        scenarioQ = `"Walk me through how you would debug an I2C or SPI communication failure using an oscilloscope."\n- Cover clock line integrity, pull-up resistors, signal bounce, and acknowledge bit timing.`;
+      } else if (curated.domain === 'Civil') {
+        techQ = `"Explain how dead load vs live load combinations are factored under standard building codes (e.g. IS 456 / ACI 318)."`;
+        scenarioQ = `"Walk me through the site investigation and soil bearing capacity verification process before foundation laying."`;
+      } else if (curated.domain === 'Data') {
+        techQ = `"Explain the difference between clustered and non-clustered indexing, and when window functions outperform self-joins."`;
+        scenarioQ = `"Walk me through how you would validate data integrity and handle schema drift in an automated data pipeline."`;
+      } else if (curated.domain === 'Finance') {
+        techQ = `"Walk me through how a $10 increase in depreciation expense flows through the income statement, cash flow statement, and balance sheet."`;
+        scenarioQ = `"How do you calculate weighted average cost of capital (WACC) and choose an appropriate terminal value multiple in a DCF model?"`;
+      } else if (curated.domain === 'Human Resources') {
+        techQ = `"How do you design a structured competency rubric to eliminate unconscious bias during behavioral evaluations?"`;
+        scenarioQ = `"Walk me through your conflict resolution framework when managing a sensitive peer dispute in the workplace."`;
+      } else if (curated.domain === 'Marketing') {
+        techQ = `"How do you evaluate CAC payback period and multi-touch attribution across paid acquisition and organic content?"`;
+        scenarioQ = `"Walk me through how you conduct an A/B test on a high-traffic landing page, from hypothesis to statistical significance."`;
+      } else if (curated.domain === 'Design') {
+        techQ = `"How do you ensure WCAG 2.1 AA contrast compliance when building tokenized color systems in Figma?"`;
+        scenarioQ = `"Walk me through how you synthesize user feedback from 5 usability sessions into actionable sprint design revisions."`;
+      }
+    }
+
     return `For entry-level **${target}** interviews, hiring teams evaluate both core problem-solving and structured communication.
 
 Here are 3 high-yield questions to practice right now:
 
 ### 1. Behavioral Question (STAR Method)
-> *"Tell me about a challenging bug or architecture problem you ran into in a project and how you resolved it."*
+> *"Tell me about a challenging technical or design problem you ran into in a project and how you resolved it."*
 - **Situation**: Define the environment, project goals, and constraints.
-- **Task**: The specific failure, bottleneck, or bug you owned.
-- **Action**: The analytical steps, debugging tools, or trade-offs you executed.
-- **Result**: Quantifiable outcome (e.g. *"reduced response time by 30%"*, *"unblocked the team before deadline"*).
+- **Task**: The specific failure, bottleneck, or requirement you owned.
+- **Action**: The analytical steps, tools, or trade-offs you executed.
+- **Result**: Quantifiable outcome (e.g. *"reduced response time by 30%"*, *"improved structural factor of safety to 1.8"*).
 
 ### 2. Core Technical Question
-> *"How do database indexes (e.g. B-Trees) accelerate query performance, and what are the trade-offs on insert and update operations?"*
-- Focus on logarithmic lookup efficiency vs the write overhead of maintaining index trees.
+> *${techQ}*
 
 ### 3. Engineering Scenario Question
-> *"Walk me through the lifecycle of an HTTP request from the moment a user clicks a button until JSON data renders on screen."*
-- Cover DNS lookup, TLS handshake, HTTP/HTTPS methods, backend route handlers, and client state updates.
+> *${scenarioQ}*
 
 You can practice interactive mock interviews tailored to **${target}** with instant voice/text AI grading in [AI Interview Preparation](/interview-prep)!`;
   }
 
-  // 4. PROJECT GUIDANCE (Check projects before general resume so project inquiries on resume match here)
+  // 8. PROJECT GUIDANCE
   if (
     msg.includes('project') ||
     msg.includes('portfolio') ||
@@ -1770,6 +1963,10 @@ You can practice interactive mock interviews tailored to **${target}** with inst
     msg.includes('repo') ||
     msg.includes('side project')
   ) {
+    if (!isGoalSet) {
+      return `Your target role is **not set** yet.\n\nTo build impactful portfolio projects that hiring managers value, set your target role in [Onboarding](/onboarding) or [My Career Data](/dashboard/my-data). You can also explore guided project blueprints in [AI Project Mentor](/projects).`;
+    }
+
     const studentContext = sp && sp.institution
       ? `As a student at **${sp.institution}** (${sp.degree || 'Degree Candidate'}${sp.graduationYear ? `, Class of ${sp.graduationYear}` : ''})${
           sp.coursework && sp.coursework.length > 0
@@ -1782,25 +1979,38 @@ You can practice interactive mock interviews tailored to **${target}** with inst
       ? `You currently feature: ${sp.projects.map((p) => `**${p.title}** (${p.techStack.join(', ')})`).join(', ')}.`
       : 'You do not have any verified portfolio projects documented yet.';
 
-    const gapSkills = missingCrits.slice(0, 3).join(', ') || 'Docker, Redis, and SQL';
+    let projectTitle = 'High-Throughput Scalable Microservice';
+    let projectArch = 'REST/tRPC API backend with relational schema modeling (PostgreSQL), an in-memory caching tier (Redis), and containerized multi-container setup (Docker).';
+    let projectHighlights = '- Implement JWT authentication with role-based access control.\n  - Add query indexing to maintain sub-50ms latency on 100k+ records.\n  - Write unit/integration tests with >80% code coverage.';
+    let projectBullet = `"Architected and deployed a containerized microservice handling 1,500 RPS with sub-40ms P95 latency using Node.js, PostgreSQL, and Docker."`;
+    let gapSkills = missingCrits.slice(0, 3).join(', ') || 'Docker, Redis, and SQL';
+
+    if (curated) {
+      gapSkills = missingCrits.slice(0, 3).join(', ') || curated.coreSkills.slice(0, 3).join(', ');
+      if (curated.projectIdeas && curated.projectIdeas.length > 0) {
+        const pIdea = curated.projectIdeas[0];
+        projectTitle = pIdea.title;
+        projectArch = `${pIdea.summary} (${pIdea.skillsPracticed.join(', ')}).`;
+        projectHighlights = pIdea.deliverables.map((d) => `- ${d}`).join('\n  ');
+        projectBullet = `"Engineered ${pIdea.title} utilizing ${pIdea.skillsPracticed.slice(0, 3).join(', ')}, delivering ${pIdea.deliverables[0] || 'complete validated design'}."`;
+      }
+    }
 
     return `${studentContext}${currentProjects}
 
 To stand out for **${target}** positions, build a project that bridges your critical skill gaps in **${gapSkills}**:
 
-### Recommended Project Blueprint: High-Throughput Scalable Microservice
-- **Core Architecture**: REST/tRPC API backend with relational schema modeling (PostgreSQL), an in-memory caching tier (${missingCrits.includes('Redis') ? 'Redis' : 'caching'}), and containerized multi-container setup (Docker).
+### Recommended Project Blueprint: ${projectTitle}
+- **Core Architecture**: ${projectArch}
 - **Key Engineering Highlights**:
-  - Implement JWT authentication with role-based access control.
-  - Add query indexing to maintain sub-50ms latency on 100k+ records.
-  - Write unit/integration tests with >80% code coverage.
+  ${projectHighlights}
 - **Resume Impact Bullet**:
-  > *"Architected and deployed a containerized microservice handling 1,500 RPS with sub-40ms P95 latency using Node.js, PostgreSQL, and Docker."*
+  > *${projectBullet}*
 
 You can explore step-by-step milestone guidance, architectural blueprints, and interactive coding help in the [AI Project Mentor](/projects), and sync completed projects directly to your resume in the [Resume Builder](/builder)!`;
   }
 
-  // 5. RESUME GUIDANCE
+  // 9. RESUME GUIDANCE
   if (
     msg.includes('resume') ||
     msg.includes('ats') ||
@@ -1810,6 +2020,17 @@ You can explore step-by-step milestone guidance, architectural blueprints, and i
     msg.includes('improve resume') ||
     msg.includes('cv')
   ) {
+    if (!isGoalSet) {
+      return `Your target role is **not set** yet.\n\nTo optimize your resume and calculate ATS keyword match density, set your target role in [Onboarding](/onboarding) or [My Career Data](/dashboard/my-data). In the meantime, you can lead with strong action verbs and structure bullets with the Google XYZ formula in [Resume Builder](/builder) and audit formatting in [ATS Score Checker](/ats-score).`;
+    }
+
+    if (!ats && (!unifiedContext?.resume || !unifiedContext.resume.hasResume)) {
+      return `You do not have a resume saved or audited in your career workspace yet.\n\nTo build and optimize your resume for **${target}** roles:
+1. Open the [Resume Builder](/builder) to draft an ATS-compliant single-column resume.
+2. Structure bullet points with the Google XYZ formula: *"Accomplished [X] as measured by [Y] by doing [Z]"*.
+3. Audit your ATS compliance score and keyword coverage in the [ATS Score Checker](/ats-score).`;
+    }
+
     let atsContext = '';
     if (ats) {
       atsContext = `Your latest resume scored **${ats.atsScore}/100** on ATS compliance. ${
@@ -1833,7 +2054,7 @@ Take action right now:
 - Update and download your clean PDF from the [Resume Builder](/builder)`;
   }
 
-  // 6. CAREER GUIDANCE & ENTRY-LEVEL PATHWAYS
+  // 10. CAREER GUIDANCE & ENTRY-LEVEL PATHWAYS
   if (
     msg.includes('career') ||
     msg.includes('pathway') ||
@@ -1841,26 +2062,68 @@ Take action right now:
     msg.includes('transition') ||
     msg.includes('what role')
   ) {
+    if (!isGoalSet) {
+      return `Your target role is **not set** yet, so I have not assumed a career path for you.\n\nSet your target role in [Onboarding](/onboarding) or [My Career Data](/dashboard/my-data), then open [Career Guidance](/guidance) to explore career pathways suited to your field.`;
+    }
+
     const studentContext = sp && sp.institution && sp.degree
       ? `Based on your **${sp.degree}** in **${sp.fieldOfStudy || 'your field'}** at **${sp.institution}**${sp.graduationYear ? ` (Class of ${sp.graduationYear})` : ''}, `
       : '';
+
+    let pathways = `1. **${target} (Primary Pathway)**: Focuses on core software engineering, data structures, and production feature development.
+2. **Junior Full Stack Developer**: Specializes in modern React/Next.js frontend architectures paired with Node.js/PostgreSQL APIs.
+3. **Junior Cloud & DevOps Engineer**: Focuses on Docker containerization, CI/CD automated deployment pipelines, and cloud operations.`;
+
+    if (curated) {
+      if (curated.domain === 'Mechanical') {
+        pathways = `1. **${curated.title} (Primary Pathway)**: Focuses on CAD modeling, mechanical design, GD&T, and engineering analysis.
+2. **CAE & Simulation Engineer**: Specializes in finite element analysis (FEA) and computational fluid dynamics (CFD).
+3. **Manufacturing & Quality Engineer**: Focuses on design for manufacturing (DFM), tooling, and quality assurance.`;
+      } else if (curated.domain === 'Electrical') {
+        pathways = `1. **${curated.title} (Primary Pathway)**: Focuses on circuit analysis, PCB layout, and embedded hardware testing.
+2. **Embedded Firmware Engineer**: Specializes in C/C++, RTOS, microcontroller interfacing, and device drivers.
+3. **Power Electronics Engineer**: Focuses on power conversion, motor drives, and energy storage systems.`;
+      } else if (curated.domain === 'Civil') {
+        pathways = `1. **${curated.title} (Primary Pathway)**: Focuses on structural analysis, drafting, and building codes.
+2. **Structural Design Engineer**: Specializes in steel/concrete framing and finite element structural modeling.
+3. **Site & Construction Operations Engineer**: Focuses on quantity estimation, scheduling, and site safety management.`;
+      } else if (curated.domain === 'Data') {
+        pathways = `1. **${curated.title} (Primary Pathway)**: Focuses on SQL analysis, dashboarding, and business metrics.
+2. **Data Engineer**: Specializes in ETL pipelines, schema design, and distributed data processing.
+3. **Machine Learning Analyst**: Focuses on feature engineering, exploratory data analysis, and predictive modeling.`;
+      } else if (curated.domain === 'Finance') {
+        pathways = `1. **${curated.title} (Primary Pathway)**: Focuses on financial modeling, three-statement accounting, and variance analysis.
+2. **Investment Banking Analyst**: Specializes in DCF valuation, M&A pitch materials, and financial due diligence.
+3. **Corporate FP&A Specialist**: Focuses on budgeting, forecasting, and operating expense analysis.`;
+      } else if (curated.domain === 'Marketing') {
+        pathways = `1. **${curated.title} (Primary Pathway)**: Focuses on SEO, content strategy, and campaign analytics.
+2. **Performance Marketing Specialist**: Specializes in paid search, conversion rate optimization (CRO), and paid media.
+3. **Lifecycle & CRM Marketer**: Focuses on retention funnels, email automation, and customer segmentation.`;
+      } else if (curated.domain === 'Human Resources') {
+        pathways = `1. **${curated.title} (Primary Pathway)**: Focuses on talent acquisition, onboarding operations, and employee relations.
+2. **Technical Recruiter**: Specializes in sourcing, screening, and closing technical candidates.
+3. **People Operations Specialist**: Focuses on HRIS administration, compensation benchmarking, and compliance.`;
+      } else if (curated.domain === 'Design') {
+        pathways = `1. **${curated.title} (Primary Pathway)**: Focuses on wireframing, interaction flows, and usability testing.
+2. **Design Systems Designer**: Specializes in tokenized component libraries, WCAG accessibility, and Figma architecture.
+3. **Product Designer**: Focuses on end-to-end product discovery, user research, and prototyping.`;
+      }
+    }
 
     return `### Recommended Career Pathways for Entry-Level Candidates
 
 ${studentContext}Your primary target role is **${target}**. Here are the highest-leverage career trajectories suited to your academic profile:
 
-1. **${target} (Primary Pathway)**: Focuses on core software engineering, data structures, and production feature development. Highest recruiter callback rate for CS grads.
-2. **Junior Full Stack Developer**: Specializes in modern React/Next.js frontend architectures paired with Node.js/PostgreSQL APIs.
-3. **Junior Cloud & DevOps Engineer**: Focuses on Docker containerization, CI/CD automated deployment pipelines, and cloud operations.
+${pathways}
 
 ### Strategic Recommendations:
-- Build 2 practical full-stack capstones that prove engineering depth rather than simple tutorial clones.
+- Build 2 practical capstones that prove domain competency rather than simple tutorial clones.
 - Audit your resume against industry standards in the [Resume Builder](/builder).
-- Follow a structured week-by-week curriculum in the [Learning Roadmap](/career/roadmap).
+- Follow a structured curriculum in [Career Guidance](/guidance).
 - Discover matching live openings in [Job Opportunities](/jobs).`;
   }
 
-  // 7. JOB GUIDANCE
+  // 11. JOB GUIDANCE
   if (
     msg.includes('job') ||
     msg.includes('fresher') ||
@@ -1872,21 +2135,25 @@ ${studentContext}Your primary target role is **${target}**. Here are the highest
     msg.includes('eligibility') ||
     msg.includes('match')
   ) {
+    if (!isGoalSet) {
+      return `Your target role is **not set** yet.\n\nSet your target role in [Onboarding](/onboarding) or [My Career Data](/dashboard/my-data) to filter relevant entry-level and internship openings in [Job Opportunities](/jobs).`;
+    }
+
     return `When searching for entry-level and fresher **${target}** positions:
 
-1. **The 65% Match Rule**: You do **not** need 100% of listed qualifications. Job descriptions are wish lists. If you match 65-70% of core technical requirements and have project evidence, you are a competitive applicant.
+1. **The 65% Match Rule**: You do **not** need 100% of listed qualifications. Job descriptions are wish lists. If you match 65-70% of core requirements and have project evidence, you are a competitive applicant.
 2. **Fresher Search Formulas**: In our job search engine, try natural language prompts like:
-   - *"remote fresher ${target}"*
-   - *"summer 2026 software engineering internship"*
-   - *"entry level developer new grad"*
+   - *"entry level ${target}"*
+   - *"fresher ${target} internship"*
+   - *"junior ${target} new grad"*
 3. **Tailor Before Submitting**: Always inspect the job description keywords and run your resume through our matcher to ensure your match score exceeds 75%.
 
 Find and filter live openings right now:
-- Browse live openings across LinkedIn, Adzuna, and Jooble in [Job Opportunities](/jobs)
+- Browse live openings in [Job Opportunities](/jobs)
 - Check your application pipeline in the [Application Tracker](/dashboard/applications)`;
   }
 
-  // 8. SKILL GUIDANCE
+  // 12. SKILL GUIDANCE
   if (
     msg.includes('skill') ||
     msg.includes('learn') ||
@@ -1896,13 +2163,23 @@ Find and filter live openings right now:
     msg.includes('study') ||
     msg.includes('master')
   ) {
+    if (!isGoalSet) {
+      return `Your target role is **not set** yet, so I have not assumed specific skill gaps for you.\n\nSet your target role in [Onboarding](/onboarding) or [My Career Data](/dashboard/my-data) to see the critical skills and assessments required for your field in [Skill Assessments](/skills).`;
+    }
+
     const vStr = verifiedList.length > 0
-      ? `You have verified qualifications in: **${verifiedList.join(', ')}**.`
+      ? `You have verified qualifications in: **${verifiedList.map((v) => `${v.name} (${v.score}%)`).join(', ')}**.`
       : 'You have not completed any proctored assessments yet.';
 
-    const gapList = missingCrits.length > 0
-      ? `Top critical gaps to close for **${target}**: **${missingCrits.slice(0, 3).join(', ')}**.`
+    const roleGaps = missingCrits.length > 0
+      ? missingCrits.slice(0, 3)
+      : (curated ? curated.coreSkills.slice(0, 3) : []);
+
+    const gapList = roleGaps.length > 0
+      ? `Top critical gaps to close for **${target}**: **${roleGaps.join(', ')}**.`
       : `Your profile meets all critical skill requirements for ${target}!`;
+
+    const primarySkillToMaster = roleGaps[0] || (curated ? curated.coreSkills[0] : 'core technical concepts');
 
     return `For **${target}** roles, recruiters favor verified technical competencies over self-reported resume claims.
 
@@ -1910,32 +2187,46 @@ ${vStr}
 ${gapList}
 
 ### 3-Step Strategy to Prove Skill Mastery:
-1. **Focus on Hiring Requirements**: Master the core paradigms of ${missingCrits[0] || 'SQL'} and how they integrate into full-stack systems.
-2. **Earn Cryptographic Credentials**: Take our 10-question proctored evaluation to earn a blockchain-style verifiable certificate with anti-cheat verification.
+1. **Focus on Hiring Requirements**: Master the core concepts of **${primarySkillToMaster}** and how they apply in ${curated ? curated.title : target} projects.
+2. **Earn Cryptographic Credentials**: Take our proctored evaluation to earn a verified certificate in [Skill Assessments](/skills).
 3. **Apply in Projects**: Integrate newly verified skills directly into your portfolio projects.
 
 Start your skill verification now:
 - Take proctored assessments in [Skill Assessments](/skills)
-- Review curated YouTube learning masterclasses in [Learning Roadmap](/career/roadmap)`;
+- Review curated learning resources in [Career Guidance](/guidance)`;
   }
 
-  // 9. GENERAL AI ASSISTANT OVERVIEW (Fallback)
+  // 13. GENERAL AI ASSISTANT OVERVIEW (Fallback)
   const studentHeadline = sp && sp.institution && sp.degree
     ? `Student at **${sp.institution}** · ${sp.degree}${sp.graduationYear ? ` (Class of ${sp.graduationYear})` : ''}`
-    : `Candidate pursuing **${target}**`;
+    : isGoalSet
+    ? `Candidate pursuing **${target}**`
+    : 'Candidate';
+
+  const targetRoleDisplay = isGoalSet
+    ? `**${target}**`
+    : '**Goal not set** (Set your role in [My Career Data](/dashboard/my-data))';
+
+  const resumeStatusDisplay = ats
+    ? `**${ats.atsScore}/100** compliance`
+    : (unifiedContext?.resume?.hasResume ? 'Draft created (pending ATS audit)' : 'No resume created yet (create one in [Resume Builder](/builder))');
+
+  const verifiedDisplay = verifiedList.length > 0
+    ? verifiedList.map((v) => `${v.name} (${v.score}%)`).join(', ')
+    : 'None yet';
 
   return `### Smart Resume AI Assistant
 
 👋 Hello ${name}! Here is your current profile snapshot:
 - **Profile**: ${studentHeadline}
-- **Target Role**: **${target}**
+- **Target Role**: ${targetRoleDisplay}
 - **Career Readiness Score**: **${readiness}/100**
-- **ATS Resume Status**: ${ats ? `**${ats.atsScore}/100** compliance` : 'Not yet audited'}
-- **Verified Skills**: ${verifiedList.length > 0 ? verifiedList.join(', ') : 'None yet'}
+- **ATS Resume Status**: ${resumeStatusDisplay}
+- **Verified Skills**: ${verifiedDisplay}
 
 ### How I Can Guide You Today:
 1. **Resume Optimization**: Improve bullet points with the Google XYZ formula in the [Resume Builder](/builder) and check scores in the [ATS Score Checker](/ats-score).
-2. **Close Skill Gaps**: Practice and earn certificates in [Skill Assessments](/skills) and follow your [Learning Roadmap](/career/roadmap).
+2. **Close Skill Gaps**: Practice and earn certificates in [Skill Assessments](/skills) and explore roadmaps in [Career Guidance](/guidance).
 3. **Interview Practice**: Run mock technical and behavioral interviews in [AI Interview Preparation](/interview-prep).
 4. **Discover Jobs**: Filter entry-level and internship listings in [Job Opportunities](/jobs).
 
