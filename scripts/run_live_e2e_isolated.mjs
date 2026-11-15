@@ -119,10 +119,15 @@ async function main() {
     await runCommand('npx', ['tsx', 'scripts/test_project_mentor_comprehensive.mjs'], testEnv);
     console.log('✓ Suite 5 passed successfully!');
 
-    // 6. Run AI Job Application Assistant Suite
-    console.log('\n--- SUITE 6: AI JOB APPLICATION ASSISTANT SUITE ---');
-    await runCommand('npx', ['tsx', 'scripts/test_application_assistant_comprehensive.mjs'], testEnv);
+    // 6. Run Resume Replacement, Removal & Multi-Resume Suite
+    console.log('\n--- SUITE 6: RESUME REPLACEMENT, REMOVAL & MULTI-RESUME SUITE ---');
+    await runCommand('npx', ['tsx', 'scripts/test_resume_management_comprehensive.mjs'], testEnv);
     console.log('✓ Suite 6 passed successfully!');
+
+    // 7. Run Proctoring Authorization & Ownership Suite
+    console.log('\n--- SUITE 7: PROCTORING AUTHORIZATION & OWNERSHIP SUITE ---');
+    await runCommand('node', ['scripts/test_proctoring_auth_regression.mjs'], testEnv);
+    console.log('✓ Suite 7 passed successfully!');
 
     allPassed = true;
   } finally {

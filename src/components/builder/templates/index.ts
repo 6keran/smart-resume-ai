@@ -1,23 +1,25 @@
 export { ResumeRenderer } from './ResumeRenderer';
 export { ATSClassicTemplate } from './ATSClassicTemplate';
 export { SoftwareEngineerTemplate } from './SoftwareEngineerTemplate';
-export { FreshGraduateTemplate, GraduateFresherTemplate } from './FreshGraduateTemplate';
-export { CorporateExecutiveTemplate, ExecutiveProfessionalTemplate } from './CorporateExecutiveTemplate';
+export { FreshGraduateTemplate, FreshGraduateTemplate as GraduateFresherTemplate } from './FreshGraduateTemplate';
+export { CorporateExecutiveTemplate } from './CorporateExecutiveTemplate';
+export { ExecutiveLeadershipTemplate, ExecutiveLeadershipTemplate as ExecutiveProfessionalTemplate } from './ExecutiveLeadershipTemplate';
+export { MinimalistATSTemplate } from './MinimalistATSTemplate';
+export { SoftwareDeveloperTemplate, SoftwareDeveloperTemplate as FullStackDeveloperTemplate } from './SoftwareDeveloperTemplate';
+export { OperationsManagementTemplate } from './OperationsManagementTemplate';
 export { DataAnalystTemplate } from './DataAnalystTemplate';
 export { UIUXDesignerTemplate } from './UIUXDesignerTemplate';
-export { FullStackDeveloperTemplate } from './FullStackDeveloperTemplate';
 export { InternshipApplicantTemplate } from './InternshipApplicantTemplate';
-export { AcademicTemplate, AcademicResearchTemplate } from './AcademicTemplate';
+export { AcademicTemplate, AcademicTemplate as AcademicResearchTemplate } from './AcademicTemplate';
 export { SalesMarketingTemplate } from './SalesMarketingTemplate';
-export { OperationsManagementTemplate } from './OperationsManagementTemplate';
-export { ModernTwoColumnTemplate, ContemporaryTemplate } from './ModernTwoColumnTemplate';
+export { ModernTwoColumnTemplate, ModernTwoColumnTemplate as ContemporaryTemplate } from './ModernTwoColumnTemplate';
+export { CompactOnePageTemplate } from './CompactOnePageTemplate';
+export { MinimalistTemplate } from './MinimalistTemplate';
+export { ExperiencedProfessionalTemplate } from './ExperiencedProfessionalTemplate';
 
 // Legacy references for backward compatibility
 export { ModernProfessionalTemplate } from './ModernProfessionalTemplate';
-export { MinimalistTemplate } from './MinimalistTemplate';
 export { CreativeProfessionalTemplate } from './CreativeProfessionalTemplate';
-export { CompactOnePageTemplate } from './CompactOnePageTemplate';
-export { ExperiencedProfessionalTemplate } from './ExperiencedProfessionalTemplate';
 export { ThomasHamptoneTemplate } from './ThomasHamptoneTemplate';
 export { NickKoeTemplate } from './NickKoeTemplate';
 export { RichardSanchezTemplate } from './RichardSanchezTemplate';

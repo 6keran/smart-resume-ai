@@ -50,7 +50,7 @@ export default function InterviewPrepPage() {
   const [viewStep, setViewStep] = useState<'setup' | 'session' | 'summary'>('setup');
 
   // Setup inputs
-  const [targetRole, setTargetRole] = useState('Full Stack Developer');
+  const [targetRole, setTargetRole] = useState('');
   const [company, setCompany] = useState('');
   const [jobDescription, setJobDescription] = useState('');
 
@@ -335,11 +335,11 @@ export default function InterviewPrepPage() {
               {/* Left Column: Form Setup (7 cols) */}
               <div className="lg:col-span-7">
                 <GlassCard className="p-6 sm:p-8 rounded-xl border border-[var(--border-color)] space-y-6 text-left">
-                  <div className="border-b border-[var(--border-color)] pb-4">
-                    <h2 className="text-base font-bold text-[var(--text-primary)]">
+                  <div className="border-b border-[#E5E8ED] pb-4">
+                    <h2 className="heading-section">
                       Configure Practice Session
                     </h2>
-                    <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                    <p className="text-body-secondary mt-1">
                       Select your target role and optional job requirements to generate 5 tailored interview questions.
                     </p>
                   </div>
@@ -347,7 +347,7 @@ export default function InterviewPrepPage() {
                   <form onSubmit={handleStartSession} className="space-y-5">
                     {/* Role Input & Quick Pills */}
                     <div className="space-y-2">
-                      <label className="block text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
+                      <label className="label-form block">
                         Target Role
                       </label>
                       <input
@@ -355,21 +355,21 @@ export default function InterviewPrepPage() {
                         value={targetRole}
                         onChange={(e) => setTargetRole(e.target.value)}
                         placeholder="e.g. Senior Full Stack Developer"
-                        className="w-full px-4 py-2.5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-hidden focus:border-[var(--accent)] transition-colors shadow-xs"
+                        className="w-full px-4 py-2.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white transition-colors"
                         required
                       />
 
                       {/* Role Suggestions */}
-                      <div className="flex flex-wrap gap-1.5 pt-1">
+                      <div className="flex flex-wrap gap-2 pt-1">
                         {rolePills.map((role) => (
                           <button
                             key={role}
                             type="button"
                             onClick={() => setTargetRole(role)}
-                            className={`px-3 py-1 rounded-full text-[10px] font-medium transition-colors border ${
+                            className={`px-3 py-1 rounded-full text-[13px] font-medium transition-colors border cursor-pointer ${
                               targetRole === role
-                                ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border-[var(--accent)]/30'
-                                : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--text-muted)]'
+                                ? 'bg-[#3157C8]/10 text-[#3157C8] border-[#3157C8]/30 font-semibold'
+                                : 'bg-[#F6F7F9] text-[#626B78] border-[#E5E8ED] hover:border-slate-300'
                             }`}
                           >
                             {role}
@@ -380,7 +380,7 @@ export default function InterviewPrepPage() {
 
                     {/* Company (Optional) */}
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
+                      <label className="label-form block">
                         Target Company (Optional)
                       </label>
                       <input
@@ -388,13 +388,13 @@ export default function InterviewPrepPage() {
                         value={company}
                         onChange={(e) => setCompany(e.target.value)}
                         placeholder="e.g. Google, Stripe, or Target Startup"
-                        className="w-full px-4 py-2.5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-hidden focus:border-[var(--accent)] transition-colors shadow-xs"
+                        className="w-full px-4 py-2.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white transition-colors"
                       />
                     </div>
 
                     {/* Job Description (Optional) */}
                     <div className="space-y-1.5">
-                      <label className="block text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
+                      <label className="label-form block">
                         Target Job Description Snippet (Optional)
                       </label>
                       <textarea
@@ -402,23 +402,23 @@ export default function InterviewPrepPage() {
                         onChange={(e) => setJobDescription(e.target.value)}
                         placeholder="Paste key requirements or responsibility bullets from the job post..."
                         rows={3}
-                        className="w-full px-4 py-2.5 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-hidden focus:border-[var(--accent)] transition-colors shadow-xs resize-none"
+                        className="w-full px-4 py-2.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white transition-colors resize-none"
                       />
                     </div>
 
                     <button
                       type="submit"
                       disabled={isStarting}
-                      className="btn-primary w-full py-3 rounded-full text-xs font-bold inline-flex items-center justify-center gap-2 shadow-sm"
+                      className="btn-primary-action w-full py-3.5 text-base font-bold inline-flex items-center justify-center gap-2 shadow-sm"
                     >
                       {isStarting ? (
                         <>
-                          <Loader2 className="w-4 h-4 animate-spin" />
+                          <Loader2 className="w-5 h-5 animate-spin" />
                           <span>Generating Customized Interview Questions...</span>
                         </>
                       ) : (
                         <>
-                          <Play className="w-4 h-4" />
+                          <Play className="w-5 h-5" />
                           <span>Start 5-Question Interview Session</span>
                         </>
                       )}

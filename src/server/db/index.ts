@@ -106,8 +106,8 @@ export function getDb(): DatabaseClient {
     );
   `);
 
-  // 1b. Real Users / Candidate Profiles Table
-  dbInstance.exec(`
+    // 1b. Real Users / Candidate Profiles Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS users (
       id TEXT PRIMARY KEY,
       name TEXT NOT NULL,
@@ -121,8 +121,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_users_name ON users(name);
   `);
 
-  // 2. Visitors / Sessions Table
-  dbInstance.exec(`
+    // 2. Visitors / Sessions Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS visitors (
       id TEXT PRIMARY KEY,
       anonymous_id TEXT UNIQUE NOT NULL,
@@ -136,8 +136,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_visitors_anon ON visitors(anonymous_id);
   `);
 
-  // 3. Resumes Table
-  dbInstance.exec(`
+    // 3. Resumes Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS resumes (
       id TEXT PRIMARY KEY,
       visitor_id TEXT,
@@ -145,13 +145,14 @@ export function getDb(): DatabaseClient {
       file_type TEXT NOT NULL,
       uploaded_at TEXT NOT NULL,
       parsed_successfully INTEGER DEFAULT 1,
+      is_active INTEGER DEFAULT 0,
       created_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_resumes_visitor ON resumes(visitor_id);
   `);
 
-  // 4. Resume Analyses Table
-  dbInstance.exec(`
+    // 4. Resume Analyses Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS resume_analyses (
       id TEXT PRIMARY KEY,
       visitor_id TEXT,
@@ -170,8 +171,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_analyses_date ON resume_analyses(analyzed_at);
   `);
 
-  // 5. Verified Skills Table
-  dbInstance.exec(`
+    // 5. Verified Skills Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS verified_skills (
       id TEXT PRIMARY KEY,
       visitor_id TEXT,
@@ -184,8 +185,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_skills_name ON verified_skills(skill_name);
   `);
 
-  // 6. Assessments Table
-  dbInstance.exec(`
+    // 6. Assessments Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS assessments (
       id TEXT PRIMARY KEY,
       visitor_id TEXT,
@@ -203,8 +204,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_assessments_skill ON assessments(skill);
   `);
 
-  // 7. Job Searches Table
-  dbInstance.exec(`
+    // 7. Job Searches Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS job_searches (
       id TEXT PRIMARY KEY,
       visitor_id TEXT,
@@ -218,8 +219,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_job_searches_date ON job_searches(searched_at);
   `);
 
-  // 7b. Job Search Results Table
-  dbInstance.exec(`
+    // 7b. Job Search Results Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS job_search_results (
       id TEXT PRIMARY KEY,
       search_id TEXT NOT NULL,
@@ -237,8 +238,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_jsr_search ON job_search_results(search_id);
   `);
 
-  // 8. Job Matches Table
-  dbInstance.exec(`
+    // 8. Job Matches Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS job_matches (
       id TEXT PRIMARY KEY,
       visitor_id TEXT,
@@ -257,8 +258,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_job_matches_user ON job_matches(user_id);
   `);
 
-  // 9. Feedback Table
-  dbInstance.exec(`
+    // 9. Feedback Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS feedback (
       id TEXT PRIMARY KEY,
       visitor_id TEXT,
@@ -272,8 +273,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_feedback_date ON feedback(created_at);
   `);
 
-  // 10. Skills Catalog Table
-  dbInstance.exec(`
+    // 10. Skills Catalog Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS skills_catalog (
       id TEXT PRIMARY KEY,
       name TEXT UNIQUE NOT NULL,
@@ -287,8 +288,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_skills_cat_slug ON skills_catalog(slug);
   `);
 
-  // 11. Assessment Configuration Table (per-skill settings)
-  dbInstance.exec(`
+    // 11. Assessment Configuration Table (per-skill settings)
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS assessment_configs (
       id TEXT PRIMARY KEY,
       skill_slug TEXT UNIQUE NOT NULL,
@@ -300,8 +301,8 @@ export function getDb(): DatabaseClient {
     );
   `);
 
-  // 12. Assessment Questions Table (Question Bank)
-  dbInstance.exec(`
+    // 12. Assessment Questions Table (Question Bank)
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS assessment_questions (
       id TEXT PRIMARY KEY,
       skill_slug TEXT NOT NULL,
@@ -322,8 +323,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_aq_status ON assessment_questions(is_active, is_deleted);
   `);
 
-  // 13. Assessment Question Snapshots Table (preserves exact questions at assessment time for historical integrity)
-  dbInstance.exec(`
+    // 13. Assessment Question Snapshots Table (preserves exact questions at assessment time for historical integrity)
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS assessment_question_snapshots (
       id TEXT PRIMARY KEY,
       assessment_id TEXT NOT NULL,
@@ -342,8 +343,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_snap_assessment ON assessment_question_snapshots(assessment_id);
   `);
 
-  // 14. Real Audit Events Table
-  dbInstance.exec(`
+    // 14. Real Audit Events Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS audit_events (
       id TEXT PRIMARY KEY,
       event_type TEXT NOT NULL,
@@ -356,8 +357,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_events(created_at);
   `);
 
-  // 15. Job Applications Table
-  dbInstance.exec(`
+    // 15. Job Applications Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS job_applications (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -377,8 +378,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_job_app_status ON job_applications(status);
   `);
 
-  // 16. Resume Improvements Table
-  dbInstance.exec(`
+    // 16. Resume Improvements Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS resume_improvements (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -392,8 +393,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_improvements_user ON resume_improvements(user_id);
   `);
 
-  // 16b. Resume Versions Table
-  dbInstance.exec(`
+    // 16b. Resume Versions Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS resume_versions (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -409,8 +410,8 @@ export function getDb(): DatabaseClient {
     CREATE UNIQUE INDEX IF NOT EXISTS idx_resume_ver_unique ON resume_versions(user_id, resume_id, version_number);
   `);
 
-  // 17. Certificates Table
-  dbInstance.exec(`
+    // 17. Certificates Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS certificates (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -427,8 +428,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_certificates_code ON certificates(certificate_code);
   `);
 
-  // 18. Courses Table
-  dbInstance.exec(`
+    // 18. Courses Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS courses (
       id TEXT PRIMARY KEY,
       slug TEXT UNIQUE NOT NULL,
@@ -443,8 +444,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_courses_slug ON courses(slug);
   `);
 
-  // 19. Course Progress Table
-  dbInstance.exec(`
+    // 19. Course Progress Table
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS course_progress (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -461,8 +462,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_cp_course ON course_progress(course_id);
   `);
 
-  // 20. Proctoring Events Table (Audit logs for camera & behavioral monitoring)
-  dbInstance.exec(`
+    // 20. Proctoring Events Table (Audit logs for camera & behavioral monitoring)
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS proctoring_events (
       id TEXT PRIMARY KEY,
       assessment_id TEXT NOT NULL,
@@ -476,14 +477,18 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_proctor_type ON proctoring_events(event_type);
   `);
 
-  // 21. User Skills Table (Profile skills claimed / tracked per user)
-  dbInstance.exec(`
+    // 21. User Skills Table (Profile skills claimed / confirmed / verified per user)
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS user_skills (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
       skill_name TEXT NOT NULL,
       category TEXT NOT NULL,
       status TEXT NOT NULL DEFAULT 'not-verified',
+      source TEXT NOT NULL DEFAULT 'user_added',
+      confidence REAL,
+      confirmed_at TEXT,
+      resume_id TEXT,
       score INTEGER,
       certificate_id TEXT,
       verified_date TEXT,
@@ -493,11 +498,12 @@ export function getDb(): DatabaseClient {
       UNIQUE(user_id, skill_name)
     );
     CREATE INDEX IF NOT EXISTS idx_user_skills_user ON user_skills(user_id);
+    CREATE INDEX IF NOT EXISTS idx_user_skills_user_status ON user_skills(user_id, status);
     CREATE INDEX IF NOT EXISTS idx_user_skills_name ON user_skills(skill_name);
   `);
 
-  // 22. Live Proctoring Sessions Table (Camera & Assessment Telemetry)
-  dbInstance.exec(`
+    // 22. Live Proctoring Sessions Table (Camera & Assessment Telemetry)
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS live_proctoring_sessions (
       id TEXT PRIMARY KEY,
       assessment_id TEXT UNIQUE NOT NULL,
@@ -527,8 +533,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_lps_last_hb ON live_proctoring_sessions(last_heartbeat_at);
   `);
 
-  // 23. User Career Goals
-  dbInstance.exec(`
+    // 23. User Career Goals
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS user_career_goals (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL UNIQUE,
@@ -544,8 +550,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_ucg_user ON user_career_goals(user_id);
   `);
 
-  // 24. User Learning Roadmaps
-  dbInstance.exec(`
+    // 24. User Learning Roadmaps
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS user_learning_roadmaps (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -558,8 +564,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_ulr_user ON user_learning_roadmaps(user_id);
   `);
 
-  // 25. User Interview Sessions
-  dbInstance.exec(`
+    // 25. User Interview Sessions
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS user_interview_sessions (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -577,8 +583,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_uis_user ON user_interview_sessions(user_id);
   `);
 
-  // 26. Student Profiles Table (Centralized Student & Fresher Career Profile)
-  dbInstance.exec(`
+    // 26. Student Profiles Table (Centralized Student & Fresher Career Profile)
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS student_profiles (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL UNIQUE,
@@ -590,26 +596,30 @@ export function getDb(): DatabaseClient {
       current_semester TEXT,
       cgpa TEXT,
       student_type TEXT DEFAULT 'college_student',
-      target_role TEXT NOT NULL DEFAULT 'Graduate Software Engineer',
+      target_role TEXT NOT NULL DEFAULT '',
       target_work_type TEXT DEFAULT 'both',
       preferred_locations TEXT,
       projects_data TEXT,
       coursework TEXT,
       achievements TEXT,
+      onboarding_status TEXT NOT NULL DEFAULT 'not_started',
+      onboarding_completed_at TEXT,
+      onboarding_skipped_at TEXT,
+      preferences_json TEXT,
       created_at TEXT NOT NULL,
       updated_at TEXT NOT NULL
     );
     CREATE INDEX IF NOT EXISTS idx_sp_user ON student_profiles(user_id);
   `);
 
-  // 27. Guided Projects Table (AI Project Mentor & Milestone Tracker)
-  dbInstance.exec(`
+    // 27. Guided Projects Table (AI Project Mentor & Milestone Tracker)
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS guided_projects (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
       title TEXT NOT NULL,
       difficulty TEXT NOT NULL DEFAULT 'Intermediate',
-      target_role TEXT NOT NULL DEFAULT 'Graduate Software Engineer',
+      target_role TEXT NOT NULL DEFAULT '',
       tech_stack TEXT NOT NULL DEFAULT '[]',
       problem_statement TEXT,
       real_world_use_case TEXT,
@@ -632,8 +642,8 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_guided_proj_status ON guided_projects(status);
   `);
 
-  // 28. Career Readiness History Table (Dated Readiness Snapshots)
-  dbInstance.exec(`
+    // 28. Career Readiness History Table (Dated Readiness Snapshots)
+    dbInstance.exec(`
     CREATE TABLE IF NOT EXISTS career_readiness_history (
       id TEXT PRIMARY KEY,
       user_id TEXT NOT NULL,
@@ -650,55 +660,85 @@ export function getDb(): DatabaseClient {
     CREATE INDEX IF NOT EXISTS idx_crh_user ON career_readiness_history(user_id, created_at DESC);
   `);
 
-  // Safe column migrations to associate activity with user_id and expand users table
-  const migrateColumns = [
-    'ALTER TABLE visitors ADD COLUMN user_id TEXT;',
-    'ALTER TABLE resumes ADD COLUMN user_id TEXT;',
-    'ALTER TABLE resume_analyses ADD COLUMN user_id TEXT;',
-    'ALTER TABLE verified_skills ADD COLUMN user_id TEXT;',
-    'ALTER TABLE assessments ADD COLUMN user_id TEXT;',
-    'ALTER TABLE assessments ADD COLUMN termination_reason TEXT;',
-    'ALTER TABLE assessments ADD COLUMN proctoring_events_json TEXT;',
-    'ALTER TABLE job_searches ADD COLUMN user_id TEXT;',
-    'ALTER TABLE job_matches ADD COLUMN user_id TEXT;',
-    'ALTER TABLE feedback ADD COLUMN user_id TEXT;',
-    'ALTER TABLE users ADD COLUMN password_hash TEXT;',
-    "ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'USER';",
-    'ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1;',
-    'ALTER TABLE users ADD COLUMN last_login_at TEXT;',
-    'ALTER TABLE job_applications ADD COLUMN resume_id TEXT;',
-    'ALTER TABLE job_applications ADD COLUMN applied_confirmed_at TEXT;',
-    'ALTER TABLE job_applications ADD COLUMN description_snippet TEXT;',
-    'ALTER TABLE job_applications ADD COLUMN salary TEXT;',
-    'ALTER TABLE job_applications ADD COLUMN cover_letter TEXT;',
-    'ALTER TABLE job_applications ADD COLUMN tailored_summary TEXT;',
-    'ALTER TABLE job_applications ADD COLUMN checklist_state TEXT;',
-    'ALTER TABLE job_applications ADD COLUMN match_analysis TEXT;',
-    'ALTER TABLE job_applications ADD COLUMN interview_date TEXT;',
-    'ALTER TABLE job_applications ADD COLUMN outreach_message TEXT;',
-    'ALTER TABLE resumes ADD COLUMN resume_data TEXT;',
-    'ALTER TABLE admin_users ADD COLUMN session_token TEXT;',
-  ];
-  for (const sql of migrateColumns) {
-    try {
-      dbInstance.exec(sql);
-    } catch {
-      // Column already exists or table updated
-    }
-  }
+    // 29. User Roadmap Progress Table (Deterministic milestone & checklist tracking)
+    dbInstance.exec(`
+    CREATE TABLE IF NOT EXISTS user_roadmap_progress (
+      id TEXT PRIMARY KEY,
+      user_id TEXT NOT NULL,
+      role_slug TEXT NOT NULL,
+      item_type TEXT NOT NULL,
+      item_key TEXT NOT NULL,
+      status TEXT NOT NULL DEFAULT 'pending',
+      notes TEXT,
+      completed_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL,
+      UNIQUE(user_id, role_slug, item_type, item_key)
+    );
+    CREATE INDEX IF NOT EXISTS idx_user_roadmap_user_role ON user_roadmap_progress(user_id, role_slug);
+  `);
 
-  const migrateIndexes = [
-    'CREATE INDEX IF NOT EXISTS idx_resumes_user ON resumes(user_id);',
-    'CREATE INDEX IF NOT EXISTS idx_resume_ver_order ON resume_versions(user_id, resume_id, version_number DESC);',
-    'CREATE UNIQUE INDEX IF NOT EXISTS idx_resume_ver_unique ON resume_versions(user_id, resume_id, version_number);',
-  ];
-  for (const sql of migrateIndexes) {
-    try {
-      dbInstance.exec(sql);
-    } catch {
-      // Index already exists
+    // Safe column migrations to associate activity with user_id and expand users table
+    const migrateColumns = [
+      'ALTER TABLE visitors ADD COLUMN user_id TEXT;',
+      'ALTER TABLE resumes ADD COLUMN user_id TEXT;',
+      'ALTER TABLE resume_analyses ADD COLUMN user_id TEXT;',
+      'ALTER TABLE verified_skills ADD COLUMN user_id TEXT;',
+      'ALTER TABLE assessments ADD COLUMN user_id TEXT;',
+      'ALTER TABLE assessments ADD COLUMN termination_reason TEXT;',
+      'ALTER TABLE assessments ADD COLUMN proctoring_events_json TEXT;',
+      'ALTER TABLE job_searches ADD COLUMN user_id TEXT;',
+      'ALTER TABLE job_matches ADD COLUMN user_id TEXT;',
+      'ALTER TABLE feedback ADD COLUMN user_id TEXT;',
+      'ALTER TABLE users ADD COLUMN password_hash TEXT;',
+      "ALTER TABLE users ADD COLUMN role TEXT DEFAULT 'USER';",
+      'ALTER TABLE users ADD COLUMN is_active INTEGER DEFAULT 1;',
+      'ALTER TABLE users ADD COLUMN last_login_at TEXT;',
+      'ALTER TABLE job_applications ADD COLUMN resume_id TEXT;',
+      'ALTER TABLE job_applications ADD COLUMN applied_confirmed_at TEXT;',
+      'ALTER TABLE job_applications ADD COLUMN description_snippet TEXT;',
+      'ALTER TABLE job_applications ADD COLUMN salary TEXT;',
+      'ALTER TABLE job_applications ADD COLUMN cover_letter TEXT;',
+      'ALTER TABLE job_applications ADD COLUMN tailored_summary TEXT;',
+      'ALTER TABLE job_applications ADD COLUMN checklist_state TEXT;',
+      'ALTER TABLE job_applications ADD COLUMN match_analysis TEXT;',
+      'ALTER TABLE job_applications ADD COLUMN interview_date TEXT;',
+      'ALTER TABLE job_applications ADD COLUMN outreach_message TEXT;',
+      'ALTER TABLE resumes ADD COLUMN resume_data TEXT;',
+      'ALTER TABLE resumes ADD COLUMN is_active INTEGER DEFAULT 0;',
+      'ALTER TABLE admin_users ADD COLUMN session_token TEXT;',
+      "ALTER TABLE user_skills ADD COLUMN source TEXT NOT NULL DEFAULT 'user_added';",
+      'ALTER TABLE user_skills ADD COLUMN confidence REAL;',
+      'ALTER TABLE user_skills ADD COLUMN confirmed_at TEXT;',
+      'ALTER TABLE user_skills ADD COLUMN resume_id TEXT;',
+      "ALTER TABLE student_profiles ADD COLUMN onboarding_status TEXT NOT NULL DEFAULT 'not_started';",
+      'ALTER TABLE student_profiles ADD COLUMN onboarding_completed_at TEXT;',
+      'ALTER TABLE student_profiles ADD COLUMN onboarding_skipped_at TEXT;',
+      'ALTER TABLE student_profiles ADD COLUMN preferences_json TEXT;',
+    ];
+    for (const sql of migrateColumns) {
+      try {
+        dbInstance.exec(sql);
+      } catch {
+        // Column already exists or table updated
+      }
     }
-  }
+
+    const migrateIndexes = [
+      'CREATE INDEX IF NOT EXISTS idx_resumes_user ON resumes(user_id);',
+      'CREATE INDEX IF NOT EXISTS idx_resume_ver_order ON resume_versions(user_id, resume_id, version_number DESC);',
+      'CREATE UNIQUE INDEX IF NOT EXISTS idx_resume_ver_unique ON resume_versions(user_id, resume_id, version_number);',
+      'CREATE INDEX IF NOT EXISTS idx_user_skills_user_status ON user_skills(user_id, status);',
+      'CREATE INDEX IF NOT EXISTS idx_verified_skills_user ON verified_skills(user_id);',
+      'CREATE INDEX IF NOT EXISTS idx_user_roadmap_user_role ON user_roadmap_progress(user_id, role_slug);',
+    ];
+    for (const sql of migrateIndexes) {
+      try {
+        dbInstance.exec(sql);
+      } catch {
+        // Index already exists
+      }
+    }
 
     // Ensure default admin user is seeded securely
     ensureAdminUserExists(dbInstance);
@@ -1326,48 +1366,7 @@ export async function registerUser(data: {
   `).run(userId, trimmedName, trimmedEmail, passwordHash, sessionToken, now, now, now, now);
 
   // Link previous visitor activity if any
-  if (data.visitorId) {
-    try {
-      await db.prepare('UPDATE visitors SET user_id = ? WHERE id = ? OR anonymous_id = ?').run(userId, data.visitorId, data.visitorId);
-    } catch (e: any) {
-      console.log('[visitor migration error - visitors]:', e?.message);
-    }
-    try {
-      await db.prepare("UPDATE resumes SET user_id = ? WHERE visitor_id = ? AND (user_id IS NULL OR user_id = '')").run(userId, data.visitorId);
-    } catch (e: any) {
-      console.log('[visitor migration error - resumes]:', e?.message);
-    }
-    try {
-      await db.prepare("UPDATE resume_analyses SET user_id = ? WHERE visitor_id = ? AND (user_id IS NULL OR user_id = '')").run(userId, data.visitorId);
-    } catch (e: any) {
-      console.log('[visitor migration error - analyses]:', e?.message);
-    }
-    try {
-      await db.prepare("UPDATE verified_skills SET user_id = ? WHERE visitor_id = ? AND (user_id IS NULL OR user_id = '')").run(userId, data.visitorId);
-    } catch (e: any) {
-      console.log('[visitor migration error - skills]:', e?.message);
-    }
-    try {
-      await db.prepare("UPDATE assessments SET user_id = ? WHERE visitor_id = ? AND (user_id IS NULL OR user_id = '')").run(userId, data.visitorId);
-    } catch (e: any) {
-      console.log('[visitor migration error - assessments]:', e?.message);
-    }
-    try {
-      await db.prepare("UPDATE job_searches SET user_id = ? WHERE visitor_id = ? AND (user_id IS NULL OR user_id = '')").run(userId, data.visitorId);
-    } catch (e: any) {
-      console.log('[visitor migration error - searches]:', e?.message);
-    }
-    try {
-      await db.prepare("UPDATE job_matches SET user_id = ? WHERE visitor_id = ? AND (user_id IS NULL OR user_id = '')").run(userId, data.visitorId);
-    } catch (e: any) {
-      console.log('[visitor migration error - matches]:', e?.message);
-    }
-    try {
-      await db.prepare("UPDATE feedback SET user_id = ? WHERE visitor_id = ? AND (user_id IS NULL OR user_id = '')").run(userId, data.visitorId);
-    } catch (e: any) {
-      console.log('[visitor migration error - feedback]:', e?.message);
-    }
-  }
+  await linkVisitorActivityToUser(db, userId, data.visitorId);
 
   await logAuditEvent({
     eventType: 'USER_REGISTERED',
@@ -1393,9 +1392,43 @@ export async function registerUser(data: {
   };
 }
 
+async function linkVisitorActivityToUser(
+  db: ReturnType<typeof getDb>,
+  userId: string,
+  visitorId?: string | null
+): Promise<void> {
+  if (!visitorId || !userId) return;
+  try {
+    await db
+      .prepare('UPDATE visitors SET user_id = ? WHERE id = ? OR anonymous_id = ?')
+      .run(userId, visitorId, visitorId);
+  } catch (e: any) {
+    console.log('[visitor migration error - visitors]:', e?.message);
+  }
+  const tables = [
+    'resumes',
+    'resume_analyses',
+    'verified_skills',
+    'assessments',
+    'job_searches',
+    'job_matches',
+    'feedback',
+  ];
+  for (const table of tables) {
+    try {
+      await db
+        .prepare(`UPDATE ${table} SET user_id = ? WHERE visitor_id = ? AND (user_id IS NULL OR user_id = '')`)
+        .run(userId, visitorId);
+    } catch (e: any) {
+      console.log(`[visitor migration error - ${table}]:`, e?.message);
+    }
+  }
+}
+
 export async function loginUser(data: {
   email: string;
   password: string;
+  visitorId?: string;
 }): Promise<{
   user: UserProfile;
   sessionToken: string;
@@ -1443,7 +1476,8 @@ export async function loginUser(data: {
     SET session_token = ?, last_login_at = ?, last_active_at = ?, updated_at = ?
     WHERE id = ?
   `).run(sessionToken, now, now, now, user.id);
-  console.log('[DEBUG loginUser] 9. updated session_token');
+
+  await linkVisitorActivityToUser(db, user.id, data.visitorId);
 
   await logAuditEvent({
     eventType: 'USER_LOGGED_IN',
@@ -1705,20 +1739,7 @@ export async function createOrUpdateUserProfile(data: {
     VALUES (?, ?, ?, ?, ?, ?, ?)
   `).run(id, trimmedName, trimmedEmail, sessionToken, now, now, now);
 
-  if (data.visitorId) {
-    try {
-      await db.prepare('UPDATE visitors SET user_id = ? WHERE id = ? OR anonymous_id = ?').run(id, data.visitorId, data.visitorId);
-      await db.prepare("UPDATE resumes SET user_id = ? WHERE visitor_id = ? AND (user_id IS NULL OR user_id = '')").run(id, data.visitorId);
-      await db.prepare("UPDATE resume_analyses SET user_id = ? WHERE visitor_id = ? AND (user_id IS NULL OR user_id = '')").run(id, data.visitorId);
-      await db.prepare("UPDATE verified_skills SET user_id = ? WHERE visitor_id = ? AND (user_id IS NULL OR user_id = '')").run(id, data.visitorId);
-      await db.prepare("UPDATE assessments SET user_id = ? WHERE visitor_id = ? AND (user_id IS NULL OR user_id = '')").run(id, data.visitorId);
-      await db.prepare("UPDATE job_searches SET user_id = ? WHERE visitor_id = ? AND (user_id IS NULL OR user_id = '')").run(id, data.visitorId);
-      await db.prepare("UPDATE job_matches SET user_id = ? WHERE visitor_id = ? AND (user_id IS NULL OR user_id = '')").run(id, data.visitorId);
-      await db.prepare("UPDATE feedback SET user_id = ? WHERE visitor_id = ? AND (user_id IS NULL OR user_id = '')").run(id, data.visitorId);
-    } catch (e) {
-      console.error('Error linking visitor activity to user:', e);
-    }
-  }
+  await linkVisitorActivityToUser(db, id, data.visitorId);
 
   return {
     id,
@@ -3444,7 +3465,7 @@ export async function submitAssessmentAttempt(data: {
   const passed = !isTerminated && score >= passingScore;
   const status = isTerminated ? 'INCOMPLETE' : passed ? 'passed' : 'failed';
   const now = new Date().toISOString();
-  
+
   // Enforce server-side time bounds
   const maxAllowedDuration = (config?.time_limit_minutes || 20) * 60 + 180;
   const duration = Math.min(data.durationSeconds || attempt.duration_seconds || 0, maxAllowedDuration);
@@ -3642,7 +3663,7 @@ export async function getAssessmentAttemptDetail(attemptId: string) {
   if (proctoringEvents.length === 0 && attempt.proctoring_events_json) {
     try {
       proctoringEvents = JSON.parse(attempt.proctoring_events_json);
-    } catch {}
+    } catch { }
   }
 
   return {
@@ -3851,11 +3872,11 @@ export async function getStudentCareerTimeline(
       events.push({
         id: `ev_prof_${sp.id}`,
         type: 'profile_completed',
-        title: 'Student Career Profile Set',
-        description: `Profile established for ${sp.target_role || 'Software Role'} (${sp.degree || 'Degree'} at ${sp.institution || 'University'}).`,
+        title: 'Career Profile Updated',
+        description: `Profile saved for ${sp.target_role || 'Goal not set'}${sp.degree ? ` (${sp.degree}${sp.institution ? ` at ${sp.institution}` : ''})` : ''}.`,
         timestamp: sp.updated_at || sp.created_at,
         badge: 'Profile',
-        href: '/dashboard/profile',
+        href: '/dashboard/my-data',
       });
     }
 
@@ -3965,10 +3986,10 @@ export async function getStudentCareerTimeline(
       events.push({
         id: `ev_int_${inv.id}`,
         type: 'interview_completed',
-        title: `AI Mock Interview: ${inv.target_role || 'Technical Role'}`,
+        title: `AI Mock Interview: ${inv.target_role || 'Interview Practice'}`,
         description: inv.status === 'completed' && inv.overall_score
           ? `Completed full mock interview with AI evaluation score of ${inv.overall_score}/100.`
-          : `Practiced realistic technical interview questions with STAR feedback.`,
+          : `Practiced structured interview questions with STAR feedback.`,
         timestamp: inv.updated_at || inv.created_at,
         badge: inv.overall_score ? `${inv.overall_score}/100` : 'Interview',
         href: '/interview-prep',
@@ -4088,7 +4109,7 @@ export async function getStudentAchievements(userId: string): Promise<Array<{
       try {
         const stack = JSON.parse(p.tech_stack || '[]');
         stackStr = Array.isArray(stack) ? stack.slice(0, 3).join(', ') : '';
-      } catch {}
+      } catch { }
       achievements.push({
         id: `ach_prj_${p.id}`,
         type: 'project',
@@ -4155,7 +4176,7 @@ export async function getStudentAchievements(userId: string): Promise<Array<{
 
 export async function getUserResumes(userId: string) {
   const db = getDb();
-  const rows = await db.prepare(`
+  const rows = (await db.prepare(`
     SELECT
       r.id,
       r.filename,
@@ -4163,17 +4184,21 @@ export async function getUserResumes(userId: string) {
       r.uploaded_at,
       r.parsed_successfully,
       r.resume_data,
+      COALESCE(r.is_active, 0) as is_active,
       (SELECT COUNT(*) FROM resume_analyses WHERE resume_id = r.id AND user_id = r.user_id) as analyses_count,
       (SELECT COUNT(*) FROM resume_versions WHERE resume_id = r.id AND user_id = r.user_id) as versions_count,
       (SELECT ats_score FROM resume_analyses WHERE resume_id = r.id AND user_id = r.user_id ORDER BY analyzed_at DESC LIMIT 1) as latest_ats_score,
       (SELECT id FROM resume_analyses WHERE resume_id = r.id AND user_id = r.user_id ORDER BY analyzed_at DESC LIMIT 1) as latest_analysis_id
     FROM resumes r
     WHERE r.user_id = ?
-    ORDER BY r.uploaded_at DESC
-  `).all(userId) as any[];
+    ORDER BY COALESCE(r.is_active, 0) DESC, r.uploaded_at DESC
+  `).all(userId)) as any[];
 
-  return rows.map((r) => ({
+  const hasActive = rows.some((r) => Number(r.is_active) === 1);
+
+  return rows.map((r, idx) => ({
     ...r,
+    isActive: hasActive ? Number(r.is_active) === 1 : idx === 0,
     resumeData: r.resume_data ? (typeof r.resume_data === 'string' ? JSON.parse(r.resume_data) : r.resume_data) : null,
     parsedSuccessfully: Boolean(r.parsed_successfully),
     latestAtsScore: r.latest_ats_score !== null ? Math.round(r.latest_ats_score) : null,
@@ -4732,6 +4757,14 @@ export async function runDatabaseMigrations(dbClient?: DatabaseClient): Promise<
     { table: 'job_applications', column: 'outreach_message', type: 'TEXT' },
     { table: 'resumes', column: 'user_id', type: 'TEXT' },
     { table: 'resumes', column: 'resume_data', type: 'TEXT' },
+    { table: 'user_skills', column: 'source', type: "TEXT NOT NULL DEFAULT 'user_added'" },
+    { table: 'user_skills', column: 'confidence', type: 'REAL' },
+    { table: 'user_skills', column: 'confirmed_at', type: 'TEXT' },
+    { table: 'user_skills', column: 'resume_id', type: 'TEXT' },
+    { table: 'student_profiles', column: 'onboarding_status', type: "TEXT NOT NULL DEFAULT 'not_started'" },
+    { table: 'student_profiles', column: 'onboarding_completed_at', type: 'TEXT' },
+    { table: 'student_profiles', column: 'onboarding_skipped_at', type: 'TEXT' },
+    { table: 'student_profiles', column: 'preferences_json', type: 'TEXT' },
   ];
 
   for (const col of columns) {
@@ -4804,12 +4837,16 @@ export async function runDatabaseMigrations(dbClient?: DatabaseClient): Promise<
         current_semester TEXT,
         cgpa TEXT,
         student_type TEXT DEFAULT 'college_student',
-        target_role TEXT NOT NULL DEFAULT 'Graduate Software Engineer',
+        target_role TEXT NOT NULL DEFAULT '',
         target_work_type TEXT DEFAULT 'both',
         preferred_locations TEXT,
         projects_data TEXT,
         coursework TEXT,
         achievements TEXT,
+        onboarding_status TEXT NOT NULL DEFAULT 'not_started',
+        onboarding_completed_at TEXT,
+        onboarding_skipped_at TEXT,
+        preferences_json TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );`,
@@ -4821,7 +4858,7 @@ export async function runDatabaseMigrations(dbClient?: DatabaseClient): Promise<
         user_id TEXT NOT NULL,
         title TEXT NOT NULL,
         difficulty TEXT NOT NULL DEFAULT 'Intermediate',
-        target_role TEXT NOT NULL DEFAULT 'Graduate Software Engineer',
+        target_role TEXT NOT NULL DEFAULT '',
         tech_stack TEXT NOT NULL DEFAULT '[]',
         problem_statement TEXT,
         real_world_use_case TEXT,
@@ -4839,6 +4876,22 @@ export async function runDatabaseMigrations(dbClient?: DatabaseClient): Promise<
         resume_bullets_json TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
+      );`,
+    },
+    {
+      name: 'user_roadmap_progress',
+      sql: `CREATE TABLE IF NOT EXISTS user_roadmap_progress (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        role_slug TEXT NOT NULL,
+        item_type TEXT NOT NULL,
+        item_key TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        notes TEXT,
+        completed_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(user_id, role_slug, item_type, item_key)
       );`,
     },
   ];
@@ -4859,6 +4912,9 @@ export async function runDatabaseMigrations(dbClient?: DatabaseClient): Promise<
     'CREATE INDEX IF NOT EXISTS idx_sp_user ON student_profiles(user_id);',
     'CREATE INDEX IF NOT EXISTS idx_guided_proj_user ON guided_projects(user_id);',
     'CREATE INDEX IF NOT EXISTS idx_guided_proj_status ON guided_projects(status);',
+    'CREATE INDEX IF NOT EXISTS idx_user_skills_user_status ON user_skills(user_id, status);',
+    'CREATE INDEX IF NOT EXISTS idx_verified_skills_user ON verified_skills(user_id);',
+    'CREATE INDEX IF NOT EXISTS idx_user_roadmap_user_role ON user_roadmap_progress(user_id, role_slug);',
   ];
   for (const idxSql of careerIndexes) {
     try {
@@ -4960,7 +5016,7 @@ export async function saveResumeVersion(
 
       try {
         await db.prepare('UPDATE resumes SET resume_data = ? WHERE id = ? AND user_id = ?').run(dataString, targetResumeId, userId);
-      } catch {}
+      } catch { }
 
       savedVersion = {
         id: versionId,
@@ -5219,21 +5275,73 @@ export async function getUserResume(userId: string, resumeId: string) {
   };
 }
 
-export async function deleteUserResume(userId: string, resumeId: string): Promise<{ found: boolean; deleted: boolean }> {
+export async function deleteUserResume(
+  userId: string,
+  resumeId: string
+): Promise<{ found: boolean; deleted: boolean; nextActiveResumeId?: string | null }> {
   const db = getDb();
-  const existing = (await db.prepare('SELECT id, user_id FROM resumes WHERE id = ?').get(resumeId)) as any;
+  const existing = (await db.prepare('SELECT id, user_id, is_active FROM resumes WHERE id = ?').get(resumeId)) as any;
   if (!existing) {
-    return { found: false, deleted: false };
+    return { found: false, deleted: false, nextActiveResumeId: null };
   }
   if (existing.user_id !== userId) {
     throw new Error('Forbidden: You do not own this resume.');
   }
 
+  // Preserve referential integrity without deleting student applications or analyses
+  try {
+    await db.prepare('DELETE FROM resume_improvements WHERE resume_id = ? AND user_id = ?').run(resumeId, userId);
+  } catch { }
+  try {
+    await db.prepare('UPDATE resume_analyses SET resume_id = NULL WHERE resume_id = ? AND user_id = ?').run(resumeId, userId);
+  } catch { }
+  try {
+    await db.prepare('UPDATE job_applications SET resume_id = NULL WHERE resume_id = ? AND user_id = ?').run(resumeId, userId);
+  } catch { }
+  try {
+    await db.prepare('UPDATE job_matches SET resume_id = NULL WHERE resume_id = ?').run(resumeId);
+  } catch { }
+
   // Delete versions & resume
+  const wasActive = Number(existing.is_active) === 1;
   await db.prepare('DELETE FROM resume_versions WHERE resume_id = ? AND user_id = ?').run(resumeId, userId);
   await db.prepare('DELETE FROM resumes WHERE id = ? AND user_id = ?').run(resumeId, userId);
 
-  return { found: true, deleted: true };
+  // Ensure an active resume remains if the user still has saved resumes
+  let nextActiveResumeId: string | null = null;
+  try {
+    if (!wasActive) {
+      const currentActive = (await db.prepare(`
+        SELECT id FROM resumes
+        WHERE user_id = ? AND is_active = 1
+        ORDER BY uploaded_at DESC, created_at DESC
+        LIMIT 1
+      `).get(userId)) as any;
+      if (currentActive?.id) {
+        nextActiveResumeId = currentActive.id;
+      }
+    }
+
+    if (!nextActiveResumeId) {
+      const nextActive = (await db.prepare(`
+        SELECT id FROM resumes
+        WHERE user_id = ?
+        ORDER BY uploaded_at DESC, created_at DESC
+        LIMIT 1
+      `).get(userId)) as any;
+      if (nextActive?.id) {
+        await db.prepare('UPDATE resumes SET is_active = 1 WHERE id = ? AND user_id = ?').run(nextActive.id, userId);
+        nextActiveResumeId = nextActive.id;
+      }
+    }
+  } catch { }
+
+  try {
+    const { clearStudentContextCache } = await import('@/server/services/unifiedStudentContext');
+    clearStudentContextCache(userId);
+  } catch { }
+
+  return { found: true, deleted: true, nextActiveResumeId };
 }
 
 export async function getUserActiveResume(userId: string) {
@@ -5242,7 +5350,7 @@ export async function getUserActiveResume(userId: string) {
     SELECT *
     FROM resumes
     WHERE user_id = ?
-    ORDER BY uploaded_at DESC, created_at DESC
+    ORDER BY COALESCE(is_active, 0) DESC, uploaded_at DESC, created_at DESC
     LIMIT 1
   `).get(userId)) as any;
 
@@ -5252,9 +5360,29 @@ export async function getUserActiveResume(userId: string) {
 
   return {
     ...row,
+    isActive: true,
     parsedSuccessfully: Boolean(row.parsed_successfully),
     resumeData: row.resume_data ? (typeof row.resume_data === 'string' ? JSON.parse(row.resume_data) : row.resume_data) : null,
   };
+}
+
+export async function setUserActiveResume(userId: string, resumeId: string) {
+  if (!userId || !resumeId) {
+    throw new Error('Valid userId and resumeId are required.');
+  }
+  const db = getDb();
+  const existing = (await db.prepare('SELECT id, user_id FROM resumes WHERE id = ?').get(resumeId)) as any;
+  if (!existing) {
+    throw new Error('Resume not found.');
+  }
+  if (existing.user_id !== userId) {
+    throw new Error('Forbidden: You do not own this resume.');
+  }
+
+  await db.prepare('UPDATE resumes SET is_active = 0 WHERE user_id = ?').run(userId);
+  await db.prepare('UPDATE resumes SET is_active = 1 WHERE id = ? AND user_id = ?').run(resumeId, userId);
+
+  return { success: true, activeResumeId: resumeId };
 }
 
 export async function saveUserResume(
@@ -5266,21 +5394,22 @@ export async function saveUserResume(
     fileType?: string | null;
     clientLastUpdated?: string | null;
     force?: boolean;
+    createNew?: boolean;
   }
 ) {
   const db = getDb();
   const now = new Date().toISOString();
   let targetResumeId: string | null = null;
-  const dataString = typeof data.resumeData === 'string' ? data.resumeData : JSON.stringify(data.resumeData);
-  const parsedIncoming = typeof data.resumeData === 'string' ? JSON.parse(data.resumeData) : data.resumeData;
+  const isExplicitNew = Boolean(data.createNew || data.resumeId === 'new');
+  const parsedIncoming = typeof data.resumeData === 'string' ? JSON.parse(data.resumeData) : { ...data.resumeData };
 
   const suggestedFilename =
     data.filename ||
     (parsedIncoming?.personalInfo?.fullName ? `${parsedIncoming.personalInfo.fullName} Resume` : null) ||
     'My Resume';
 
-  // If a valid existing resumeId is supplied
-  if (data.resumeId && !isClientDraftResumeId(data.resumeId)) {
+  // If a valid existing resumeId is supplied and not explicitly creating new
+  if (data.resumeId && !isClientDraftResumeId(data.resumeId) && !isExplicitNew) {
     const existing = (await db.prepare('SELECT id, user_id, filename, resume_data, uploaded_at FROM resumes WHERE id = ?').get(data.resumeId)) as any;
     if (existing) {
       if (existing.user_id !== userId) {
@@ -5308,6 +5437,9 @@ export async function saveUserResume(
         }
       }
 
+      parsedIncoming.id = targetResumeId;
+      const dataString = JSON.stringify(parsedIncoming);
+
       await db.prepare(`
         UPDATE resumes
         SET resume_data = ?,
@@ -5318,29 +5450,40 @@ export async function saveUserResume(
     }
   }
 
-  // If targetResumeId is still null, look for user's most recent resume to update
+  // If targetResumeId is still null
   if (!targetResumeId) {
-    const latestExisting = (await db.prepare(`
-      SELECT id, user_id, resume_data FROM resumes
-      WHERE user_id = ?
-      ORDER BY uploaded_at DESC, created_at DESC
-      LIMIT 1
-    `).get(userId)) as any;
+    // Only check for user's most recent resume if NOT explicitly creating a new resume
+    if (!isExplicitNew) {
+      const latestExisting = (await db.prepare(`
+        SELECT id, user_id, resume_data FROM resumes
+        WHERE user_id = ?
+        ORDER BY uploaded_at DESC, created_at DESC
+        LIMIT 1
+      `).get(userId)) as any;
 
-    if (latestExisting) {
-      targetResumeId = latestExisting.id;
-      await db.prepare(`
-        UPDATE resumes
-        SET resume_data = ?,
-            filename = COALESCE(?, filename),
-            uploaded_at = ?
-        WHERE id = ? AND user_id = ?
-      `).run(dataString, suggestedFilename, now, targetResumeId, userId);
-    } else {
+      if (latestExisting) {
+        targetResumeId = latestExisting.id;
+        parsedIncoming.id = targetResumeId;
+        const dataString = JSON.stringify(parsedIncoming);
+
+        await db.prepare(`
+          UPDATE resumes
+          SET resume_data = ?,
+              filename = COALESCE(?, filename),
+              uploaded_at = ?
+          WHERE id = ? AND user_id = ?
+        `).run(dataString, suggestedFilename, now, targetResumeId, userId);
+      }
+    }
+
+    if (!targetResumeId) {
       // Create new canonical resume record for this user
-      targetResumeId = (data.resumeId && !isClientDraftResumeId(data.resumeId))
+      targetResumeId = (data.resumeId && !isClientDraftResumeId(data.resumeId) && !isExplicitNew)
         ? data.resumeId
         : `res_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+
+      parsedIncoming.id = targetResumeId;
+      const dataString = JSON.stringify(parsedIncoming);
 
       await db.prepare(`
         INSERT INTO resumes (id, user_id, filename, file_type, uploaded_at, parsed_successfully, resume_data, created_at)
@@ -5718,6 +5861,14 @@ export async function getUserSkills(userId: string) {
       name: r.skill_name,
       category: r.category,
       status: status,
+      source: (r.source || (status === 'verified' ? 'verified' : 'user_added')) as
+        | 'resume_parsed'
+        | 'user_added'
+        | 'assessed'
+        | 'verified',
+      confidence: typeof r.confidence === 'number' ? r.confidence : undefined,
+      confirmedAt: r.confirmed_at || undefined,
+      resumeId: r.resume_id || undefined,
       score: score || undefined,
       certificateId: certificateId || undefined,
       verifiedDate: verifiedDate || undefined,
@@ -5733,10 +5884,25 @@ export async function addUserSkill(
   userId: string,
   skillName: string,
   category: string,
-  claimDirectly = true
+  claimDirectly = true,
+  options?: {
+    source?: 'resume_parsed' | 'user_added' | 'assessed' | 'verified';
+    confidence?: number | null;
+    confirmedAt?: string | null;
+    resumeId?: string | null;
+  }
 ) {
   const db = getDb();
   const now = new Date().toISOString();
+  const requestedSource = options?.source || 'user_added';
+  const requestedConfidence =
+    typeof options?.confidence === 'number' ? options.confidence : requestedSource === 'user_added' ? 1 : null;
+  const requestedConfirmedAt =
+    options?.confirmedAt !== undefined
+      ? options.confirmedAt
+      : requestedSource === 'user_added' && claimDirectly
+        ? now
+        : null;
 
   // Check if skill already exists for this user
   const existing = (await db.prepare(
@@ -5747,17 +5913,29 @@ export async function addUserSkill(
     if (claimDirectly && existing.status === 'not-verified') {
       await db.prepare(`
         UPDATE user_skills
-        SET status = 'claimed', claimed_date = ?, updated_at = ?
+        SET status = 'claimed', claimed_date = ?, confirmed_at = COALESCE(confirmed_at, ?), updated_at = ?
         WHERE id = ?
-      `).run(now.split('T')[0], now, existing.id);
+      `).run(now.split('T')[0], requestedConfirmedAt, now, existing.id);
       existing.status = 'claimed';
       existing.claimed_date = now.split('T')[0];
+      existing.confirmed_at = existing.confirmed_at || requestedConfirmedAt;
+    } else if (requestedConfirmedAt && !existing.confirmed_at) {
+      await db.prepare(`
+        UPDATE user_skills
+        SET confirmed_at = ?, source = COALESCE(source, ?), updated_at = ?
+        WHERE id = ?
+      `).run(requestedConfirmedAt, requestedSource, now, existing.id);
+      existing.confirmed_at = requestedConfirmedAt;
     }
     return {
       id: existing.id,
       name: existing.skill_name,
       category: existing.category,
       status: existing.status,
+      source: existing.source || requestedSource,
+      confidence: typeof existing.confidence === 'number' ? existing.confidence : undefined,
+      confirmedAt: existing.confirmed_at || undefined,
+      resumeId: existing.resume_id || undefined,
       score: existing.score || undefined,
       certificateId: existing.certificate_id || undefined,
       verifiedDate: existing.verified_date || undefined,
@@ -5777,6 +5955,8 @@ export async function addUserSkill(
 
   const id = `usk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
   const status = verified ? 'verified' : claimDirectly ? 'claimed' : 'not-verified';
+  const source = verified ? 'verified' : requestedSource;
+  const confirmedAt = verified ? verified.verified_at || now : requestedConfirmedAt;
   const score = verified ? verified.att_score : null;
   const certificateId = verified ? verified.certificate_code : null;
   const verifiedDate = verified ? verified.verified_at : null;
@@ -5784,15 +5964,19 @@ export async function addUserSkill(
 
   await db.prepare(`
     INSERT INTO user_skills (
-      id, user_id, skill_name, category, status, score, certificate_id,
-      verified_date, claimed_date, created_at, updated_at
-    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      id, user_id, skill_name, category, status, source, confidence, confirmed_at, resume_id,
+      score, certificate_id, verified_date, claimed_date, created_at, updated_at
+    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
   `).run(
     id,
     userId,
     skillName,
     category,
     status,
+    source,
+    requestedConfidence,
+    confirmedAt,
+    options?.resumeId || null,
     score,
     certificateId,
     verifiedDate,
@@ -5806,6 +5990,10 @@ export async function addUserSkill(
     name: skillName,
     category,
     status,
+    source,
+    confidence: requestedConfidence ?? undefined,
+    confirmedAt: confirmedAt || undefined,
+    resumeId: options?.resumeId || undefined,
     score: score || undefined,
     certificateId: certificateId || undefined,
     verifiedDate: verifiedDate || undefined,
@@ -5885,9 +6073,10 @@ export async function syncUserSkillVerification(
   if (existing) {
     await db.prepare(`
       UPDATE user_skills
-      SET status = 'verified', score = ?, certificate_id = ?, verified_date = ?, updated_at = ?
+      SET status = 'verified', source = 'verified', confirmed_at = COALESCE(confirmed_at, ?),
+          score = ?, certificate_id = ?, verified_date = ?, updated_at = ?
       WHERE id = ?
-    `).run(score, certificateCode, verifiedAt, now, existing.id);
+    `).run(verifiedAt || now, score, certificateCode, verifiedAt, now, existing.id);
   } else {
     const catalogItem = (await db.prepare('SELECT category FROM skills_catalog WHERE LOWER(name) = LOWER(?)').get(skillName)) as any;
     const category = catalogItem?.category || 'Technical';
@@ -5895,10 +6084,10 @@ export async function syncUserSkillVerification(
 
     await db.prepare(`
       INSERT INTO user_skills (
-        id, user_id, skill_name, category, status, score, certificate_id,
-        verified_date, claimed_date, created_at, updated_at
-      ) VALUES (?, ?, ?, ?, 'verified', ?, ?, ?, NULL, ?, ?)
-    `).run(id, userId, skillName, category, score, certificateCode, verifiedAt, now, now);
+        id, user_id, skill_name, category, status, source, confidence, confirmed_at,
+        score, certificate_id, verified_date, claimed_date, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, 'verified', 'verified', 1.0, ?, ?, ?, ?, NULL, ?, ?)
+    `).run(id, userId, skillName, category, verifiedAt || now, score, certificateCode, verifiedAt, now, now);
   }
 }
 
@@ -6094,7 +6283,7 @@ export async function deleteUserAndData(
     for (const s of userSearches) {
       try {
         await tx.prepare('DELETE FROM job_search_results WHERE search_id = ?').run(s.id);
-      } catch {}
+      } catch { }
     }
     await tx.prepare('DELETE FROM job_searches WHERE user_id = ?').run(targetUserId);
     await tx.prepare('DELETE FROM job_matches WHERE user_id = ?').run(targetUserId);
@@ -6102,7 +6291,7 @@ export async function deleteUserAndData(
     // Live proctoring sessions
     try {
       await tx.prepare('DELETE FROM live_proctoring_sessions WHERE user_id = ?').run(targetUserId);
-    } catch {}
+    } catch { }
 
     // Anonymize visitors & feedback to preserve aggregate metrics without PII
     await tx.prepare('UPDATE visitors SET user_id = NULL WHERE user_id = ?').run(targetUserId);
@@ -6550,7 +6739,7 @@ export async function saveWebRtcSignal(
     const row = (await db.prepare(`SELECT ${col} FROM live_proctoring_sessions WHERE assessment_id = ?`).get(assessmentId)) as any;
     let list: any[] = [];
     if (row && row[col]) {
-      try { list = JSON.parse(row[col]); } catch {}
+      try { list = JSON.parse(row[col]); } catch { }
     }
     list.push(signalData);
     await db.prepare(`
@@ -6578,20 +6767,20 @@ export async function getWebRtcSignal(assessmentId: string, forRole: 'candidate'
   let candidates: any[] = [];
 
   if (row.signaling_offer) {
-    try { offer = JSON.parse(row.signaling_offer); } catch {}
+    try { offer = JSON.parse(row.signaling_offer); } catch { }
   }
   if (row.signaling_answer) {
-    try { answer = JSON.parse(row.signaling_answer); } catch {}
+    try { answer = JSON.parse(row.signaling_answer); } catch { }
   }
 
   if (forRole === 'admin') {
     if (row.candidate_ice_candidates) {
-      try { candidates = JSON.parse(row.candidate_ice_candidates); } catch {}
+      try { candidates = JSON.parse(row.candidate_ice_candidates); } catch { }
     }
     return { offer, answer, candidates, status: row.status };
   } else {
     if (row.admin_ice_candidates) {
-      try { candidates = JSON.parse(row.admin_ice_candidates); } catch {}
+      try { candidates = JSON.parse(row.admin_ice_candidates); } catch { }
     }
     return { offer, answer, candidates, status: row.status };
   }
@@ -6753,6 +6942,14 @@ export interface StudentProject {
   endDate?: string;
 }
 
+export interface CareerPreferences {
+  targetRoleSlug?: string | null;
+  jobTypes?: string[];
+  workMode?: 'remote' | 'hybrid' | 'onsite' | 'any';
+  experienceBand?: 'student' | 'fresher' | 'early_career' | 'experienced';
+  careerInterests?: string[];
+}
+
 export interface StudentProfileRecord {
   id: string;
   user_id: string;
@@ -6770,6 +6967,10 @@ export interface StudentProfileRecord {
   projects_data?: string | null;
   coursework?: string | null;
   achievements?: string | null;
+  onboarding_status?: string | null;
+  onboarding_completed_at?: string | null;
+  onboarding_skipped_at?: string | null;
+  preferences_json?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -6791,8 +6992,33 @@ export interface StudentProfileDTO {
   projects: StudentProject[];
   coursework: string[];
   achievements: string[];
+  onboardingStatus: 'not_started' | 'in_progress' | 'completed' | 'skipped';
+  onboardingCompletedAt?: string | null;
+  onboardingSkippedAt?: string | null;
+  preferences: CareerPreferences;
   createdAt: string;
   updatedAt: string;
+}
+
+function safeParseCareerPreferences(str?: string | null): CareerPreferences {
+  if (!str) return {};
+  try {
+    const parsed = JSON.parse(str);
+    if (!parsed || typeof parsed !== 'object') return {};
+    return {
+      targetRoleSlug: typeof parsed.targetRoleSlug === 'string' ? parsed.targetRoleSlug : null,
+      jobTypes: Array.isArray(parsed.jobTypes) ? parsed.jobTypes.map((x: any) => String(x).trim()).filter(Boolean) : [],
+      workMode: ['remote', 'hybrid', 'onsite', 'any'].includes(parsed.workMode) ? parsed.workMode : 'any',
+      experienceBand: ['student', 'fresher', 'early_career', 'experienced'].includes(parsed.experienceBand)
+        ? parsed.experienceBand
+        : undefined,
+      careerInterests: Array.isArray(parsed.careerInterests)
+        ? parsed.careerInterests.map((x: any) => String(x).trim()).filter(Boolean)
+        : [],
+    };
+  } catch {
+    return {};
+  }
 }
 
 function safeParseJsonStringArray(str?: string | null): string[] {
@@ -6849,7 +7075,7 @@ export async function getStudentProfile(userId: string): Promise<StudentProfileD
     studentType: (['college_student', 'recent_graduate', 'fresher'].includes(row.student_type)
       ? row.student_type
       : 'college_student') as StudentProfileDTO['studentType'],
-    targetRole: row.target_role || 'Graduate Software Engineer',
+    targetRole: (row.target_role || '').trim(),
     targetWorkType: (['internship', 'full_time', 'both'].includes(row.target_work_type)
       ? row.target_work_type
       : 'both') as StudentProfileDTO['targetWorkType'],
@@ -6857,6 +7083,14 @@ export async function getStudentProfile(userId: string): Promise<StudentProfileD
     projects: safeParseStudentProjects(row.projects_data),
     coursework: safeParseJsonStringArray(row.coursework),
     achievements: safeParseJsonStringArray(row.achievements),
+    onboardingStatus: (['not_started', 'in_progress', 'completed', 'skipped'].includes(
+      row.onboarding_status || ''
+    )
+      ? row.onboarding_status
+      : 'not_started') as StudentProfileDTO['onboardingStatus'],
+    onboardingCompletedAt: row.onboarding_completed_at || null,
+    onboardingSkippedAt: row.onboarding_skipped_at || null,
+    preferences: safeParseCareerPreferences(row.preferences_json),
     createdAt: row.created_at,
     updatedAt: row.updated_at,
   };
@@ -6877,13 +7111,13 @@ export async function upsertStudentProfile(
   const graduationYear = Number(
     data.graduationYear !== undefined
       ? data.graduationYear
-      : (existing?.graduationYear || new Date().getFullYear())
+      : (existing?.graduationYear || 0)
   );
   const graduationMonth = (data.graduationMonth !== undefined ? data.graduationMonth : (existing?.graduationMonth || null))?.trim() || null;
   const currentSemester = (data.currentSemester !== undefined ? data.currentSemester : (existing?.currentSemester || null))?.trim() || null;
   const cgpa = data.cgpa !== undefined && data.cgpa !== null ? String(data.cgpa).trim() : (existing?.cgpa || null);
   const studentType = (data.studentType || existing?.studentType || 'college_student') as StudentProfileDTO['studentType'];
-  const targetRole = (data.targetRole || existing?.targetRole || 'Graduate Software Engineer').trim();
+  const targetRole = (data.targetRole !== undefined ? data.targetRole : (existing?.targetRole || '')).trim();
   const targetWorkType = (data.targetWorkType || existing?.targetWorkType || 'both') as StudentProfileDTO['targetWorkType'];
 
   const preferredLocations = Array.isArray(data.preferredLocations)
@@ -6899,10 +7133,32 @@ export async function upsertStudentProfile(
     ? data.achievements
     : existing?.achievements || [];
 
+  const onboardingStatus =
+    data.onboardingStatus !== undefined
+      ? data.onboardingStatus
+      : existing?.onboardingStatus || (targetRole ? 'completed' : 'not_started');
+  const onboardingCompletedAt =
+    data.onboardingCompletedAt !== undefined
+      ? data.onboardingCompletedAt
+      : onboardingStatus === 'completed'
+        ? existing?.onboardingCompletedAt || now
+        : existing?.onboardingCompletedAt || null;
+  const onboardingSkippedAt =
+    data.onboardingSkippedAt !== undefined
+      ? data.onboardingSkippedAt
+      : onboardingStatus === 'skipped'
+        ? existing?.onboardingSkippedAt || now
+        : existing?.onboardingSkippedAt || null;
+  const mergedPreferences: CareerPreferences = {
+    ...(existing?.preferences || {}),
+    ...(data.preferences || {}),
+  };
+
   const preferredLocationsJson = JSON.stringify(preferredLocations);
   const projectsJson = JSON.stringify(projects);
   const courseworkJson = JSON.stringify(coursework);
   const achievementsJson = JSON.stringify(achievements);
+  const preferencesJson = JSON.stringify(mergedPreferences);
 
   if (existing) {
     await db
@@ -6922,6 +7178,10 @@ export async function upsertStudentProfile(
             projects_data = ?,
             coursework = ?,
             achievements = ?,
+            onboarding_status = ?,
+            onboarding_completed_at = ?,
+            onboarding_skipped_at = ?,
+            preferences_json = ?,
             updated_at = ?
         WHERE user_id = ?
       `)
@@ -6940,6 +7200,10 @@ export async function upsertStudentProfile(
         projectsJson,
         courseworkJson,
         achievementsJson,
+        onboardingStatus,
+        onboardingCompletedAt,
+        onboardingSkippedAt,
+        preferencesJson,
         now,
         userId
       );
@@ -6951,8 +7215,10 @@ export async function upsertStudentProfile(
           id, user_id, institution, degree, field_of_study,
           graduation_year, graduation_month, current_semester, cgpa,
           student_type, target_role, target_work_type, preferred_locations,
-          projects_data, coursework, achievements, created_at, updated_at
-        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          projects_data, coursework, achievements,
+          onboarding_status, onboarding_completed_at, onboarding_skipped_at, preferences_json,
+          created_at, updated_at
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `)
       .run(
         id,
@@ -6971,19 +7237,27 @@ export async function upsertStudentProfile(
         projectsJson,
         courseworkJson,
         achievementsJson,
+        onboardingStatus,
+        onboardingCompletedAt,
+        onboardingSkippedAt,
+        preferencesJson,
         now,
         now
       );
   }
 
-  // Keep user_career_goals in sync so legacy interfaces reflect targetRole & fresher level
+  // Keep user_career_goals in sync when a targetRole is present (or clear it if explicitly cleared)
   try {
-    await upsertUserCareerGoal(userId, {
-      targetRole,
-      experienceLevel: 'Fresher / Entry Level',
-      preferredLocation: preferredLocations[0] || null,
-    });
-  } catch {}
+    if (targetRole) {
+      await upsertUserCareerGoal(userId, {
+        targetRole,
+        experienceLevel: mergedPreferences.experienceBand || undefined,
+        preferredLocation: preferredLocations[0] || null,
+      });
+    } else {
+      await db.prepare('DELETE FROM user_career_goals WHERE user_id = ?').run(userId);
+    }
+  } catch { }
 
   const updated = await getStudentProfile(userId);
   if (!updated) {
@@ -7026,7 +7300,7 @@ export async function saveUserRoadmap(userId: string, targetRole: string, roadma
   // Set any previous active roadmaps for this user to superseded
   try {
     await db.prepare("UPDATE user_learning_roadmaps SET status = 'superseded', updated_at = ? WHERE user_id = ? AND status = 'active'").run(now, userId);
-  } catch {}
+  } catch { }
 
   await db
     .prepare(`
@@ -7134,8 +7408,8 @@ export async function getUserInterviewSessions(userId: string) {
   return rows.map((r) => {
     let questions = [];
     let answers = [];
-    try { questions = JSON.parse(r.questions_data); } catch {}
-    try { answers = JSON.parse(r.answers_data || '[]'); } catch {}
+    try { questions = JSON.parse(r.questions_data); } catch { }
+    try { answers = JSON.parse(r.answers_data || '[]'); } catch { }
     return {
       ...r,
       questions,
@@ -7153,8 +7427,8 @@ export async function getInterviewSession(userId: string, sessionId: string) {
   if (!row) return null;
   let questions = [];
   let answers = [];
-  try { questions = JSON.parse(row.questions_data); } catch {}
-  try { answers = JSON.parse(row.answers_data || '[]'); } catch {}
+  try { questions = JSON.parse(row.questions_data); } catch { }
+  try { answers = JSON.parse(row.answers_data || '[]'); } catch { }
 
   return {
     ...row,
@@ -7263,17 +7537,17 @@ function mapGuidedProjectRow(row: any): GuidedProjectDTO {
   let milestones: any[] = [];
   let resumeBullets: string[] = [];
 
-  try { techStack = JSON.parse(row.tech_stack || '[]'); } catch {}
-  try { specification = JSON.parse(row.specification_json || '{}'); } catch {}
-  try { milestones = JSON.parse(row.milestones_json || '[]'); } catch {}
-  try { resumeBullets = JSON.parse(row.resume_bullets_json || '[]'); } catch {}
+  try { techStack = JSON.parse(row.tech_stack || '[]'); } catch { }
+  try { specification = JSON.parse(row.specification_json || '{}'); } catch { }
+  try { milestones = JSON.parse(row.milestones_json || '[]'); } catch { }
+  try { resumeBullets = JSON.parse(row.resume_bullets_json || '[]'); } catch { }
 
   return {
     id: row.id,
     userId: row.user_id,
     title: row.title,
     difficulty: (row.difficulty as any) || 'Intermediate',
-    targetRole: row.target_role || 'Graduate Software Engineer',
+    targetRole: row.target_role || '',
     techStack,
     problemStatement: row.problem_statement || '',
     realWorldUseCase: row.real_world_use_case || '',
@@ -7305,9 +7579,9 @@ export async function createGuidedProject(
   const id = `gproj_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
   const now = new Date().toISOString();
 
-  const title = (data.title || 'Portfolio Software Project').trim();
+  const title = (data.title || 'Portfolio Project').trim();
   const difficulty = data.difficulty || 'Intermediate';
-  const targetRole = (data.targetRole || 'Graduate Software Engineer').trim();
+  const targetRole = (data.targetRole || '').trim();
   const techStack = Array.isArray(data.techStack) ? data.techStack : [];
   const problemStatement = data.problemStatement || '';
   const realWorldUseCase = data.realWorldUseCase || '';
@@ -7733,6 +8007,329 @@ export async function getUserReadinessHistory(
     return [];
   }
 }
+
+// ============================================================================
+// PERSONALIZED CAREER PATH: ONBOARDING, SKILL PROVENANCE & ROADMAP HELPERS
+// ============================================================================
+
+export type UserSkillSource = 'resume_parsed' | 'user_added' | 'assessed' | 'verified';
+
+export interface BulkSkillUpsertInput {
+  skillName: string;
+  category?: string;
+  source?: UserSkillSource;
+  status?: 'claimed' | 'not-verified' | 'rejected';
+  confidence?: number | null;
+  confirmedAt?: string | null;
+  resumeId?: string | null;
+}
+
+export async function bulkUpsertUserSkills(
+  userId: string,
+  items: BulkSkillUpsertInput[]
+): Promise<Awaited<ReturnType<typeof getUserSkills>>> {
+  if (!userId || !Array.isArray(items) || items.length === 0) {
+    return getUserSkills(userId);
+  }
+  const db = getDb();
+  const now = new Date().toISOString();
+
+  for (const rawItem of items) {
+    const skillName = String(rawItem.skillName || '').trim();
+    if (!skillName) continue;
+    const category = String(rawItem.category || 'General').trim() || 'General';
+    const source: UserSkillSource = rawItem.source || 'user_added';
+    const confidence = typeof rawItem.confidence === 'number' ? rawItem.confidence : null;
+    const confirmedAt = rawItem.confirmedAt !== undefined ? rawItem.confirmedAt : null;
+
+    const existing = (await db
+      .prepare('SELECT * FROM user_skills WHERE user_id = ? AND LOWER(skill_name) = LOWER(?)')
+      .get(userId, skillName)) as any;
+
+    if (existing) {
+      if (existing.status === 'verified') continue; // Never downgrade verified assessments
+      const nextStatus = rawItem.status || existing.status || 'claimed';
+      const nextConfirmedAt = confirmedAt ?? existing.confirmed_at ?? (source === 'user_added' ? now : null);
+      await db
+        .prepare(`
+          UPDATE user_skills
+          SET category = ?,
+              status = ?,
+              source = COALESCE(?, source),
+              confidence = COALESCE(?, confidence),
+              confirmed_at = COALESCE(?, confirmed_at),
+              resume_id = COALESCE(?, resume_id),
+              claimed_date = COALESCE(claimed_date, ?),
+              updated_at = ?
+          WHERE id = ? AND user_id = ?
+        `)
+        .run(
+          category,
+          nextStatus,
+          source,
+          confidence,
+          nextConfirmedAt,
+          rawItem.resumeId || null,
+          nextStatus === 'claimed' ? now.split('T')[0] : null,
+          now,
+          existing.id,
+          userId
+        );
+    } else {
+      const id = `usk_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const status = rawItem.status || 'claimed';
+      const claimedDate = status === 'claimed' ? now.split('T')[0] : null;
+      await db
+        .prepare(`
+          INSERT INTO user_skills (
+            id, user_id, skill_name, category, status, source, confidence, confirmed_at, resume_id,
+            score, certificate_id, verified_date, claimed_date, created_at, updated_at
+          ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NULL, NULL, NULL, ?, ?, ?)
+        `)
+        .run(
+          id,
+          userId,
+          skillName,
+          category,
+          status,
+          source,
+          confidence,
+          confirmedAt,
+          rawItem.resumeId || null,
+          claimedDate,
+          now,
+          now
+        );
+    }
+  }
+
+  return getUserSkills(userId);
+}
+
+export async function confirmUserSkill(userId: string, skillIdOrName: string): Promise<boolean> {
+  if (!userId || !skillIdOrName) return false;
+  const db = getDb();
+  const now = new Date().toISOString();
+  const existing = (await db
+    .prepare('SELECT id, status FROM user_skills WHERE user_id = ? AND (id = ? OR LOWER(skill_name) = LOWER(?))')
+    .get(userId, skillIdOrName, skillIdOrName)) as any;
+
+  if (!existing) return false;
+  const nextStatus = existing.status === 'verified' ? 'verified' : 'claimed';
+  await db
+    .prepare(`
+      UPDATE user_skills
+      SET status = ?,
+          confirmed_at = COALESCE(confirmed_at, ?),
+          claimed_date = COALESCE(claimed_date, ?),
+          updated_at = ?
+      WHERE id = ? AND user_id = ?
+    `)
+    .run(nextStatus, now, now.split('T')[0], now, existing.id, userId);
+
+  return true;
+}
+
+export async function updateOnboardingState(
+  userId: string,
+  status: 'not_started' | 'in_progress' | 'completed' | 'skipped'
+): Promise<StudentProfileDTO> {
+  const now = new Date().toISOString();
+  return upsertStudentProfile(userId, {
+    onboardingStatus: status,
+    ...(status === 'completed' ? { onboardingCompletedAt: now } : {}),
+    ...(status === 'skipped' ? { onboardingSkippedAt: now } : {}),
+  });
+}
+
+export interface RoadmapProgressItemDTO {
+  id: string;
+  userId: string;
+  roleSlug: string;
+  itemType: 'skill' | 'project' | 'certification' | 'resource';
+  itemKey: string;
+  status: 'pending' | 'in_progress' | 'completed';
+  notes?: string | null;
+  completedAt?: string | null;
+  updatedAt: string;
+}
+
+export async function getUserRoadmapProgress(
+  userId: string,
+  roleSlug: string
+): Promise<RoadmapProgressItemDTO[]> {
+  if (!userId || !roleSlug) return [];
+  const db = getDb();
+  try {
+    const rows = (await db
+      .prepare('SELECT * FROM user_roadmap_progress WHERE user_id = ? AND role_slug = ? ORDER BY updated_at DESC')
+      .all(userId, roleSlug)) as any[];
+    return (rows || []).map((r) => ({
+      id: r.id,
+      userId: r.user_id,
+      roleSlug: r.role_slug,
+      itemType: r.item_type,
+      itemKey: r.item_key,
+      status: r.status,
+      notes: r.notes || null,
+      completedAt: r.completed_at || null,
+      updatedAt: r.updated_at,
+    }));
+  } catch {
+    return [];
+  }
+}
+
+export async function upsertUserRoadmapProgressItem(
+  userId: string,
+  input: {
+    roleSlug: string;
+    itemType: 'skill' | 'project' | 'certification' | 'resource';
+    itemKey: string;
+    status: 'pending' | 'in_progress' | 'completed';
+    notes?: string | null;
+  }
+): Promise<RoadmapProgressItemDTO> {
+  const db = getDb();
+  const now = new Date().toISOString();
+  const completedAt = input.status === 'completed' ? now : null;
+  const existing = (await db
+    .prepare(
+      'SELECT * FROM user_roadmap_progress WHERE user_id = ? AND role_slug = ? AND item_type = ? AND item_key = ?'
+    )
+    .get(userId, input.roleSlug, input.itemType, input.itemKey)) as any;
+
+  if (existing) {
+    await db
+      .prepare(`
+        UPDATE user_roadmap_progress
+        SET status = ?, notes = COALESCE(?, notes), completed_at = ?, updated_at = ?
+        WHERE id = ? AND user_id = ?
+      `)
+      .run(input.status, input.notes ?? null, completedAt, now, existing.id, userId);
+
+    return {
+      id: existing.id,
+      userId,
+      roleSlug: input.roleSlug,
+      itemType: input.itemType,
+      itemKey: input.itemKey,
+      status: input.status,
+      notes: input.notes ?? existing.notes ?? null,
+      completedAt,
+      updatedAt: now,
+    };
+  }
+
+  const id = `urp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+  await db
+    .prepare(`
+      INSERT INTO user_roadmap_progress (
+        id, user_id, role_slug, item_type, item_key, status, notes, completed_at, created_at, updated_at
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    `)
+    .run(id, userId, input.roleSlug, input.itemType, input.itemKey, input.status, input.notes || null, completedAt, now, now);
+
+  return {
+    id,
+    userId,
+    roleSlug: input.roleSlug,
+    itemType: input.itemType,
+    itemKey: input.itemKey,
+    status: input.status,
+    notes: input.notes || null,
+    completedAt,
+    updatedAt: now,
+  };
+}
+
+export async function getUserCareerDataSnapshot(userId: string) {
+  const [user, studentProfile, careerGoal, skills, resumes, certificates] = await Promise.all([
+    getUserById(userId),
+    getStudentProfile(userId),
+    getUserCareerGoal(userId),
+    getUserSkills(userId),
+    getUserResumes(userId),
+    getUserCertificates(userId),
+  ]);
+
+  const targetRole = (studentProfile?.targetRole || careerGoal?.target_role || '').trim();
+  const safeResumes = (resumes || []).map((r: any) => ({
+    id: r.id,
+    filename: r.filename,
+    uploadedAt: r.uploaded_at,
+    isActive: Boolean(r.is_active),
+    resumeData: (() => {
+      try {
+        return r.resume_data ? JSON.parse(r.resume_data) : null;
+      } catch {
+        return null;
+      }
+    })(),
+  }));
+
+  return {
+    account: user ? { id: user.id, name: user.name, email: user.email, createdAt: user.createdAt } : null,
+    goalSet: Boolean(targetRole),
+    targetRole: targetRole || null,
+    onboardingStatus: studentProfile?.onboardingStatus || 'not_started',
+    onboardingCompletedAt: studentProfile?.onboardingCompletedAt || null,
+    onboardingSkippedAt: studentProfile?.onboardingSkippedAt || null,
+    preferences: studentProfile?.preferences || {},
+    profile: studentProfile,
+    careerGoal,
+    skills,
+    resumes: safeResumes,
+    certificates,
+  };
+}
+
+export async function clearUserCareerData(userId: string): Promise<{ success: boolean }> {
+  if (!userId) return { success: false };
+  const db = getDb();
+  const now = new Date().toISOString();
+
+  await db.transaction(async (tx) => {
+    await tx.prepare('DELETE FROM user_career_goals WHERE user_id = ?').run(userId);
+    await tx.prepare('DELETE FROM user_roadmap_progress WHERE user_id = ?').run(userId);
+    await tx.prepare('DELETE FROM user_learning_roadmaps WHERE user_id = ?').run(userId);
+    // Remove user-claimed/unverified/resume-parsed skills while keeping verified assessment certificates
+    await tx.prepare("DELETE FROM user_skills WHERE user_id = ? AND status != 'verified'").run(userId);
+    await tx
+      .prepare(`
+        UPDATE student_profiles
+        SET target_role = '',
+            institution = '',
+            degree = '',
+            field_of_study = '',
+            graduation_year = 0,
+            graduation_month = NULL,
+            current_semester = NULL,
+            cgpa = NULL,
+            preferred_locations = '[]',
+            projects_data = '[]',
+            coursework = '[]',
+            achievements = '[]',
+            preferences_json = '{}',
+            onboarding_status = 'not_started',
+            onboarding_completed_at = NULL,
+            onboarding_skipped_at = NULL,
+            updated_at = ?
+        WHERE user_id = ?
+      `)
+      .run(now, userId);
+  });
+
+  await logAuditEvent({
+    eventType: 'USER_CAREER_DATA_CLEARED',
+    actorType: 'USER',
+    actorId: userId,
+    description: 'User cleared saved career profile, goal, roadmap progress, and unverified skills.',
+  });
+
+  return { success: true };
+}
+
 
 
 

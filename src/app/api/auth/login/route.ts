@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { loginUser } from '@/lib/db';
+import { getOrCreateVisitorId } from '@/lib/visitor';
 
 export async function POST(req: Request) {
   try {
@@ -13,9 +14,12 @@ export async function POST(req: Request) {
       );
     }
 
+    const visitorId = await getOrCreateVisitorId(req);
+
     const { user, sessionToken } = await loginUser({
       email,
       password,
+      visitorId,
     });
 
     const response = NextResponse.json({

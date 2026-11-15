@@ -1,7 +1,17 @@
 import { NextResponse } from 'next/server';
 import { getUserFromRequest } from '@/lib/userSession';
-import { getUserResumes, getUserResume, getUserActiveResume, saveUserResume, deleteUserResume } from '@/lib/db';
+import {
+  getUserResumes,
+  getUserResume,
+  getUserActiveResume,
+  setUserActiveResume,
+  saveUserResume,
+  deleteUserResume,
+} from '@/lib/db';
 import { validateResumeData } from '@/lib/resumeValidator';
+import { detectFileSignature, extractResumeText } from '@/server/services/extractResumeText';
+import { validateResumeDocument } from '@/server/services/resumeValidator';
+import { parseResumeTextToResumeData } from '@/server/services/parseResumeToData';
 
 export async function GET(req: Request) {
   try {
@@ -40,6 +50,10 @@ export async function GET(req: Request) {
 }
 
 export async function POST(req: Request) {
+  const contentType = req.headers.get('content-type') || '';
+  if (contentType.includes('multipart/form-data')) {
+    return handleUploadResume(req);
+  }
   return handleSaveResume(req);
 }
 
@@ -73,7 +87,11 @@ export async function DELETE(req: Request) {
       return NextResponse.json({ message: 'Resume not found' }, { status: 404 });
     }
 
-    return NextResponse.json({ success: true, message: 'Resume deleted successfully.' });
+    return NextResponse.json({
+      success: true,
+      message: 'Resume deleted successfully.',
+      nextActiveResumeId: result.nextActiveResumeId ?? null,
+    });
   } catch (err: any) {
     const msg = err instanceof Error ? err.message : String(err);
     if (/forbidden|permission|do not own/i.test(msg)) {
@@ -90,14 +108,30 @@ async function handleSaveResume(req: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    let body: any;
+    let body: any = {};
     try {
-      body = await req.json();
+      const text = await req.text();
+      if (text && text.trim()) {
+        body = JSON.parse(text);
+      }
     } catch {
       return NextResponse.json({ message: 'Invalid JSON request payload.' }, { status: 400 });
     }
 
-    const { resumeId, resumeData, filename, fileType, clientLastUpdated, force } = body;
+    const { searchParams } = new URL(req.url);
+    const action = searchParams.get('action');
+
+    // Handle explicit set_active action
+    if (action === 'set_active' || body?.action === 'set_active') {
+      const targetId = searchParams.get('id') || body?.resumeId || body?.id;
+      if (!targetId) {
+        return NextResponse.json({ message: 'Resume ID is required to set active.' }, { status: 400 });
+      }
+      const activeResult = await setUserActiveResume(user.id, String(targetId));
+      return NextResponse.json({ success: true, activeResumeId: activeResult.activeResumeId }, { status: 200 });
+    }
+
+    const { resumeId, resumeData, filename, fileType, clientLastUpdated, force, createNew, setActive } = body;
 
     // Validate incoming resumeData structure
     const validation = validateResumeData(resumeData);
@@ -119,7 +153,12 @@ async function handleSaveResume(req: Request) {
       fileType: fileType ? String(fileType).trim().slice(0, 50) : undefined,
       clientLastUpdated: clientLastUpdated ? String(clientLastUpdated) : null,
       force: Boolean(force),
+      createNew: Boolean(createNew),
     });
+
+    if (setActive) {
+      await setUserActiveResume(user.id, saved.id).catch(() => null);
+    }
 
     return NextResponse.json(
       {
@@ -150,5 +189,107 @@ async function handleSaveResume(req: Request) {
     }
 
     return NextResponse.json({ message: msg || 'Failed to persist resume' }, { status: 500 });
+  }
+}
+
+async function handleUploadResume(req: Request) {
+  try {
+    const user = await getUserFromRequest(req);
+    if (!user) {
+      return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
+    }
+
+    let formData: FormData;
+    try {
+      formData = await req.formData();
+    } catch {
+      return NextResponse.json({ message: 'Invalid form data.' }, { status: 400 });
+    }
+
+    const file = formData.get('file') as File | null;
+    if (!file) {
+      return NextResponse.json(
+        { message: 'No file was provided. Please upload a valid PDF or DOCX file.' },
+        { status: 400 }
+      );
+    }
+
+    // 10MB file limit
+    if (file.size > 10 * 1024 * 1024) {
+      return NextResponse.json(
+        { message: 'File size exceeds the 10MB limit. Please upload a smaller resume document.' },
+        { status: 400 }
+      );
+    }
+
+    const arrayBuffer = await file.arrayBuffer();
+    const buffer = Buffer.from(arrayBuffer);
+
+    // Validate binary format signature
+    const signature = detectFileSignature(buffer);
+    if (signature.format !== 'pdf' && signature.format !== 'docx' && signature.format !== 'text') {
+      return NextResponse.json(
+        { message: 'Unsupported file format. Please upload an authentic PDF or DOCX resume.' },
+        { status: 400 }
+      );
+    }
+
+    // Extract text
+    let extractedText = '';
+    let detectedType: string = signature.format;
+    try {
+      const extraction = await extractResumeText(buffer, file.name, file.type);
+      extractedText = extraction.text;
+      detectedType = extraction.fileType || signature.format;
+    } catch (extractErr: any) {
+      return NextResponse.json(
+        { message: extractErr.message || 'Unable to read this document. Please ensure it contains readable text.' },
+        { status: 400 }
+      );
+    }
+
+    if (!extractedText || extractedText.trim().length < 20) {
+      return NextResponse.json(
+        { message: 'No readable text found in document. Please upload a text-based PDF or DOCX file rather than a scanned image.' },
+        { status: 400 }
+      );
+    }
+
+    // Validate document is an authentic resume
+    const validation = validateResumeDocument(extractedText, { fileName: file.name });
+    if (!validation.isValid) {
+      return NextResponse.json(
+        {
+          message: validation.message || 'The uploaded file does not appear to be an authentic resume/CV.',
+          validation,
+        },
+        { status: 422 }
+      );
+    }
+
+    // Parse into structured ResumeData model
+    const parsedData = parseResumeTextToResumeData(extractedText, file.name);
+
+    // Persist as a new resume record under the user's account
+    const saved = await saveUserResume(user.id, {
+      resumeData: parsedData,
+      filename: file.name,
+      fileType: detectedType,
+      createNew: true,
+    });
+
+    await setUserActiveResume(user.id, saved.id).catch(() => null);
+
+    return NextResponse.json({
+      success: true,
+      message: `Resume "${file.name}" uploaded and loaded into editor.`,
+      resumeId: saved.id,
+      resume: saved,
+      resumeData: parsedData,
+    });
+  } catch (err: any) {
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error('Error uploading user resume:', msg);
+    return NextResponse.json({ message: msg || 'Failed to upload and parse resume' }, { status: 500 });
   }
 }

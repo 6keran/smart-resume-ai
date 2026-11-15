@@ -12,8 +12,7 @@ interface ThemeToggleProps {
 export function ThemeToggle({ className = '', variant = 'segmented' }: ThemeToggleProps) {
   const { theme, resolvedTheme, setTheme, toggleTheme, mounted } = useTheme();
 
-  // Guard against SSR hydration differences: default to dark before client mount
-  const isDark = mounted ? resolvedTheme === 'dark' : true;
+  const isDark = mounted ? resolvedTheme === 'dark' : false;
 
   if (variant === 'icon') {
     return (
@@ -23,10 +22,10 @@ export function ThemeToggle({ className = '', variant = 'segmented' }: ThemeTogg
         onClick={toggleTheme}
         aria-label={`Switch to ${isDark ? 'Light' : 'Dark'} mode`}
         title={`Switch to ${isDark ? 'Light' : 'Dark'} mode`}
-        className={`theme-toggle theme-toggle-btn w-9 h-9 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-secondary)] hover:border-[var(--border-hover)] flex items-center justify-center transition-all duration-150 cursor-pointer shadow-sm text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${className}`}
+        className={`theme-toggle theme-toggle-btn w-9 h-9 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-secondary)] hover:border-[var(--border-hover)] flex items-center justify-center transition-all duration-150 cursor-pointer shadow-xs text-[var(--text-primary)] focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${className}`}
       >
         {isDark ? (
-          <Sun className="w-4 h-4 text-amber-400 rotate-0 scale-100 transition-transform duration-150" />
+          <Sun className="w-4 h-4 text-amber-500 rotate-0 scale-100 transition-transform duration-150" />
         ) : (
           <Moon className="w-4 h-4 text-[var(--accent)] rotate-0 scale-100 transition-transform duration-150" />
         )}
@@ -34,13 +33,12 @@ export function ThemeToggle({ className = '', variant = 'segmented' }: ThemeTogg
     );
   }
 
-  // Segmented control with clear Light and Dark options and balanced active styling
+  // Segmented control with clear Light and Dark options
   return (
     <div
       role="radiogroup"
       aria-label="Theme selector"
-      onClick={toggleTheme}
-      className={`theme-toggle inline-flex items-center p-0.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] shadow-sm transition-colors duration-150 cursor-pointer ${className}`}
+      className={`theme-toggle inline-flex items-center p-0.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-secondary)] shadow-xs transition-colors duration-150 ${className}`}
     >
       {/* Light Option Button */}
       <button
@@ -53,9 +51,9 @@ export function ThemeToggle({ className = '', variant = 'segmented' }: ThemeTogg
           e.stopPropagation();
           setTheme('light');
         }}
-        className={`theme-toggle-btn theme-toggle-light flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer select-none whitespace-nowrap shrink-0 ${
+        className={`theme-toggle-btn theme-toggle-light flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all duration-150 cursor-pointer select-none whitespace-nowrap shrink-0 ${
           !isDark
-            ? 'bg-[var(--bg-card)] text-[var(--text-primary)] shadow-xs border border-[var(--border-color)]'
+            ? 'bg-white text-[var(--text-primary)] shadow-xs border border-[var(--border-color)]'
             : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
         }`}
         title="Activate Light Mode"
@@ -79,7 +77,7 @@ export function ThemeToggle({ className = '', variant = 'segmented' }: ThemeTogg
           e.stopPropagation();
           setTheme('dark');
         }}
-        className={`theme-toggle-btn theme-toggle-dark flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-all duration-150 cursor-pointer select-none whitespace-nowrap shrink-0 ${
+        className={`theme-toggle-btn theme-toggle-dark flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-semibold transition-all duration-150 cursor-pointer select-none whitespace-nowrap shrink-0 ${
           isDark
             ? 'bg-[var(--accent)] text-white shadow-xs'
             : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'

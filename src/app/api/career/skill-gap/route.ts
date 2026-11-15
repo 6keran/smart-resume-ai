@@ -7,28 +7,37 @@ export async function POST(req: Request) {
     const user = await getUserFromRequest(req).catch(() => null);
     const body = await req.json().catch(() => ({}));
     const { currentSkills, jobDescription } = body;
-    let targetRole = body.targetRole;
-
-    if (!targetRole || typeof targetRole !== 'string') {
-      targetRole = 'Full Stack Developer';
-    }
+    let targetRole = typeof body.targetRole === 'string' ? body.targetRole.trim() : '';
 
     let skillsList: string[] = Array.isArray(currentSkills) ? currentSkills : [];
 
-    // If candidate is logged in and no skills were passed, automatically aggregate candidate's skills
-    if (skillsList.length === 0 && user) {
+    // If candidate is logged in, reuse profile goal and skills when omitted
+    if (user && (!targetRole || skillsList.length === 0)) {
       try {
         const summary = await getCareerProfileSummary(user.id);
-        skillsList = [
-          ...summary.skills.verified.map((v) => v.name),
-          ...summary.skills.claimed.map((c) => c.name),
-          ...summary.skills.inferred.map((i) => i.name),
-        ];
+        if (!targetRole) targetRole = (summary.targetRole || '').trim();
+        if (skillsList.length === 0) {
+          skillsList = [
+            ...summary.skills.verified.map((v) => v.name),
+            ...summary.skills.claimed.map((c) => c.name),
+            ...summary.skills.inferred.map((i) => i.name),
+          ];
+        }
       } catch {}
     }
 
+    if (!targetRole) {
+      return NextResponse.json({
+        success: true,
+        goalSet: false,
+        result: null,
+        analysis: null,
+        message: 'Target role is not set.',
+      });
+    }
+
     const result = await performSkillGapAnalysis(skillsList, targetRole, jobDescription);
-    return NextResponse.json({ success: true, result, analysis: result });
+    return NextResponse.json({ success: true, goalSet: true, result, analysis: result });
   } catch (err: any) {
     console.error('[API /api/career/skill-gap] Error:', err);
     return NextResponse.json(

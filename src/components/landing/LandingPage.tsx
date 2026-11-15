@@ -496,11 +496,11 @@ export default function LandingPage() {
             {/* 2. Resume Analyzer */}
             <div className="bento-card p-6 sm:p-8 flex flex-col justify-between group">
               <div className="space-y-4">
-                <div className="w-12 h-12 rounded-xl bg-purple-500/10 border border-purple-500/25 text-purple-400 flex items-center justify-center shadow-xs">
+                <div className="w-12 h-12 rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent)]/25 text-[var(--accent)] flex items-center justify-center shadow-xs">
                   <FileSearch className="w-6 h-6" />
                 </div>
                 <div>
-                  <span className="text-[11px] font-bold text-purple-400 uppercase tracking-wider">
+                  <span className="text-[11px] font-bold text-[var(--accent)] uppercase tracking-wider">
                     Deep Diagnostic
                   </span>
                   <h3 className="text-xl font-bold text-[var(--text-primary)] mt-1">

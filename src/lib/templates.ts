@@ -1,53 +1,165 @@
 import { ResumeTemplateId, ResumeTemplateInfo, ResumeData } from '@/types/resume';
 
 export const RESUME_TEMPLATES: ResumeTemplateInfo[] = [
+  // 12 Distinct Professional Resume Templates
   {
     id: 'ats-classic',
-    name: 'ATS Classic',
+    name: 'Classic Professional',
     category: 'ATS-Friendly',
-    intendedUse: 'Corporate, Finance, Legal, Government, and high-volume ATS portals',
-    description: 'Traditional single-column layout with clean serif typography, optimized for 100% compliance with applicant tracking systems.',
-    styleDescription: 'Clean serif typography, centered header, traditional hairline rules',
+    intendedUse: 'Corporate, Finance, Law, Operations, and high-volume applicant tracking systems',
+    description: 'Traditional single-column layout with centered contact header, classic serif typography, and clean hairline dividers. Maximizes ATS parseability.',
+    styleDescription: 'Georgia serif typography, centered contact bar, traditional section rules',
     isAtsFriendly: true,
     atsScoreRating: 99,
     isPopular: true,
-    tags: ['ATS-Friendly', 'Single-Column', 'Traditional', 'High Compliance'],
+    tags: ['Classic', 'ATS-Friendly', 'Single-Column', 'Traditional', 'Finance & Law'],
   },
   {
-    id: 'software-engineer',
-    name: 'Software Engineer',
-    category: 'Technical',
-    intendedUse: 'Software Engineers, Backend/Frontend Developers, Cloud & DevOps Specialists',
-    description: 'Engineering layout featuring categorized technical skills, monospace metadata badges, GitHub repositories, and architectural scale highlights.',
-    styleDescription: 'Technical skills matrix, monospace repository tags, system scale callouts',
+    id: 'corporate-executive',
+    name: 'Modern Corporate',
+    category: 'Corporate',
+    intendedUse: 'Mid-to-Senior Corporate Managers, Consultants, Business Analysts, and MNC roles',
+    description: 'Refined corporate layout with dark slate header styling, blue designation accents, structured milestone dividers, and crisp contact details.',
+    styleDescription: 'Corporate charcoal header, blue accents, structured milestone dividers',
     isAtsFriendly: true,
     atsScoreRating: 98,
     isPopular: true,
-    tags: ['Technical', 'Engineering', 'Code Repos', 'Monospace'],
-  },
-  {
-    id: 'graduate-fresher',
-    name: 'Graduate / Fresher',
-    category: 'Freshers',
-    intendedUse: 'Recent College Graduates, Entry-Level Candidates, and Career Transitioners',
-    description: 'Strategic structure prioritizing degree credentials, GPA, honors, coursework, and capstone projects ahead of corporate tenure.',
-    styleDescription: 'Education & project priority, academic honors, clean single-column',
-    isAtsFriendly: true,
-    atsScoreRating: 98,
-    isPopular: true,
-    tags: ['Freshers', 'Campus Projects', 'Academic Honors', 'Entry-Level'],
+    tags: ['Corporate', 'Modern', 'Management', 'Consulting', 'Structured'],
   },
   {
     id: 'executive-professional',
-    name: 'Executive Professional',
-    category: 'Experienced',
-    intendedUse: 'C-Suite, VP, Directors, General Managers, and Senior Department Heads',
-    description: 'Authoritative executive layout with deep charcoal header styling, strategic core competencies grid, and career progression milestones.',
-    styleDescription: 'Executive charcoal header, strategic competencies matrix, P&L progression',
+    name: 'Executive Leadership',
+    category: 'Executive',
+    intendedUse: 'Senior Directors, VPs, Department Heads, General Managers, and C-Suite Leaders',
+    description: 'Authoritative executive presentation featuring a stylized executive summary narrative box, 3-column strategic competencies matrix, and career milestones.',
+    styleDescription: 'Executive narrative quote box, strategic competencies grid, milestone progression',
     isAtsFriendly: true,
     atsScoreRating: 97,
     isPopular: true,
-    tags: ['Experienced', 'Leadership', 'Executive', 'P&L Management'],
+    tags: ['Executive', 'Leadership', 'Strategic Competencies', 'Directors & VPs'],
+  },
+  {
+    id: 'software-engineer',
+    name: 'Engineering Professional',
+    category: 'Technical',
+    intendedUse: 'Mechanical, Electrical, Civil, Production, and Core Engineering specialists',
+    description: 'Tailored for core engineering disciplines. Highlighting tools, machinery, simulation CAD software, compliance standards, and practical outcomes.',
+    styleDescription: 'Engineering capabilities matrix, tools & machinery highlights, project outcomes',
+    isAtsFriendly: true,
+    atsScoreRating: 98,
+    isPopular: true,
+    tags: ['Engineering', 'Mechanical/Electrical/Civil', 'CAD & Machinery', 'B.Tech & Diploma'],
+  },
+  {
+    id: 'operations-management',
+    name: 'Manufacturing & Operations',
+    category: 'Experienced',
+    intendedUse: 'Manufacturing, Plant Operations, Quality Control, Shift Supervisors, and EHS Leads',
+    description: 'Industrial shop-floor to plant management layout. Highlights production machinery, shift availability, Kaizen/Six Sigma systems, and plant KPIs.',
+    styleDescription: 'Industrial header, shift badges, machinery capabilities, production KPIs',
+    isAtsFriendly: true,
+    atsScoreRating: 97,
+    isPopular: true,
+    tags: ['Manufacturing', 'Plant Operations', 'Quality Control', 'Shift Supervisor'],
+  },
+  {
+    id: 'full-stack-developer',
+    name: 'Software Developer',
+    category: 'Technical',
+    intendedUse: 'Software Engineers, Full Stack Developers, DevOps, and IT Professionals',
+    description: 'Modern developer layout with monospace accents, high-visibility categorized tech stack badges, GitHub/portfolio links, and project architecture cards.',
+    styleDescription: 'Monospace code accents, categorized tech pills, live demo & repo links',
+    isAtsFriendly: true,
+    atsScoreRating: 98,
+    isPopular: true,
+    tags: ['Software', 'Full Stack', 'Cloud & DevOps', 'GitHub & Repos'],
+  },
+  {
+    id: 'graduate-fresher',
+    name: 'Fresher & Graduate',
+    category: 'Freshers',
+    intendedUse: 'University Students, Recent College Graduates, Diploma Holders, and Entry-Level Roles',
+    description: 'Entry-level structure placing education and CGPA prominently at the top, followed by academic capstone projects, internships, and campus achievements.',
+    styleDescription: 'Education & CGPA priority, academic projects, clean single-column',
+    isAtsFriendly: true,
+    atsScoreRating: 98,
+    isPopular: true,
+    tags: ['Freshers', 'Graduates', 'Campus Projects', 'Entry-Level'],
+  },
+  {
+    id: 'minimalist-ats',
+    name: 'Minimalist ATS',
+    category: 'ATS-Friendly',
+    intendedUse: 'Candidates seeking maximum parseability across all ATS software without graphical elements',
+    description: 'Strictly distraction-free monochrome single-column design. Uses standard typography, simple horizontal underlines, and linear bullet points.',
+    styleDescription: 'Ultra-clean monochrome, zero graphics/icons, standard headings, pure text',
+    isAtsFriendly: true,
+    atsScoreRating: 100,
+    isPopular: true,
+    tags: ['Minimalist ATS', 'Zero Distraction', 'Highly Parseable', 'Clean Monochrome'],
+  },
+  {
+    id: 'minimalist',
+    name: 'Modern Minimalist',
+    category: 'Minimal',
+    intendedUse: 'Designers, Product Managers, and professionals seeking a clean, whitespace-balanced aesthetic',
+    description: 'Swiss-inspired minimalist layout with generous whitespace, elegant typographic weights, subtle slate dividers, and balanced page composition.',
+    styleDescription: 'Swiss typography, generous whitespace, understated elegance',
+    isAtsFriendly: true,
+    atsScoreRating: 99,
+    isPopular: true,
+    tags: ['Modern Minimalist', 'Swiss Design', 'Whitespace', 'Universal'],
+  },
+  {
+    id: 'academic-research',
+    name: 'Academic & Research',
+    category: 'Academic',
+    intendedUse: 'Professors, Postdocs, Research Scholars, PhD Candidates, and Fellowship Applicants',
+    description: 'Formal scholarly curriculum vitae format highlighting degrees with dissertation advisors, research projects, peer-reviewed publications, and teaching appointments.',
+    styleDescription: 'Formal Georgia serif, numbered citations, thesis advisor focus',
+    isAtsFriendly: true,
+    atsScoreRating: 96,
+    isPopular: false,
+    tags: ['Academic', 'Research', 'Scholarly CV', 'Publications & Grants'],
+  },
+  {
+    id: 'modern-two-column',
+    name: 'Professional Sidebar',
+    category: 'Creative',
+    intendedUse: 'Designers, Product Leaders, Marketers, and candidates wanting a visual dual-column resume',
+    description: 'Two-column layout featuring a dedicated 32% cool-grey sidebar for monogram badge, contact info, skill pills, and credentials, paired with a 68% career narrative.',
+    styleDescription: '32% sidebar, monogram initials badge, skill pills, dual-column visual layout',
+    isAtsFriendly: false,
+    atsScoreRating: 92,
+    isPopular: true,
+    isVisualLayout: true,
+    tags: ['Professional Sidebar', 'Dual-Column', 'Visual Layout', 'Portfolio'],
+  },
+  {
+    id: 'compact-one-page',
+    name: 'Compact One-Page',
+    category: 'Minimal',
+    intendedUse: 'Candidates who want to fit extensive experience and skills cleanly onto a single high-impact page',
+    description: 'Highly dense, space-efficient layout with an inline header, compact section margins, and multi-column skill and education rows.',
+    styleDescription: 'High-density inline header, tight vertical rhythm, single-page optimization',
+    isAtsFriendly: true,
+    atsScoreRating: 98,
+    isPopular: true,
+    tags: ['Compact', 'One-Page', 'Dense Layout', 'Space-Efficient'],
+  },
+
+  // Supplementary & Specialized Roles
+  {
+    id: 'experienced-professional',
+    name: 'Experienced Professional',
+    category: 'Experienced',
+    intendedUse: 'Professionals with 3+ years of progressive industrial or software tenure',
+    description: 'Chronological work history emphasis highlighting designations, departments, responsibilities, tools used, and measurable results.',
+    styleDescription: 'Work history priority, responsibilities bullets, career progression',
+    isAtsFriendly: true,
+    atsScoreRating: 98,
+    isPopular: false,
+    tags: ['Experienced', 'Chronological', 'Career History'],
   },
   {
     id: 'data-analyst',
@@ -70,20 +182,8 @@ export const RESUME_TEMPLATES: ResumeTemplateInfo[] = [
     styleDescription: 'Geometric typography, portfolio showcase, design & research skills',
     isAtsFriendly: true,
     atsScoreRating: 96,
-    isPopular: true,
+    isPopular: false,
     tags: ['Creative', 'Design Systems', 'Figma', 'Case Studies'],
-  },
-  {
-    id: 'full-stack-developer',
-    name: 'Full Stack Developer',
-    category: 'Technical',
-    intendedUse: 'Full Stack Engineers, Web Application Architects, and Cloud Solutions Developers',
-    description: 'High-density technical layout highlighting dual frontend/backend stacks, database architectures, APIs, and live production deployments.',
-    styleDescription: 'Dual-stack skill pills, live demo & repo links, web architecture',
-    isAtsFriendly: true,
-    atsScoreRating: 98,
-    isPopular: true,
-    tags: ['Technical', 'Full Stack', 'Web Architecture', 'DevOps'],
   },
   {
     id: 'internship-applicant',
@@ -95,19 +195,7 @@ export const RESUME_TEMPLATES: ResumeTemplateInfo[] = [
     isAtsFriendly: true,
     atsScoreRating: 98,
     isPopular: false,
-    tags: ['Freshers', 'Internship', 'Coursework', 'Student Leadership'],
-  },
-  {
-    id: 'academic-research',
-    name: 'Academic / Research',
-    category: 'Academic',
-    intendedUse: 'PhD Candidates, Postdocs, Research Scientists, Faculty, and Fellowship Applicants',
-    description: 'Formal scholarly curriculum vitae format highlighting education with thesis advisors, peer-reviewed publications, grant awards, and teaching experience.',
-    styleDescription: 'Formal Garamond/Georgia serif, numbered publication citations, dissertation focus',
-    isAtsFriendly: true,
-    atsScoreRating: 96,
-    isPopular: false,
-    tags: ['Academic', 'Research', 'Scholarly CV', 'Publications'],
+    tags: ['Freshers', 'Internship', 'Coursework'],
   },
   {
     id: 'sales-marketing',
@@ -119,84 +207,108 @@ export const RESUME_TEMPLATES: ResumeTemplateInfo[] = [
     isAtsFriendly: true,
     atsScoreRating: 97,
     isPopular: false,
-    tags: ['Experienced', 'Sales & Growth', 'Quota Attainment', 'Revenue'],
-  },
-  {
-    id: 'operations-management',
-    name: 'Operations & Management',
-    category: 'Experienced',
-    intendedUse: 'Operations Directors, Program Managers, Scrum Masters, and Supply Chain Leaders',
-    description: 'Disciplined executive structure focusing on Lean Six Sigma, Agile delivery, supply chain workflows, SLA improvements, and operational turnaround.',
-    styleDescription: 'Process & operational competencies, efficiency KPIs, PMP/CSM credentials',
-    isAtsFriendly: true,
-    atsScoreRating: 97,
-    isPopular: false,
-    tags: ['Experienced', 'Operations', 'Process Optimization', 'Agile/PMP'],
-  },
-  {
-    id: 'modern-two-column',
-    name: 'Modern Two-Column',
-    category: 'Creative',
-    intendedUse: 'Visual layout for design, client-facing consulting, marketing, and creative tech',
-    description: 'Contemporary split-view layout featuring a cool slate sidebar for contact info, skills, and credentials, paired with an expansive career narrative.',
-    styleDescription: 'Contemporary dual-column, sidebar credentials, visual layout',
-    isAtsFriendly: false,
-    atsScoreRating: 92,
-    isPopular: true,
-    isVisualLayout: true,
-    tags: ['Creative', 'Dual-Column', 'Visual Layout', 'Portfolio'],
+    tags: ['Experienced', 'Sales & Growth', 'Quota Attainment'],
   },
 ];
 
 export function normalizeTemplateId(id: string): ResumeTemplateId {
   switch (id) {
+    // 1. Classic Professional
+    case 'classic-professional':
     case 'ats-classic':
+    case 'ats-professional':
     case 'modern-ats':
       return 'ats-classic';
+
+    // 2. Modern Corporate
+    case 'modern-corporate':
+    case 'corporate-executive':
+    case 'corporate':
+      return 'corporate-executive';
+
+    // 3. Executive Leadership
+    case 'executive-leadership':
+    case 'executive-professional':
+    case 'executive':
+      return 'executive-professional';
+
+    // 4. Engineering Professional
+    case 'engineering-professional':
     case 'software-engineer':
+    case 'engineering':
+    case 'engineering-manufacturing':
     case 'tech-professional':
       return 'software-engineer';
+
+    // 5. Manufacturing & Operations
+    case 'manufacturing-operations':
+    case 'operations-management':
+      return 'operations-management';
+
+    // 6. Software Developer
+    case 'software-developer':
+    case 'full-stack-developer':
+      return 'full-stack-developer';
+
+    // 7. Fresher and Graduate
+    case 'fresher-graduate':
     case 'graduate-fresher':
     case 'fresh-graduate':
+    case 'fresher':
     case 'graduate-entry':
       return 'graduate-fresher';
-    case 'executive-professional':
-    case 'corporate-executive':
-    case 'executive':
-    case 'corporate':
+
+    // 8. Minimalist ATS
+    case 'minimalist-ats':
+    case 'ats-minimal':
+      return 'minimalist-ats';
+
+    // 9. Modern Minimalist
+    case 'modern-minimalist':
+    case 'minimalist':
+    case 'minimal-professional':
+    case 'minimal':
+      return 'minimalist';
+
+    // 10. Academic and Research
+    case 'academic-research':
+    case 'academic':
+      return 'academic-research';
+
+    // 11. Professional Sidebar
+    case 'professional-sidebar':
+    case 'modern-two-column':
+    case 'contemporary':
+      return 'modern-two-column';
+
+    // 12. Compact One-Page
+    case 'compact-one-page':
+      return 'compact-one-page';
+
+    // Supplementary
     case 'experienced-professional':
-      return 'executive-professional';
+    case 'experienced':
+      return 'experienced-professional';
     case 'data-analyst':
     case 'data-ai':
       return 'data-analyst';
     case 'ui-ux-designer':
     case 'creative-professional':
       return 'ui-ux-designer';
-    case 'full-stack-developer':
-      return 'full-stack-developer';
     case 'internship-applicant':
       return 'internship-applicant';
-    case 'academic-research':
-    case 'academic':
-      return 'academic-research';
     case 'sales-marketing':
       return 'sales-marketing';
-    case 'operations-management':
-      return 'operations-management';
-    case 'modern-two-column':
-    case 'contemporary':
-      return 'modern-two-column';
-    // Older reference designs mapped gracefully to canonical templates or preserved
+
+    // Older reference designs
     case 'modern-professional':
-    case 'minimalist':
-    case 'minimal':
-    case 'compact-one-page':
     case 'thomas-hamptone':
     case 'nick-koe':
     case 'richard-sanchez':
     case 'olivia-wilson-grid':
     case 'olivia-wilson-blush':
       return id as ResumeTemplateId;
+
     default:
       return 'ats-classic';
   }

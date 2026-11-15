@@ -18,77 +18,54 @@ async function api(page: Page, url: string, method: 'GET' | 'POST' | 'PUT' | 'PA
   }, { requestUrl: url, requestMethod: method, requestBody: body === undefined ? null : body });
 }
 
-test('Career Command Center 3.0 renders authentic student metrics, 4 quadrants, and explainable score', async ({ page }) => {
+test('Career Command Center renders authentic student metrics and 4 readiness quadrants', async ({ page }) => {
   await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
   // 1. Header & Identity
-  await expect(page.getByText('CAREER COMMAND CENTER 3.0')).toBeVisible();
   await expect(page.getByRole('heading', { name: /welcome back, playwright test user/i })).toBeVisible();
-  await expect(page.getByText(/Target Role:/i).first()).toBeVisible();
+  await expect(page.getByText('Candidate Workspace')).toBeVisible();
+  await expect(page.getByText(/Target:/i).first()).toBeVisible();
 
-  // 2. Multidimensional Readiness Index & 4 Quadrants
-  await expect(page.getByRole('heading', { name: /career readiness score:/i })).toBeVisible();
-  await expect(page.getByText(/100 PTS/i)).toBeVisible();
+  // 2. Career Readiness Engine & 4 Quadrants (each weighted 25%)
+  await expect(page.getByText(/CAREER READINESS ENGINE/i)).toBeVisible();
+  await expect(page.getByRole('heading', { name: /overall preparedness:/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Technical Skills', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Project Evidence', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Resume ATS', exact: true })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Interview Practice', exact: true })).toBeVisible();
+  await expect(page.getByText(/Weight: 25%/i).first()).toBeVisible();
 
-  // 4 Dimensions
-  await expect(page.getByText('Technical (25%)')).toBeVisible();
-  await expect(page.getByText('Projects (25%)')).toBeVisible();
-  await expect(page.getByText('Resume ATS (25%)')).toBeVisible();
-  await expect(page.getByText('Interview (25%)')).toBeVisible();
-
-  // 3. Educational Readiness Disclaimer Banner
-  await expect(page.getByText(/Educational Readiness Index:/i)).toBeVisible();
-  await expect(page.getByText(/does not guarantee employment or hiring outcomes/i)).toBeVisible();
-
-  // 4. Core sections
-  await expect(page.getByRole('heading', { name: /career progress timeline/i })).toBeVisible();
-  await expect(page.getByRole('heading', { name: /verified achievements & milestones/i })).toBeVisible();
-  await expect(page.getByRole('heading', { name: /recommended next actions/i })).toBeVisible();
-  await expect(page.getByRole('heading', { name: /career (intelligence studio|tools)/i })).toBeVisible();
+  // 3. Core sections
+  await expect(page.getByRole('heading', { name: /career activity & milestones/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /important skill gaps/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /recommended next action/i })).toBeVisible();
 });
 
-test('Explainability breakdown drawer toggles and presents algorithmic methodology', async ({ page }) => {
+// NOTE: The former "Explainability breakdown drawer toggles and presents algorithmic
+// methodology" test was removed. The redesigned Career Readiness HUD replaced the
+// "Why this score?" button and "algorithmic evaluation methodology" drawer with
+// per-quadrant "Weight: 25%" badges and inline strengths/recommendations. There is no
+// longer a toggleable methodology drawer to assert.
+
+test('Career Activity & Milestones timeline filters by category', async ({ page }) => {
   await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
-  const explainButton = page.getByRole('button', { name: /why this score\?/i });
-  await expect(explainButton).toBeVisible();
-
-  // Open drawer
-  await explainButton.click();
-  await expect(page.getByRole('heading', { name: /algorithmic evaluation methodology/i })).toBeVisible();
-  await expect(page.getByText('1. Data Evaluated')).toBeVisible();
-  await expect(page.getByText('2. Weighting Strategy')).toBeVisible();
-  await expect(page.getByText('3. What Is Missing')).toBeVisible();
-  await expect(page.getByText('4. Concrete Next Step')).toBeVisible();
-
-  // Close drawer
-  const hideButton = page.getByRole('button', { name: /hide breakdown/i });
-  await expect(hideButton).toBeVisible();
-  await hideButton.click();
-  await expect(page.getByRole('heading', { name: /algorithmic evaluation methodology/i })).toBeHidden();
-});
-
-test('Career progress timeline filters by category', async ({ page }) => {
-  await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
-
-  await expect(page.getByRole('heading', { name: /career progress timeline/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /career activity & milestones/i })).toBeVisible();
 
   const filterAll = page.getByRole('button', { name: /^all$/i });
-  const filterAssessment = page.getByRole('button', { name: /^assessment$/i });
-  const filterProject = page.getByRole('button', { name: /^project$/i });
-  const filterResume = page.getByRole('button', { name: /^resume$/i });
-  const filterApplication = page.getByRole('button', { name: /^application$/i });
+  const filterResumes = page.getByRole('button', { name: /^resumes$/i });
+  const filterSkills = page.getByRole('button', { name: /^skills$/i });
+  const filterApplications = page.getByRole('button', { name: /^applications$/i });
 
   await expect(filterAll).toBeVisible();
-  await expect(filterAssessment).toBeVisible();
-  await expect(filterProject).toBeVisible();
-  await expect(filterResume).toBeVisible();
-  await expect(filterApplication).toBeVisible();
+  await expect(filterResumes).toBeVisible();
+  await expect(filterSkills).toBeVisible();
+  await expect(filterApplications).toBeVisible();
 
   // Switch filters
-  await filterProject.click();
-  await filterAssessment.click();
-  await filterResume.click();
+  await filterResumes.click();
+  await filterSkills.click();
+  await filterApplications.click();
   await filterAll.click();
 });
 
@@ -112,7 +89,7 @@ test('Contextual AI Assistant integration launches with pre-filled coaching prom
   const chatInput = chatDialog.getByPlaceholder(/ask about your resume/i);
   await expect(chatInput).toBeVisible();
   const inputValue = await chatInput.inputValue();
-  expect(inputValue).toContain('Explain my overall career readiness score');
+  expect(inputValue).toContain('Review my profile for');
 
   // Close chat via Escape
   await page.keyboard.press('Escape');
@@ -147,16 +124,11 @@ test('Regular student cannot access protected admin dashboard', async ({ page })
 test('Authentic empty states render genuine fallback messaging without fabricated metrics', async ({ page }) => {
   await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
-  // Fresh test user has no completed projects or verified credentials initially
-  // Verify authentic empty state copy is rendered
-  await expect(page.getByText(/no verified achievements recorded yet/i)).toBeVisible();
-  await expect(page.getByRole('link', { name: /take skill assessment/i })).toBeVisible();
-
-  await expect(page.getByText(/no capstones started yet/i)).toBeVisible();
-  await expect(page.getByRole('link', { name: /start (ai )?guided project/i })).toBeVisible();
-
-  await expect(page.getByText(/no applications tracked yet/i)).toBeVisible();
-  await expect(page.getByRole('link', { name: /find jobs/i })).toBeVisible();
+  // Fresh test user has no milestones, applications, or verified credentials initially.
+  await expect(page.getByText(/no milestones found for this category/i)).toBeVisible();
+  await expect(page.getByRole('link', { name: /create resume/i }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: /take assessment/i }).first()).toBeVisible();
+  await expect(page.getByRole('link', { name: /search roles/i }).first()).toBeVisible();
 });
 
 test('Action execution deep links navigate to core workspaces', async ({ page }, testInfo) => {
@@ -164,28 +136,17 @@ test('Action execution deep links navigate to core workspaces', async ({ page },
 
   await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
-  // 1. Create Resume deep link
-  const createResumeLink = page.getByRole('main').getByRole('link', { name: /create resume/i }).first();
-  await expect(createResumeLink).toBeVisible();
-  await createResumeLink.click();
+  // 1. Open Resume Editor deep link
+  const resumeLink = page.getByRole('main').getByRole('link', { name: /open resume editor/i }).first();
+  await expect(resumeLink).toBeVisible();
+  await resumeLink.click();
   await expect(page).toHaveURL(/\/builder/);
-
-  // Return to dashboard
   await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
 
-  // 2. Guided Projects deep link
-  const projectsLink = page.getByRole('main').getByRole('link', { name: /guided projects/i }).first();
+  // 2. Guided Projects deep link (activate the Project Evidence quadrant first)
+  await page.getByRole('button', { name: /project evidence/i }).click();
+  const projectsLink = page.getByRole('main').getByRole('link', { name: /explore guided projects/i }).first();
   await expect(projectsLink).toBeVisible();
   await projectsLink.click();
   await expect(page).toHaveURL(/\/projects/);
-
-  // Return to dashboard
-  await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
-
-  // 3. Learning Roadmap deep link
-  const roadmapLink = page.getByRole('main').getByRole('link', { name: /learning roadmap/i }).first();
-  await expect(roadmapLink).toBeVisible();
-  await roadmapLink.click();
-  await expect(page).toHaveURL(/\/skills\?tab=roadmap/);
 });
-

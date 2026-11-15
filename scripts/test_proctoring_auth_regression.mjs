@@ -246,6 +246,19 @@ async function run() {
   });
 
   await check('13. Authorized Admin can view Candidate A live video frame (returns 200)', async () => {
+    // Ensure Candidate A has sent a fresh frame within the 10-second live buffer window
+    await fetch(`${BASE_URL}/api/proctoring/frame`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Cookie': `sra_user_session=${candidateAToken}`,
+      },
+      body: JSON.stringify({
+        assessmentId: testAssessmentId,
+        frame: 'data:image/jpeg;base64,testframealice',
+      }),
+    });
+
     const res = await fetch(`${BASE_URL}/api/proctoring/frame?assessmentId=${testAssessmentId}`, {
       headers: { 'Cookie': `sra_admin_session=${adminToken}` },
     });

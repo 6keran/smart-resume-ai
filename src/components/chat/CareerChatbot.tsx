@@ -47,7 +47,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
       await navigator.clipboard.writeText(text);
       copied = true;
     }
-  } catch {}
+  } catch { }
 
   if (!copied) {
     try {
@@ -62,7 +62,7 @@ async function copyToClipboard(text: string): Promise<boolean> {
       textarea.select();
       document.execCommand('copy');
       document.body.removeChild(textarea);
-    } catch {}
+    } catch { }
   }
 
   return true;
@@ -80,13 +80,13 @@ function CodeBlock({ language, code }: { language?: string; code: string }) {
   };
 
   return (
-    <div className="my-2.5 rounded-xl bg-slate-900 text-slate-100 font-mono text-[11px] sm:text-xs overflow-hidden border border-slate-700/60 shadow-sm">
-      <div className="flex items-center justify-between px-3 py-1.5 bg-slate-800/80 border-b border-slate-700/50 text-[10px] sm:text-[11px] text-slate-400 font-sans">
+    <div className="my-2.5 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] font-mono text-[11px] sm:text-xs overflow-hidden border border-[var(--border-color)] shadow-sm">
+      <div className="flex items-center justify-between px-3 py-1.5 bg-[var(--bg-primary)] border-b border-[var(--border-color)] text-[10px] sm:text-[11px] text-[var(--text-secondary)] font-sans">
         <span className="uppercase tracking-wider font-semibold">{language || 'code'}</span>
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1 hover:text-white transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-slate-700/50"
+          className="flex items-center gap-1 hover:text-[var(--text-primary)] transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-[var(--bg-elevated)]"
           title={copied ? 'Copied to clipboard' : 'Copy code'}
           aria-label={copied ? 'Code copied to clipboard' : 'Copy code snippet'}
         >
@@ -157,7 +157,7 @@ function renderInlineFormatting(text: string): React.ReactNode {
     }
     if (part.startsWith('**') && part.endsWith('**')) {
       return (
-        <strong key={idx} className="font-semibold text-slate-900 dark:text-white">
+        <strong key={idx} className="font-semibold text-[var(--text-primary)]">
           {part.slice(2, -2)}
         </strong>
       );
@@ -202,19 +202,19 @@ function FormattedAssistantMessage({ content }: { content: string }) {
 
     if (line.startsWith('### ')) {
       elements.push(
-        <h4 key={`h3_${i}`} className="font-bold text-sm text-slate-900 dark:text-white mt-2 mb-1">
+        <h4 key={`h3_${i}`} className="font-bold text-sm text-[var(--text-primary)] mt-2 mb-1">
           {line.slice(4)}
         </h4>
       );
     } else if (line.startsWith('## ')) {
       elements.push(
-        <h3 key={`h2_${i}`} className="font-bold text-base text-slate-900 dark:text-white mt-2.5 mb-1">
+        <h3 key={`h2_${i}`} className="font-bold text-base text-[var(--text-primary)] mt-2.5 mb-1">
           {line.slice(3)}
         </h3>
       );
     } else if (line.startsWith('# ')) {
       elements.push(
-        <h2 key={`h1_${i}`} className="font-bold text-lg text-slate-900 dark:text-white mt-3 mb-1">
+        <h2 key={`h1_${i}`} className="font-bold text-lg text-[var(--text-primary)] mt-3 mb-1">
           {line.slice(2)}
         </h2>
       );
@@ -379,7 +379,7 @@ export function CareerChatbot() {
           setCareerProfile(data.profile);
         }
       })
-      .catch(() => {});
+      .catch(() => { });
     return () => {
       isMounted = false;
     };
@@ -387,9 +387,16 @@ export function CareerChatbot() {
 
   useEffect(() => {
     if (careerProfile && messages.length === 1 && messages[0].id === 'welcome') {
-      const greeting = `Hello ${careerProfile.name || 'there'}! I am your AI Assistant. I'm tracking your target role as **${careerProfile.targetRole}**${
-        careerProfile.studentProfile ? ` at **${careerProfile.studentProfile.institution}**` : ''
-      }${careerProfile.metrics?.readinessScore ? ` (${careerProfile.metrics.readinessScore}% career ready)` : ''}. How can I assist your career launch today?`;
+      const targetRole = (careerProfile.targetRole || '').trim();
+      const institution = (careerProfile.studentProfile?.institution || '').trim();
+      const readinessScore = careerProfile.metrics?.readinessScore;
+      const rolePart = targetRole
+        ? `I'm tracking your target role as **${targetRole}**${institution ? ` at **${institution}**` : ''}`
+        : institution
+          ? `Connected to your **${institution}** profile`
+          : `Set your target career role anytime to personalize my guidance`;
+      const readinessPart = typeof readinessScore === 'number' && readinessScore > 0 ? ` (${readinessScore}% career ready)` : '';
+      const greeting = `Hello ${careerProfile.name || 'there'}! I am your AI Assistant. ${rolePart}${readinessPart}. How can I assist your career launch today?`;
       if (messages[0].content !== greeting) {
         setMessages([
           {
@@ -404,9 +411,10 @@ export function CareerChatbot() {
   }, [careerProfile, messages]);
 
   const getCategoryPrompts = () => {
-    const target = careerProfile?.targetRole || targetJob?.title || 'Graduate Software Engineer';
+    const target = careerProfile?.targetRole || targetJob?.title || '';
+    const displayTarget = target || 'my career goal';
     const ats = careerProfile?.latestAtsAnalysis;
-    const missingSkill = careerProfile?.skillGaps?.missingCriticalSkills?.[0] || 'Docker';
+    const missingSkill = careerProfile?.skillGaps?.missingCriticalSkills?.[0] || null;
     const projects = careerProfile?.studentProfile?.projects;
     const topProject = projects && projects.length > 0 ? projects[0].title : null;
     const apps = careerProfile?.recentApplications;
@@ -418,8 +426,8 @@ export function CareerChatbot() {
         id: 'res-1',
         category: 'resume',
         text: ats?.atsScore
-          ? `How can I improve my ${ats.atsScore}% ATS score for ${target}?`
-          : `How can I optimize my fresher resume for ${target}?`,
+          ? `How can I improve my ${ats.atsScore}% ATS score for ${displayTarget}?`
+          : `How can I optimize my resume for ${displayTarget}?`,
       },
       {
         id: 'res-2',
@@ -429,7 +437,7 @@ export function CareerChatbot() {
       {
         id: 'res-3',
         category: 'resume',
-        text: 'What formatting mistakes get fresher resumes rejected by ATS?',
+        text: 'What formatting mistakes get resumes rejected by ATS?',
       },
 
       // Projects
@@ -438,29 +446,31 @@ export function CareerChatbot() {
         category: 'projects',
         text: topProject
           ? `How should I describe my '${topProject}' project on my resume?`
-          : `What portfolio project should I build with ${missingSkill} for ${target}?`,
+          : missingSkill
+            ? `What portfolio project should I build with ${missingSkill} for ${displayTarget}?`
+            : `What portfolio project should I build for ${displayTarget}?`,
       },
       {
         id: 'proj-2',
         category: 'projects',
-        text: `Suggest a full-stack capstone project architecture for ${target}`,
+        text: `Suggest a portfolio project plan for ${displayTarget}`,
       },
       {
         id: 'proj-3',
         category: 'projects',
-        text: 'How do I document GitHub repositories to impress technical recruiters?',
+        text: 'How do I document portfolio projects clearly for recruiters?',
       },
       {
         id: 'proj-4',
         category: 'projects',
-        text: 'Guide me on using the AI Project Mentor to build portfolio projects',
+        text: 'Guide me on using the Project Mentor to structure portfolio projects',
       },
 
       // Interview
       {
         id: 'int-1',
         category: 'interview',
-        text: `Give me 3 practice interview questions for an entry-level ${target}`,
+        text: `Give me 3 practice interview questions for ${displayTarget}`,
       },
       {
         id: 'int-2',
@@ -470,24 +480,24 @@ export function CareerChatbot() {
       {
         id: 'int-3',
         category: 'interview',
-        text: 'Ask me a technical question and critique my answer',
+        text: 'Ask me a role-focused question and critique my answer',
       },
 
       // Skills
       {
         id: 'skl-1',
         category: 'skills',
-        text: `Which critical skills should I prioritize learning next for ${target}?`,
+        text: `Which core skills should I prioritize learning next for ${displayTarget}?`,
       },
       {
         id: 'skl-2',
         category: 'skills',
-        text: 'How do I verify my technical skills on Smart Resume AI?',
+        text: 'How do I manage and verify my skills on Smart Resume AI?',
       },
       {
         id: 'skl-3',
         category: 'skills',
-        text: 'Break down a 10-week learning roadmap for my target role',
+        text: 'Break down a learning roadmap for my target role',
       },
 
       // Jobs
@@ -501,17 +511,17 @@ export function CareerChatbot() {
       {
         id: 'job-2',
         category: 'jobs',
-        text: 'How do I know if I qualify for a junior role requiring 1-2 years experience?',
+        text: 'How do I know if I qualify for a role requiring 1-2 years experience?',
       },
       {
         id: 'job-3',
         category: 'jobs',
-        text: `What search queries find verified fresher ${target} openings?`,
+        text: `What search queries find verified openings for ${displayTarget}?`,
       },
       {
         id: 'job-4',
         category: 'jobs',
-        text: 'How does the AI Job Application Assistant tailor my resume and cover letter?',
+        text: 'How should I tailor my resume bullet points for a specific job description?',
       },
     ];
 
@@ -1080,7 +1090,6 @@ export function CareerChatbot() {
         if (pathname.startsWith('/improver')) return 'resume_improver';
         if (pathname.startsWith('/projects')) return 'project_mentor';
         if (pathname.startsWith('/jobs')) return 'job_discovery';
-        if (pathname.startsWith('/apply-assistant')) return 'application_assistant';
         if (pathname.startsWith('/interview-prep')) return 'interview_prep';
         if (pathname.startsWith('/skills')) return 'skill_assessments';
         if (pathname.startsWith('/dashboard')) return 'career_command_center';
@@ -1235,17 +1244,17 @@ export function CareerChatbot() {
 
   const launcherStyle: React.CSSProperties = position && isClient
     ? {
-        position: 'fixed',
-        left: `${position.x}px`,
-        top: `${position.y}px`,
-        touchAction: 'none',
-      }
+      position: 'fixed',
+      left: `${position.x}px`,
+      top: `${position.y}px`,
+      touchAction: 'none',
+    }
     : {
-        position: 'fixed',
-        bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))',
-        right: 'calc(1.5rem + env(safe-area-inset-right, 0px))',
-        touchAction: 'none',
-      };
+      position: 'fixed',
+      bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))',
+      right: 'calc(1.5rem + env(safe-area-inset-right, 0px))',
+      touchAction: 'none',
+    };
 
   return (
     <>
@@ -1265,9 +1274,8 @@ export function CareerChatbot() {
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerCancel}
-            className={`z-40 select-none no-print transition-shadow ${
-              isDragging ? 'cursor-grabbing opacity-90' : 'cursor-grab'
-            }`}
+            className={`z-40 select-none no-print transition-shadow ${isDragging ? 'cursor-grabbing opacity-90' : 'cursor-grab'
+              }`}
           >
             <button
               type="button"
@@ -1304,22 +1312,22 @@ export function CareerChatbot() {
               prefersReduced
                 ? { opacity: 0 }
                 : isFullScreen
-                ? { opacity: 0 }
-                : { opacity: 0, scale: 0.97 }
+                  ? { opacity: 0 }
+                  : { opacity: 0, scale: 0.97 }
             }
             animate={
               prefersReduced
                 ? { opacity: 1 }
                 : isFullScreen
-                ? { opacity: 1 }
-                : { opacity: 1, scale: 1 }
+                  ? { opacity: 1 }
+                  : { opacity: 1, scale: 1 }
             }
             exit={
               prefersReduced
                 ? { opacity: 0 }
                 : isFullScreen
-                ? { opacity: 0 }
-                : { opacity: 0, scale: 0.97 }
+                  ? { opacity: 0 }
+                  : { opacity: 0, scale: 0.97 }
             }
             transition={prefersReduced ? { duration: 0 } : { duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className={
@@ -1328,330 +1336,328 @@ export function CareerChatbot() {
                 : 'fixed inset-x-2 bottom-2 sm:inset-x-auto z-50 w-auto sm:w-[460px] max-w-[calc(100vw-16px)] sm:max-w-none h-[560px] sm:h-[620px] max-h-[calc(100dvh-16px)] sm:max-h-[85vh] rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-xl flex flex-col overflow-hidden no-print'
             }
           >
-          {/* Header */}
-          <div
-            data-chat-drag="true"
-            className={`shrink-0 px-4 py-3 sm:px-6 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] relative select-none ${
-              isFullScreen ? '' : isPanelDragging ? 'cursor-grabbing select-none touch-none' : 'cursor-grab touch-none'
-            }`}
-            onPointerDown={handlePanelPointerDown}
-            onPointerMove={handlePanelPointerMove}
-            onPointerUp={finishPanelDrag}
-            onPointerCancel={cancelPanelDrag}
-          >
-            <div className={`flex items-center justify-between ${isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}`}>
-              <div className="flex items-center gap-2.5">
-                <div className="w-8 h-8 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] flex items-center justify-center shrink-0 border border-[var(--accent)]/20 shadow-xs">
-                  <Bot className="w-4 h-4" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-1.5">
-                    <h3 className="text-xs sm:text-sm font-bold text-[var(--text-primary)] leading-none">
-                      AI Assistant
-                    </h3>
-                    {careerProfile?.metrics?.readinessScore !== undefined && (
-                      <span className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20">
-                        {careerProfile.metrics.readinessScore}% Ready
-                      </span>
-                    )}
+            {/* Header */}
+            <div
+              data-chat-drag="true"
+              className={`shrink-0 px-4 py-3 sm:px-6 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] relative select-none ${isFullScreen ? '' : isPanelDragging ? 'cursor-grabbing select-none touch-none' : 'cursor-grab touch-none'
+                }`}
+              onPointerDown={handlePanelPointerDown}
+              onPointerMove={handlePanelPointerMove}
+              onPointerUp={finishPanelDrag}
+              onPointerCancel={cancelPanelDrag}
+            >
+              <div className={`flex items-center justify-between ${isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}`}>
+                <div className="flex items-center gap-2.5">
+                  <div className="w-8 h-8 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] flex items-center justify-center shrink-0 border border-[var(--accent)]/20 shadow-xs">
+                    <Bot className="w-4 h-4" />
                   </div>
-                  <span className="text-[10px] text-[var(--text-secondary)] mt-1 inline-block truncate max-w-[210px] sm:max-w-xs">
-                    {careerProfile?.studentProfile
-                      ? `${careerProfile.studentProfile.institution} · ${careerProfile.targetRole}`
-                      : careerProfile?.targetRole
-                      ? `Target: ${careerProfile.targetRole}`
-                      : isFullScreen
-                      ? 'Career guidance · Full screen'
-                      : 'Career guidance & mentorship'}
-                  </span>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-1.5">
-                {(position || panelPosition) && (
-                  <button
-                    type="button"
-                    onClick={handleResetPosition}
-                    title="Reset position to default bottom-right (Home)"
-                    aria-label="Reset position to default bottom-right"
-                    className="btn-icon btn-icon-sm rounded-full cursor-pointer"
-                  >
-                    <Compass className="w-3.5 h-3.5" />
-                  </button>
-                )}
-                <button
-                  type="button"
-                  onClick={() => setShowClearConfirm(true)}
-                  title="Reset conversation"
-                  aria-label="Reset conversation"
-                  className="btn-icon btn-icon-sm rounded-full"
-                >
-                  <RotateCcw className="w-3.5 h-3.5" />
-                </button>
-                <button
-                  type="button"
-                  onClick={toggleFullScreen}
-                  title={isFullScreen ? 'Exit full screen (Esc)' : 'Expand to full screen'}
-                  aria-label={isFullScreen ? 'Exit full screen mode' : 'Expand chat to full screen'}
-                  aria-expanded={isFullScreen}
-                  className="btn-icon btn-icon-sm rounded-full"
-                >
-                  {isFullScreen ? (
-                    <Minimize2 className="w-3.5 h-3.5" />
-                  ) : (
-                    <Maximize2 className="w-3.5 h-3.5" />
-                  )}
-                </button>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setIsFullScreen(false);
-                    setIsOpen(false);
-                  }}
-                  title="Close chat"
-                  aria-label="Close chat"
-                  className="btn-icon btn-icon-sm rounded-full"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-
-            {/* Clear Conversation Confirmation Modal */}
-            {showClearConfirm && (
-              <div data-chat-no-drag="true" role="alertdialog" aria-modal="true" aria-label="Clear conversation confirmation" className="absolute inset-x-4 top-14 z-30 p-4 rounded-2xl bg-[var(--bg-card)]/95 border border-[var(--border-color)] shadow-xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 shrink-0">
-                    <AlertCircle className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 text-xs">
-                    <p className="font-semibold text-[var(--text-primary)]">Clear conversation?</p>
-                    <p className="text-[var(--text-secondary)] mt-0.5">
-                      All messages in this session will be removed. This cannot be undone.
-                    </p>
-                    <div className="mt-3 flex items-center gap-2 justify-end">
-                      <button
-                        type="button"
-                        onClick={() => setShowClearConfirm(false)}
-                        className="btn-secondary btn-sm rounded-full text-xs"
-                      >
-                        Cancel
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleReset();
-                          setShowClearConfirm(false);
-                        }}
-                        className="btn-destructive btn-sm rounded-full text-xs"
-                      >
-                        Clear conversation
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {/* Messages Body */}
-          <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:px-6 space-y-3.5 text-xs sm:text-sm">
-            <div className={`space-y-3.5 ${isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}`}>
-              {messages.map((m) => (
-                <motion.div
-                  key={m.id}
-                  initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 4 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={prefersReduced ? { duration: 0 } : { duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                  className={`flex gap-2.5 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                >
-                  {m.role === 'assistant' && (
-                    <div className="w-6 h-6 rounded-full bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center shrink-0 mt-0.5 border border-[var(--accent)]/20">
-                      <Bot className="w-3 h-3" />
-                    </div>
-                  )}
-
-                  <div
-                    className={`max-w-[85%] rounded-2xl px-3.5 py-2.5 leading-relaxed ${
-                      m.role === 'user'
-                        ? 'bg-[var(--accent)] text-white rounded-br-xs'
-                        : 'bg-[var(--glass-bg)] text-[var(--text-primary)] border border-[var(--glass-border)] rounded-bl-xs'
-                    }`}
-                  >
-                    {m.role === 'assistant' ? (
-                      <FormattedAssistantMessage content={m.content} />
-                    ) : (
-                      <div className="whitespace-pre-wrap">{m.content}</div>
-                    )}
-
-                    <div className="mt-1.5 flex items-center justify-between gap-2 text-[9px] sm:text-[10px] opacity-70">
-                      <div className="flex items-center gap-2">
-                        <span>{m.timestamp}</span>
-                        {m.provider && <span className="font-mono text-[9px]">{m.provider}</span>}
-                      </div>
-                      {m.role === 'assistant' && (
-                        <button
-                          type="button"
-                          onClick={() => handleCopyMessage(m.id, m.content)}
-                          className="inline-flex items-center gap-1 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-slate-200/50 dark:hover:bg-slate-700/50"
-                          title={copiedMessageId === m.id ? 'Copied to clipboard' : 'Copy answer'}
-                          aria-label={copiedMessageId === m.id ? 'Answer copied' : 'Copy assistant answer'}
-                        >
-                          {copiedMessageId === m.id ? (
-                            <>
-                              <Check className="w-3 h-3 text-emerald-500" />
-                              <span className="text-emerald-500 font-medium">Copied</span>
-                            </>
-                          ) : (
-                            <>
-                              <Copy className="w-3 h-3" />
-                              <span>Copy</span>
-                            </>
-                          )}
-                        </button>
+                  <div>
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="text-xs sm:text-sm font-bold text-[var(--text-primary)] leading-none">
+                        AI Assistant
+                      </h3>
+                      {careerProfile?.metrics?.readinessScore !== undefined && (
+                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20">
+                          {careerProfile.metrics.readinessScore}% Ready
+                        </span>
                       )}
                     </div>
+                    <span className="text-[10px] text-[var(--text-secondary)] mt-1 inline-block truncate max-w-[210px] sm:max-w-xs">
+                      {(() => {
+                        const inst = (careerProfile?.studentProfile?.institution || '').trim();
+                        const role = (careerProfile?.targetRole || '').trim();
+                        if (inst && role) return `${inst} · ${role}`;
+                        if (role) return `Target: ${role}`;
+                        if (inst) return inst;
+                        return isFullScreen ? 'Career guidance · Full screen' : 'Career guidance & mentorship';
+                      })()}
+                    </span>
                   </div>
+                </div>
 
-                  {m.role === 'user' && (
-                    <div className="w-6 h-6 rounded-full bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20 flex items-center justify-center shrink-0 mt-0.5 font-bold text-[10px]">
-                      {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                    </div>
+                <div className="flex items-center gap-1.5">
+                  {(position || panelPosition) && (
+                    <button
+                      type="button"
+                      onClick={handleResetPosition}
+                      title="Reset position to default bottom-right (Home)"
+                      aria-label="Reset position to default bottom-right"
+                      className="btn-icon btn-icon-sm rounded-full cursor-pointer"
+                    >
+                      <Compass className="w-3.5 h-3.5" />
+                    </button>
                   )}
-                </motion.div>
-              ))}
+                  <button
+                    type="button"
+                    onClick={() => setShowClearConfirm(true)}
+                    title="Reset conversation"
+                    aria-label="Reset conversation"
+                    className="btn-icon btn-icon-sm rounded-full"
+                  >
+                    <RotateCcw className="w-3.5 h-3.5" />
+                  </button>
+                  <button
+                    type="button"
+                    onClick={toggleFullScreen}
+                    title={isFullScreen ? 'Exit full screen (Esc)' : 'Expand to full screen'}
+                    aria-label={isFullScreen ? 'Exit full screen mode' : 'Expand chat to full screen'}
+                    aria-expanded={isFullScreen}
+                    className="btn-icon btn-icon-sm rounded-full"
+                  >
+                    {isFullScreen ? (
+                      <Minimize2 className="w-3.5 h-3.5" />
+                    ) : (
+                      <Maximize2 className="w-3.5 h-3.5" />
+                    )}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsFullScreen(false);
+                      setIsOpen(false);
+                    }}
+                    title="Close chat"
+                    aria-label="Close chat"
+                    className="btn-icon btn-icon-sm rounded-full"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
 
-              {chatLoading && (
-                <div className="flex items-center gap-2 text-[var(--text-secondary)] text-xs py-2" role="status" aria-live="polite">
-                  <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--accent)]" />
-                  <span>Generating response...</span>
+              {/* Clear Conversation Confirmation Modal */}
+              {showClearConfirm && (
+                <div data-chat-no-drag="true" role="alertdialog" aria-modal="true" aria-label="Clear conversation confirmation" className="absolute inset-x-4 top-14 z-30 p-4 rounded-2xl bg-[var(--bg-card)]/95 border border-[var(--border-color)] shadow-xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+                  <div className="flex items-start gap-3">
+                    <div className="p-2 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 shrink-0">
+                      <AlertCircle className="w-4 h-4" />
+                    </div>
+                    <div className="flex-1 text-xs">
+                      <p className="font-semibold text-[var(--text-primary)]">Clear conversation?</p>
+                      <p className="text-[var(--text-secondary)] mt-0.5">
+                        All messages in this session will be removed. This cannot be undone.
+                      </p>
+                      <div className="mt-3 flex items-center gap-2 justify-end">
+                        <button
+                          type="button"
+                          onClick={() => setShowClearConfirm(false)}
+                          className="btn-secondary btn-sm rounded-full text-xs"
+                        >
+                          Cancel
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            handleReset();
+                            setShowClearConfirm(false);
+                          }}
+                          className="btn-destructive btn-sm rounded-full text-xs"
+                        >
+                          Clear conversation
+                        </button>
+                      </div>
+                    </div>
+                  </div>
                 </div>
               )}
-
-              {error && (
-                <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs flex flex-col gap-2" role="alert">
-                  <div className="flex items-start gap-2">
-                    <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-                    <span className="leading-relaxed">{error}</span>
-                  </div>
-                  {lastFailedMessage && (
-                    <div className="flex justify-end pt-1">
-                      <button
-                        type="button"
-                        onClick={() => handleSend(lastFailedMessage)}
-                        className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-[11px] transition-colors cursor-pointer"
-                      >
-                        <RotateCcw className="w-3.5 h-3.5" />
-                        Retry
-                      </button>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              <div ref={messagesEndRef} />
             </div>
-          </div>
 
-          {/* Starter Prompt Chips with Categories */}
-          {messages.length <= 2 && (
-            <div className="shrink-0 px-4 py-2.5 sm:px-6 border-t border-[var(--glass-border)] bg-[var(--glass-bg)]">
-              <div className={isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}>
-                <div className="flex items-center justify-between gap-2 mb-2">
-                  <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider block shrink-0">
-                    Suggested Topics
-                  </span>
-                  <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5" data-chat-no-drag="true">
-                    {[
-                      { key: 'all', label: 'All' },
-                      { key: 'resume', label: 'Resume' },
-                      { key: 'projects', label: 'Projects' },
-                      { key: 'interview', label: 'Interview' },
-                      { key: 'skills', label: 'Skills' },
-                      { key: 'jobs', label: 'Jobs' },
-                    ].map((cat) => (
-                      <button
-                        key={cat.key}
-                        type="button"
-                        data-chat-no-drag="true"
-                        onClick={() => setSelectedPromptCategory(cat.key as any)}
-                        className={`text-[10px] px-2 py-0.5 rounded-full transition-all cursor-pointer font-medium ${
-                          selectedPromptCategory === cat.key
+            {/* Messages Body */}
+            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:px-6 space-y-4 text-[14px] sm:text-[15px]">
+              <div className={`space-y-4 ${isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}`}>
+                {messages.map((m) => (
+                  <motion.div
+                    key={m.id}
+                    initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 4 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={prefersReduced ? { duration: 0 } : { duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+                    className={`flex gap-3 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                  >
+                    {m.role === 'assistant' && (
+                      <div className="w-7 h-7 rounded-full bg-[#3157C8]/10 text-[#3157C8] flex items-center justify-center shrink-0 mt-0.5 border border-[#3157C8]/20">
+                        <Bot className="w-4 h-4" />
+                      </div>
+                    )}
+
+                    <div
+                      className={`max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed ${m.role === 'user'
+                        ? 'bg-[#3157C8] text-white rounded-br-xs'
+                        : 'bg-white text-[#20242B] border border-[#E5E8ED] shadow-xs rounded-bl-xs'
+                        }`}
+                    >
+                      {m.role === 'assistant' ? (
+                        <FormattedAssistantMessage content={m.content} />
+                      ) : (
+                        <div className="whitespace-pre-wrap">{m.content}</div>
+                      )}
+
+                      <div className="mt-2 flex items-center justify-between gap-3 text-[12px] opacity-75">
+                        <div className="flex items-center gap-2">
+                          <span>{m.timestamp}</span>
+                          {m.provider && <span className="font-mono text-[11px]">{m.provider}</span>}
+                        </div>
+                        {m.role === 'assistant' && (
+                          <button
+                            type="button"
+                            onClick={() => handleCopyMessage(m.id, m.content)}
+                            className="inline-flex items-center gap-1 hover:text-[#20242B] transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-slate-100"
+                            title={copiedMessageId === m.id ? 'Copied to clipboard' : 'Copy answer'}
+                            aria-label={copiedMessageId === m.id ? 'Answer copied' : 'Copy assistant answer'}
+                          >
+                            {copiedMessageId === m.id ? (
+                              <>
+                                <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                <span className="text-emerald-600 font-medium">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3.5 h-3.5" />
+                                <span>Copy</span>
+                              </>
+                            )}
+                          </button>
+                        )}
+                      </div>
+                    </div>
+
+                    {m.role === 'user' && (
+                      <div className="w-7 h-7 rounded-full bg-[#3157C8]/10 text-[#3157C8] border border-[#3157C8]/20 flex items-center justify-center shrink-0 mt-0.5 font-bold text-[12px]">
+                        {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                      </div>
+                    )}
+                  </motion.div>
+                ))}
+
+                {chatLoading && (
+                  <div className="flex items-center gap-2 text-[var(--text-secondary)] text-xs py-2" role="status" aria-live="polite">
+                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--accent)]" />
+                    <span>Generating response...</span>
+                  </div>
+                )}
+
+                {error && (
+                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs flex flex-col gap-2" role="alert">
+                    <div className="flex items-start gap-2">
+                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <span className="leading-relaxed">{error}</span>
+                    </div>
+                    {lastFailedMessage && (
+                      <div className="flex justify-end pt-1">
+                        <button
+                          type="button"
+                          onClick={() => handleSend(lastFailedMessage)}
+                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-[11px] transition-colors cursor-pointer"
+                        >
+                          <RotateCcw className="w-3.5 h-3.5" />
+                          Retry
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <div ref={messagesEndRef} />
+              </div>
+            </div>
+
+            {/* Starter Prompt Chips with Categories */}
+            {messages.length <= 2 && (
+              <div className="shrink-0 px-4 py-2.5 sm:px-6 border-t border-[var(--glass-border)] bg-[var(--glass-bg)]">
+                <div className={isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider block shrink-0">
+                      Suggested Topics
+                    </span>
+                    <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5" data-chat-no-drag="true">
+                      {[
+                        { key: 'all', label: 'All' },
+                        { key: 'resume', label: 'Resume' },
+                        { key: 'projects', label: 'Projects' },
+                        { key: 'interview', label: 'Interview' },
+                        { key: 'skills', label: 'Skills' },
+                        { key: 'jobs', label: 'Jobs' },
+                      ].map((cat) => (
+                        <button
+                          key={cat.key}
+                          type="button"
+                          data-chat-no-drag="true"
+                          onClick={() => setSelectedPromptCategory(cat.key as any)}
+                          className={`text-[10px] px-2 py-0.5 rounded-full transition-all cursor-pointer font-medium ${selectedPromptCategory === cat.key
                             ? 'bg-[var(--accent)] text-white shadow-xs'
                             : 'bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                        }`}
+                            }`}
+                        >
+                          {cat.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar" data-chat-no-drag="true">
+                    {getCategoryPrompts().map((prompt) => (
+                      <button
+                        key={prompt.id}
+                        type="button"
+                        data-chat-no-drag="true"
+                        onClick={() => handleSend(prompt.text)}
+                        className="text-[11px] px-3 py-1 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--bg-elevated)] transition-all text-left cursor-pointer shadow-xs leading-snug"
                       >
-                        {cat.label}
+                        {prompt.text}
                       </button>
                     ))}
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar" data-chat-no-drag="true">
-                  {getCategoryPrompts().map((prompt) => (
+              </div>
+            )}
+
+            {/* Input Form */}
+            <div className="shrink-0 p-3 sm:px-6 border-t border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+              <div className={isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}>
+                <form
+                  onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSend();
+                  }}
+                  className="flex items-end gap-2"
+                >
+                  <textarea
+                    ref={textareaRef}
+                    rows={1}
+                    value={input}
+                    onChange={handleTextareaChange}
+                    onKeyDown={handleTextareaKeyDown}
+                    placeholder="Ask about your resume, interviews, jobs, or career..."
+                    maxLength={2000}
+                    disabled={chatLoading}
+                    aria-describedby="chat-input-help"
+                    className="flex-1 min-h-[44px] max-h-[120px] resize-none py-2.5 px-4 text-xs sm:text-sm rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_rgba(79,131,241,0.22)] disabled:opacity-50 transition-all leading-relaxed shadow-xs"
+                  />
+                  <span id="chat-input-help" className="sr-only">Press Enter to send. Press Shift and Enter for a new line.</span>
+                  {chatLoading ? (
                     <button
-                      key={prompt.id}
                       type="button"
-                      data-chat-no-drag="true"
-                      onClick={() => handleSend(prompt.text)}
-                      className="text-[11px] px-3 py-1 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--bg-elevated)] transition-all text-left cursor-pointer shadow-xs leading-snug"
+                      onClick={handleStopGeneration}
+                      className="btn-destructive h-11 px-4 rounded-full flex items-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-sm"
+                      title="Stop generating response"
+                      aria-label="Stop generating response"
                     >
-                      {prompt.text}
+                      <Square className="w-3.5 h-3.5 fill-current" />
+                      <span className="text-xs font-semibold hidden sm:inline">Stop</span>
                     </button>
-                  ))}
-                </div>
+                  ) : (
+                    <button
+                      type="submit"
+                      disabled={!input.trim()}
+                      className="btn-primary h-11 w-11 p-0 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-sm disabled:opacity-40"
+                      aria-label="Send message"
+                      title="Send message (Enter)"
+                    >
+                      <Send className="w-4 h-4" />
+                    </button>
+                  )}
+                </form>
               </div>
             </div>
-          )}
-
-          {/* Input Form */}
-          <div className="shrink-0 p-3 sm:px-6 border-t border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-            <div className={isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}>
-              <form
-                onSubmit={(e) => {
-                  e.preventDefault();
-                  handleSend();
-                }}
-                className="flex items-end gap-2"
-              >
-                <textarea
-                  ref={textareaRef}
-                  rows={1}
-                  value={input}
-                  onChange={handleTextareaChange}
-                  onKeyDown={handleTextareaKeyDown}
-                  placeholder="Ask about your resume, interviews, jobs, or career..."
-                  maxLength={2000}
-                  disabled={chatLoading}
-                  aria-describedby="chat-input-help"
-                  className="flex-1 min-h-[44px] max-h-[120px] resize-none py-2.5 px-4 text-xs sm:text-sm rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_rgba(79,131,241,0.22)] disabled:opacity-50 transition-all leading-relaxed shadow-xs"
-                />
-                <span id="chat-input-help" className="sr-only">Press Enter to send. Press Shift and Enter for a new line.</span>
-                {chatLoading ? (
-                  <button
-                    type="button"
-                    onClick={handleStopGeneration}
-                    className="btn-destructive h-11 px-4 rounded-full flex items-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-sm"
-                    title="Stop generating response"
-                    aria-label="Stop generating response"
-                  >
-                    <Square className="w-3.5 h-3.5 fill-current" />
-                    <span className="text-xs font-semibold hidden sm:inline">Stop</span>
-                  </button>
-                ) : (
-                  <button
-                    type="submit"
-                    disabled={!input.trim()}
-                    className="btn-primary h-11 w-11 p-0 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-sm disabled:opacity-40"
-                    aria-label="Send message"
-                    title="Send message (Enter)"
-                  >
-                    <Send className="w-4 h-4" />
-                  </button>
-                )}
-              </form>
-            </div>
-          </div>
-        </motion.div>
+          </motion.div>
         )}
       </AnimatePresence>
     </>

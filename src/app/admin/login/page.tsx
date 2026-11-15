@@ -211,7 +211,7 @@ function AdminLoginForm() {
           {/* Clean Invalid Credentials Error Message Below Form */}
           {error && (
             <div
-              className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-2.5 text-xs text-rose-500 dark:text-rose-400 mt-3"
+              className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-2.5 text-xs text-[var(--color-error)] mt-3"
             >
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
               <div className="leading-relaxed font-medium">{error}</div>
@@ -263,7 +263,7 @@ export default function AdminLoginPage() {
       </div>
 
       {/* Subtle Background Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(#ffffff08_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(#20242B08_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
 
       <Suspense
         fallback={

@@ -1,3 +1,3 @@
 'use client';
 
-export { CorporateExecutiveTemplate as ExecutiveProfessionalTemplate } from './CorporateExecutiveTemplate';
+export { ExecutiveLeadershipTemplate as ExecutiveProfessionalTemplate } from './ExecutiveLeadershipTemplate';

@@ -79,11 +79,17 @@ export async function POST(req: Request) {
       ? techStack.map((t: any) => String(t).trim()).filter(Boolean)
       : ['TypeScript', 'PostgreSQL'];
 
+    const studentProfile = await getStudentProfile(user.id).catch(() => null);
+    const resolvedTargetRole =
+      (typeof targetRole === 'string' && targetRole.trim()) ||
+      studentProfile?.targetRole ||
+      '';
+
     const recProject: RecommendedProject = {
       id: `init_${Date.now()}`,
       title: title.trim(),
       difficulty: ['Beginner', 'Intermediate', 'Advanced'].includes(difficulty) ? difficulty : 'Intermediate',
-      targetRole: (targetRole || 'Graduate Software Engineer').trim(),
+      targetRole: resolvedTargetRole,
       matchedGaps: [],
       techStack: cleanStack,
       problemStatement: (problemStatement || '').trim(),
@@ -96,7 +102,6 @@ export async function POST(req: Request) {
       resumeValue: (resumeValue || '').trim(),
     };
 
-    const studentProfile = await getStudentProfile(user.id).catch(() => null);
     const specification = await generateProjectSpecification(recProject, studentProfile);
     const milestones = buildStandardProjectMilestones(recProject.title, recProject.techStack);
 

@@ -271,7 +271,7 @@ export default function AdminSkillsPage() {
 
       {/* Edit Skill Modal */}
       {editingSkill && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#20242B]/40 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl p-6 text-left space-y-4">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
               <h3 className="text-base font-bold text-[var(--text-primary)]">

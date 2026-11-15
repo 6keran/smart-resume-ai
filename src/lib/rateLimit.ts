@@ -184,6 +184,63 @@ export function checkAuthRateLimit(
 }
 
 /**
+ * Rate limits authenticated onboarding resume-parse requests.
+ * Default: 10 parses per 10 minutes per user + IP.
+ */
+export function checkParseResumeRateLimit(
+  userId: string,
+  request?: Request,
+  options: RateLimitOptions = {}
+): RateLimitResult {
+  const limit = options.limit ?? 10;
+  const windowMs = options.windowMs ?? 10 * 60 * 1000;
+  const now = Date.now();
+
+  cleanupStaleEntries(windowMs);
+
+  const forwardedFor = request?.headers.get('x-forwarded-for');
+  const realIp = request?.headers.get('x-real-ip');
+  const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : realIp || '127.0.0.1';
+  const key = `onboarding_parse:${userId || ip}`;
+
+  let record = store.get(key);
+  if (!record) {
+    record = { timestamps: [] };
+    store.set(key, record);
+  }
+
+  record.timestamps = record.timestamps.filter((ts) => now - ts < windowMs);
+
+  if (record.timestamps.length >= limit) {
+    const oldestTimestamp = record.timestamps[0];
+    const resetTime = oldestTimestamp + windowMs;
+    const retryAfter = Math.max(1, Math.ceil((resetTime - now) / 1000));
+
+    return {
+      allowed: false,
+      limit,
+      remaining: 0,
+      retryAfter,
+      resetInSeconds: retryAfter,
+      visitorId: userId || ip,
+    };
+  }
+
+  record.timestamps.push(now);
+  const remaining = Math.max(0, limit - record.timestamps.length);
+  const resetInSeconds = Math.ceil(windowMs / 1000);
+
+  return {
+    allowed: true,
+    limit,
+    remaining,
+    retryAfter: 0,
+    resetInSeconds,
+    visitorId: userId || ip,
+  };
+}
+
+/**
  * Helper to reset rate limits during automated testing.
  */
 export function resetRateLimitsForTesting(): void {

@@ -266,8 +266,8 @@ export default function AdminUserDetailPage() {
                 </h1>
                 <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ${
                   (user.role || '').toUpperCase() === 'ADMIN'
-                    ? 'bg-purple-500/10 text-purple-400 border-purple-500/25'
-                    : 'bg-blue-500/10 text-blue-400 border-blue-500/25'
+                    ? 'bg-slate-900 text-white border-slate-700'
+                    : 'bg-blue-50 text-blue-700 border-blue-200'
                 }`}>
                   <Shield className="w-3 h-3" />
                   {user.role || 'USER'}
@@ -396,7 +396,7 @@ export default function AdminUserDetailPage() {
         <GlassCard className="p-4 text-left">
           <div className="flex items-center justify-between text-[var(--text-secondary)] text-[10px] font-bold uppercase tracking-wider mb-1">
             <span>Verified</span>
-            <BadgeCheck className="w-3.5 h-3.5 text-violet-400" />
+            <BadgeCheck className="w-3.5 h-3.5 text-blue-600" />
           </div>
           <div className="text-xl font-black text-emerald-400">
             {verifiedSkills.length}
@@ -761,7 +761,7 @@ export default function AdminUserDetailPage() {
 
       {/* Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20242B]/40 animate-fade-in">
           <div className="w-full max-w-lg rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)] shadow-2xl p-6 space-y-5 text-left">
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-3 border-b border-[var(--border-color)] pb-4">
@@ -881,7 +881,7 @@ export default function AdminUserDetailPage() {
 
       {/* Edit User Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20242B]/40 animate-fade-in">
           <div className="w-full max-w-lg rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)] shadow-2xl p-6 space-y-5 text-left">
             <div className="flex items-start justify-between gap-3 border-b border-[var(--border-color)] pb-4">
               <div className="flex items-center gap-3">

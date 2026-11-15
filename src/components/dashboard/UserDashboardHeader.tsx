@@ -25,6 +25,7 @@ import {
   Wand2,
   FileSearch,
   Sparkles,
+  Database,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserProfile } from '@/components/user/UserContext';
@@ -70,6 +71,8 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
         return { section: 'Learning', page: 'Courses' };
       case '/dashboard/profile':
         return { section: 'Account', page: 'Profile & Settings' };
+      case '/dashboard/my-data':
+        return { section: 'Account', page: 'My Career Data' };
       default:
         return { section: 'Workspace', page: 'Dashboard' };
     }
@@ -86,6 +89,7 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
 
   const mobileNavItems = [
     { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'My Career Data', href: '/dashboard/my-data', icon: Database },
     { label: 'Resume Builder', href: '/builder', icon: FileEdit },
     { label: 'My Resumes', href: '/dashboard/resumes', icon: FileText },
     { label: 'Job Search', href: '/jobs', icon: Briefcase },
@@ -180,10 +184,10 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
               <div className="w-6 h-6 rounded-full bg-[var(--accent)] text-white font-bold text-xs flex items-center justify-center shrink-0">
                 {user.name.charAt(0).toUpperCase()}
               </div>
-              <span className="hidden sm:inline font-semibold text-xs text-[var(--text-primary)] max-w-[100px] truncate">
+              <span className="hidden lg:inline font-semibold text-xs text-[var(--text-primary)] max-w-[100px] truncate">
                 {user.name}
               </span>
-              <ChevronDown className="w-3 h-3 text-[var(--text-muted)] hidden sm:inline" />
+              <ChevronDown className="w-3 h-3 text-[var(--text-muted)] hidden lg:inline" />
             </button>
 
             <AnimatePresence>
@@ -262,7 +266,7 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="w-72 max-w-[85vw] h-full bg-[var(--glass-bg-elevated)] backdrop-blur-2xl border-r border-[var(--glass-border)] p-4 flex flex-col justify-between shadow-2xl"
+              className="w-72 max-w-[85vw] h-full bg-[var(--bg-card)] border-r border-[var(--border-color)] p-4 flex flex-col justify-between shadow-2xl"
             >
               <div>
                 <div className="flex items-center justify-between pb-3.5 border-b border-[var(--glass-border)]">

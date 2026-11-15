@@ -36,7 +36,6 @@
     "test:spelling": "npx tsx scripts/test_job_search_spelling_tolerance.mjs",
     "test:analyzer": "npx tsx scripts/test_resume_analyzer_reliability.mjs",
     "test:projects": "npx tsx scripts/test_project_mentor_comprehensive.mjs",
-    "test:assistant": "npx tsx scripts/test_application_assistant_comprehensive.mjs",
     "db:migrate:postgres": "node scripts/migrate_sqlite_to_postgres.mjs",
     "db:init:postgres": "node scripts/init_postgres_schema.mjs",
     "db:verify:postgres": "node scripts/verify_postgres_schema.mjs"

@@ -11,6 +11,7 @@ import {
   type StudentProfileDTO,
 } from '@/server/db';
 import { CANDIDATE_GEMINI_MODELS } from '@/server/services/gemini';
+import { findCuratedRoleProfile } from '@/lib/career/roleProfiles';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
 
@@ -381,6 +382,34 @@ function getDeterministicProjectBlueprints(
     );
   }
 
+  // Curated domain blueprints from roleProfiles across all 9 domains
+  const curatedRole = findCuratedRoleProfile(targetRole);
+  if (curatedRole && allBlueprints.length === 0) {
+    for (const idea of curatedRole.projectIdeas) {
+      allBlueprints.push({
+        id: idea.id,
+        title: idea.title,
+        difficulty: idea.difficulty,
+        targetRole: curatedRole.title,
+        matchedGaps: gapsUpper.filter((g) =>
+          idea.skillsPracticed.some((s) => s.toLowerCase() === g.toLowerCase())
+        ),
+        techStack: idea.skillsPracticed,
+        problemStatement: idea.summary,
+        realWorldUseCase: `Practical portfolio deliverable tailored to ${curatedRole.title} workflows in ${curatedRole.domain}.`,
+        learningOutcomes: idea.deliverables,
+        mainFeatures: idea.deliverables,
+        suggestedDatabaseDesign: {
+          overview: `Structured workspace and artifact checklist for "${idea.title}".`,
+          entities: [],
+        },
+        architectureOverview: `${curatedRole.domain} workflow deliverable focusing on ${idea.skillsPracticed.join(', ')}.`,
+        estimatedComplexity: idea.estimatedEffort,
+        resumeValue: `Demonstrates verifiable ${curatedRole.domain.toLowerCase()} execution in ${idea.skillsPracticed.slice(0, 3).join(', ')}.`,
+      });
+    }
+  }
+
   // Filter out any projects the student has already built or has in profile
   const filtered = allBlueprints.filter((b) => !existingSet.has(b.title.toLowerCase().trim()));
   return filtered.slice(0, 4);
@@ -394,6 +423,7 @@ export async function getProjectRecommendations(userId: string): Promise<{
   recommendations: RecommendedProject[];
   studentSummary: {
     targetRole: string;
+    goalSet: boolean;
     institution?: string;
     degree?: string;
     topSkillGaps: string[];
@@ -402,7 +432,7 @@ export async function getProjectRecommendations(userId: string): Promise<{
   };
 }> {
   const profileSummary = await getCareerProfileSummary(userId);
-  const targetRole = profileSummary.targetRole || 'Graduate Software Engineer';
+  const targetRole = (profileSummary.targetRole || '').trim();
   const roleSpec = findRoleSpecification(targetRole);
   const student = profileSummary.studentProfile;
   const existingProjects = student?.projects || [];
@@ -411,6 +441,21 @@ export async function getProjectRecommendations(userId: string): Promise<{
   const missingCrits = profileSummary.skillGaps?.missingCriticalSkills || roleSpec.criticalSkills;
   const missingRecs = profileSummary.skillGaps?.missingRecommendedSkills || roleSpec.recommendedSkills;
   const allGaps = [...missingCrits, ...missingRecs];
+
+  if (!targetRole) {
+    return {
+      recommendations: [],
+      studentSummary: {
+        targetRole: '',
+        goalSet: false,
+        institution: student?.institution,
+        degree: student?.degree,
+        topSkillGaps: [],
+        readinessScore: profileSummary.metrics?.readinessScore || 0,
+        existingProjectsCount: existingProjects.length,
+      },
+    };
+  }
 
   // Generate deterministic candidates grounded in student gaps
   const deterministicRecs = getDeterministicProjectBlueprints(
@@ -423,11 +468,11 @@ export async function getProjectRecommendations(userId: string): Promise<{
   // If Gemini is available, attempt to enrich projects with student-specific context
   if (aiClient && deterministicRecs.length > 0) {
     try {
-      const prompt = `You are a Principal Software Architect and Career Mentor for college students.
-Student Profile:
-- Degree: ${student?.degree || 'Computer Science'} at ${student?.institution || 'University'}
+      const prompt = `You are a Principal Domain Specialist and Career Mentor.
+Candidate Profile:
+- Background: ${student?.degree || 'Not specified'}${student?.institution ? ` at ${student.institution}` : ''}
 - Target Role: ${targetRole}
-- Identified Skill Gaps to Resolve: ${allGaps.slice(0, 5).join(', ')}
+- Identified Skill Gaps to Resolve: ${allGaps.slice(0, 5).join(', ') || 'None identified'}
 - Existing Documented Projects: ${existingTitles.join(', ') || 'None'}
 
 Review these recommended project ideas and return a JSON array of 3 to 4 tailored projects that will provide the highest hiring leverage for this student:
@@ -496,6 +541,7 @@ Return ONLY a valid JSON array matching this exact schema:
                 recommendations: validated,
                 studentSummary: {
                   targetRole,
+                  goalSet: true,
                   institution: student?.institution,
                   degree: student?.degree,
                   topSkillGaps: allGaps.slice(0, 4),
@@ -518,6 +564,7 @@ Return ONLY a valid JSON array matching this exact schema:
     recommendations: deterministicRecs,
     studentSummary: {
       targetRole,
+      goalSet: Boolean(targetRole),
       institution: student?.institution,
       degree: student?.degree,
       topSkillGaps: allGaps.slice(0, 4),

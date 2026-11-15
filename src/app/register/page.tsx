@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, Suspense } from 'react';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import {
@@ -75,17 +75,18 @@ function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [mounted, setMounted] = useState(false);
+  const justRegisteredRef = useRef(false);
 
   useEffect(() => {
     setMounted(true);
   }, []);
 
-  // If already authenticated, redirect immediately to dashboard
+  // If already authenticated on page load, redirect immediately to dashboard
   useEffect(() => {
-    if (!userLoading && user) {
+    if (!userLoading && user && !justRegisteredRef.current && !isLoading) {
       window.location.href = safeFrom;
     }
-  }, [user, userLoading, safeFrom]);
+  }, [user, userLoading, safeFrom, isLoading]);
 
   const handleSubmit = async (e?: React.FormEvent | React.MouseEvent) => {
     e?.preventDefault?.();
@@ -143,11 +144,13 @@ function RegisterForm() {
         return;
       }
 
+      justRegisteredRef.current = true;
       if (data.user && refreshUser) {
         await refreshUser(data.user);
       }
 
-      window.location.replace(safeFrom);
+      const nextPath = safeFrom === '/dashboard' ? '/onboarding' : safeFrom;
+      window.location.replace(nextPath);
     } catch {
       setError('Unable to reach the registration server. Please check your network connection.');
       setIsLoading(false);
@@ -282,7 +285,7 @@ function RegisterForm() {
           {/* Error Banner */}
           {error && (
             <div
-              className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/25 text-red-500 dark:text-red-400 text-xs flex items-start gap-2.5 backdrop-blur-xs"
+              className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/25 text-[#C43D43] text-xs flex items-start gap-2.5 backdrop-blur-xs"
               role="alert"
               id="register-error"
             >
@@ -510,12 +513,7 @@ export default function RegisterPage() {
     <div className="min-h-screen w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 py-10 bg-[var(--bg-primary)] text-[var(--text-primary)] relative overflow-hidden">
       {/* Top Bar with Theme Toggle */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30 flex items-center gap-2">
-        <div className="sm:hidden">
-          <ThemeToggle variant="icon" />
-        </div>
-        <div className="hidden sm:block">
-          <ThemeToggle variant="segmented" />
-        </div>
+        <ThemeToggle variant="segmented" />
       </div>
       {/* Background Grid Pattern */}
       <div
@@ -527,9 +525,6 @@ export default function RegisterPage() {
         }}
       />
 
-      {/* Decorative Ambient Glow Orbs */}
-      <div className="w-[500px] h-[500px] rounded-full bg-[var(--accent)]/10 blur-3xl pointer-events-none absolute -top-40 -left-40" />
-      <div className="w-[450px] h-[450px] rounded-full bg-slate-500/10 blur-3xl pointer-events-none absolute -bottom-20 -right-20" />
 
       <Suspense
         fallback={

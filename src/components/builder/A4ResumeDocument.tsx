@@ -85,7 +85,7 @@ export function A4ResumeDocument({
                 style={{ top: `${(idx + 1) * A4_PAGE_HEIGHT_PX}px` }}
               >
                 <div className="w-full border-t border-dashed border-slate-400/50 relative">
-                  <span className="absolute -top-3 right-4 bg-slate-800 text-white text-[10px] font-medium px-2.5 py-0.5 rounded shadow-sm">
+                  <span className="absolute -top-3 right-4 bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-secondary)] text-[10px] font-semibold px-2.5 py-0.5 rounded shadow-xs">
                     Page {idx + 2} of {totalPages}
                   </span>
                 </div>

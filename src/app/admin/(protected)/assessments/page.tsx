@@ -1047,7 +1047,7 @@ export default function AdminAssessmentsWorkspace() {
       {/* MODAL: ADD / EDIT QUESTION */}
       {/* ========================================================================= */}
       {isQuestionModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-[#20242B]/40 flex items-center justify-center p-4 overflow-y-auto">
           <div className="w-full max-w-2xl bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl p-6 my-8 text-left space-y-6">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
               <h2 className="text-lg font-black text-[var(--text-primary)]">
@@ -1226,7 +1226,7 @@ export default function AdminAssessmentsWorkspace() {
       {/* MODAL: DELETE QUESTION CONFIRMATION */}
       {/* ========================================================================= */}
       {deletingQuestion && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#20242B]/40 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-[var(--bg-primary)] border border-rose-500/30 rounded-2xl shadow-2xl p-6 text-left space-y-4">
             <div className="flex items-center gap-3 text-rose-400">
               <AlertTriangle className="w-6 h-6 shrink-0" />
@@ -1262,7 +1262,7 @@ export default function AdminAssessmentsWorkspace() {
       {/* MODAL: HISTORICAL ATTEMPT REVIEW */}
       {/* ========================================================================= */}
       {selectedAttemptId && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+        <div className="fixed inset-0 z-50 bg-[#20242B]/40 flex items-center justify-center p-4 overflow-y-auto">
           <div className="w-full max-w-3xl bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl p-6 my-8 text-left space-y-6">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
               <div>
@@ -1457,7 +1457,7 @@ export default function AdminAssessmentsWorkspace() {
       {/* MODAL: EDIT CONFIGURATION */}
       {/* ========================================================================= */}
       {editingConfigSkill && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-50 bg-[#20242B]/40 flex items-center justify-center p-4">
           <div className="w-full max-w-md bg-[var(--bg-primary)] border border-[var(--border-color)] rounded-2xl shadow-2xl p-6 text-left space-y-4">
             <h3 className="text-base font-bold text-[var(--text-primary)]">
               Configure {editingConfigSkill.name} Assessment

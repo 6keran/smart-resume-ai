@@ -544,34 +544,34 @@ export default function AdminProctoringPage() {
                   )}
 
                   {/* Top Live Overlay HUD */}
-                  <div className="absolute top-3 left-3 flex items-center gap-2 bg-black/75 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/10 text-[10px] text-white font-mono shadow-md">
-                    <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
+                  <div className="absolute top-3 left-3 flex items-center gap-2 bg-white/95 px-2.5 py-1.5 rounded-lg border border-[#E5E8ED] text-[10px] text-[#20242B] font-mono shadow-sm">
+                    <span className="w-2.5 h-2.5 rounded-full bg-[#16845B] animate-pulse" />
                     <span className="font-bold tracking-wide">LIVE PROCTOR STREAM</span>
-                    <span className="text-white/60">({liveResolution} • {liveFps} FPS)</span>
+                    <span className="text-[#626B78]">({liveResolution} • {liveFps} FPS)</span>
                   </div>
 
-                  <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-black/75 backdrop-blur-md px-2.5 py-1.5 rounded-xl border border-white/10 text-[10px] font-mono text-emerald-400 shadow-md">
-                    <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                  <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-white/95 px-2.5 py-1.5 rounded-lg border border-[#E5E8ED] text-[10px] font-mono text-[#16845B] shadow-sm">
+                    <ShieldCheck className="w-3.5 h-3.5 text-[#16845B]" />
                     <span>{webRtcConnected ? 'WebRTC P2P' : 'Frame Relay'}</span>
                   </div>
 
                   {/* Bottom Telemetry HUD Bar */}
-                  <div className="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 bg-black/80 backdrop-blur-md px-3.5 py-2 rounded-xl border border-white/10 text-[10px] font-mono text-slate-300 shadow-lg">
+                  <div className="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 bg-white/95 px-3.5 py-2 rounded-lg border border-[#E5E8ED] text-[10px] font-mono text-[#20242B] shadow-sm">
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-400">Heartbeat:</span>
-                      <span className="text-emerald-400 font-bold">
+                      <span className="text-[#626B78]">Heartbeat:</span>
+                      <span className="text-[#16845B] font-bold">
                         {heartbeatAge !== null ? `${heartbeatAge}s ago` : 'Active'}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-400">Health:</span>
-                      <span className={streamHealth === 'good' ? 'text-emerald-400 font-bold uppercase' : 'text-amber-400 font-bold uppercase'}>
+                      <span className="text-[#626B78]">Health:</span>
+                      <span className={streamHealth === 'good' ? 'text-[#16845B] font-bold uppercase' : 'text-[#A96812] font-bold uppercase'}>
                         {streamHealth}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-slate-400">Consent:</span>
-                      <span className="text-indigo-300 font-bold">Verified</span>
+                      <span className="text-[#626B78]">Consent:</span>
+                      <span className="text-[#3157C8] font-bold">Verified</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-slate-400">Violations:</span>

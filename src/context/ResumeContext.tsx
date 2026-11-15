@@ -19,6 +19,27 @@ const INITIAL_TARGET_JOB: TargetJobContext = {
 
 export type ResumeSaveState = 'idle' | 'saving' | 'saved' | 'error';
 
+function normalizeLoadedResumeData(raw: ResumeData, fallbackId: string): ResumeData {
+  const resolvedId = raw.id && !isClientDraftResumeId(raw.id) ? raw.id : fallbackId;
+  return {
+    ...raw,
+    id: resolvedId,
+  };
+}
+
+function buildStubResumeData(resume: {
+  id: string;
+  filename?: string | null;
+  uploaded_at?: string | null;
+}): ResumeData {
+  return {
+    ...INITIAL_RESUME_DATA,
+    id: resume.id,
+    title: resume.filename || 'Untitled Resume',
+    lastUpdated: resume.uploaded_at || new Date().toISOString(),
+  };
+}
+
 interface ResumeContextType {
   resumeData: ResumeData;
   setResumeData: React.Dispatch<React.SetStateAction<ResumeData>>;
@@ -78,6 +99,38 @@ interface ResumeContextType {
     company?: string,
     jobDescription?: string
   ) => Promise<void>;
+  // Multiple Resumes Management
+  userResumes: Array<{
+    id: string;
+    filename: string;
+    file_type?: string;
+    uploaded_at: string;
+    isActive?: boolean;
+    latestAtsScore?: number | null;
+    versionsCount?: number;
+    resumeData?: ResumeData | null;
+  }>;
+  isLoadingUserResumes: boolean;
+  fetchUserResumes: () => Promise<void>;
+  switchActiveResume: (resumeId: string) => Promise<boolean>;
+  setActiveResume: (resumeId: string) => Promise<boolean>;
+  removeActiveResume: (resumeId?: string) => Promise<{ success: boolean; error?: string }>;
+  createNewResume: (templateId?: ResumeTemplateId) => Promise<{ success: boolean; resumeId?: string; error?: string }>;
+  uploadNewResume: (file: File) => Promise<{ success: boolean; resumeId?: string; error?: string }>;
+  // Editing experience helpers
+  hasUnsavedChanges: boolean;
+  setHasUnsavedChanges: (val: boolean) => void;
+  undo: () => void;
+  redo: () => void;
+  canUndo: boolean;
+  canRedo: boolean;
+  updateLanguages: (languages: string[]) => void;
+  updateAchievements: (achievements: string[]) => void;
+  updateSectionOrder: (order: string[]) => void;
+  updateObjective: (objective: string) => void;
+  updateAdditionalInfo: (info: ResumeData['additionalInfo']) => void;
+  updateCustomSections: (sections: ResumeData['customSections']) => void;
+  updateHiddenSections: (hidden: string[]) => void;
 }
 
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
@@ -95,10 +148,70 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
   const [lastSavedAt, setLastSavedAt] = useState<string | null>(null);
   const [isRehydrating, setIsRehydrating] = useState<boolean>(true);
   const [isLoaded, setIsLoaded] = useState(false);
+  const [userResumes, setUserResumes] = useState<any[]>([]);
+  const [isLoadingUserResumes, setIsLoadingUserResumes] = useState<boolean>(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState<boolean>(false);
+  const [history, setHistory] = useState<ResumeData[]>([INITIAL_RESUME_DATA]);
+  const [historyIndex, setHistoryIndex] = useState<number>(0);
+  const isHistoryActionRef = useRef<boolean>(false);
+
+  const recordHistory = useCallback((nextData: ResumeData) => {
+    if (isHistoryActionRef.current) return;
+    setHistory((prev) => {
+      const slice = prev.slice(0, historyIndex + 1);
+      const next = [...slice, nextData];
+      if (next.length > 30) return next.slice(next.length - 30);
+      return next;
+    });
+    setHistoryIndex((prev) => Math.min(prev + 1, 29));
+  }, [historyIndex]);
+
+  const undo = useCallback(() => {
+    if (historyIndex > 0) {
+      isHistoryActionRef.current = true;
+      const targetIndex = historyIndex - 1;
+      const target = history[targetIndex];
+      setResumeData(target);
+      setHistoryIndex(targetIndex);
+      hasUserEditedRef.current = true;
+      setHasUnsavedChanges(true);
+      setTimeout(() => {
+        isHistoryActionRef.current = false;
+      }, 50);
+    }
+  }, [historyIndex, history]);
+
+  const redo = useCallback(() => {
+    if (historyIndex < history.length - 1) {
+      isHistoryActionRef.current = true;
+      const targetIndex = historyIndex + 1;
+      const target = history[targetIndex];
+      setResumeData(target);
+      setHistoryIndex(targetIndex);
+      hasUserEditedRef.current = true;
+      setHasUnsavedChanges(true);
+      setTimeout(() => {
+        isHistoryActionRef.current = false;
+      }, 50);
+    }
+  }, [historyIndex, history]);
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
 
   // Concurrency and edit tracking refs
   const hasUserEditedRef = useRef<boolean>(false);
   const saveSeqRef = useRef<number>(0);
+  const autoSaveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const deletedResumeIdsRef = useRef<Set<string>>(new Set());
+
+  const cancelPendingAutoSave = useCallback(() => {
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+      autoSaveTimerRef.current = null;
+    }
+    saveSeqRef.current += 1;
+  }, []);
 
   // Save active resume to server database with strict ownership and concurrency check
   const saveActiveResume = useCallback(
@@ -113,14 +226,19 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
       options?: { force?: boolean }
     ): Promise<{ success: boolean; resumeId?: string; error?: string }> => {
       const target = dataToSave || resumeData;
+      const targetResumeId = (activeResumeId && !isClientDraftResumeId(activeResumeId))
+        ? activeResumeId
+        : (target.id && !isClientDraftResumeId(target.id) ? target.id : null);
+
+      if (targetResumeId && deletedResumeIdsRef.current.has(targetResumeId)) {
+        return { success: false, error: 'Cannot save a deleted resume.' };
+      }
+
       const currentSeq = ++saveSeqRef.current;
       setSaveState('saving');
       setSaveError(null);
 
       try {
-        const targetResumeId = (activeResumeId && !isClientDraftResumeId(activeResumeId))
-          ? activeResumeId
-          : (target.id && !isClientDraftResumeId(target.id) ? target.id : null);
 
         const payload = {
           resumeId: targetResumeId,
@@ -161,16 +279,30 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
         const data = await res.json();
         const persistedId = data.resumeId || data.resume?.id || activeResumeId;
 
+        if (
+          (targetResumeId && deletedResumeIdsRef.current.has(targetResumeId)) ||
+          (persistedId && deletedResumeIdsRef.current.has(persistedId))
+        ) {
+          return { success: false, error: 'Resume was deleted during save.' };
+        }
+
         if (currentSeq === saveSeqRef.current) {
+          const syncedTarget = persistedId ? { ...target, id: persistedId } : target;
           if (persistedId && persistedId !== activeResumeId) {
             setActiveResumeId(persistedId);
           }
+          if (persistedId && target.id !== persistedId) {
+            setResumeData((prev) => (prev.id === persistedId ? prev : { ...prev, id: persistedId }));
+          }
           setSaveState('saved');
+          setSaveError(null);
+          hasUserEditedRef.current = false;
+          setHasUnsavedChanges(false);
           setLastSavedAt(new Date().toISOString());
 
           // Keep localStorage as recovery draft
           try {
-            localStorage.setItem('sra_resume_data', JSON.stringify(target));
+            localStorage.setItem('sra_resume_data', JSON.stringify(syncedTarget));
           } catch {}
         }
 
@@ -206,40 +338,100 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
     [resumeData, activeResumeId]
   );
 
-  // Rehydrate authoritative active resume from server on page load
+  // Fetch list of all saved resumes for authenticated user
+  const fetchUserResumes = useCallback(async () => {
+    setIsLoadingUserResumes(true);
+    try {
+      const res = await fetch('/api/user/resumes', { cache: 'no-store' });
+      if (res.ok) {
+        const data = await res.json();
+        setUserResumes(data.resumes || []);
+      } else if (res.status === 401) {
+        setUserResumes([]);
+      }
+    } catch (err) {
+      console.warn('Could not fetch user resumes:', err);
+    } finally {
+      setIsLoadingUserResumes(false);
+    }
+  }, []);
+
+  // Rehydrate authoritative active resume and saved resumes list from server on page load
   const rehydrateResume = useCallback(async () => {
     setIsRehydrating(true);
     setSaveError(null);
     let loadedFromServer = false;
+    let isAuthenticated = false;
+    let serverResumes: any[] = [];
 
     try {
-      const res = await fetch('/api/user/resumes?active=true', { cache: 'no-store' });
-      if (res.ok) {
-        const data = await res.json();
-        if (data.resume && data.resume.resumeData) {
-          setResumeData(data.resume.resumeData);
+      const [activeRes, listRes] = await Promise.allSettled([
+        fetch('/api/user/resumes?active=true', { cache: 'no-store' }),
+        fetch('/api/user/resumes', { cache: 'no-store' }),
+      ]);
+
+      if (listRes.status === 'fulfilled' && listRes.value.ok) {
+        isAuthenticated = true;
+        const listData = await listRes.value.json().catch(() => ({}));
+        serverResumes = listData.resumes || [];
+        setUserResumes(serverResumes);
+      } else if (listRes.status === 'fulfilled' && listRes.value.status === 401) {
+        setUserResumes([]);
+      }
+
+      if (activeRes.status === 'fulfilled' && activeRes.value.ok) {
+        isAuthenticated = true;
+        const data = await activeRes.value.json().catch(() => ({}));
+        if (data.resume) {
+          const nextData = data.resume.resumeData
+            ? normalizeLoadedResumeData(data.resume.resumeData, data.resume.id)
+            : buildStubResumeData(data.resume);
+          setResumeData(nextData);
           setActiveResumeId(data.resume.id);
+          setHistory([nextData]);
+          setHistoryIndex(0);
           loadedFromServer = true;
           setSaveState('saved');
+          setHasUnsavedChanges(false);
+          hasUserEditedRef.current = false;
           setLastSavedAt(data.resume.uploaded_at || new Date().toISOString());
+          try {
+            localStorage.setItem('sra_resume_data', JSON.stringify(nextData));
+          } catch {}
         }
       }
     } catch (err) {
       console.warn('Network issue rehydrating active resume from server:', err);
     }
 
-    // If server resume is not available (e.g. guest or new user), load draft from local storage
+    // If server resume is not available (e.g. guest or new user), load valid draft from local storage
     if (!loadedFromServer) {
       try {
         const savedResume = localStorage.getItem('sra_resume_data');
         if (savedResume) {
           const parsed = JSON.parse(savedResume);
-          if (
+          const hasStaleServerId =
+            isAuthenticated &&
+            Boolean(parsed?.id) &&
+            !isClientDraftResumeId(parsed.id) &&
+            !serverResumes.some((r) => r.id === parsed.id);
+
+          if (hasStaleServerId) {
+            localStorage.removeItem('sra_resume_data');
+            setResumeData(INITIAL_RESUME_DATA);
+            setActiveResumeId(null);
+            setHistory([INITIAL_RESUME_DATA]);
+            setHistoryIndex(0);
+            setSaveState('idle');
+            setLastSavedAt(null);
+          } else if (
             parsed.personalInfo?.fullName !== 'Candidate Profile' &&
             parsed.personalInfo?.fullName !== 'Alex Morgan' &&
             parsed.personalInfo?.email !== 'candidate@email.com'
           ) {
             setResumeData(parsed);
+            setHistory([parsed]);
+            setHistoryIndex(0);
             if (parsed.id && !isClientDraftResumeId(parsed.id)) {
               setActiveResumeId(parsed.id);
             } else {
@@ -270,6 +462,352 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
     setIsRehydrating(false);
   }, []);
 
+  // Switch active resume to selected saved resume
+  const switchActiveResume = useCallback(
+    async (targetId: string): Promise<boolean> => {
+      if (!targetId || deletedResumeIdsRef.current.has(targetId)) return false;
+
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+
+      // Auto-save current active resume if user made edits
+      if (activeResumeId && !deletedResumeIdsRef.current.has(activeResumeId) && hasUserEditedRef.current) {
+        try {
+          await saveActiveResume(resumeData, undefined, { force: true });
+        } catch (err) {
+          console.warn('Auto-save prior to switching returned error:', err);
+        }
+      }
+
+      // Check if target exists in userResumes with parsed resumeData
+      const cached = userResumes.find((r) => r.id === targetId);
+      if (cached && cached.resumeData) {
+        const nextData = normalizeLoadedResumeData(cached.resumeData, targetId);
+        cancelPendingAutoSave();
+        setResumeData(nextData);
+        setActiveResumeId(targetId);
+        setHistory([nextData]);
+        setHistoryIndex(0);
+        hasUserEditedRef.current = false;
+        setHasUnsavedChanges(false);
+        setSaveState('saved');
+        setSaveError(null);
+        setLastSavedAt(cached.uploaded_at || new Date().toISOString());
+        try {
+          localStorage.setItem('sra_resume_data', JSON.stringify(nextData));
+        } catch {}
+        return true;
+      }
+
+      // Fetch specific resume from server (supports analyzer uploads with resumeData === null)
+      try {
+        const res = await fetch(`/api/user/resumes?id=${encodeURIComponent(targetId)}`, { cache: 'no-store' });
+        if (res.ok) {
+          const data = await res.json();
+          if (data.resume) {
+            const nextData = data.resume.resumeData
+              ? normalizeLoadedResumeData(data.resume.resumeData, data.resume.id)
+              : buildStubResumeData(data.resume);
+            cancelPendingAutoSave();
+            setResumeData(nextData);
+            setActiveResumeId(data.resume.id);
+            setHistory([nextData]);
+            setHistoryIndex(0);
+            hasUserEditedRef.current = false;
+            setHasUnsavedChanges(false);
+            setSaveState('saved');
+            setSaveError(null);
+            setLastSavedAt(data.resume.uploaded_at || new Date().toISOString());
+            try {
+              localStorage.setItem('sra_resume_data', JSON.stringify(nextData));
+            } catch {}
+            return true;
+          }
+        }
+      } catch (err) {
+        console.error('Failed to switch resume:', err);
+      }
+      return false;
+    },
+    [activeResumeId, cancelPendingAutoSave, resumeData, saveActiveResume, userResumes]
+  );
+
+  // Set another resume as active across the platform
+  const setActiveResume = useCallback(
+    async (targetId: string): Promise<boolean> => {
+      if (!targetId) return false;
+      try {
+        const res = await fetch(`/api/user/resumes?action=set_active&id=${encodeURIComponent(targetId)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ action: 'set_active', resumeId: targetId }),
+        });
+        if (res.ok) {
+          setUserResumes((prev) =>
+            prev.map((r) => ({
+              ...r,
+              isActive: r.id === targetId,
+            }))
+          );
+          if (activeResumeId !== targetId) {
+            await switchActiveResume(targetId);
+          }
+          return true;
+        }
+      } catch (err) {
+        console.error('Error setting active resume:', err);
+      }
+      return false;
+    },
+    [activeResumeId, switchActiveResume]
+  );
+
+  // Remove active resume from server and switch to next available resume
+  const removeActiveResume = useCallback(
+    async (targetId?: string): Promise<{ success: boolean; error?: string }> => {
+      const idToRemove =
+        targetId ||
+        activeResumeId ||
+        (!isClientDraftResumeId(resumeData.id) ? resumeData.id : null);
+
+      cancelPendingAutoSave();
+      hasUserEditedRef.current = false;
+      setHasUnsavedChanges(false);
+
+      if (!idToRemove) {
+        setResumeData(INITIAL_RESUME_DATA);
+        setActiveResumeId(null);
+        setHistory([INITIAL_RESUME_DATA]);
+        setHistoryIndex(0);
+        setSaveState('idle');
+        setSaveError(null);
+        setLastSavedAt(null);
+        try {
+          localStorage.removeItem('sra_resume_data');
+        } catch {}
+        return { success: true };
+      }
+
+      let serverNextActiveId: string | null = null;
+
+      // If persistent server ID, delete on server
+      if (!isClientDraftResumeId(idToRemove)) {
+        deletedResumeIdsRef.current.add(idToRemove);
+        try {
+          const res = await fetch(`/api/user/resumes?id=${encodeURIComponent(idToRemove)}`, {
+            method: 'DELETE',
+          });
+          if (!res.ok && res.status !== 404) {
+            deletedResumeIdsRef.current.delete(idToRemove);
+            const errData = await res.json().catch(() => ({}));
+            return { success: false, error: errData.message || 'Failed to remove resume from server.' };
+          }
+          const delData = await res.json().catch(() => ({}));
+          serverNextActiveId = delData.nextActiveResumeId || null;
+        } catch (err: any) {
+          deletedResumeIdsRef.current.delete(idToRemove);
+          return { success: false, error: err.message || 'Network error removing resume.' };
+        }
+      }
+
+      // Immediately clear localStorage if it referenced the deleted resume
+      try {
+        const storedRaw = localStorage.getItem('sra_resume_data');
+        if (storedRaw) {
+          const storedParsed = JSON.parse(storedRaw);
+          if (!storedParsed?.id || storedParsed.id === idToRemove || isClientDraftResumeId(storedParsed.id)) {
+            localStorage.removeItem('sra_resume_data');
+          }
+        }
+      } catch {}
+
+      // Update local state list
+      const remainingRaw = userResumes.filter((r) => r.id !== idToRemove);
+      const nextActiveCandidateId =
+        serverNextActiveId && remainingRaw.some((r) => r.id === serverNextActiveId)
+          ? serverNextActiveId
+          : (remainingRaw[0]?.id || serverNextActiveId || null);
+
+      const remaining = remainingRaw.map((r) => ({
+        ...r,
+        isActive: nextActiveCandidateId ? r.id === nextActiveCandidateId : false,
+      }));
+      setUserResumes(remaining);
+
+      const removedCurrent =
+        !targetId ||
+        activeResumeId === idToRemove ||
+        resumeData.id === idToRemove ||
+        isClientDraftResumeId(resumeData.id);
+
+      // Always synchronize authoritative saved resumes list with server state
+      await fetchUserResumes();
+
+      // If active resume was removed, switch to next available or reset to initial blank template
+      if (removedCurrent) {
+        if (nextActiveCandidateId) {
+          await switchActiveResume(nextActiveCandidateId);
+        } else {
+          setResumeData(INITIAL_RESUME_DATA);
+          setActiveResumeId(null);
+          setHistory([INITIAL_RESUME_DATA]);
+          setHistoryIndex(0);
+          setSaveState('idle');
+          setSaveError(null);
+          setLastSavedAt(null);
+          try {
+            localStorage.removeItem('sra_resume_data');
+          } catch {}
+        }
+      }
+
+      return { success: true };
+    },
+    [activeResumeId, cancelPendingAutoSave, fetchUserResumes, resumeData.id, switchActiveResume, userResumes]
+  );
+
+  // Create a brand new resume in the builder without overwriting existing resumes
+  const createNewResume = useCallback(
+    async (templateId: ResumeTemplateId = 'modern-ats'): Promise<{ success: boolean; resumeId?: string; error?: string }> => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+
+      // Auto-save current active resume if user made edits
+      if (activeResumeId && !deletedResumeIdsRef.current.has(activeResumeId) && hasUserEditedRef.current) {
+        try {
+          await saveActiveResume(resumeData, undefined, { force: true });
+        } catch {}
+      }
+
+      const newResume: ResumeData = {
+        ...INITIAL_RESUME_DATA,
+        id: `res_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`,
+        title: 'Untitled Resume',
+        templateId,
+        lastUpdated: new Date().toISOString(),
+      };
+
+      try {
+        const res = await fetch('/api/user/resumes', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            createNew: true,
+            setActive: true,
+            resumeData: newResume,
+            filename: newResume.title,
+          }),
+        });
+
+        if (res.ok) {
+          const data = await res.json();
+          const persistedId = data.resumeId || data.resume?.id || newResume.id;
+          newResume.id = persistedId;
+          cancelPendingAutoSave();
+          setResumeData(newResume);
+          setActiveResumeId(persistedId);
+          setHistory([newResume]);
+          setHistoryIndex(0);
+          hasUserEditedRef.current = false;
+          setSaveState('saved');
+          setSaveError(null);
+          setHasUnsavedChanges(false);
+          setLastSavedAt(new Date().toISOString());
+          try {
+            localStorage.setItem('sra_resume_data', JSON.stringify(newResume));
+          } catch {}
+          await fetchUserResumes();
+          return { success: true, resumeId: persistedId };
+        } else if (res.status === 401) {
+          // Guest mode
+          cancelPendingAutoSave();
+          setResumeData(newResume);
+          setActiveResumeId(null);
+          setHistory([newResume]);
+          setHistoryIndex(0);
+          hasUserEditedRef.current = false;
+          setSaveState('saved');
+          setSaveError(null);
+          try {
+            localStorage.setItem('sra_resume_data', JSON.stringify(newResume));
+          } catch {}
+          return { success: true };
+        } else {
+          const errJson = await res.json().catch(() => ({}));
+          return { success: false, error: errJson.message || 'Failed to create new resume.' };
+        }
+      } catch (err: any) {
+        return { success: false, error: err.message || 'Network error creating resume.' };
+      }
+    },
+    [activeResumeId, cancelPendingAutoSave, resumeData, saveActiveResume, fetchUserResumes]
+  );
+
+  // Upload an authentic PDF/DOCX resume directly from the editor
+  const uploadNewResume = useCallback(
+    async (file: File): Promise<{ success: boolean; resumeId?: string; error?: string }> => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+
+      // Auto-save current active resume if user made edits
+      if (activeResumeId && !deletedResumeIdsRef.current.has(activeResumeId) && hasUserEditedRef.current) {
+        try {
+          await saveActiveResume(resumeData, undefined, { force: true });
+        } catch {}
+      }
+
+      const formData = new FormData();
+      formData.append('file', file);
+
+      try {
+        const res = await fetch('/api/user/resumes', {
+          method: 'POST',
+          body: formData,
+        });
+
+        if (!res.ok) {
+          const errJson = await res.json().catch(() => ({}));
+          return { success: false, error: errJson.message || 'Failed to upload and parse resume.' };
+        }
+
+        const data = await res.json();
+        const uploadedId = data.resumeId || data.resume?.id || null;
+        if (data.resumeData) {
+          const nextData = uploadedId
+            ? normalizeLoadedResumeData(data.resumeData, uploadedId)
+            : data.resumeData;
+          cancelPendingAutoSave();
+          setResumeData(nextData);
+          setActiveResumeId(uploadedId);
+          setHistory([nextData]);
+          setHistoryIndex(0);
+          hasUserEditedRef.current = false;
+          setSaveState('saved');
+          setSaveError(null);
+          setHasUnsavedChanges(false);
+          setLastSavedAt(new Date().toISOString());
+          try {
+            localStorage.setItem('sra_resume_data', JSON.stringify(nextData));
+          } catch {}
+          await fetchUserResumes();
+          return { success: true, resumeId: uploadedId || undefined };
+        }
+
+        return { success: true, resumeId: uploadedId || undefined };
+      } catch (err: any) {
+        return { success: false, error: err.message || 'Network error uploading resume.' };
+      }
+    },
+    [activeResumeId, cancelPendingAutoSave, resumeData, saveActiveResume, fetchUserResumes]
+  );
+
+
   // Rehydrate on initial mount
   useEffect(() => {
     rehydrateResume();
@@ -279,11 +817,21 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     if (!isLoaded || !hasUserEditedRef.current) return;
 
-    const timer = setTimeout(() => {
+    if (autoSaveTimerRef.current) {
+      clearTimeout(autoSaveTimerRef.current);
+    }
+
+    autoSaveTimerRef.current = setTimeout(() => {
+      autoSaveTimerRef.current = null;
       saveActiveResume(resumeData);
     }, 1200);
 
-    return () => clearTimeout(timer);
+    return () => {
+      if (autoSaveTimerRef.current) {
+        clearTimeout(autoSaveTimerRef.current);
+        autoSaveTimerRef.current = null;
+      }
+    };
   }, [resumeData, isLoaded, saveActiveResume]);
 
   // Secondary local storage persistence as recovery backup
@@ -314,82 +862,226 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
 
   const updatePersonalInfo = (info: Partial<ResumeData['personalInfo']>) => {
     hasUserEditedRef.current = true;
-    setResumeData((prev) => ({
-      ...prev,
-      personalInfo: { ...prev.personalInfo, ...info },
-      lastUpdated: new Date().toISOString(),
-    }));
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        personalInfo: { ...prev.personalInfo, ...info },
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
   };
 
   const updateSummary = (summary: string) => {
     hasUserEditedRef.current = true;
-    setResumeData((prev) => ({
-      ...prev,
-      summary,
-      lastUpdated: new Date().toISOString(),
-    }));
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        summary,
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
   };
 
   const updateSkills = (skills: ResumeData['skills']) => {
     hasUserEditedRef.current = true;
-    setResumeData((prev) => ({
-      ...prev,
-      skills,
-      lastUpdated: new Date().toISOString(),
-    }));
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        skills,
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
   };
 
   const updateExperience = (experience: ResumeData['experience']) => {
     hasUserEditedRef.current = true;
-    setResumeData((prev) => ({
-      ...prev,
-      experience,
-      lastUpdated: new Date().toISOString(),
-    }));
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        experience,
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
   };
 
   const updateEducation = (education: ResumeData['education']) => {
     hasUserEditedRef.current = true;
-    setResumeData((prev) => ({
-      ...prev,
-      education,
-      lastUpdated: new Date().toISOString(),
-    }));
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        education,
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
   };
 
   const updateProjects = (projects: ResumeData['projects']) => {
     hasUserEditedRef.current = true;
-    setResumeData((prev) => ({
-      ...prev,
-      projects,
-      lastUpdated: new Date().toISOString(),
-    }));
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        projects,
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
   };
 
   const updateCertifications = (certifications: ResumeData['certifications']) => {
     hasUserEditedRef.current = true;
-    setResumeData((prev) => ({
-      ...prev,
-      certifications,
-      lastUpdated: new Date().toISOString(),
-    }));
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        certifications,
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
+  };
+
+  const updateLanguages = (languages: string[]) => {
+    hasUserEditedRef.current = true;
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        languages,
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
+  };
+
+  const updateAchievements = (achievements: string[]) => {
+    hasUserEditedRef.current = true;
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        achievements,
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
+  };
+
+  const updateSectionOrder = (sectionOrder: string[]) => {
+    hasUserEditedRef.current = true;
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        sectionOrder,
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
+  };
+
+  const updateObjective = (objective: string) => {
+    hasUserEditedRef.current = true;
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        objective,
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
+  };
+
+  const updateAdditionalInfo = (additionalInfo: ResumeData['additionalInfo']) => {
+    hasUserEditedRef.current = true;
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        additionalInfo,
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
+  };
+
+  const updateCustomSections = (customSections: ResumeData['customSections']) => {
+    hasUserEditedRef.current = true;
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        customSections,
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
+  };
+
+  const updateHiddenSections = (hiddenSections: string[]) => {
+    hasUserEditedRef.current = true;
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        hiddenSections,
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
   };
 
   const setTemplateId = (templateId: ResumeTemplateId) => {
     hasUserEditedRef.current = true;
-    setResumeData((prev) => ({
-      ...prev,
-      templateId,
-      lastUpdated: new Date().toISOString(),
-    }));
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        templateId,
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
   };
 
   const setCandidateType = (candidateType: 'experienced' | 'fresher') => {
     hasUserEditedRef.current = true;
-    setResumeData((prev) => ({
-      ...prev,
-      candidateType,
-    }));
+    setHasUnsavedChanges(true);
+    setResumeData((prev) => {
+      const next = {
+        ...prev,
+        candidateType,
+        lastUpdated: new Date().toISOString(),
+      };
+      recordHistory(next);
+      return next;
+    });
   };
 
   const updateTargetJob = (job: Partial<TargetJobContext>) => {
@@ -1294,6 +1986,27 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
         applyAllApprovedImprovements,
         regenerateImprovement,
         tailorResumeToJob,
+        userResumes,
+        isLoadingUserResumes,
+        fetchUserResumes,
+        switchActiveResume,
+        setActiveResume,
+        removeActiveResume,
+        createNewResume,
+        uploadNewResume,
+        hasUnsavedChanges,
+        setHasUnsavedChanges,
+        undo,
+        redo,
+        canUndo,
+        canRedo,
+        updateLanguages,
+        updateAchievements,
+        updateSectionOrder,
+        updateObjective,
+        updateAdditionalInfo,
+        updateCustomSections,
+        updateHiddenSections,
       }}
     >
       {children}

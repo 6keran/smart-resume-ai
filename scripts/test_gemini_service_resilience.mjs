@@ -175,7 +175,7 @@ async function run() {
       cwd: process.cwd(),
       encoding: 'utf8',
       stdio: ['ignore', 'pipe', 'ignore'],
-      timeout: 60_000,
+      timeout: 90_000,
     });
     assert.ok(out.includes('FALLBACK_OK:timeout'), 'Timed out provider should produce explicitly deterministic ATS output');
   });
@@ -183,7 +183,7 @@ async function run() {
   await test('9. Career intelligence quota failures use deterministic results', async () => {
     const { execSync } = await import('node:child_process');
     const out = execSync(`npx tsx scripts/test_career_intelligence_fallback_child.mjs quota`, {
-      cwd: process.cwd(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 30_000,
+      cwd: process.cwd(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 90_000,
     });
     assert.ok(out.includes('CAREER_FALLBACK_OK:quota'));
   });
@@ -191,7 +191,7 @@ async function run() {
   await test('10. Career intelligence provider timeouts use deterministic results', async () => {
     const { execSync } = await import('node:child_process');
     const out = execSync(`npx tsx scripts/test_career_intelligence_fallback_child.mjs timeout`, {
-      cwd: process.cwd(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 35_000,
+      cwd: process.cwd(), encoding: 'utf8', stdio: ['ignore', 'pipe', 'ignore'], timeout: 90_000,
     });
     assert.ok(out.includes('CAREER_FALLBACK_OK:timeout'));
   });

@@ -2,7 +2,10 @@
 
 import React, { ReactNode, useEffect, useId, useRef, useState } from 'react';
 import { Loader2 } from 'lucide-react';
-import type { JobSearchSuggestion } from '@/server/services/jobs/suggestions';
+import type {
+  JobSearchSuggestion,
+  JobSearchSuggestionField,
+} from '@/server/services/jobs/suggestions';
 
 const suggestionResponseCache = new Map<string, JobSearchSuggestion[]>();
 
@@ -16,14 +19,15 @@ function cacheSuggestions(key: string, suggestions: JobSearchSuggestion[]) {
 }
 
 interface JobSearchAutocompleteProps {
-  field: 'keywords' | 'location';
+  field: JobSearchSuggestionField;
   label: string;
   value: string;
   placeholder: string;
-  leadingIcon: ReactNode;
+  leadingIcon?: ReactNode;
   onChange: (value: string) => void;
   onSelect: (value: string) => void;
   className?: string;
+  inputClassName?: string;
 }
 
 function HighlightedValue({ value, query }: { value: string; query: string }) {
@@ -50,6 +54,7 @@ export function JobSearchAutocomplete({
   onChange,
   onSelect,
   className = '',
+  inputClassName,
 }: JobSearchAutocompleteProps) {
   const id = useId();
   const wrapperRef = useRef<HTMLDivElement>(null);
@@ -83,7 +88,6 @@ export function JobSearchAutocomplete({
     }
 
     const controller = new AbortController();
-    setSuggestions([]);
     setActiveIndex(-1);
     setStatus('loading');
 
@@ -109,7 +113,7 @@ export function JobSearchAutocomplete({
         setSuggestions([]);
         setStatus('error');
       }
-    }, 220);
+    }, 120);
 
     return () => {
       window.clearTimeout(timeoutId);
@@ -145,6 +149,12 @@ export function JobSearchAutocomplete({
       return;
     }
 
+    if (event.key === 'Tab') {
+      setFocused(false);
+      setActiveIndex(-1);
+      return;
+    }
+
     if (!isOpen || suggestions.length === 0) return;
 
     if (event.key === 'ArrowDown') {
@@ -153,18 +163,24 @@ export function JobSearchAutocomplete({
     } else if (event.key === 'ArrowUp') {
       event.preventDefault();
       setActiveIndex((current) => current <= 0 ? suggestions.length - 1 : current - 1);
-    } else if (event.key === 'Enter' && activeIndex >= 0) {
+    } else if (event.key === 'Enter') {
       event.preventDefault();
-      selectSuggestion(suggestions[activeIndex]);
+      if (activeIndex >= 0 && suggestions[activeIndex]) {
+        selectSuggestion(suggestions[activeIndex]);
+      } else if (suggestions.length > 0) {
+        selectSuggestion(suggestions[0]);
+      }
     }
   };
 
   return (
     <div ref={wrapperRef} className={`relative min-w-0 ${className}`}>
       <label htmlFor={`${id}-input`} className="sr-only">{label}</label>
-      <span className="absolute left-3.5 top-3.5 text-[var(--text-secondary)] pointer-events-none">
-        {leadingIcon}
-      </span>
+      {leadingIcon && (
+        <span className="absolute left-3.5 top-3.5 text-[var(--text-secondary)] pointer-events-none">
+          {leadingIcon}
+        </span>
+      )}
       <input
         id={`${id}-input`}
         type="text"
@@ -183,11 +199,14 @@ export function JobSearchAutocomplete({
         }}
         onKeyDown={handleKeyDown}
         placeholder={placeholder}
-        className="w-full min-h-11 pl-10 pr-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs sm:text-sm focus:outline-none focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 transition-colors duration-150"
+        className={
+          inputClassName ||
+          `w-full min-h-11 ${leadingIcon ? 'pl-10' : 'pl-3.5'} pr-4 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs sm:text-sm focus:outline-none focus:border-[var(--accent)] focus-visible:ring-2 focus-visible:ring-[var(--accent)]/20 transition-colors duration-150`
+        }
       />
 
       {isOpen && (
-        <div className="absolute z-40 left-0 right-0 top-full mt-1.5 overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)]/95 shadow-lg backdrop-blur-xl animate-fade-in">
+        <div className="absolute z-40 left-0 right-0 top-full mt-1.5 overflow-hidden rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-md">
           {status === 'loading' && (
             <p role="status" className="flex items-center gap-2 px-3.5 py-3 text-xs text-[var(--text-secondary)]">
               <Loader2 className="h-3.5 w-3.5 animate-spin text-[var(--accent)]" />
@@ -217,11 +236,10 @@ export function JobSearchAutocomplete({
                   aria-selected={activeIndex === index}
                   onMouseDown={(event) => event.preventDefault()}
                   onClick={() => selectSuggestion(suggestion)}
-                  className={`flex min-h-10 cursor-pointer items-center justify-between gap-3 px-3.5 py-2 text-left text-sm transition-colors duration-100 ${
-                    activeIndex === index
-                      ? 'bg-[var(--accent-subtle)] text-[var(--text-primary)]'
-                      : 'text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
-                  }`}
+                  className={`flex min-h-10 cursor-pointer items-center justify-between gap-3 px-3.5 py-2 text-left text-sm transition-colors duration-100 ${activeIndex === index
+                    ? 'bg-[var(--accent-subtle)] text-[var(--text-primary)]'
+                    : 'text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
+                    }`}
                 >
                   <span className="min-w-0 truncate"><HighlightedValue value={suggestion.value} query={query} /></span>
                   <span className="shrink-0 text-[10px] font-medium text-[var(--text-muted)]">{suggestion.kind}</span>

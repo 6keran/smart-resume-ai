@@ -16,7 +16,7 @@ for (const route of publicRoutes) {
 }
 
 test('protected dashboard and builder send anonymous users to login', async ({ page }) => {
-  for (const route of ['/dashboard', '/builder', '/apply-assistant', '/jobs']) {
+  for (const route of ['/dashboard', '/builder', '/jobs']) {
     await page.goto(route);
     await expect(page).toHaveURL(/\/login\?from=/);
     await expect(page.getByRole('heading', { name: 'Welcome back' })).toBeVisible();

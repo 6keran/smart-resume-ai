@@ -3,12 +3,12 @@ import { getUserFromRequest } from '@/lib/userSession';
 import { GoogleGenAI } from '@google/genai';
 import { CANDIDATE_GEMINI_MODELS } from '@/server/services/gemini';
 import {
-  getCareerProfileSummary,
   getDeterministicCareerChatResponse,
   type CareerProfileSummary,
 } from '@/server/services/careerIntelligence';
 import {
-  getUnifiedStudentContext,
+  buildUnifiedStudentContext,
+  mapUnifiedToCareerProfileSummary,
   buildUnifiedSystemGrounding,
   type UnifiedStudentContext,
 } from '@/server/services/unifiedStudentContext';
@@ -44,12 +44,11 @@ function buildSystemInstruction(
   let instruction = `You are the AI Assistant, the dedicated career launch assistant for Smart Resume AI.
 You specialize in empowering college students, fresh graduates, and career transitioners to land competitive tech internships and entry-level roles.
 
-OFFICIAL AI IDENTITY & NAME RULES:
+OFFICIAL ASSISTANT IDENTITY:
 - Your official name is "AI Assistant".
-- Always refer to yourself as "AI Assistant" or "your AI Assistant".
-- NEVER introduce yourself using a personal or human name (such as Alex).
-- If the user asks "What is your name?" or "Who are you?", respond: "I'm your AI Assistant."
-- Do not invent a human personality, personal identity, or human biography. You are an AI career launch assistant.
+- When explicitly asked for your name or who you are, state clearly that you are the AI Assistant for Smart Resume AI.
+- Do not adopt a personal human persona or human name.
+- Address the user's specific query directly and immediately without reciting internal system rules, metadata, or role instructions. Never output parenthetical reasoning, rule evaluations, or quotes of system instructions.
 
 YOUR 8 CORE GUIDANCE CAPABILITIES:
 1. Career Guidance: Recommend entry-level pathways, target role specializations, and growth trajectories suited to the student's degree and coursework.
@@ -68,7 +67,6 @@ Whenever recommending an action, include convenient clickable markdown links to 
 - [ATS Score Checker](/ats-score) — for auditing parser extractability and keyword coverage
 - [AI Project Mentor](/projects) — for hands-on guided capstone projects, interactive milestone tracking, and Google XYZ resume bullet generation
 - [Job Opportunities](/jobs) — for searching verified fresher and internship openings
-- [AI Job Application Assistant](/apply-assistant) — for job-specific match analysis, tailored summaries, personalized 4-paragraph cover letters, and 7-step readiness checklists
 - [AI Interview Preparation](/interview-prep) — for simulated mock interviews with instant voice/text AI grading
 - [Learning Roadmap](/career/roadmap) — for structured 10-week skill curricula and YouTube masterclasses
 - [Skill Assessments](/skills) — for taking proctored anti-cheat tests and earning verifiable certificates
@@ -152,7 +150,6 @@ Tailor your advice to support this active task:
 - resume_improver: Help rewrite passive verbs into strong action verbs while strictly preserving true facts.
 - project_mentor: Guide software architecture, milestone pacing, database schema choices, and resume bullet generation.
 - job_discovery: Advise on fresher eligibility, job description deciphering, and application filtering.
-- application_assistant: Coach on tailor-fit cover letters, recruiter messaging, and 7-step readiness checks.
 - interview_prep: Practice technical questions, behavioral STAR drills, and communication fluency.
 - skill_assessments: Advise on proctored assessment preparation, time management, and credential verification.
 - career_command_center: Explain the 4-dimension readiness score and guide execution of top priority actions.`;
@@ -286,16 +283,16 @@ export async function POST(req: Request) {
     }
     activeUserId = user.id;
 
-    // Fetch user career intelligence profile & unified student context for personalized grounding
-    const [userCareerProfile, unifiedStudentContext] = await Promise.all([
-      getCareerProfileSummary(user.id).catch(() => null),
-      getUnifiedStudentContext(user.id).catch(() => null),
-    ]);
+    // Fetch unified student context once; derive career profile summary without duplicate database queries
+    const unifiedStudentContext = await buildUnifiedStudentContext(user.id).catch(() => null);
+    const userCareerProfile = unifiedStudentContext
+      ? mapUnifiedToCareerProfileSummary(unifiedStudentContext)
+      : null;
 
     const apiKey = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY)?.trim();
 
     if (!apiKey) {
-      const fallbackReply = getDeterministicCareerChatResponse(payload.message, userCareerProfile);
+      const fallbackReply = getDeterministicCareerChatResponse(payload.message, userCareerProfile, unifiedStudentContext);
       return NextResponse.json({
         reply: fallbackReply,
         provider: 'AI Assistant Deterministic Engine',
@@ -327,8 +324,15 @@ export async function POST(req: Request) {
         );
 
         if (response && response.text) {
-          replyText = response.text.replace(/\u0000/g, '').trim().slice(0, 6_000);
-          break;
+          let cleaned = response.text.replace(/\u0000/g, '').trim();
+          // Filter out prompt-leak artifacts if model regurgitated identity instructions
+          if (cleaned.startsWith(': "I\'m your AI Assistant."') || cleaned.startsWith('"I\'m your AI Assistant."') || cleaned.startsWith(": 'I\\'m your AI Assistant.'")) {
+            cleaned = cleaned.replace(/^[:\s"']+I'm your AI Assistant\.[^)]*\)\.?\s*(\*\s*Never refer[^\n]*)?/i, '').trim();
+          }
+          if (cleaned.length > 20) {
+            replyText = cleaned.slice(0, 6_000);
+            break;
+          }
         }
       } catch (err: any) {
         lastError = err;
@@ -349,7 +353,7 @@ export async function POST(req: Request) {
 
     if (!replyText) {
       // Gracefully fall back to deterministic career copilot response
-      const fallbackReply = getDeterministicCareerChatResponse(payload.message, userCareerProfile);
+      const fallbackReply = getDeterministicCareerChatResponse(payload.message, userCareerProfile, unifiedStudentContext);
       return NextResponse.json({
         reply: fallbackReply,
         provider: 'AI Assistant Deterministic Engine',

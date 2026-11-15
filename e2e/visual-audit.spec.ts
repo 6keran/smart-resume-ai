@@ -113,12 +113,6 @@ test.describe('Visual Design Audit - Authenticated Student Pages', () => {
     await expect(page.getByRole('heading', { name: /portfolio engineering & milestone workspace/i })).toBeVisible();
     await saveAuditScreenshot(page, testInfo.project.name, '15-projects-guide');
   });
-
-  test('Application Assistant visual audit', async ({ page }, testInfo) => {
-    await page.goto('/apply-assistant', { waitUntil: 'domcontentloaded' });
-    await expect(page.getByRole('heading', { name: /application preparation studio/i })).toBeVisible();
-    await saveAuditScreenshot(page, testInfo.project.name, '16-apply-assistant');
-  });
 });
 
 test.describe('Visual Design Audit - Admin Pages', () => {

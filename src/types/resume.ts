@@ -14,28 +14,41 @@ export interface ExperienceItem {
   id: string;
   company: string;
   role: string;
+  department?: string;
   location?: string;
   startDate: string;
   endDate: string;
   current: boolean;
+  employmentType?: string;
   bulletPoints: string[];
+  achievements?: string[];
+  technologies?: string[];
 }
 
 export interface EducationItem {
   id: string;
+  qualification?: string;
   degree: string;
   institution: string;
+  university?: string;
   location?: string;
+  startDate?: string;
   graduationYear: string;
   gpa?: string;
   honors?: string;
+  current?: boolean;
 }
 
 export interface ProjectItem {
   id: string;
   title: string;
   description: string;
+  objective?: string;
   technologies: string[];
+  role?: string;
+  outcome?: string;
+  startDate?: string;
+  endDate?: string;
   link?: string;
   bullets?: string[];
 }
@@ -44,9 +57,54 @@ export interface CertificationItem {
   id: string;
   name: string;
   issuer: string;
+  type?: string;
   date: string;
+  duration?: string;
   expiryDate?: string;
   credentialId?: string;
+  credentialUrl?: string;
+  description?: string;
+}
+
+export interface SkillGroupItem {
+  name: string;
+  level?: 'Beginner' | 'Intermediate' | 'Advanced' | 'Expert';
+}
+
+export interface SkillCategoryGroup {
+  category: string;
+  skills: Array<SkillGroupItem | string>;
+}
+
+export interface AchievementItem {
+  id?: string;
+  title: string;
+  description?: string;
+  date?: string;
+  result?: string;
+}
+
+export interface LanguageItem {
+  id?: string;
+  name: string;
+  proficiency?: 'Native' | 'Fluent' | 'Professional' | 'Intermediate' | 'Conversational' | 'Basic';
+}
+
+export interface AdditionalInfo {
+  noticePeriod?: string;
+  relocation?: string;
+  shiftAvailability?: string;
+  shiftPreference?: string;
+  drivingLicence?: string;
+  memberships?: string[];
+  other?: string;
+}
+
+export interface CustomSection {
+  id: string;
+  title: string;
+  content?: string;
+  items?: string[];
 }
 
 export interface ResumeData {
@@ -55,43 +113,70 @@ export interface ResumeData {
   candidateType: 'experienced' | 'fresher';
   personalInfo: PersonalInfo;
   summary: string;
+  objective?: string;
+  summaryType?: 'summary' | 'objective' | 'both';
   skills: {
     technical: string[];
     soft: string[];
     tools: string[];
+    categories?: SkillCategoryGroup[];
   };
   experience: ExperienceItem[];
   education: EducationItem[];
   projects: ProjectItem[];
   certifications: CertificationItem[];
+  languages?: Array<string | LanguageItem>;
+  achievements?: Array<string | AchievementItem>;
+  additionalInfo?: AdditionalInfo;
+  customSections?: CustomSection[];
+  hiddenSections?: string[];
+  sectionOrder?: string[];
   templateId: ResumeTemplateId;
   lastUpdated: string;
 }
 
 export type ResumeTemplateId =
-  // 12 Production SaaS Templates
+  // 12 Distinct Professional Templates & Aliases
+  | 'classic-professional'
   | 'ats-classic'
+  | 'ats-professional'
+  | 'modern-corporate'
+  | 'corporate-executive'
+  | 'executive-leadership'
+  | 'executive-professional'
+  | 'executive'
+  | 'engineering-professional'
   | 'software-engineer'
+  | 'engineering'
+  | 'engineering-manufacturing'
+  | 'manufacturing-operations'
+  | 'operations-management'
+  | 'software-developer'
+  | 'full-stack-developer'
+  | 'fresher-graduate'
   | 'graduate-fresher'
   | 'fresh-graduate'
-  | 'executive-professional'
-  | 'corporate-executive'
-  | 'data-analyst'
-  | 'ui-ux-designer'
-  | 'full-stack-developer'
-  | 'internship-applicant'
+  | 'fresher'
+  | 'minimalist-ats'
+  | 'ats-minimal'
+  | 'modern-minimalist'
+  | 'minimalist'
+  | 'minimal-professional'
   | 'academic-research'
   | 'academic'
-  | 'sales-marketing'
-  | 'operations-management'
+  | 'professional-sidebar'
   | 'modern-two-column'
   | 'contemporary'
+  | 'compact-one-page'
+  | 'experienced'
+  | 'experienced-professional'
+  | 'data-analyst'
+  | 'ui-ux-designer'
+  | 'internship-applicant'
+  | 'sales-marketing'
   // Existing / Legacy references for backward compatibility
   | 'modern-professional'
-  | 'minimalist'
   | 'creative-professional'
-  | 'compact-one-page'
-  | 'experienced-professional'
   | 'thomas-hamptone'
   | 'nick-koe'
   | 'richard-sanchez'
@@ -99,7 +184,6 @@ export type ResumeTemplateId =
   | 'olivia-wilson-blush'
   | 'modern-ats'
   | 'tech-professional'
-  | 'executive'
   | 'data-ai'
   | 'corporate'
   | 'minimal'
