@@ -118,9 +118,6 @@ test('live Gemini integrations report real provider status and model outcomes', 
   const mentor = await call('Project Mentor', '/api/career/projects/e2e-project-context/mentor', 'POST', { message: 'What is the first practical milestone for a TypeScript and PostgreSQL student project?' }, (r) => r.body?.isLive ? 'Gemini/live' : r.body?.provider || 'provider status missing');
   expect(mentor.status, JSON.stringify(mentor.body)).toBe(200);
 
-  const materials = await call('Application materials', '/api/career/assistant/prepare', 'POST', { title: role, company, description: jobDescription, requiredSkills: ['TypeScript', 'React', 'PostgreSQL'] }, (r) => r.body?.materials?.isLiveAi ? 'Gemini/live' : r.body?.materials?.provider || 'provider status missing');
-  expect(materials.status, JSON.stringify(materials.body)).toBe(200);
-
   const interview = await call('Interview question generation', '/api/career/interview', 'POST', { action: 'start', targetRole: role, jobTitle: role, company, jobDescription, resumeSnippet: resumeText }, (r) => r.body?.provider || 'API does not expose provider status');
   expect(interview.status, JSON.stringify(interview.body)).toBe(200);
   const chatbot = await call('AI Assistant chat', '/api/chat', 'POST', { message: 'Can you suggest one practical way to prepare for a graduate software engineering interview?' }, (r) => r.body?.isLive ? 'Gemini/live' : r.body?.provider || 'provider status missing');
@@ -148,7 +145,6 @@ test('live Gemini integrations report real provider status and model outcomes', 
 
   expect(ats.body.analysisEngine, 'ATS must identify whether the provider result was Gemini or deterministic').toBe('gemini');
   expect(mentor.body.isLive, 'Project Mentor must not label deterministic output as live Gemini').toBe(true);
-  expect(materials.body.materials.isLiveAi, 'Application materials must not label deterministic output as live Gemini').toBe(true);
   expect(chatbot.body.isLive, 'AI Assistant must not label deterministic output as live Gemini').toBe(true);
   for (const serviceName of ['Resume improver', 'Job match', 'Interview question generation']) {
     const service = results.find((result) => result.service === serviceName);

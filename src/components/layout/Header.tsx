@@ -68,8 +68,6 @@ export function Header() {
         return 'Job Match';
       case '/jobs':
         return 'Job Search';
-      case '/apply-assistant':
-        return 'Application Assistant';
       case '/guidance':
         return 'Career Guidance';
       case '/feedback':
@@ -87,7 +85,6 @@ export function Header() {
     { label: 'ATS Score', href: '/ats-score', icon: BarChart3 },
     { label: 'Resume Analyzer', href: '/analyzer', icon: FileText },
     { label: 'Project Mentor', href: '/projects', icon: Code2, badge: 'New' },
-    { label: 'Apply Assistant', href: '/apply-assistant', icon: Sparkles, badge: 'AI' },
     { label: 'Skill Assessments', href: '/skills', icon: BadgeCheck },
     { label: 'Resume Builder', href: '/builder', icon: FileEdit },
     { label: 'Job Search', href: '/jobs', icon: BriefcaseBusiness },
@@ -108,7 +105,7 @@ export function Header() {
         <div className="flex items-center gap-3 sm:gap-6 min-w-0 shrink">
           {isPublicLanding ? (
             <Link href="/" className="flex items-center gap-2.5 group shrink-0">
-              <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center text-white shadow-[0_2px_10px_rgba(79,143,247,0.35)] group-hover:scale-105 transition-transform duration-200">
+              <div className="w-7 h-7 rounded-lg bg-[var(--accent)] flex items-center justify-center text-white shadow-xs group-hover:scale-105 transition-transform duration-200">
                 <Sparkles className="w-3.5 h-3.5" />
               </div>
               <div className="flex items-center gap-1.5 leading-tight">
@@ -163,15 +160,8 @@ export function Header() {
           )}
         </div>
 
-        {/* Right: ThemeToggle, Auth buttons / User Profile & Primary action */}
-        <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0">
-          {/* Responsive ThemeToggle: icon button on mobile/tablet, segmented on desktop */}
-          <div className="lg:hidden shrink-0">
-            <ThemeToggle variant="icon" />
-          </div>
-          <div className="hidden lg:block shrink-0">
-            <ThemeToggle variant="segmented" />
-          </div>
+        {/* Right: Auth buttons / User Profile & Primary action */}
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
 
           {user?.name ? (
             <div className="flex items-center gap-1.5 sm:gap-2">
@@ -266,16 +256,16 @@ export function Header() {
                   )}
                 >
                   <div className="w-5 h-5 flex items-center justify-center shrink-0">
-                    <Icon className="w-[18px] h-[18px] shrink-0" />
+                    <Icon className="w-5 h-5 shrink-0" />
                   </div>
-                  <span className="truncate flex-1 text-left">{item.label}</span>
+                  <span className="truncate flex-1 text-left text-[15px]">{item.label}</span>
                   {item.badge && (
                     <span
                       className={cn(
                         'text-[10px] px-2 py-0.5 rounded-full font-semibold tracking-wide shrink-0',
                         isActive
                           ? 'bg-white/20 text-white'
-                          : 'bg-amber-500/10 text-amber-500 dark:text-amber-400 border border-amber-500/20'
+                          : 'bg-amber-50 text-amber-700 border border-amber-200'
                       )}
                     >
                       {item.badge}
@@ -316,12 +306,6 @@ export function Header() {
           </div>
         </div>
 
-        {/* Mobile Theme Toggle */}
-        <div className="py-2.5 px-3 mb-2 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] flex items-center justify-between">
-          <span className="text-[11px] font-semibold text-[var(--text-muted)]">Theme</span>
-          <ThemeToggle />
-        </div>
-
         {/* Drawer Footer */}
         <div className="pt-3 border-t border-[var(--glass-border)] space-y-2">
           {user?.name ? (
@@ -339,7 +323,7 @@ export function Header() {
                   setMobileMenuOpen(false);
                   logout();
                 }}
-                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-red-500/20 text-red-400 text-xs font-semibold hover:bg-red-500/8 transition-all cursor-pointer"
+                className="w-full flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-rose-200 text-rose-700 text-xs font-semibold hover:bg-rose-50 transition-all cursor-pointer"
               >
                 <span>Sign Out</span>
               </button>

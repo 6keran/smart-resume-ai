@@ -1074,78 +1074,78 @@ export default function AssessmentRunnerPage() {
           </div>
 
           {/* Main Readiness Card */}
-          <GlassCard variant="bento" className="p-6 sm:p-8 space-y-6 text-left" glow>
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[var(--border-color)] gap-3">
+          <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 space-y-6 text-left shadow-sm">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-4 border-b border-[#E5E8ED] gap-3">
               <div>
-                <span className="inline-block px-2.5 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[var(--accent)]/15 text-[var(--accent)] mb-2">
+                <span className="inline-block px-2.5 py-0.5 rounded text-xs font-semibold bg-blue-50 text-[#3157C8] border border-blue-200 mb-2">
                   Proctored Examination
                 </span>
-                <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)]">
+                <h1 className="text-[24px] sm:text-[28px] font-bold text-[#20242B]">
                   {skillParam} Technical Assessment
                 </h1>
-                <p className="text-xs text-[var(--text-secondary)] mt-1">
-                  Mandatory Fullscreen & Camera Readiness Check
+                <p className="text-[14px] text-[#626B78] mt-1">
+                  Mandatory Fullscreen &amp; Camera Readiness Check
                 </p>
               </div>
 
-              <div className="flex items-center gap-2 text-xs font-mono px-3 py-1.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-                <Clock className="w-4 h-4 text-[var(--accent)]" />
+              <div className="flex items-center gap-2 text-[14px] font-mono px-3.5 py-2 rounded-lg bg-[#F6F7F9] border border-[#E5E8ED]">
+                <Clock className="w-4 h-4 text-[#3157C8]" />
                 <span>{timeLimitMinutes} Minutes</span>
               </div>
             </div>
 
             {/* Assessment Rules Summary */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-1">
-                <div className="text-[10px] uppercase font-bold text-[var(--text-secondary)]">Questions</div>
-                <div className="text-base font-bold text-[var(--text-primary)]">10 Multiple Choice</div>
-                <div className="text-[11px] text-[var(--text-secondary)]">Randomized from bank</div>
+              <div className="p-4 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-1">
+                <div className="text-[12px] uppercase font-bold text-[#626B78]">Questions</div>
+                <div className="text-[16px] font-bold text-[#20242B]">10 Multiple Choice</div>
+                <div className="text-[13px] text-[#626B78]">Randomized from question bank</div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-1">
-                <div className="text-[10px] uppercase font-bold text-[var(--text-secondary)]">Passing Score</div>
-                <div className="text-base font-bold text-emerald-400">70% Required</div>
-                <div className="text-[11px] text-[var(--text-secondary)]">7 of 10 to certify</div>
+              <div className="p-4 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-1">
+                <div className="text-[12px] uppercase font-bold text-[#626B78]">Passing Score</div>
+                <div className="text-[16px] font-bold text-[#16845B]">70% Required</div>
+                <div className="text-[13px] text-[#626B78]">7 of 10 to certify</div>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-1">
-                <div className="text-[10px] uppercase font-bold text-[var(--text-secondary)]">Integrity Policy</div>
-                <div className="text-base font-bold text-amber-400">3 Violations Max</div>
-                <div className="text-[11px] text-[var(--text-secondary)]">Terminates as INCOMPLETE</div>
+              <div className="p-4 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-1">
+                <div className="text-[12px] uppercase font-bold text-[#626B78]">Integrity Policy</div>
+                <div className="text-[16px] font-bold text-[#A96812]">3 Violations Max</div>
+                <div className="text-[13px] text-[#626B78]">Terminates as INCOMPLETE</div>
               </div>
             </div>
 
             {/* Camera Setup & Live Verification Card */}
-            <div className="p-5 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-4">
+            <div className="p-5 rounded-2xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-4">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2">
-                  <Camera className="w-5 h-5 text-[var(--accent)]" />
-                  <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                  <Camera className="w-5 h-5 text-[#3157C8]" />
+                  <h3 className="text-[16px] font-bold text-[#20242B]">
                     Camera Proctoring Verification
                   </h3>
                 </div>
 
                 <div className="flex items-center gap-2">
                   {cameraActive && framesVerified ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                      <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200">
+                      <span className="w-2 h-2 rounded-full bg-[#16845B] animate-pulse" />
                       Frames Verified ({measuredResolution}, {measuredFps} FPS)
                     </span>
                   ) : measuringFrames ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium bg-blue-50 text-[#3157C8] border border-blue-200">
                       <RefreshCw className="w-3 h-3 animate-spin" />
                       Verifying Video Frames...
                     </span>
                   ) : cameraHardwareStatus === 'denied' ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-red-500/10 text-red-400 border border-red-500/20">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold bg-red-50 text-[#C43D43] border border-red-200">
                       Permission Denied
                     </span>
                   ) : cameraHardwareStatus === 'unavailable' ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-bold bg-amber-50 text-[#A96812] border border-amber-200">
                       Camera Unavailable
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[11px] font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[12px] font-medium bg-amber-50 text-[#A96812] border border-amber-200">
                       Camera Required
                     </span>
                   )}
@@ -1153,9 +1153,9 @@ export default function AssessmentRunnerPage() {
               </div>
 
               {/* Assessment Lifecycle Status Banner */}
-              <div className="p-3 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-between text-xs">
-                <span className="text-[var(--text-secondary)]">Assessment Lifecycle Status:</span>
-                <span className="font-bold text-[var(--accent)] uppercase tracking-wider text-[11px]">
+              <div className="p-3.5 rounded-xl bg-white border border-[#E5E8ED] flex items-center justify-between text-[13px]">
+                <span className="text-[#626B78]">Assessment Lifecycle Status:</span>
+                <span className="font-bold text-[#3157C8] uppercase tracking-wider text-[12px]">
                   {assessmentStatus === 'not_started'
                     ? 'Not Started'
                     : assessmentStatus === 'waiting_camera'
@@ -1170,17 +1170,17 @@ export default function AssessmentRunnerPage() {
                 </span>
               </div>
 
-              <div className="p-3.5 rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent)]/20 text-xs text-[var(--text-secondary)] leading-relaxed space-y-1">
-                <p className="font-semibold text-[var(--text-primary)]">
-                  Candidate Consent & Camera Proctoring Notice:
+              <div className="p-4 rounded-xl bg-blue-50 border border-blue-200 text-[13px] text-[#626B78] leading-relaxed space-y-1">
+                <p className="font-semibold text-[#20242B]">
+                  Candidate Consent &amp; Camera Proctoring Notice:
                 </p>
-                <p className="text-[11px] text-[var(--text-secondary)]">
+                <p>
                   By starting this examination, you acknowledge and consent that your camera feed is streamed in real-time to the administrator proctoring console for skill authentication. Audio is strictly disabled. Video media tracks are stopped and released immediately when your assessment concludes.
                 </p>
               </div>
 
               {/* Video Preview Box with Persistent Video Element */}
-              <div className="relative rounded-xl overflow-hidden bg-black border border-[var(--border-color)] max-w-md mx-auto aspect-video flex items-center justify-center shadow-inner">
+              <div className="relative rounded-xl overflow-hidden bg-black border border-[#E5E8ED] max-w-md mx-auto aspect-video flex items-center justify-center shadow-inner">
                 {/* Real Mirrored Video Element - Permanently mounted so ref and layout are always available */}
                 <video
                   ref={readinessVideoRef}
@@ -1192,8 +1192,8 @@ export default function AssessmentRunnerPage() {
 
                 {/* State 1: Live Verified Overlay Badge */}
                 {cameraActive && framesVerified && (
-                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-black/60 backdrop-blur-md border border-white/10 text-[10px] text-white flex items-center gap-1.5 font-medium z-10">
-                    <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                  <div className="absolute top-3 left-3 px-2.5 py-1 rounded-lg bg-white/95 border border-[#E5E8ED] text-[10px] text-[#20242B] flex items-center gap-1.5 font-medium z-10 shadow-sm">
+                    <span className="w-2 h-2 rounded-full bg-[#16845B] animate-pulse" />
                     Live Verified Camera Stream ({measuredResolution})
                   </div>
                 )}
@@ -1201,7 +1201,7 @@ export default function AssessmentRunnerPage() {
                 {/* State 2: Camera Loading or Measuring Frames Overlay */}
                 {(cameraLoading || measuringFrames) && (
                   <div className="absolute inset-0 bg-black/70 backdrop-blur-xs flex flex-col items-center justify-center p-4 text-center z-10 space-y-2">
-                    <RefreshCw className="w-6 h-6 animate-spin text-[var(--accent)]" />
+                    <RefreshCw className="w-6 h-6 animate-spin text-[#3157C8]" />
                     <p className="text-xs font-bold text-white">Verifying Camera & Video Frames...</p>
                     <p className="text-[11px] text-white/80">Checking live video playback and frame delivery</p>
                   </div>
@@ -1209,15 +1209,15 @@ export default function AssessmentRunnerPage() {
 
                 {/* State 3: Not active and not measuring (Initial prompt or idle state) */}
                 {!cameraActive && !measuringFrames && !cameraLoading && (
-                  <div className="absolute inset-0 bg-[var(--bg-elevated)] flex flex-col items-center justify-center text-center p-6 space-y-3 z-10 border border-dashed border-[var(--border-color)] rounded-xl">
-                    <div className="w-12 h-12 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] flex items-center justify-center mx-auto text-[var(--text-secondary)]">
+                  <div className="absolute inset-0 bg-white flex flex-col items-center justify-center text-center p-6 space-y-3 z-10 border border-dashed border-[#E5E8ED] rounded-xl">
+                    <div className="w-12 h-12 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] flex items-center justify-center mx-auto text-[#626B78]">
                       <Video className="w-6 h-6" />
                     </div>
                     <div>
-                      <h4 className="text-xs font-bold text-[var(--text-primary)]">
-                        Camera Permission & Frame Verification Required
+                      <h4 className="text-[14px] font-bold text-[#20242B]">
+                        Camera Permission &amp; Frame Verification Required
                       </h4>
-                      <p className="text-[11px] text-[var(--text-secondary)] max-w-sm mx-auto mt-0.5">
+                      <p className="text-[13px] text-[#626B78] max-w-sm mx-auto mt-0.5">
                         Click below to request camera access and verify that active video frames are rendering.
                       </p>
                     </div>
@@ -1226,10 +1226,10 @@ export default function AssessmentRunnerPage() {
                       type="button"
                       onClick={handleEnableCamera}
                       disabled={cameraLoading || measuringFrames}
-                      className="btn-primary btn-sm inline-flex items-center gap-2 text-xs font-semibold shadow-md cursor-pointer disabled:opacity-50"
+                      className="px-5 py-2.5 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[13px] font-semibold inline-flex items-center gap-2 shadow-sm cursor-pointer disabled:opacity-50"
                     >
                       <Camera className="w-4 h-4" />
-                      <span>Enable Camera & Verify Frames</span>
+                      <span>Enable Camera &amp; Verify Frames</span>
                     </button>
                   </div>
                 )}
@@ -1237,14 +1237,14 @@ export default function AssessmentRunnerPage() {
 
               {/* Error Notice if camera failed */}
               {cameraError && (
-                <div className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/25 text-rose-400 text-xs flex items-start gap-2.5">
+                <div className="p-3.5 rounded-xl bg-red-50 border border-red-200 text-[#C43D43] text-[13px] flex items-start gap-2.5">
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                   <div className="flex-1 space-y-2">
                     <p className="font-medium">{cameraError}</p>
                     <button
                       type="button"
                       onClick={handleEnableCamera}
-                      className="px-3 py-1 rounded-lg bg-rose-500 text-white text-[11px] font-semibold hover:bg-rose-600 transition-colors"
+                      className="px-3 py-1 rounded-lg bg-[#C43D43] text-white text-[12px] font-semibold hover:bg-red-700 transition-colors"
                     >
                       Retry Camera Access
                     </button>
@@ -1254,60 +1254,36 @@ export default function AssessmentRunnerPage() {
             </div>
 
             {/* Test Rules & Code of Conduct */}
-            <div className="p-4 rounded-xl bg-[var(--bg-secondary)]/60 border border-[var(--border-color)] space-y-2 text-xs">
-              <h4 className="font-bold text-[var(--text-primary)] flex items-center gap-1.5">
-                <Shield className="w-4 h-4 text-[var(--accent)]" />
+            <div className="p-4 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-2 text-[13px]">
+              <h4 className="font-bold text-[#20242B] flex items-center gap-1.5">
+                <Shield className="w-4 h-4 text-[#3157C8]" />
                 Strict Fullscreen Examination Rules
               </h4>
-              <ul className="space-y-1.5 text-[var(--text-secondary)] list-disc pl-5">
-                <li><strong className="text-[var(--text-primary)]">Mandatory Fullscreen:</strong> The exam starts only in full-screen mode. Exiting fullscreen will pause the timer and log a violation.</li>
-                <li><strong className="text-[var(--text-primary)]">Tab Switching:</strong> Switching browser tabs or minimizing the window pauses the exam and logs a violation.</li>
-                <li><strong className="text-[var(--text-primary)]">Live Camera:</strong> The camera feed must remain connected. Disconnecting the camera triggers a violation.</li>
-                <li><strong className="text-rose-400">3 Violations Maximum:</strong> Reaching 3 violations automatically terminates the test as <strong className="text-rose-400">INCOMPLETE</strong> with no credential awarded.</li>
+              <ul className="space-y-1.5 text-[#626B78] list-disc pl-5">
+                <li><strong className="text-[#20242B]">Mandatory Fullscreen:</strong> The exam starts only in full-screen mode. Exiting fullscreen will pause the timer and log a violation.</li>
+                <li><strong className="text-[#20242B]">Tab Switching:</strong> Switching browser tabs or minimizing the window pauses the exam and logs a violation.</li>
+                <li><strong className="text-[#20242B]">Live Camera:</strong> The camera feed must remain connected. Disconnecting the camera triggers a violation.</li>
+                <li><strong className="text-[#C43D43]">3 Violations Maximum:</strong> Reaching 3 violations automatically terminates the test as <strong className="text-[#C43D43]">INCOMPLETE</strong> with no credential awarded.</li>
               </ul>
-              <p className="text-[11px] text-[var(--text-secondary)] italic pt-1 border-t border-[var(--border-color)]/60">
-                Note: Standard web browsers rely on real-time event monitoring rather than physical operating system locks. Integrity is enforced via continuous incident detection.
-              </p>
             </div>
 
-            {/* Fullscreen Error Banner if Fullscreen request failed */}
-            {fullscreenError && (
-              <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs flex items-start gap-3">
-                <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
-                <div className="flex-1 space-y-2">
-                  <p className="font-semibold">{fullscreenError}</p>
-                  <p className="text-[11px] text-[var(--text-secondary)]">
-                    Please click Retry Fullscreen and ensure your browser allows fullscreen permissions.
-                  </p>
-                  <button
-                    type="button"
-                    onClick={handleStartAssessment}
-                    className="btn-destructive btn-sm inline-flex items-center gap-1.5 text-xs font-semibold shadow-sm cursor-pointer"
-                  >
-                    <RotateCcw className="w-3.5 h-3.5" />
-                    <span>Retry Fullscreen Activation</span>
-                  </button>
-                </div>
-              </div>
-            )}
-
             {/* Rules Acknowledgment Checkbox */}
-            <label className="flex items-start gap-3 p-3.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] cursor-pointer hover:border-[var(--accent)]/40 transition-colors">
+            <label className="flex items-start gap-3 p-4 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] cursor-pointer hover:bg-white transition-colors">
               <input
                 type="checkbox"
                 checked={rulesAccepted}
                 onChange={(e) => setRulesAccepted(e.target.checked)}
-                className="mt-0.5 rounded border-[var(--border-color)] text-[var(--accent)] focus:ring-[var(--accent)]"
+                className="mt-1 rounded border-[#E5E8ED] text-[#3157C8] focus:ring-[#3157C8]"
               />
-              <span className="text-xs text-[var(--text-primary)] font-medium leading-relaxed">
+              <span className="text-[14px] text-[#20242B] font-medium leading-relaxed">
                 I agree to the strict examination rules: I understand that the exam requires fullscreen mode, and that leaving the window, switching tabs, or disconnecting the camera will record violations and terminate the session at 3 violations.
               </span>
             </label>
 
             {/* Action Bar */}
             <div className="flex flex-col sm:flex-row items-center justify-between gap-4 pt-2">
-              <div className="text-xs text-[var(--text-secondary)] flex items-center gap-1.5">
-                <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <div className="text-[13px] text-[#626B78] flex items-center gap-2">
+                <ShieldCheck className="w-4 h-4 text-[#16845B]" />
                 <span>Protected by Smart Resume AI Integrity Engine</span>
               </div>
 
@@ -1315,7 +1291,7 @@ export default function AssessmentRunnerPage() {
                 type="button"
                 onClick={handleStartAssessment}
                 disabled={!cameraActive || !rulesAccepted || startLoading}
-                className="btn-primary w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 text-xs sm:text-sm font-semibold shadow-lg disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer"
+                className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 py-3 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[15px] font-semibold shadow-sm disabled:opacity-40 disabled:cursor-not-allowed cursor-pointer transition-all"
               >
                 {startLoading ? (
                   <>
@@ -1330,7 +1306,7 @@ export default function AssessmentRunnerPage() {
                 )}
               </button>
             </div>
-          </GlassCard>
+          </div>
         </div>
       </div>
     );
@@ -1485,7 +1461,7 @@ export default function AssessmentRunnerPage() {
 
                   {/* Code Snippet if present */}
                   {currentQ.codeSnippet && (
-                    <pre className="p-4 rounded-xl bg-slate-950 text-slate-100 text-xs font-mono overflow-x-auto border border-slate-800 leading-relaxed">
+                    <pre className="p-4 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] text-xs font-mono overflow-x-auto border border-[var(--border-color)] leading-relaxed">
                       <code>{currentQ.codeSnippet}</code>
                     </pre>
                   )}

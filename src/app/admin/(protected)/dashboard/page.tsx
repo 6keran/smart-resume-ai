@@ -318,7 +318,7 @@ export default function AdminDashboardPage() {
             <GlassCard className="p-4 flex flex-col justify-between h-full group-hover:border-[var(--accent)]/50 transition-all">
               <div className="flex items-center justify-between text-[var(--text-secondary)]">
                 <span className="text-[10px] font-bold uppercase tracking-wider">Verified Skills</span>
-                <BadgeCheck className="w-3.5 h-3.5 text-violet-400" />
+                <BadgeCheck className="w-3.5 h-3.5 text-blue-600" />
               </div>
               <div className="text-2xl font-black text-[var(--text-primary)] my-2">
                 {s.verifiedSkillsCount}
@@ -619,7 +619,7 @@ export default function AdminDashboardPage() {
                   Actual pass scores achieved during technical skill assessments.
                 </p>
               </div>
-              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-violet-500/15 text-violet-400 border border-violet-500/30">
+              <span className="text-[10px] px-2 py-0.5 rounded-md font-bold bg-blue-50 text-blue-700 border border-blue-200">
                 Verified Skills
               </span>
             </div>
@@ -883,7 +883,7 @@ export default function AdminDashboardPage() {
             <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--text-secondary)]">
               Skills Covered
             </span>
-            <div className="text-2xl font-black text-violet-400 mt-1">
+            <div className="text-2xl font-black text-blue-600 mt-1">
               {s.questionBankStats.skillsCovered}
             </div>
           </div>

@@ -63,7 +63,7 @@ export function UserProfileModal() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed inset-0 bg-black/80 backdrop-blur-md"
+            className="fixed inset-0 bg-[#20242B]/40"
           />
 
           {/* Modal Card */}
@@ -72,11 +72,8 @@ export function UserProfileModal() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="relative w-full max-w-md rounded-2xl bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] p-6 sm:p-8 shadow-[var(--shadow-glass-hover)] backdrop-blur-2xl text-left overflow-hidden"
+            className="relative w-full max-w-md rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-8 shadow-xl text-left overflow-hidden"
           >
-          <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent pointer-events-none" />
-          {/* Subtle Ambient Glow */}
-          <div className="absolute -top-12 -left-12 w-48 h-48 bg-[var(--accent)]/10 rounded-full blur-3xl pointer-events-none" />
 
           {/* Header */}
           <div className="flex items-center gap-3 mb-6">

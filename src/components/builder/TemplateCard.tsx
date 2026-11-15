@@ -55,7 +55,7 @@ export function TemplateCard({
               {template.name}
             </h3>
             {template.intendedUse && (
-              <p className="text-[10px] text-blue-600 dark:text-blue-400 font-medium truncate mt-0.5" title={template.intendedUse}>
+              <p className="text-[10px] text-[#3157C8] font-medium truncate mt-0.5" title={template.intendedUse}>
                 Best for: {template.intendedUse}
               </p>
             )}
@@ -63,23 +63,23 @@ export function TemplateCard({
 
           {template.isVisualLayout ? (
             <span
-              className="inline-flex items-center gap-1 text-[9px] font-semibold text-amber-600 dark:text-amber-400 bg-amber-500/10 border border-amber-500/20 px-2.5 py-0.5 rounded-full shrink-0"
+              className="inline-flex items-center gap-1 text-[9px] font-semibold text-[#A96812] bg-[#A96812]/10 border border-[#A96812]/20 px-2 py-0.5 rounded-md shrink-0"
               title="Visual layout for creative tech & portfolios. Single-column recommended for ATS-strict portals."
             >
-              <AlertCircle className="w-3 h-3 text-amber-600 dark:text-amber-400 shrink-0" />
+              <AlertCircle className="w-3 h-3 text-[#A96812] shrink-0" />
               Visual Layout
             </span>
           ) : template.isAtsFriendly ? (
             <span
-              className="inline-flex items-center gap-1 text-[9px] font-semibold text-[var(--color-success)] bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 px-2.5 py-0.5 rounded-full shrink-0"
-              title="100% compliant single-column layout for Applicant Tracking Systems"
+              className="inline-flex items-center gap-1 text-[9px] font-semibold text-[var(--color-success)] bg-[var(--color-success)]/10 border border-[var(--color-success)]/20 px-2 py-0.5 rounded-md shrink-0"
+              title="Standard single-column layout optimized for Applicant Tracking Systems"
             >
               <ShieldCheck className="w-3 h-3 text-[var(--color-success)] shrink-0" />
               ATS-Friendly
             </span>
           ) : (
             <span
-              className="inline-flex items-center gap-1 text-[9px] font-semibold text-[var(--accent)] bg-[var(--accent-subtle)] border border-[var(--border-color)] px-2.5 py-0.5 rounded-full shrink-0"
+              className="inline-flex items-center gap-1 text-[9px] font-semibold text-[var(--accent)] bg-[var(--accent-subtle)] border border-[var(--border-color)] px-2 py-0.5 rounded-md shrink-0"
             >
               Portfolio Design
             </span>
@@ -97,7 +97,7 @@ export function TemplateCard({
           id={`template-preview-${template.id}`}
           ref={containerRef}
           onClick={() => onSelect(template.id)}
-          className="relative w-full aspect-[210/297] rounded-xl overflow-hidden border border-slate-300 dark:border-slate-800 bg-white shadow-sm cursor-pointer select-none group-hover:shadow-md transition-shadow"
+          className="relative w-full aspect-[210/297] rounded-xl overflow-hidden border border-[#E5E8ED] bg-white shadow-xs cursor-pointer select-none group-hover:shadow-sm transition-shadow"
           title={`Click to select ${template.name}`}
         >
           {/* Scaled Live Renderer */}

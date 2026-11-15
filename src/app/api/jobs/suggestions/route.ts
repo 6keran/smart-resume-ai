@@ -26,7 +26,7 @@ export async function POST(req: Request) {
   }
 
   const { field, query } = body as Record<string, unknown>;
-  if (field !== 'keywords' && field !== 'location') {
+  if (field !== 'keywords' && field !== 'location' && field !== 'role' && field !== 'skill') {
     return NextResponse.json({ message: 'Unsupported suggestion field.' }, { status: 400 });
   }
   if (typeof query !== 'string' || query.length > MAX_QUERY_LENGTH) {

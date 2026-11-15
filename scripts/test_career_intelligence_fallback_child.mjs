@@ -21,7 +21,7 @@ if (mode === 'quota') {
     error: { code: 429, message: 'Quota exceeded for this test scenario.', status: 'RESOURCE_EXHAUSTED' },
   }), { status: 429, headers: { 'Content-Type': 'application/json' } });
 } else {
-  globalThis.setTimeout = (callback, delay, ...args) => originalSetTimeout(callback, delay === 20000 ? 1 : delay, ...args);
+  globalThis.setTimeout = (callback, delay, ...args) => originalSetTimeout(callback, (delay === 20000 || delay >= 10000) ? 1 : delay, ...args);
   globalThis.fetch = async () => new Promise(() => {});
 }
 

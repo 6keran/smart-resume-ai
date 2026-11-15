@@ -172,18 +172,18 @@ export default function SkillVerificationPage() {
   };
 
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 text-[#20242B]">
       {/* Page Header */}
-      <div className="bento-card p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
+      <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 text-left shadow-sm">
         <div className="space-y-1.5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[var(--accent)]/15 border border-[var(--accent)]/30 text-xs font-semibold text-[var(--accent)]">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-blue-50 border border-blue-200 text-xs font-semibold text-[#3157C8]">
             <Award className="w-3.5 h-3.5" />
             <span>Technical Proficiency Verification</span>
           </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight">
+          <h1 className="text-[28px] sm:text-[30px] font-bold text-[#20242B] tracking-tight">
             Skill Assessments
           </h1>
-          <p className="text-xs sm:text-sm text-[var(--text-secondary)] leading-relaxed">
+          <p className="text-[15px] text-[#626B78] leading-relaxed">
             Test your proficiency across key technical topics and track your assessment results.
           </p>
         </div>
@@ -191,64 +191,65 @@ export default function SkillVerificationPage() {
         <button
           type="button"
           onClick={() => setIsAddModalOpen(true)}
-          className="btn-ink-pill h-[42px] px-5 shadow-sm active:scale-95 shrink-0 cursor-pointer"
+          className="px-5 py-2.5 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[14px] font-semibold shadow-sm inline-flex items-center gap-2 shrink-0 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
-          Add Skill
+          <span>Add Skill</span>
         </button>
       </div>
 
-      {/* Info Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <GlassCard variant="bento" className="p-5 flex items-start gap-4">
-          <div className="w-10 h-10 rounded-lg bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center shrink-0">
-            <Clock className="w-5 h-5" />
-          </div>
-          <div className="text-left space-y-1">
-            <h4 className="text-sm font-semibold text-[var(--text-primary)]">Timed Questions</h4>
-            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-              10 curated questions spanning code output, debugging, and practical concepts.
+      {/* Expandable Assessment Instructions & Scoring Rules */}
+      <details className="group bg-white rounded-2xl border border-[#E5E8ED] p-5 shadow-sm text-left">
+        <summary className="font-bold text-[16px] text-[#20242B] cursor-pointer list-none flex items-center justify-between">
+          <span className="flex items-center gap-2">
+            <ShieldCheck className="w-4 h-4 text-[#3157C8]" />
+            Assessment Instructions &amp; Scoring Rules
+          </span>
+          <span className="text-[13px] text-[#3157C8] font-semibold group-open:hidden">View Rules</span>
+        </summary>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-[#E5E8ED]">
+          <div className="p-4 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-1">
+            <span className="text-[14px] font-bold text-[#20242B] flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-[#3157C8]" />
+              Timed Questions
+            </span>
+            <p className="text-[13px] text-[#626B78] leading-relaxed">
+              10 curated multiple-choice questions spanning syntax, debugging, and real-world architectures with 20 minutes limit.
             </p>
           </div>
-        </GlassCard>
-
-        <GlassCard variant="bento" className="p-5 flex items-start gap-4">
-          <div className="w-10 h-10 rounded-lg bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center shrink-0">
-            <Award className="w-5 h-5" />
-          </div>
-          <div className="text-left space-y-1">
-            <h4 className="text-sm font-semibold text-[var(--text-primary)]">Passing Benchmark</h4>
-            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-              Score 7/10 (70%) or higher to demonstrate subject proficiency.
+          <div className="p-4 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-1">
+            <span className="text-[14px] font-bold text-[#20242B] flex items-center gap-1.5">
+              <Award className="w-4 h-4 text-[#16845B]" />
+              70% Passing Benchmark
+            </span>
+            <p className="text-[13px] text-[#626B78] leading-relaxed">
+              Score at least 7 of 10 to demonstrate verified competency and receive an official credential.
             </p>
           </div>
-        </GlassCard>
-
-        <GlassCard variant="bento" className="p-5 flex items-start gap-4">
-          <div className="w-10 h-10 rounded-lg bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-            <ShieldCheck className="w-5 h-5" />
-          </div>
-          <div className="text-left space-y-1">
-            <h4 className="text-sm font-semibold text-[var(--text-primary)]">Profile Records</h4>
-            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-              Assessment scores and completion dates are saved to your profile dashboard.
+          <div className="p-4 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-1">
+            <span className="text-[14px] font-bold text-[#20242B] flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-[#3157C8]" />
+              Verified Profile Record
+            </span>
+            <p className="text-[13px] text-[#626B78] leading-relaxed">
+              Passed assessment scores and certificates automatically display on your public career profile.
             </p>
           </div>
-        </GlassCard>
-      </div>
+        </div>
+      </details>
 
       {/* Dual Tab Mode Switcher */}
-      <div className="flex items-center gap-2 p-1 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] self-start shadow-xs">
+      <div className="flex items-center gap-2 p-1 rounded-lg bg-[#F6F7F9] border border-[#E5E8ED] self-start shadow-xs">
         <button
           type="button"
           onClick={() => setActiveTab('skills')}
-          className={`px-5 py-2 rounded-full text-xs font-bold transition-all cursor-pointer ${
+          className={`px-5 py-2 rounded-md text-[14px] font-semibold transition-all cursor-pointer ${
             activeTab === 'skills'
-              ? 'bg-[var(--accent)] text-white shadow-xs'
-              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+              ? 'bg-white text-[#3157C8] shadow-sm'
+              : 'text-[#626B78] hover:text-[#20242B]'
           }`}
         >
-          My Skills & Assessments
+          My Skills &amp; Assessments
         </button>
         <button
           type="button"
@@ -256,13 +257,13 @@ export default function SkillVerificationPage() {
             setActiveTab('roadmap');
             if (!roadmapData) loadRoadmap();
           }}
-          className={`px-5 py-2 rounded-lg text-xs font-bold transition-all cursor-pointer inline-flex items-center gap-2 ${
+          className={`px-5 py-2 rounded-md text-[14px] font-semibold transition-all cursor-pointer inline-flex items-center gap-2 ${
             activeTab === 'roadmap'
-              ? 'bg-[var(--accent)] text-white shadow-xs'
-              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+              ? 'bg-white text-[#3157C8] shadow-sm'
+              : 'text-[#626B78] hover:text-[#20242B]'
           }`}
         >
-          <BookOpen className="w-3.5 h-3.5" />
+          <BookOpen className="w-4 h-4" />
           <span>Learning Roadmap</span>
         </button>
       </div>
@@ -274,32 +275,35 @@ export default function SkillVerificationPage() {
           <div className="space-y-4 text-left">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-lg font-bold text-[var(--text-primary)]">My Skills</h2>
-                <p className="text-xs text-[var(--text-secondary)]">
-                  Manage your skills and launch technical assessments.
+                <h2 className="text-[20px] font-bold text-[#20242B]">My Skills</h2>
+                <p className="text-[14px] text-[#626B78]">
+                  Manage your claimed skills and launch technical assessments.
                 </p>
               </div>
-              <span className="text-xs font-semibold text-[var(--text-secondary)]">
+              <span className="text-[13px] font-semibold text-[#626B78]">
                 Total: {skills.length} skills
               </span>
             </div>
 
             {skills.length === 0 ? (
-              <GlassCard className="p-8 text-center space-y-3">
-                <Award className="w-8 h-8 text-[var(--text-secondary)] mx-auto opacity-50" />
-                <p className="text-sm font-semibold text-[var(--text-primary)]">No skills added yet</p>
-                <p className="text-xs text-[var(--text-secondary)]">
+              <div className="bg-white rounded-2xl border border-[#E5E8ED] p-8 text-center space-y-3 shadow-sm">
+                <Award className="w-10 h-10 text-[#626B78] mx-auto opacity-50" />
+                <p className="text-[16px] font-semibold text-[#20242B]">No skills added yet</p>
+                <p className="text-[14px] text-[#626B78]">
                   Add skills from the directory below to take assessments.
                 </p>
-              </GlassCard>
+              </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
                 {skills.map((userSkill) => {
                   const isVerified = userSkill.status === 'verified';
 
                   return (
-                    <GlassCard key={userSkill.id} variant="bento" className="p-5 flex flex-col justify-between space-y-4">
-                      <div className="space-y-2">
+                    <div
+                      key={userSkill.id}
+                      className="bg-white rounded-2xl border border-[#E5E8ED] hover:border-[#3157C8] hover:shadow-md transition-all p-5 flex flex-col justify-between space-y-4 shadow-sm"
+                    >
+                      <div className="space-y-3">
                         <div className="flex items-center justify-between">
                           <SkillBadge
                             skill={userSkill.name}
@@ -309,24 +313,47 @@ export default function SkillVerificationPage() {
                           <button
                             type="button"
                             onClick={() => setSkillToRemove(userSkill)}
-                            className="p-1 rounded text-[var(--text-secondary)] hover:text-rose-500 transition-colors cursor-pointer"
+                            className="p-1 rounded text-[#626B78] hover:text-[#C43D43] transition-colors cursor-pointer"
                             title="Remove skill"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
 
-                        <div className="flex items-center justify-between text-xs pt-1">
-                          <span className="text-[11px] text-[var(--text-secondary)]">Category</span>
-                          <span className="text-[11px] font-medium text-[var(--text-primary)]">
-                            {userSkill.category}
-                          </span>
+                        <div>
+                          <h3 className="text-[18px] font-bold text-[#20242B]">
+                            {userSkill.name} Assessment
+                          </h3>
+                          <div className="flex items-center justify-between text-[13px] text-[#626B78] mt-1">
+                            <span>{userSkill.category}</span>
+                            <span className="px-2 py-0.5 rounded bg-[#F6F7F9] border border-[#E5E8ED] font-medium">
+                              20 Mins · 10 Questions
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Progress Bar / Score Indicator */}
+                        <div className="space-y-1 pt-1">
+                          <div className="flex items-center justify-between text-[13px]">
+                            <span className="text-[#626B78]">Proficiency</span>
+                            <span className="font-semibold text-[#20242B]">
+                              {userSkill.score ? `${userSkill.score}/10 (${userSkill.score * 10}%)` : 'Not assessed yet'}
+                            </span>
+                          </div>
+                          <div className="w-full bg-[#E5E8ED] h-2 rounded-full overflow-hidden">
+                            <div
+                              className={`h-full rounded-full transition-all duration-500 ${
+                                isVerified ? 'bg-[#16845B]' : 'bg-[#3157C8]'
+                              }`}
+                              style={{ width: `${userSkill.score ? userSkill.score * 10 : 0}%` }}
+                            />
+                          </div>
                         </div>
 
                         {userSkill.verifiedDate && (
-                          <div className="flex items-center justify-between text-xs">
-                            <span className="text-[11px] text-[var(--text-secondary)]">Verified On</span>
-                            <span className="text-[11px] font-mono text-emerald-600 dark:text-emerald-400">
+                          <div className="flex items-center justify-between text-[13px]">
+                            <span className="text-[#626B78]">Verified On</span>
+                            <span className="font-mono text-[#16845B]">
                               {userSkill.verifiedDate}
                             </span>
                           </div>
@@ -334,26 +361,26 @@ export default function SkillVerificationPage() {
                       </div>
 
                       {/* Card Actions */}
-                      <div className="pt-2 border-t border-[var(--border-color)] flex items-center justify-between gap-2">
+                      <div className="pt-2 border-t border-[#E5E8ED]">
                         {isVerified && userSkill.certificateId ? (
                           <Link
                             href={`/skills/certificate/${userSkill.certificateId}`}
-                            className="btn-secondary btn-sm w-full inline-flex items-center justify-center gap-1.5 text-xs font-semibold cursor-pointer"
+                            className="px-4 py-2 rounded-lg border border-[#E5E8ED] bg-white hover:bg-[#F6F7F9] text-[#20242B] text-[14px] font-semibold w-full inline-flex items-center justify-center gap-1.5 cursor-pointer"
                           >
-                            <FileCheck className="w-3.5 h-3.5" />
-                            View Certificate
+                            <FileCheck className="w-4 h-4 text-[#16845B]" />
+                            <span>View Certificate</span>
                           </Link>
                         ) : (
                           <Link
                             href={`/skills/assess/${encodeURIComponent(userSkill.name)}`}
-                            className="btn-primary btn-sm w-full inline-flex items-center justify-center gap-1.5 text-xs font-semibold shadow-sm cursor-pointer"
+                            className="px-4 py-2.5 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[14px] font-semibold w-full inline-flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
                           >
-                            <span>Take Assessment</span>
-                            <ArrowRight className="w-3.5 h-3.5" />
+                            <span>Start Assessment</span>
+                            <ArrowRight className="w-4 h-4" />
                           </Link>
                         )}
                       </div>
-                    </GlassCard>
+                    </div>
                   );
                 })}
               </div>
@@ -361,60 +388,52 @@ export default function SkillVerificationPage() {
           </div>
 
           {/* ALL SUPPORTED SKILLS DIRECTORY */}
-          <div id="skills-directory" className="space-y-4 text-left pt-6 border-t border-[var(--border-color)]">
+          <div id="skills-directory" className="space-y-4 text-left pt-6 border-t border-[#E5E8ED]">
             <div>
-              <h2 className="text-lg font-bold text-[var(--text-primary)]">
-                Explore Supported Technical Skills
+              <h2 className="text-[20px] font-bold text-[#20242B]">
+                Explore Supported Technical Assessments
               </h2>
-              <p className="text-xs text-[var(--text-secondary)]">
-                Smart Resume AI currently provides full assessment banks for 11 core industry skills. Select any skill to take a proctored assessment.
+              <p className="text-[14px] text-[#626B78]">
+                Smart Resume AI provides proctored assessments for 11 core industry skills. Select any skill to begin.
               </p>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
               {allSupportedSkills.map((sk) => {
                 const isUserSkill = skills.some((s) => s.name === sk.name);
                 return (
                   <div
                     key={sk.name}
-                    className="p-4 rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg)] hover:bg-[var(--glass-bg-elevated)] backdrop-blur-xl shadow-xs flex flex-col justify-between gap-3.5 text-xs transition-all hover:-translate-y-0.5"
+                    className="p-5 rounded-2xl border border-[#E5E8ED] bg-white hover:border-[#3157C8] hover:shadow-md shadow-sm flex flex-col justify-between gap-4 text-left transition-all"
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h4 className="font-bold text-sm text-[var(--text-primary)]">{sk.name}</h4>
-                        <p className="text-[10px] text-[var(--text-secondary)] mt-0.5">{sk.category}</p>
-                      </div>
-                      {isUserSkill ? (
-                        <span className="text-[10px] font-semibold text-emerald-600 dark:text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded-lg border border-emerald-500/20 shrink-0">
-                          Added
+                    <div className="space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h4 className="font-bold text-[18px] text-[#20242B]">{sk.name}</h4>
+                          <p className="text-[13px] text-[#626B78]">{sk.category}</p>
+                        </div>
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-[#3157C8] border border-blue-200">
+                          Intermediate
                         </span>
-                      ) : (
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            addSkill(sk.name, sk.category, true);
-                            setToast({
-                              type: 'success',
-                              message: `${sk.name} added to your profile.`,
-                            });
-                          }}
-                          className="p-1.5 rounded-xl bg-[var(--glass-bg-elevated)] hover:bg-[var(--accent)] hover:text-white text-[var(--text-secondary)] border border-[var(--glass-border)] transition-colors cursor-pointer shrink-0"
-                          title={`Add ${sk.name} to My Skills`}
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
-                      )}
+                      </div>
+
+                      <div className="flex items-center justify-between text-[13px] text-[#626B78] pt-1">
+                        <span className="flex items-center gap-1">
+                          <Clock className="w-3.5 h-3.5" />
+                          20 Mins
+                        </span>
+                        <span>10 MCQ</span>
+                        <span className="text-[#16845B] font-medium">70% to Pass</span>
+                      </div>
                     </div>
 
-                    <div className="pt-2 border-t border-[var(--border-color)]">
+                    <div className="pt-2 border-t border-[#E5E8ED]">
                       <Link
                         href={`/skills/assess/${encodeURIComponent(sk.name)}`}
-                        className="btn-primary btn-sm w-full inline-flex items-center justify-center gap-1.5 text-xs font-semibold shadow-sm cursor-pointer"
+                        className="px-4 py-2 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[13px] font-semibold w-full inline-flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
                       >
-                        <Award className="w-3.5 h-3.5" />
-                        <span>Take Assessment</span>
+                        <Award className="w-4 h-4" />
+                        <span>Start Assessment</span>
                         <ArrowRight className="w-3.5 h-3.5" />
                       </Link>
                     </div>
@@ -430,7 +449,7 @@ export default function SkillVerificationPage() {
       {activeTab === 'roadmap' && (
         <div className="space-y-6 text-left">
           {/* Roadmap Controls Header */}
-          <div className="p-6 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="p-6 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="space-y-1">
               <span className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider">
                 PERSONALIZED CURRICULUM
@@ -848,7 +867,7 @@ export default function SkillVerificationPage() {
 
       {/* Floating Toast Notification */}
       {toast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-xs font-medium backdrop-blur-2xl bg-[var(--glass-bg-elevated)] border-[var(--glass-border)] text-[var(--text-primary)]">
+        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-xs font-medium bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-primary)]">
           {toast.type === 'success' ? (
             <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
           ) : (

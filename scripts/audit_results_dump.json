@@ -1,0 +1,338 @@
+[
+  {
+    "id": 1,
+    "title": "Fresher with Academic Projects & Technical Skills",
+    "candidate": "Alex Rivera",
+    "jobTitle": "Junior Software Engineer",
+    "scores": {
+      "overall": 74,
+      "keyword": 71,
+      "formatting": 65,
+      "content": 80,
+      "section": 83,
+      "readability": 75,
+      "bulletStrength": 85
+    },
+    "sectionScores": {
+      "header": 100,
+      "summary": 100,
+      "experience": 45,
+      "projects": 100,
+      "skills": 100,
+      "education": 80
+    },
+    "evidenceConsistency": {
+      "total": 24,
+      "backed": 11,
+      "consistencyScore": 46,
+      "unbackedCount": 13
+    },
+    "detectedKeywordsCount": 24,
+    "missingKeywordsCount": 10,
+    "missingAlerts": [
+      "Work Experience (critical)"
+    ],
+    "topSuggestionsCount": 3,
+    "topSuggestions": [
+      "[High] Target Job Description Alignment: The resume is missing key technical competencies explicitly requested in the target job posting: CI/CD, Design, Develop, Engineer.",
+      "[High] Work Experience: No Work Experience or Employment History section detected.",
+      "[Medium] Technical Keyword Coverage: Absence of key modern cloud and infrastructure competencies expected for this discipline: .NET, AWS, Agile."
+    ],
+    "isDeterministic": true,
+    "expectedOutcome": "High relevance (strong skills + projects), fair fresher scoring"
+  },
+  {
+    "id": 2,
+    "title": "Fresher with Unrelated Projects & Unrelated Skills",
+    "candidate": "Marcus Vance",
+    "jobTitle": "Junior Software Engineer",
+    "scores": {
+      "overall": 50,
+      "keyword": 15,
+      "formatting": 65,
+      "content": 65,
+      "section": 83,
+      "readability": 75,
+      "bulletStrength": 70
+    },
+    "sectionScores": {
+      "header": 85,
+      "summary": 100,
+      "experience": 45,
+      "projects": 100,
+      "skills": 35,
+      "education": 80
+    },
+    "evidenceConsistency": {
+      "total": 0,
+      "backed": 0,
+      "consistencyScore": 80,
+      "unbackedCount": 0
+    },
+    "detectedKeywordsCount": 0,
+    "missingKeywordsCount": 26,
+    "missingAlerts": [
+      "GitHub Link (recommended)",
+      "Work Experience (critical)",
+      "Skills Section (critical)"
+    ],
+    "topSuggestionsCount": 3,
+    "topSuggestions": [
+      "[High] Target Job Description Alignment: The resume is missing key technical competencies explicitly requested in the target job posting: APIs, CI/CD, Data Structures, Develop.",
+      "[High] Work Experience: No Work Experience or Employment History section detected.",
+      "[High] Technical Skills: No dedicated Technical Skills section detected."
+    ],
+    "isDeterministic": true,
+    "expectedOutcome": "Low relevance (Civil Eng skills/projects vs SWE role)"
+  },
+  {
+    "id": 3,
+    "title": "Experienced Software Developer with Relevant Experience",
+    "candidate": "Samantha Reed",
+    "jobTitle": "Senior Full Stack Engineer",
+    "scores": {
+      "overall": 85,
+      "keyword": 64,
+      "formatting": 95,
+      "content": 95,
+      "section": 100,
+      "readability": 90,
+      "bulletStrength": 95
+    },
+    "sectionScores": {
+      "header": 100,
+      "summary": 100,
+      "experience": 100,
+      "projects": 100,
+      "skills": 100,
+      "education": 80
+    },
+    "evidenceConsistency": {
+      "total": 23,
+      "backed": 18,
+      "consistencyScore": 78,
+      "unbackedCount": 5
+    },
+    "detectedKeywordsCount": 23,
+    "missingKeywordsCount": 12,
+    "missingAlerts": [],
+    "topSuggestionsCount": 2,
+    "topSuggestions": [
+      "[High] Target Job Description Alignment: The resume is missing key technical competencies explicitly requested in the target job posting: App, Architect, CloudScale, Demonstrated.",
+      "[Medium] Technical Keyword Coverage: Absence of key modern cloud and infrastructure competencies expected for this discipline: .NET, Agile, Algorithms."
+    ],
+    "isDeterministic": true,
+    "expectedOutcome": "Top tier (perfect skills match, metrics, experience, leadership)"
+  },
+  {
+    "id": 4,
+    "title": "Experienced Candidate Applying for an Unrelated Role",
+    "candidate": "David Harrington",
+    "jobTitle": "Senior Full Stack Engineer",
+    "scores": {
+      "overall": 59,
+      "keyword": 15,
+      "formatting": 85,
+      "content": 80,
+      "section": 83,
+      "readability": 90,
+      "bulletStrength": 85
+    },
+    "sectionScores": {
+      "header": 85,
+      "summary": 100,
+      "experience": 100,
+      "projects": 40,
+      "skills": 35,
+      "education": 80
+    },
+    "evidenceConsistency": {
+      "total": 0,
+      "backed": 0,
+      "consistencyScore": 80,
+      "unbackedCount": 0
+    },
+    "detectedKeywordsCount": 0,
+    "missingKeywordsCount": 24,
+    "missingAlerts": [
+      "GitHub Link (recommended)",
+      "Projects (critical)",
+      "Skills Section (critical)"
+    ],
+    "topSuggestionsCount": 3,
+    "topSuggestions": [
+      "[High] Target Job Description Alignment: The resume is missing key technical competencies explicitly requested in the target job posting: AWS, App, Architect, CI/CD.",
+      "[High] Technical Skills: No dedicated Technical Skills section detected.",
+      "[Medium] Technical Keyword Coverage: Absence of key modern cloud and infrastructure competencies expected for this discipline: .NET, AWS, Agile."
+    ],
+    "isDeterministic": true,
+    "expectedOutcome": "Low relevance (CPA/Accountant applying for Senior SWE)"
+  },
+  {
+    "id": 5,
+    "title": "Resume with Keyword Stuffing (No Supporting Experience)",
+    "candidate": "Kevin Miller",
+    "jobTitle": "Junior Software Engineer",
+    "scores": {
+      "overall": 72,
+      "keyword": 64,
+      "formatting": 75,
+      "content": 65,
+      "section": 100,
+      "readability": 70,
+      "bulletStrength": 70
+    },
+    "sectionScores": {
+      "header": 85,
+      "summary": 100,
+      "experience": 100,
+      "projects": 100,
+      "skills": 100,
+      "education": 80
+    },
+    "evidenceConsistency": {
+      "total": 40,
+      "backed": 2,
+      "consistencyScore": 5,
+      "unbackedCount": 38
+    },
+    "detectedKeywordsCount": 40,
+    "missingKeywordsCount": 13,
+    "missingAlerts": [
+      "GitHub Link (recommended)"
+    ],
+    "topSuggestionsCount": 2,
+    "topSuggestions": [
+      "[High] Target Job Description Alignment: The resume is missing key technical competencies explicitly requested in the target job posting: APIs, Data Structures, Develop, Engineer.",
+      "[Medium] Technical Keyword Coverage: Absence of key modern cloud and infrastructure competencies expected for this discipline: .NET, Agile, Algorithms."
+    ],
+    "isDeterministic": true,
+    "expectedOutcome": "Penalized by evidence checker / unbacked skills alert"
+  },
+  {
+    "id": 6,
+    "title": "Resume with Strong Projects but No Employment History",
+    "candidate": "Elena Rostova",
+    "jobTitle": "Junior to Mid Full Stack Engineer",
+    "scores": {
+      "overall": 85,
+      "keyword": 71,
+      "formatting": 95,
+      "content": 85,
+      "section": 100,
+      "readability": 90,
+      "bulletStrength": 95
+    },
+    "sectionScores": {
+      "header": 100,
+      "summary": 100,
+      "experience": 100,
+      "projects": 100,
+      "skills": 100,
+      "education": 80
+    },
+    "evidenceConsistency": {
+      "total": 24,
+      "backed": 15,
+      "consistencyScore": 63,
+      "unbackedCount": 9
+    },
+    "detectedKeywordsCount": 24,
+    "missingKeywordsCount": 10,
+    "missingAlerts": [],
+    "topSuggestionsCount": 2,
+    "topSuggestions": [
+      "[High] Target Job Description Alignment: The resume is missing key technical competencies explicitly requested in the target job posting: Data Structures, Design, Develop, Engineer.",
+      "[Medium] Technical Keyword Coverage: Absence of key modern cloud and infrastructure competencies expected for this discipline: .NET, Agile, Algorithms."
+    ],
+    "isDeterministic": true,
+    "expectedOutcome": "Projects credited appropriately, not totally rejected"
+  },
+  {
+    "id": 7,
+    "title": "Resume with Incomplete Contact Information",
+    "candidate": "Jordan Lee",
+    "jobTitle": "Junior Software Engineer",
+    "scores": {
+      "overall": 76,
+      "keyword": 64,
+      "formatting": 75,
+      "content": 80,
+      "section": 100,
+      "readability": 75,
+      "bulletStrength": 85
+    },
+    "sectionScores": {
+      "header": 20,
+      "summary": 100,
+      "experience": 100,
+      "projects": 100,
+      "skills": 100,
+      "education": 80
+    },
+    "evidenceConsistency": {
+      "total": 12,
+      "backed": 9,
+      "consistencyScore": 75,
+      "unbackedCount": 3
+    },
+    "detectedKeywordsCount": 12,
+    "missingKeywordsCount": 13,
+    "missingAlerts": [
+      "Email (critical)",
+      "Phone Number (critical)",
+      "LinkedIn URL (recommended)",
+      "GitHub Link (recommended)"
+    ],
+    "topSuggestionsCount": 2,
+    "topSuggestions": [
+      "[High] Target Job Description Alignment: The resume is missing key technical competencies explicitly requested in the target job posting: Data Structures, Design, Develop, Engineer.",
+      "[Medium] Technical Keyword Coverage: Absence of key modern cloud and infrastructure competencies expected for this discipline: .NET, AWS, Agile."
+    ],
+    "isDeterministic": true,
+    "expectedOutcome": "Header penalized for missing contact info, content unaffected"
+  },
+  {
+    "id": 8,
+    "title": "Resume with Excellent Formatting but Weak Job Relevance",
+    "candidate": "Victoria Sterling",
+    "jobTitle": "Senior Backend Engineer",
+    "scores": {
+      "overall": 60,
+      "keyword": 15,
+      "formatting": 95,
+      "content": 65,
+      "section": 100,
+      "readability": 90,
+      "bulletStrength": 70
+    },
+    "sectionScores": {
+      "header": 85,
+      "summary": 100,
+      "experience": 100,
+      "projects": 100,
+      "skills": 35,
+      "education": 80
+    },
+    "evidenceConsistency": {
+      "total": 0,
+      "backed": 0,
+      "consistencyScore": 80,
+      "unbackedCount": 0
+    },
+    "detectedKeywordsCount": 0,
+    "missingKeywordsCount": 16,
+    "missingAlerts": [
+      "GitHub Link (recommended)",
+      "Skills Section (critical)"
+    ],
+    "topSuggestionsCount": 3,
+    "topSuggestions": [
+      "[High] Target Job Description Alignment: The resume is missing key technical competencies explicitly requested in the target job posting: API, AWS, Backend, Containerization.",
+      "[High] Technical Skills: No dedicated Technical Skills section detected.",
+      "[Medium] Technical Keyword Coverage: Absence of key modern cloud and infrastructure competencies expected for this discipline: .NET, AWS, Agile."
+    ],
+    "isDeterministic": true,
+    "expectedOutcome": "Formatting/Content high, but Keyword Match low reflects mismatch"
+  }
+]

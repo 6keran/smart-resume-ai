@@ -7,8 +7,13 @@ import {
   PrioritizedSuggestion,
   AnalysisWeakness,
   AnalysisRecommendation,
+  AnalysisStrength,
 } from '@/types/resume';
 import { JobMatchResult, SkillMatchDetail } from '@/types/jobs';
+import {
+  calculateDeterministicAtsScore,
+  normalizeAtsInput,
+} from './deterministicAtsEngine';
 
 // Safe server-side accessor for Gemini API key
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
@@ -329,21 +334,32 @@ export async function analyzeResume(
   jobTitle?: string,
   company?: string
 ): Promise<ResumeAnalysisResult> {
-  const jdProvided = Boolean(jobDescription && jobDescription.trim().length > 20);
+  const normResume = normalizeAtsInput(resumeText);
+  const normJd = jobDescription ? normalizeAtsInput(jobDescription) : '';
+  const jdProvided = Boolean(normJd && normJd.length > 20);
   const targetRole = jobTitle || (jdProvided ? 'Target Role' : undefined);
   const targetCompany = company || (jdProvided ? 'Target Company' : undefined);
 
-  if (aiClient && resumeText.trim().length > 50) {
+  // 1. Compute foundational numerical scores and metrics with 100% mathematical determinism
+  const deterministicResult = calculateDeterministicAtsScore(
+    normResume,
+    normJd,
+    targetRole,
+    targetCompany
+  );
+
+  // 2. Query Gemini solely for qualitative recommendations and rewrites (numerical scores remain deterministic)
+  if (aiClient && normResume.length > 50) {
     const prompt = `You are a Principal Technical Recruiter and ATS parsing algorithm expert. Analyze the following resume text${
       jdProvided ? ` against the target role (${targetRole || 'Target Role'} at ${targetCompany || 'Target Company'}) and Job Description` : ''
     }.
 
-${jdProvided ? `Target Role: ${targetRole || 'Not specified'}\nTarget Company: ${targetCompany || 'Not specified'}\nTarget Job Description:\n${jobDescription?.trim()}\n` : ''}
+${jdProvided ? `Target Role: ${targetRole || 'Not specified'}\nTarget Company: ${targetCompany || 'Not specified'}\nTarget Job Description:\n${normJd}\n` : ''}
 Resume Text:
-${resumeText}
+${normResume}
 
 CRITICAL RULES:
-1. NEVER invent experiences, skills, employment, or certifications.
+1. The deterministic ATS scoring engine has already evaluated this resume. Numerical scores are fixed and must NOT be generated or modified.
 2. Select the top prioritized improvements based on this specific resume${jdProvided ? ' and target job description' : ''}.
 3. Each suggestion must identify:
    - priority: "High" | "Medium" | "Low"
@@ -351,21 +367,10 @@ CRITICAL RULES:
    - whatNeedsImprovement: the specific weakness
    - whyItMatters: brief explanation of clarity, relevance, or ATS impact
    - howToImprove: concrete actionable recommendation
+   - extractedText: exact quote or text segment from the resume that needs improvement
    - example: a rewritten example based on the candidate's actual text without inventing facts or false metrics.
 4. Return ONLY a valid JSON object matching this schema:
 {
-  "overallAtsScore": number (0-100),
-  "keywordMatchScore": number (0-100),
-  "formattingScore": number (0-100),
-  "contentScore": number (0-100),
-  "sectionScore": number (0-100),
-  "wordCount": number,
-  "readabilityScore": number (0-100),
-  "bulletStrengthScore": number (0-100),
-  "detectedKeywords": string[],
-  "missingKeywords": string[],
-  "matchedSkills": [{"skill": string, "status": "matched" | "partial" | "missing", "context": string}],
-  "missingSkills": string[],
   "strengths": [{"id": string, "section": string, "title": string, "description": string}],
   "topSuggestions": [
     {
@@ -387,29 +392,25 @@ CRITICAL RULES:
         contents: prompt,
         config: {
           responseMimeType: 'application/json',
-          temperature: 0.2,
+          temperature: 0.1,
         },
       });
       return response.text;
     });
 
     if (rawCall && rawCall.data) {
-      const parsed = safeJsonParse<ResumeAnalysisResult & { topSuggestions?: unknown[]; weaknesses?: unknown[]; atsScore?: unknown }>(rawCall.data);
-      if (parsed && (typeof parsed.overallAtsScore === 'number' || typeof parsed.atsScore === 'number')) {
-        const rawScore = Number(parsed.overallAtsScore ?? parsed.atsScore) || 0;
-        const overallAtsScore = Math.min(100, Math.max(0, Math.round(rawScore)));
-        const keywordMatchScore = Math.min(100, Math.max(0, Math.round(Number(parsed.keywordMatchScore ?? overallAtsScore) || overallAtsScore)));
-        const formattingScore = Math.min(100, Math.max(0, Math.round(Number(parsed.formattingScore ?? overallAtsScore) || overallAtsScore)));
-        const contentScore = Math.min(100, Math.max(0, Math.round(Number(parsed.contentScore ?? overallAtsScore) || overallAtsScore)));
-        const sectionScore = Math.min(100, Math.max(0, Math.round(Number(parsed.sectionScore ?? overallAtsScore) || overallAtsScore)));
-        const readabilityScore = Math.min(100, Math.max(0, Math.round(Number(parsed.readabilityScore ?? 75) || 75)));
-        const bulletStrengthScore = Math.min(100, Math.max(0, Math.round(Number(parsed.bulletStrengthScore ?? 80) || 80)));
-        const wordCount = Math.max(1, Math.round(Number(parsed.wordCount) || resumeText.split(/\s+/).filter(Boolean).length));
+      const parsed = safeJsonParse<{
+        topSuggestions?: unknown[];
+        weaknesses?: unknown[];
+        strengths?: unknown[];
+        summaryFeedback?: unknown;
+      }>(rawCall.data);
 
+      if (parsed) {
         const rawList = Array.isArray(parsed.topSuggestions) && parsed.topSuggestions.length > 0
           ? parsed.topSuggestions
           : Array.isArray(parsed.weaknesses) ? parsed.weaknesses : [];
-        const topSuggestions = validateAndRankSuggestions(rawList, resumeText, jobDescription);
+        const topSuggestions = validateAndRankSuggestions(rawList, normResume, normJd);
 
         // Derive weaknesses and recommendations for backwards compatibility
         const weaknesses: AnalysisWeakness[] = topSuggestions.map((sug, idx) => ({
@@ -432,20 +433,6 @@ CRITICAL RULES:
           extractedText: sug.extractedText,
         }));
 
-        // Compute detected and missing standard sections
-        const lowerRes = resumeText.toLowerCase();
-        const detectedSections: string[] = [
-          /experience|work history|employment|career/i.test(lowerRes) ? 'Work Experience' : null,
-          /education|academic|university|degree|bachelor|master/i.test(lowerRes) ? 'Education' : null,
-          /skills|technical skills|competencies|technologies/i.test(lowerRes) ? 'Skills' : null,
-          /projects|portfolio|open source/i.test(lowerRes) ? 'Projects' : null,
-          /summary|profile|about me|objective/i.test(lowerRes) ? 'Professional Summary' : null,
-          /@|linkedin|github|phone|\+?\d{3}/i.test(lowerRes) ? 'Contact Information' : null,
-        ].filter(Boolean) as string[];
-
-        const allStandardSections = ['Work Experience', 'Education', 'Skills', 'Projects', 'Professional Summary', 'Contact Information'];
-        const missingSections: string[] = allStandardSections.filter((s) => !detectedSections.includes(s));
-
         const usedModelDisplay = rawCall.model.includes('3.8')
           ? 'Gemini 3.8 Flash'
           : rawCall.model.includes('3.5')
@@ -453,43 +440,40 @@ CRITICAL RULES:
           : 'Gemini Flash';
 
         recordGeminiProviderStatus('ATS resume analysis', 'Gemini', rawCall.model);
+
         return {
-          ...parsed,
-          overallAtsScore,
-          keywordMatchScore,
-          formattingScore,
-          contentScore,
-          sectionScore,
-          readabilityScore,
-          bulletStrengthScore,
-          wordCount,
+          ...deterministicResult,
+          topSuggestions: topSuggestions.length > 0 ? topSuggestions : deterministicResult.topSuggestions,
+          weaknesses: topSuggestions.length > 0 ? weaknesses : deterministicResult.weaknesses,
+          recommendations: topSuggestions.length > 0 ? recommendations : deterministicResult.recommendations,
+          strengths: Array.isArray(parsed.strengths) && parsed.strengths.length > 0
+            ? (parsed.strengths as AnalysisStrength[])
+            : deterministicResult.strengths,
+          summaryFeedback: typeof parsed.summaryFeedback === 'string' && parsed.summaryFeedback.trim()
+            ? parsed.summaryFeedback.trim()
+            : deterministicResult.summaryFeedback,
+          analysisEngine: 'gemini',
+          engineDisplayName: usedModelDisplay,
           isJobSpecific: jdProvided,
           jobTitle: targetRole,
           company: targetCompany,
-          missingSections: Array.isArray(parsed.missingSections) && parsed.missingSections.length > 0 ? parsed.missingSections : missingSections,
-          detectedSections: Array.isArray(parsed.detectedSections) && parsed.detectedSections.length > 0 ? parsed.detectedSections : detectedSections,
-          detectedKeywords: Array.isArray(parsed.detectedKeywords) ? parsed.detectedKeywords : [],
-          missingKeywords: Array.isArray(parsed.missingKeywords) ? parsed.missingKeywords : [],
-          strengths: Array.isArray(parsed.strengths) ? parsed.strengths : [],
-          topSuggestions,
-          weaknesses,
-          recommendations,
-          analysisEngine: 'gemini',
-          engineDisplayName: usedModelDisplay,
-          summaryFeedback: typeof parsed.summaryFeedback === 'string' && parsed.summaryFeedback.trim()
-            ? parsed.summaryFeedback.trim()
-            : `ATS analysis completed via ${usedModelDisplay}. Overall ATS compatibility rated at ${overallAtsScore}%.`,
           analyzedAt: new Date().toISOString(),
         };
-      } else {
-        console.warn('[Gemini] Response could not be parsed as valid JSON. Using deterministic ATS engine.');
       }
     }
   }
 
-  // Deterministic algorithmic ATS intelligence engine fallback
+  // Deterministic fallback (guarantees identical numerical scores)
   recordGeminiProviderStatus('ATS resume analysis', 'deterministic');
-  return generateDeterministicAtsAnalysis(resumeText, jobDescription, targetRole, targetCompany);
+  return {
+    ...deterministicResult,
+    isJobSpecific: jdProvided,
+    jobTitle: targetRole,
+    company: targetCompany,
+    analysisEngine: 'deterministic-ats',
+    engineDisplayName: 'Rule-Based ATS Engine (Deterministic)',
+    analyzedAt: new Date().toISOString(),
+  };
 }
 
 /**
@@ -1039,428 +1023,19 @@ export function generateDeterministicAtsAnalysis(
   jobTitle?: string,
   company?: string
 ): ResumeAnalysisResult {
-  const words = text.split(/\s+/).filter(Boolean);
-  const wordCount = words.length;
-  const lower = text.toLowerCase();
-  const jdProvided = Boolean(jobDescription && jobDescription.trim().length > 20);
+  const normResume = normalizeAtsInput(text);
+  const normJd = jobDescription ? normalizeAtsInput(jobDescription) : '';
+  const jdProvided = Boolean(normJd && normJd.length > 20);
   const targetRole = jobTitle || (jdProvided ? 'Target Role' : undefined);
   const targetCompany = company || (jdProvided ? 'Target Company' : undefined);
 
-  // 1. Detect industry skills present in the resume
-  const detected: string[] = [];
-  const missing: string[] = [];
-
-  for (const skill of INDUSTRY_SKILLS) {
-    const skillPattern = new RegExp(`\\b${skill.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
-    if (skillPattern.test(text)) {
-      detected.push(skill);
-    } else {
-      missing.push(skill);
-    }
-  }
-
-  // Pick high-value missing keywords relevant to modern software roles
-  const topMissing = missing.slice(0, 5);
-
-  // Job-specific skills matching
-  const matchedSkills: { skill: string; status: 'matched' | 'partial' | 'missing'; context?: string }[] = [];
-  const missingJobSkills: string[] = [];
-
-  if (jdProvided && jobDescription) {
-    const lowerJd = jobDescription.toLowerCase();
-
-    // Check static industry skills requested in JD
-    for (const skill of INDUSTRY_SKILLS) {
-      const inJd = lowerJd.includes(skill.toLowerCase());
-      const inResume = lower.includes(skill.toLowerCase());
-
-      if (inJd && inResume) {
-        matchedSkills.push({
-          skill,
-          status: 'matched',
-          context: `Verified in resume and requested for ${targetRole || 'this position'}.`,
-        });
-      } else if (inJd && !inResume) {
-        missingJobSkills.push(skill);
-        matchedSkills.push({
-          skill,
-          status: 'missing',
-          context: `Required by job description for ${targetRole || 'role'}, but not found on resume.`,
-        });
-      }
-    }
-
-    // Also extract dynamic technical words from the JD (custom requirements not in default list)
-    const dynamicJdCandidates = jobDescription.match(/\b[A-Z][a-zA-Z0-9.+/#-]{2,35}\b/g) || [];
-    const nonTechWords = new Set([
-      'The', 'And', 'For', 'With', 'You', 'Will', 'Our', 'Are', 'This', 'That', 'Have',
-      'Work', 'Team', 'Role', 'About', 'Job', 'Requirements', 'Preferred', 'Qualifications',
-      'Experience', 'Responsibilities', 'Company', 'Years', 'Candidate', 'Join', 'Opportunity',
-      'Workplace', 'Equal', 'Status', 'Strong', 'Ability', 'Hands', 'Must', 'Plus', 'Skills',
-      'Degree', 'Bachelor', 'Master', 'Location', 'Salary', 'Benefits', 'Apply', 'Full', 'Time'
-    ]);
-
-    for (const rawWord of dynamicJdCandidates) {
-      if (
-        !nonTechWords.has(rawWord) &&
-        !INDUSTRY_SKILLS.some((s) => s.toLowerCase() === rawWord.toLowerCase()) &&
-        !matchedSkills.some((s) => s.skill.toLowerCase() === rawWord.toLowerCase()) &&
-        !missingJobSkills.some((s) => s.toLowerCase() === rawWord.toLowerCase())
-      ) {
-        const inResume = new RegExp(`\\b${rawWord.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i').test(text);
-        if (inResume) {
-          matchedSkills.push({
-            skill: rawWord,
-            status: 'matched',
-            context: `Matches explicit requirement in ${targetRole || 'job'} description.`,
-          });
-        } else {
-          missingJobSkills.push(rawWord);
-          matchedSkills.push({
-            skill: rawWord,
-            status: 'missing',
-            context: `Mentioned in ${targetRole || 'job'} description, but not identified on resume.`,
-          });
-        }
-      }
-    }
-
-    // If no specific matched skills found, include standard core competency
-    if (matchedSkills.filter((s) => s.status === 'matched').length === 0 && detected.length > 0) {
-      matchedSkills.push({
-        skill: detected[0],
-        status: 'matched',
-        context: 'Foundational technical competency present in resume.',
-      });
-    }
-  }
-
-  // 2. Section detection & Structured Identification
-  const hasExperience = /experience|work history|employment|career/i.test(lower);
-  const hasEducation = /education|academic|university|degree|bachelor|master/i.test(lower);
-  const hasSkills = /skills|technical skills|competencies|technologies/i.test(lower) || detected.length >= 3;
-  const hasProjects = /projects|portfolio|open source/i.test(lower);
-  const hasSummary = /summary|profile|about me|objective/i.test(lower);
-  const hasContact = /@|linkedin|github|phone|\+?\d{3}/i.test(lower);
-
-  const detectedSections: string[] = [];
-  const missingSections: string[] = [];
-
-  if (hasExperience) detectedSections.push('Work Experience');
-  else missingSections.push('Work Experience');
-
-  if (hasEducation) detectedSections.push('Education');
-  else missingSections.push('Education');
-
-  if (hasSkills) detectedSections.push('Skills');
-  else missingSections.push('Skills');
-
-  if (hasProjects) detectedSections.push('Projects');
-  else missingSections.push('Projects');
-
-  if (hasSummary) detectedSections.push('Professional Summary');
-  else missingSections.push('Professional Summary');
-
-  if (hasContact) detectedSections.push('Contact Information');
-  else missingSections.push('Contact Information');
-
-  const sectionsDetectedCount = detectedSections.length;
-
-  // 3. Metric & quantification detection (e.g. 20%, $100k, 5x, reduced by, increased by)
-  const metricMatches = text.match(/\b\d+(\.\d+)?%|\$\d+[km]?|\b\d+[xX]\b|\b\d{2,}\b/g) || [];
-  const metricCount = metricMatches.length;
-
-  // 4. Action verb detection
-  const actionVerbMatches = text.match(/\b(built|developed|led|engineered|created|architected|designed|implemented|managed|spearheaded|optimized|automated|orchestrated|delivered|refactored|launched)\b/gi) || [];
-  const actionVerbCount = actionVerbMatches.length;
-
-  // 5. Bullet Strength & Readability scores
-  const bulletStrengthScore = Math.min(
-    Math.max(35 + Math.min(actionVerbCount * 5, 30) + Math.min(metricCount * 6, 30), 30),
-    96
-  );
-  const readabilityScore = Math.min(
-    Math.max(50 + (wordCount >= 200 && wordCount <= 850 ? 25 : 10) + (sectionsDetectedCount >= 4 ? 15 : 5), 40),
-    95
-  );
-
-  // 6. Compute realistic scores based on detected evidence and job alignment
-  let keywordScore: number;
-  if (jdProvided && (matchedSkills.length > 0 || missingJobSkills.length > 0)) {
-    const matchedCount = matchedSkills.filter((s) => s.status === 'matched').length;
-    const totalJobSkills = matchedCount + missingJobSkills.length;
-    if (totalJobSkills > 0) {
-      const matchRatio = matchedCount / totalJobSkills;
-      keywordScore = Math.round(matchRatio * 65 + (detected.length > 0 ? 30 : 10));
-      keywordScore = Math.min(Math.max(keywordScore, 15), 98);
-    } else {
-      keywordScore = Math.min(detected.length * 8 + 20, 95);
-    }
-  } else {
-    if (detected.length === 0) {
-      keywordScore = 20;
-    } else {
-      keywordScore = Math.min(25 + detected.length * 7, 95);
-    }
-  }
-
-  let formattingScore: number;
-  if (sectionsDetectedCount === 0) {
-    formattingScore = 20;
-  } else {
-    formattingScore = Math.round((sectionsDetectedCount / 6) * 60 + (wordCount >= 200 && wordCount <= 900 ? 35 : 15));
-    formattingScore = Math.min(Math.max(formattingScore, 20), 96);
-  }
-
-  let contentScore: number;
-  if (wordCount < 40) {
-    contentScore = 15;
-  } else {
-    contentScore = Math.min(
-      Math.max(25 + Math.min(metricCount * 7, 35) + Math.min(actionVerbCount * 5, 25) + (wordCount >= 250 ? 15 : 0), 20),
-      95
-    );
-  }
-
-  const sectionScore = Math.round((sectionsDetectedCount / 6) * 100);
-  const overallAtsScore = Math.round(
-    keywordScore * 0.35 + formattingScore * 0.25 + contentScore * 0.25 + sectionScore * 0.15
-  );
-
-  // 7. Structural and content findings supported by the resume
-  const strengths = [];
-  if (detected.length >= 3) {
-    strengths.push({
-      id: 'str_skills',
-      section: 'Skills Coverage',
-      title: 'Technical Skills Detected',
-      description: `Identified ${detected.length} relevant technologies in resume text: ${detected.slice(0, 6).join(', ')}.`,
-    });
-  }
-
-  if (metricCount >= 2) {
-    strengths.push({
-      id: 'str_metrics',
-      section: 'Work Experience',
-      title: 'Quantified Results',
-      description: `Detected ${metricCount} numerical metrics indicating measurable project scope or performance.`,
-    });
-  }
-
-  if (hasExperience && hasEducation && hasSkills) {
-    strengths.push({
-      id: 'str_sections',
-      section: 'Structure',
-      title: 'Standard Section Layout',
-      description: 'Identified standard Experience, Education, and Skills sections for clear ATS parsing.',
-    });
-  }
-
-  // 8. Generate candidate prioritized improvements based on actual content and target job description
-  const candidateSuggestions: Array<{
-    priority: 'High' | 'Medium' | 'Low';
-    section: string;
-    whatNeedsImprovement: string;
-    whyItMatters: string;
-    howToImprove: string;
-    example?: string;
-    extractedText?: string;
-  }> = [];
-
-  // A. Check target job description alignment if supplied
-  if (jdProvided && missingJobSkills.length > 0) {
-    candidateSuggestions.push({
-      priority: 'High',
-      section: 'Target Job Description Alignment',
-      whatNeedsImprovement: `The resume is missing key technical competencies explicitly requested in the target job posting: ${missingJobSkills.slice(0, 4).join(', ')}.`,
-      whyItMatters: `Adding relevant technologies you genuinely use may improve keyword coverage for matching job descriptions and ensure hiring teams recognize your qualifications.`,
-      howToImprove: `Incorporate ${missingJobSkills.slice(0, 2).join(' and ')} directly into your skills inventory and relevant project or experience bullet points where you have genuine working exposure.`,
-      extractedText: detected.length > 0 ? `Current Technical Skills: ${detected.slice(0, 6).join(', ')}` : '(No technical skills detected in standard section)',
-      example: `Core Competencies: ${missingJobSkills.slice(0, 3).join(', ')} | Tools & Frameworks: ${detected.slice(0, 3).join(', ')}`,
-    });
-  }
-
-  // B. Missing Work Experience Section
-  if (!hasExperience) {
-    candidateSuggestions.push({
-      priority: 'High',
-      section: 'Work Experience',
-      whatNeedsImprovement: 'No Work Experience or Employment History section detected.',
-      whyItMatters: 'Applicant tracking systems and recruiters evaluate professional trajectory, domain depth, and project impact primarily through work experience.',
-      howToImprove: 'Add an Experience section detailing your past roles, companies, dates, and accomplishment bullets.',
-      extractedText: '(No work experience section detected in current resume)',
-      example: 'Software Engineer — Company Name (2022 – Present)\n• Engineered full-stack web applications using React and Node.js.',
-    });
-  }
-
-  // C. Missing Technical Skills Section
-  if (!hasSkills || detected.length === 0) {
-    candidateSuggestions.push({
-      priority: 'High',
-      section: 'Technical Skills',
-      whatNeedsImprovement: 'No dedicated Technical Skills section detected.',
-      whyItMatters: 'ATS search filters parse technical skills to index candidate competency. Without a skills section, keyword extraction is significantly impaired.',
-      howToImprove: 'Add a dedicated Skills section categorizing programming languages, frameworks, developer tools, and databases.',
-      extractedText: '(No technical skills section detected)',
-      example: 'Technical Skills: Python, TypeScript, React, Node.js, PostgreSQL, Docker, Git',
-    });
-  }
-
-  // D. Missing Education Section
-  if (!hasEducation) {
-    candidateSuggestions.push({
-      priority: 'High',
-      section: 'Education & Credentials',
-      whatNeedsImprovement: 'No distinct Education section detected.',
-      whyItMatters: 'Many enterprise ATS workflows require a recognized degree or accreditation credential for automated application compliance.',
-      howToImprove: 'Add an Education section specifying your degree, university or program, and graduation year.',
-      extractedText: '(No education section detected in current resume)',
-      example: 'B.S. in Computer Science — University / College (Graduation Year)',
-    });
-  }
-
-  // E. Missing Contact Information Section
-  if (!hasContact) {
-    candidateSuggestions.push({
-      priority: 'High',
-      section: 'Contact Information',
-      whatNeedsImprovement: 'No contact information (email address, phone number, or professional profile) detected.',
-      whyItMatters: 'Recruiters and ATS platforms must extract a valid email and phone number to create your candidate profile and schedule interviews.',
-      howToImprove: 'Include your full name, professional email, phone number, location, and LinkedIn/GitHub profile links at the top of the resume.',
-      extractedText: '(No contact details detected in current resume)',
-      example: 'jane.doe@email.com | (555) 123-4567 | San Francisco, CA | linkedin.com/in/janedoe',
-    });
-  }
-
-  // F. Missing Professional Summary
-  if (!hasSummary) {
-    const summaryCandidate = words.length > 0 ? text.slice(0, 100) : '';
-    candidateSuggestions.push({
-      priority: 'Medium',
-      section: 'Professional Summary',
-      whatNeedsImprovement: 'Missing a focused professional summary statement at the beginning of the resume.',
-      whyItMatters: 'A professional summary gives recruiters an immediate value proposition within 6 seconds, framing your seniority, core domain, and top technical proficiencies.',
-      howToImprove: 'Add a 2–3 sentence executive summary tailored to your target role, highlighting your primary technical stack, years of experience, and architectural scope.',
-      extractedText: summaryCandidate ? summaryCandidate.slice(0, 120) : '(No summary section detected in current resume)',
-      example: `${detected.length >= 2 ? detected.slice(0, 3).join(', ') : 'Software'} Engineer with demonstrated experience designing and delivering reliable distributed applications and modern user experiences.`,
-    });
-  }
-
-  // G. Quantified Impact & Measurable Achievements
-  const lines = text.split(/\r?\n/).map((l) => l.trim()).filter((l) => l.length > 20);
-  const foundBullet = lines.find((l) => /^(?:[•\-*]|\d+\.|\b(?:Built|Developed|Led|Engineered|Created|Architected|Designed|Implemented|Managed|Spearheaded)\b)/i.test(l)) || lines[1] || '';
-  const cleanBullet = foundBullet.replace(/^[•\-*\d.]+\s*/, '').trim();
-
-  if (metricCount < 3 && hasExperience) {
-    candidateSuggestions.push({
-      priority: 'High',
-      section: 'Work Experience & Impact',
-      whatNeedsImprovement: 'Work experience bullets describe duties and responsibilities rather than measurable business outcomes and quantifiable achievements.',
-      whyItMatters: 'Hiring managers look for evidence of measurable impact (such as scale handled, latency reductions, or delivery timelines) to evaluate project scope and effectiveness.',
-      howToImprove: 'Structure bullet points using the Google X-Y-Z formula: "Accomplished [X] measured by [Y] by doing [Z]". Add genuine metrics representing scale, percentage performance gains, or delivery speed.',
-      extractedText: cleanBullet || (lines[0] ? lines[0].slice(0, 140) : '(Current bullet point in experience section)'),
-      example: cleanBullet
-        ? `Engineered scalable service workflows, improving system throughput by 35% and accelerating release cycles across production deployments.`
-        : 'Optimized database query throughput by 42% by rewriting indexing pipelines and decoupling redundant microservice calls.',
-    });
-  }
-
-  // H. Weak or Vague Action Verbs
-  const passiveMatch = text.match(/\b(responsible for|assisted with|worked on|helped to|tasked with|involved in)\b/i);
-  if (passiveMatch) {
-    const matchedLine = lines.find((l) => new RegExp(`\\b${passiveMatch[0]}\\b`, 'i').test(l)) || passiveMatch[0];
-    const cleanMatchedLine = matchedLine.replace(/^[•\-*\d.]+\s*/, '').trim();
-
-    candidateSuggestions.push({
-      priority: 'Medium',
-      section: 'Action-Oriented Phrasing',
-      whatNeedsImprovement: `Several statements use passive duty-based wording ("${passiveMatch[0]}") instead of authoritative engineering action verbs.`,
-      whyItMatters: `Clear, active verbs communicate direct ownership and technical contribution more effectively to recruiters than passive duty descriptions.`,
-      howToImprove: 'Begin every bullet point with strong active verbs like "Architected", "Spearheaded", "Engineered", "Refactored", or "Automated".',
-      extractedText: cleanMatchedLine,
-      example: cleanMatchedLine
-        ? cleanMatchedLine.replace(new RegExp(`\\b${passiveMatch[0]}\\b\\s*`, 'i'), 'Architected and implemented ')
-        : 'Architected and deployed production-grade services, ensuring zero downtime.',
-    });
-  }
-
-  // I. Technical Keyword Coverage (if no JD was provided or if additional skills missing)
-  if (topMissing.length > 0 && candidateSuggestions.length < 3) {
-    candidateSuggestions.push({
-      priority: 'Medium',
-      section: 'Technical Keyword Coverage',
-      whatNeedsImprovement: `Absence of key modern cloud and infrastructure competencies expected for this discipline: ${topMissing.slice(0, 3).join(', ')}.`,
-      whyItMatters: 'Technical recruiters and search filters scan for relevant stack components. Listing the tools and frameworks you actually work with clarifies your domain experience.',
-      howToImprove: `Incorporate exposure to ${topMissing.slice(0, 2).join(' and ')} in your technical skills inventory or project descriptions where applicable.`,
-      extractedText: detected.length > 0 ? `Current Technical Skills: ${detected.slice(0, 6).join(', ')}` : '(No skills section detected)',
-      example: `Technical Skills: ${detected.slice(0, 4).join(', ')}${topMissing.length > 0 ? `, ${topMissing.slice(0, 2).join(', ')}` : ''}`,
-    });
-  }
-
-  // J. Resume Depth / Under-detailed
-  if (wordCount < 150 && !missingSections.includes('Work Experience')) {
-    candidateSuggestions.push({
-      priority: 'High',
-      section: 'Resume Depth & Completeness',
-      whatNeedsImprovement: `The resume is unusually brief (${wordCount} words), leaving critical technical responsibilities, architectures, and achievements unexplained.`,
-      whyItMatters: 'Under-detailed resumes receive low ATS semantic completeness scores and fail to establish sufficient depth during recruiter evaluations.',
-      howToImprove: 'Expand work experience and academic or open-source projects with detailed technical responsibilities, architecture decisions, and outcomes.',
-      extractedText: lines.slice(0, 2).join(' ').slice(0, 140),
-      example: 'Engineered full-stack features using React and Node.js, collaborating with cross-functional teams to deliver production releases.',
-    });
-  }
-
-  // Validate, deduplicate, prioritize, and limit to exactly the top 3
-  const topSuggestions = validateAndRankSuggestions(candidateSuggestions, text, jobDescription);
-
-  // Synchronize weaknesses and recommendations for backward compatibility
-  const weaknesses: AnalysisWeakness[] = topSuggestions.map((sug, idx) => ({
-    id: `wk_${idx + 1}`,
-    section: sug.section,
-    whatIsWrong: sug.whatNeedsImprovement,
-    whyItMatters: sug.whyItMatters,
-    howToImprove: sug.howToImprove,
-    severity: sug.priority.toLowerCase() as 'high' | 'medium' | 'low',
-  }));
-
-  const recommendations: AnalysisRecommendation[] = topSuggestions.map((sug, idx) => ({
-    id: `rec_${idx + 1}`,
-    category: sug.section,
-    title: sug.howToImprove.slice(0, 60),
-    actionText: sug.howToImprove,
-    originalText: sug.extractedText || '',
-    improvedText: sug.example || '',
-    impact: sug.priority === 'High' ? 'High Impact' : sug.priority === 'Medium' ? 'Moderate Impact' : 'Refinement',
-    extractedText: sug.extractedText,
-  }));
-
-  const summaryFeedback = jdProvided
-    ? `Targeted analysis for ${targetRole || 'selected role'} at ${targetCompany || 'target company'} completed. Detected ${detected.length} technical skills with ${matchedSkills.filter((s) => s.status === 'matched').length} direct matches to job requirements across ${sectionsDetectedCount} standard sections. ATS compatibility is rated at ${overallAtsScore}%.`
-    : `Resume analysis completed. Detected ${detected.length} core technical keywords across ${sectionsDetectedCount} standard sections. Overall ATS compatibility is rated at ${overallAtsScore}%.`;
+  const calc = calculateDeterministicAtsScore(normResume, normJd, targetRole, targetCompany);
 
   return {
-    overallAtsScore,
-    keywordMatchScore: keywordScore,
-    formattingScore,
-    contentScore,
-    sectionScore,
-    wordCount,
-    readabilityScore,
-    bulletStrengthScore,
-    detectedKeywords: detected,
-    missingKeywords: jdProvided && missingJobSkills.length > 0 ? missingJobSkills : topMissing,
-    missingSections,
-    detectedSections,
+    ...calc,
     isJobSpecific: jdProvided,
     jobTitle: targetRole,
     company: targetCompany,
-    matchedSkills: jdProvided ? matchedSkills : undefined,
-    missingSkills: jdProvided ? missingJobSkills : undefined,
-    strengths,
-    weaknesses,
-    recommendations,
-    topSuggestions,
-    summaryFeedback,
     analysisEngine: 'deterministic-ats',
     engineDisplayName: 'Rule-Based ATS Engine (Deterministic)',
     analyzedAt: new Date().toISOString(),

@@ -7,23 +7,25 @@ import { ATSClassicTemplate } from './ATSClassicTemplate';
 import { SoftwareEngineerTemplate } from './SoftwareEngineerTemplate';
 import { FreshGraduateTemplate } from './FreshGraduateTemplate';
 import { CorporateExecutiveTemplate } from './CorporateExecutiveTemplate';
-import { DataAnalystTemplate } from './DataAnalystTemplate';
-import { UIUXDesignerTemplate } from './UIUXDesignerTemplate';
-import { FullStackDeveloperTemplate } from './FullStackDeveloperTemplate';
-import { InternshipApplicantTemplate } from './InternshipApplicantTemplate';
-import { AcademicTemplate } from './AcademicTemplate';
-import { SalesMarketingTemplate } from './SalesMarketingTemplate';
+import { ExecutiveLeadershipTemplate } from './ExecutiveLeadershipTemplate';
+import { MinimalistATSTemplate } from './MinimalistATSTemplate';
+import { SoftwareDeveloperTemplate } from './SoftwareDeveloperTemplate';
 import { OperationsManagementTemplate } from './OperationsManagementTemplate';
 import { ModernTwoColumnTemplate } from './ModernTwoColumnTemplate';
+import { CompactOnePageTemplate } from './CompactOnePageTemplate';
+import { MinimalistTemplate } from './MinimalistTemplate';
+import { AcademicTemplate } from './AcademicTemplate';
+import { ExperiencedProfessionalTemplate } from './ExperiencedProfessionalTemplate';
+import { DataAnalystTemplate } from './DataAnalystTemplate';
+import { UIUXDesignerTemplate } from './UIUXDesignerTemplate';
+import { InternshipApplicantTemplate } from './InternshipApplicantTemplate';
+import { SalesMarketingTemplate } from './SalesMarketingTemplate';
 
 import dynamic from 'next/dynamic';
 
 // Legacy / Reference components loaded dynamically on demand for backward compatibility
 const ModernProfessionalTemplate = dynamic(() => import('./ModernProfessionalTemplate').then((m) => m.ModernProfessionalTemplate));
-const MinimalistTemplate = dynamic(() => import('./MinimalistTemplate').then((m) => m.MinimalistTemplate));
 const CreativeProfessionalTemplate = dynamic(() => import('./CreativeProfessionalTemplate').then((m) => m.CreativeProfessionalTemplate));
-const CompactOnePageTemplate = dynamic(() => import('./CompactOnePageTemplate').then((m) => m.CompactOnePageTemplate));
-const ExperiencedProfessionalTemplate = dynamic(() => import('./ExperiencedProfessionalTemplate').then((m) => m.ExperiencedProfessionalTemplate));
 const ContemporaryTemplate = dynamic(() => import('./ContemporaryTemplate').then((m) => m.ContemporaryTemplate));
 const ThomasHamptoneTemplate = dynamic(() => import('./ThomasHamptoneTemplate').then((m) => m.ThomasHamptoneTemplate));
 const NickKoeTemplate = dynamic(() => import('./NickKoeTemplate').then((m) => m.NickKoeTemplate));
@@ -62,47 +64,87 @@ export function ResumeRenderer({
   }, [data]);
 
   switch (activeTemplate) {
-    // 12 Production SaaS Templates
+    // 12 Distinct Production Templates
+    case 'classic-professional':
     case 'ats-classic':
+    case 'ats-professional':
       return <ATSClassicTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
+    case 'modern-corporate':
+    case 'corporate-executive':
+    case 'corporate':
+      return <CorporateExecutiveTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
+    case 'executive-leadership':
+    case 'executive-professional':
+    case 'executive':
+      return <ExecutiveLeadershipTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
+    case 'engineering-professional':
     case 'software-engineer':
+    case 'engineering':
+    case 'engineering-manufacturing':
       return <SoftwareEngineerTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
+    case 'manufacturing-operations':
+    case 'operations-management':
+      return <OperationsManagementTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
+    case 'software-developer':
+    case 'full-stack-developer':
+      return <SoftwareDeveloperTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
+    case 'fresher-graduate':
     case 'graduate-fresher':
     case 'fresh-graduate':
+    case 'fresher':
+    case 'graduate-entry':
       return <FreshGraduateTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
-    case 'executive-professional':
-    case 'corporate-executive':
-      return <CorporateExecutiveTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
-    case 'data-analyst':
-      return <DataAnalystTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
-    case 'ui-ux-designer':
-      return <UIUXDesignerTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
-    case 'full-stack-developer':
-      return <FullStackDeveloperTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
-    case 'internship-applicant':
-      return <InternshipApplicantTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
+    case 'minimalist-ats':
+    case 'ats-minimal':
+      return <MinimalistATSTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
+    case 'modern-minimalist':
+    case 'minimalist':
+    case 'minimal-professional':
+    case 'minimal':
+      return <MinimalistTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
     case 'academic-research':
     case 'academic':
       return <AcademicTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
-    case 'sales-marketing':
-      return <SalesMarketingTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
-    case 'operations-management':
-      return <OperationsManagementTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
+    case 'professional-sidebar':
     case 'modern-two-column':
     case 'contemporary':
       return <ModernTwoColumnTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
 
+    case 'compact-one-page':
+      return <CompactOnePageTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
+    // Specialized & Supplementary Templates
+    case 'experienced-professional':
+    case 'experienced':
+      return <ExperiencedProfessionalTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
+    case 'data-analyst':
+    case 'data-ai':
+      return <DataAnalystTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
+    case 'ui-ux-designer':
+    case 'creative-professional':
+      return <UIUXDesignerTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
+    case 'internship-applicant':
+      return <InternshipApplicantTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
+    case 'sales-marketing':
+      return <SalesMarketingTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
+
     // Legacy Reference Templates
     case 'modern-professional':
       return <ModernProfessionalTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
-    case 'minimalist':
-      return <MinimalistTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
-    case 'creative-professional':
-      return <CreativeProfessionalTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
-    case 'compact-one-page':
-      return <CompactOnePageTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
-    case 'experienced-professional':
-      return <ExperiencedProfessionalTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'thomas-hamptone':
       return <ThomasHamptoneTemplate data={cleanData} isMiniPreview={isMiniPreview} />;
     case 'nick-koe':

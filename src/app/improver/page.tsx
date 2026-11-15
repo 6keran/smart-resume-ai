@@ -77,7 +77,7 @@ export default function ResumeImproverPage() {
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   // Job-Specific Tailoring Studio State
-  const [targetRoleInput, setTargetRoleInput] = useState(targetJob.title || 'Graduate Software Engineer');
+  const [targetRoleInput, setTargetRoleInput] = useState(targetJob.title || '');
   const [targetCompanyInput, setTargetCompanyInput] = useState(targetJob.company || '');
   const [targetJdInput, setTargetJdInput] = useState(targetJob.description || '');
   const [isTailoringJob, setIsTailoringJob] = useState(false);
@@ -153,7 +153,11 @@ export default function ResumeImproverPage() {
       resumeParts.push(`Experience:\n${resumeData.experience.map((e) => `• ${e.role} at ${e.company}: ${e.bulletPoints?.join('; ')}`).join('\n')}`);
     }
 
-    const fullResumeText = resumeParts.join('\n\n') || (customInput.trim() ? customInput.trim() : 'Candidate seeking entry-level software position with academic projects.');
+    const fullResumeText = resumeParts.join('\n\n') || (customInput.trim() ? customInput.trim() : '');
+    if (!fullResumeText) {
+      triggerToast('Add resume details or paste content first before tailoring.');
+      return;
+    }
 
     setIsTailoringJob(true);
     try {
@@ -162,7 +166,7 @@ export default function ResumeImproverPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           resumeText: fullResumeText,
-          jobTitle: targetRoleInput.trim() || 'Graduate Software Engineer',
+          jobTitle: targetRoleInput.trim() || 'Target Role',
           company: targetCompanyInput.trim() || 'Target Company',
           jobDescription: targetJdInput.trim(),
         }),
@@ -243,8 +247,8 @@ export default function ResumeImproverPage() {
         if (!updatedExp.length) {
           updatedExp.push({
             id: 'exp_' + Date.now(),
-            role: targetRoleInput || 'Software Engineer',
-            company: 'Academic Projects & Training',
+            role: targetRoleInput.trim() || 'Project Experience',
+            company: 'Portfolio & Projects',
             startDate: '2024',
             endDate: 'Present',
             current: true,
@@ -503,7 +507,7 @@ export default function ResumeImproverPage() {
       </div>
 
       {/* ─── JOB-SPECIFIC TAILORING & DIFF STUDIO ────────────────────────── */}
-      <div className="bento-card p-6 sm:p-8 space-y-6">
+      <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 space-y-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border-color)]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[var(--accent)] text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -745,10 +749,7 @@ export default function ResumeImproverPage() {
 
       {/* ─── LIVE PHRASING STUDIO WORKBENCH ──────────────────────────────── */}
       <div
-        onPointerMove={handlePointerMove}
-        onPointerLeave={handlePointerLeave}
-        onPointerOut={handlePointerLeave}
-        className="liquid-glass-card rounded-2xl p-6 sm:p-8 space-y-6"
+        className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 space-y-6 shadow-sm"
       >
         {/* Workbench Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--glass-border)]">
@@ -1045,14 +1046,11 @@ export default function ResumeImproverPage() {
             return (
               <div
                 key={item.id}
-                onPointerMove={handlePointerMove}
-                onPointerLeave={handlePointerLeave}
-                onPointerOut={handlePointerLeave}
-                className={`liquid-glass-card rounded-2xl p-5 sm:p-6 space-y-4 transition-all ${
+                className={`bg-white rounded-2xl border border-[#E5E8ED] p-5 sm:p-6 space-y-4 shadow-sm transition-all ${
                   isRejected
                     ? 'opacity-60'
                     : isAppliedToResume
-                    ? 'border-emerald-500/30 shadow-[0_4px_20px_rgba(36,199,138,0.06)]'
+                    ? 'border-emerald-500/30'
                     : ''
                 }`}
               >

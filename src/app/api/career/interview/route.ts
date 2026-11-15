@@ -58,19 +58,29 @@ export async function POST(req: Request) {
     // ACTION 1: START NEW INTERVIEW SESSION
     if (action === 'start') {
       const { targetRole, jobTitle, company, jobDescription, resumeSnippet } = body;
-      const role = (targetRole && typeof targetRole === 'string') ? targetRole.trim() : 'Graduate Software Engineer';
+      const student = await getStudentProfile(user.id).catch(() => null);
+      const role =
+        (targetRole && typeof targetRole === 'string' && targetRole.trim()) ||
+        student?.targetRole ||
+        (typeof jobTitle === 'string' && jobTitle.trim()) ||
+        '';
+      if (!role) {
+        return NextResponse.json(
+          { message: 'Please set a target role before starting an interview session.' },
+          { status: 400 }
+        );
+      }
 
       let effectiveSnippet = resumeSnippet;
       if (!effectiveSnippet) {
-        const student = await getStudentProfile(user.id);
         if (student) {
           const projectDetails = (student.projects || [])
             .map((p) => `- Project: ${p.title}. ${p.description}. Tech: ${p.techStack.join(', ')}`)
             .join('\n');
           const courseDetails = (student.coursework || []).join(', ');
-          effectiveSnippet = `Education: ${student.degree} in ${student.fieldOfStudy} at ${student.institution} (Class of ${student.graduationYear}).
-Coursework: ${courseDetails || 'Computer Science fundamentals'}
-Projects:\n${projectDetails || 'Academic capstone projects'}`;
+          effectiveSnippet = `Education: ${student.degree || 'Degree'} in ${student.fieldOfStudy || 'Study'} at ${student.institution || 'Institution'}${student.graduationYear ? ` (Class of ${student.graduationYear})` : ''}.
+Coursework: ${courseDetails || 'None specified'}
+Projects:\n${projectDetails || 'None specified'}`;
         }
       }
 
@@ -93,7 +103,7 @@ Projects:\n${projectDetails || 'Academic capstone projects'}`;
         return NextResponse.json({ message: 'Missing evaluation parameters.' }, { status: 400 });
       }
 
-      const role = (targetRole && typeof targetRole === 'string') ? targetRole.trim() : 'Full Stack Developer';
+      const role = (targetRole && typeof targetRole === 'string' && targetRole.trim()) ? targetRole.trim() : 'General Role';
       const evaluation = await evaluateInterviewAnswer(question, answer, role);
 
       if (sessionId && typeof questionIndex === 'number') {

@@ -1,12 +1,11 @@
 (function() {
   try {
-    var t = localStorage.getItem('smart_resume_theme') || localStorage.getItem('theme');
-    var d = window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-    var m = t === 'light' || t === 'dark' ? t : (t === 'system' ? d : 'dark');
+    var t = 'light';
+    var m = t === 'dark' ? 'dark' : 'light';
     var r = document.documentElement;
-    r.classList.remove('light', 'dark');
-    r.classList.add(m);
-    r.setAttribute('data-theme', m);
-    r.style.colorScheme = m;
+    r.classList.remove('dark');
+    r.classList.add('light');
+    r.setAttribute('data-theme', 'light');
+    r.style.colorScheme = 'light';
   } catch (e) {}
 })();

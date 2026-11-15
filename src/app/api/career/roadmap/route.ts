@@ -20,28 +20,38 @@ export async function GET(req: Request) {
 
     let roadmap = await getUserActiveRoadmap(user.id, requestedRole || undefined);
 
-    // If no roadmap exists yet, auto-generate one based on user profile and target role
+    // If no roadmap exists yet, generate one only when user or request has an explicit role
     if (!roadmap) {
-      const careerGoal = await getUserCareerGoal(user.id);
-      const targetRole = requestedRole || careerGoal?.target_role || 'Full Stack Developer';
+      const summary = await getCareerProfileSummary(user.id).catch(() => null);
+      const careerGoal = await getUserCareerGoal(user.id).catch(() => null);
+      const targetRole = (requestedRole || summary?.targetRole || careerGoal?.target_role || '').trim();
+
+      if (!targetRole) {
+        return NextResponse.json({
+          success: true,
+          goalSet: false,
+          roadmap: null,
+        });
+      }
 
       let missingSkills: string[] = [];
-      try {
-        const summary = await getCareerProfileSummary(user.id);
+      if (summary) {
         const currentSkills = [
           ...summary.skills.verified.map((v) => v.name),
           ...summary.skills.claimed.map((c) => c.name),
           ...summary.skills.inferred.map((i) => i.name),
         ];
-        const gap = await performSkillGapAnalysis(currentSkills, targetRole);
-        missingSkills = [...gap.missingCriticalSkills, ...gap.missingRecommendedSkills];
-      } catch {}
+        try {
+          const gap = await performSkillGapAnalysis(currentSkills, targetRole);
+          missingSkills = [...gap.missingCriticalSkills, ...gap.missingRecommendedSkills];
+        } catch {}
+      }
 
       const roadmapData = generateLearningRoadmap(targetRole, missingSkills);
       roadmap = await saveUserRoadmap(user.id, targetRole, roadmapData);
     }
 
-    return NextResponse.json({ success: true, roadmap });
+    return NextResponse.json({ success: true, goalSet: true, roadmap });
   } catch (err: any) {
     console.error('[API /api/career/roadmap GET] Error:', err);
     return NextResponse.json(
@@ -64,7 +74,10 @@ export async function POST(req: Request) {
     const body = await req.json().catch(() => ({}));
     const { targetRole, missingSkills } = body;
 
-    const role = (targetRole && typeof targetRole === 'string') ? targetRole.trim() : 'Full Stack Developer';
+    const role = (targetRole && typeof targetRole === 'string') ? targetRole.trim() : '';
+    if (!role) {
+      return NextResponse.json({ message: 'Target role is required to generate a roadmap.' }, { status: 400 });
+    }
     const skills = Array.isArray(missingSkills) ? missingSkills : [];
 
     const roadmapData = generateLearningRoadmap(role, skills);

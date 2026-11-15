@@ -1,5 +1,30 @@
 import 'server-only';
-import { extractSkillsFromText } from '@/server/services/applicationAssistant';
+import { normalizeAtsInput } from './deterministicAtsEngine';
+
+const COMMON_TECH_SKILLS = [
+  'JavaScript', 'TypeScript', 'React', 'Next.js', 'Node.js', 'Python',
+  'SQL', 'PostgreSQL', 'MySQL', 'MongoDB', 'Redis', 'Docker',
+  'Git', 'AWS', 'Linux', 'Java', 'C++', 'C#', 'GraphQL',
+  'HTML', 'CSS', 'Tailwind', 'Tailwind CSS', 'FastAPI', 'Express',
+  'Django', 'Flask', 'Spring Boot', 'REST APIs', 'Data Structures',
+  'Algorithms', 'Jest', 'CI/CD', 'Machine Learning', 'Data Analysis'
+];
+
+export function extractSkillsFromText(text: string): string[] {
+  if (!text) return [];
+  const lower = text.toLowerCase();
+  const matched: string[] = [];
+
+  for (const s of COMMON_TECH_SKILLS) {
+    const sLower = s.toLowerCase();
+    const regex = new RegExp(`\\b${sLower.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\\b`, 'i');
+    if (regex.test(lower)) {
+      matched.push(s);
+    }
+  }
+
+  return Array.from(new Set(matched));
+}
 
 // ============================================================================
 // ADVANCED RESUME INTELLIGENCE TYPES
@@ -143,15 +168,17 @@ export function performAdvancedResumeAudit(
   jobTitle?: string,
   company?: string
 ): AdvancedResumeAuditResult {
-  const sections = extractResumeSections(resumeText);
+  const normResume = normalizeAtsInput(resumeText);
+  const normJd = jobDescription ? normalizeAtsInput(jobDescription) : '';
+  const sections = extractResumeSections(normResume);
   const missingInfo: MissingInformationAlert[] = [];
 
   // 1. AUDIT HEADER & CONTACT INFO
   const headerText = sections.header || '';
-  const emailMatch = resumeText.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
-  const phoneMatch = resumeText.match(/(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
-  const hasLinkedIn = /linkedin\.com\/in\/[a-zA-Z0-9_-]+/i.test(resumeText);
-  const hasGitHub = /github\.com\/[a-zA-Z0-9_-]+/i.test(resumeText);
+  const emailMatch = normResume.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  const phoneMatch = normResume.match(/(\+?\d{1,3}[-.\s]?)?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{4}/);
+  const hasLinkedIn = /linkedin\.com\/in\/[a-zA-Z0-9_-]+/i.test(normResume);
+  const hasGitHub = /github\.com\/[a-zA-Z0-9_-]+/i.test(normResume);
 
   let headerScore = 100;
   const headerFeedback: string[] = [];

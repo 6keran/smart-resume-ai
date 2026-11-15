@@ -240,49 +240,42 @@ function ApplicationsContent() {
   const getStatusColor = (status: JobApplication['status']) => {
     switch (status) {
       case 'Saved':
-        return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
       case 'Ready to apply':
-        return 'bg-sky-500/10 text-sky-400 border-sky-500/20';
+        return 'bg-sky-50 text-sky-700 border-sky-200';
       case 'Application pending':
-        return 'bg-amber-500/10 text-amber-400 border-amber-500/20';
+        return 'bg-amber-50 text-amber-700 border-amber-200';
       case 'Applied':
-        return 'bg-blue-600/15 text-blue-400 border-blue-500/30';
+        return 'bg-blue-50 text-[#3157C8] border-blue-200';
       case 'Interview':
-        return 'bg-emerald-500/15 text-emerald-400 border-emerald-500/30';
+        return 'bg-blue-100/70 text-blue-800 border-blue-200';
       case 'Offer':
-        return 'bg-teal-500/20 text-teal-300 border-teal-500/30';
+        return 'bg-emerald-50 text-emerald-700 border-emerald-200';
       case 'Rejected':
-        return 'bg-rose-500/15 text-rose-400 border-rose-500/30';
+        return 'bg-rose-50 text-rose-700 border-rose-200';
       case 'Withdrawn':
-        return 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20';
+        return 'bg-zinc-100 text-zinc-700 border-zinc-200';
       default:
-        return 'bg-slate-500/10 text-slate-400 border-slate-500/20';
+        return 'bg-slate-100 text-slate-700 border-slate-200';
     }
   };
 
   return (
     <div className="space-y-6 animate-fade-in text-left">
       {/* Header */}
-      <div className="bento-card p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-[#E5E8ED] shadow-sm p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
+          <h1 className="heading-page">
             Job Applications
           </h1>
-          <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
+          <p className="text-body-secondary mt-1">
             Track, update, and manage every stage of your job hunt ({applications.length} total records).
           </p>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <Link
-            href="/apply-assistant"
-            className="px-3.5 py-1.5 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-white transition-all text-xs font-semibold inline-flex items-center gap-1.5"
-          >
-            <Sparkles className="w-4 h-4" />
-            <span>AI Apply Studio</span>
-          </Link>
+        <div className="flex items-center gap-3 shrink-0">
           <button
             onClick={openCreateModal}
-            className="btn-primary btn-sm inline-flex items-center gap-2 text-xs font-semibold shadow-sm cursor-pointer shrink-0"
+            className="btn-primary-action inline-flex items-center gap-2 py-2 px-4 text-[14px]"
           >
             <Plus className="w-4 h-4" />
             <span>Add Application</span>
@@ -291,16 +284,16 @@ function ApplicationsContent() {
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-3 bg-[var(--bg-secondary)]/80 p-3.5 rounded-2xl border border-[var(--border-color)]">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[#E5E8ED] shadow-sm">
         {/* Search */}
         <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#626B78]" />
           <input
             type="text"
             placeholder="Search by job title, company, or city..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 rounded-full bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] placeholder-[var(--text-secondary)]/50 focus:outline-none focus:border-[var(--accent)]"
+            className="w-full pl-10 pr-3 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-[14px] text-[#20242B] placeholder-[#626B78]/60 focus:outline-none focus:border-[#3157C8] focus:bg-white"
           />
         </div>
 
@@ -316,16 +309,16 @@ function ApplicationsContent() {
               <button
                 key={st}
                 onClick={() => setFilterStatus(st)}
-                className={`px-3 py-1 rounded-full text-xs font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3 py-1.5 rounded-xl text-[14px] font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
                   filterStatus === st
-                    ? 'bg-[var(--accent)] text-white shadow-sm'
-                    : 'bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)]'
+                    ? 'bg-[#3157C8] text-white shadow-xs'
+                    : 'bg-[#F6F7F9] text-[#626B78] hover:text-[#20242B] border border-[#E5E8ED]'
                 }`}
               >
                 <span>{st}</span>
                 <span
-                  className={`text-[10px] px-1.5 py-0.2 rounded-full ${
-                    filterStatus === st ? 'bg-white/20 text-white' : 'bg-slate-500/10 text-slate-400'
+                  className={`text-[12px] px-1.5 py-0.2 rounded-full ${
+                    filterStatus === st ? 'bg-white/20 text-white' : 'bg-slate-200 text-[#626B78]'
                   }`}
                 >
                   {count}
@@ -366,16 +359,16 @@ function ApplicationsContent() {
           {filteredApplications.map((app) => (
             <div
               key={app.id}
-              className="bento-card p-4 sm:p-5 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all duration-200"
+              className="bg-white rounded-2xl border border-[#E5E8ED] shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:border-slate-300"
             >
-              <div className="min-w-0 space-y-1.5 flex-1">
+              <div className="min-w-0 space-y-2 flex-1">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                  <h3 className="text-base sm:text-lg font-bold text-[#20242B]">
                     {app.job_title}
                   </h3>
 
                   <span
-                    className={`px-2.5 py-0.5 rounded-md text-[10px] font-bold border ${getStatusColor(
+                    className={`px-3 py-1 rounded-full text-[12px] font-bold border ${getStatusColor(
                       app.status
                     )}`}
                   >
@@ -383,52 +376,52 @@ function ApplicationsContent() {
                   </span>
 
                   {app.source && (
-                    <span className="text-[10px] font-medium text-[var(--text-secondary)] px-1.5 py-0.5 rounded bg-[var(--bg-card)] border border-[var(--border-color)]">
+                    <span className="text-[12px] font-medium text-[#626B78] px-2 py-0.5 rounded-md bg-[#F6F7F9] border border-[#E5E8ED]">
                       {app.source}
                     </span>
                   )}
 
                   {app.applied_confirmed_at && (
-                    <span className="text-[10px] text-emerald-500 bg-emerald-500/10 px-1.5 py-0.5 rounded font-medium border border-emerald-500/20 flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" />
+                    <span className="text-[12px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-semibold border border-emerald-200 flex items-center gap-1">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
                       Confirmed Applied
                     </span>
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center gap-4 text-xs text-[var(--text-secondary)]">
-                  <span className="flex items-center gap-1 font-semibold text-[var(--text-primary)]">
-                    <Building className="w-3.5 h-3.5 text-[var(--accent)]" />
+                <div className="flex flex-wrap items-center gap-4 text-[14px] text-[#626B78]">
+                  <span className="flex items-center gap-1.5 font-semibold text-[#20242B]">
+                    <Building className="w-4 h-4 text-[#3157C8]" />
                     {app.company}
                   </span>
                   {app.location && (
-                    <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5" />
+                    <span className="flex items-center gap-1.5">
+                      <MapPin className="w-4 h-4" />
                       {app.location}
                     </span>
                   )}
-                  <span className="flex items-center gap-1">
-                    <Calendar className="w-3.5 h-3.5" />
-                    Date: {new Date(app.applied_at).toLocaleDateString()}
+                  <span className="flex items-center gap-1.5">
+                    <Calendar className="w-4 h-4" />
+                    Applied: {new Date(app.applied_at).toLocaleDateString()}
                   </span>
                 </div>
 
                 {app.notes && (
-                  <p className="text-xs text-[var(--text-secondary)] italic bg-[var(--bg-card)]/60 px-3 py-1.5 rounded-lg border border-[var(--border-color)]/60">
+                  <p className="text-[14px] text-[#626B78] italic bg-[#F6F7F9] px-3.5 py-2 rounded-xl border border-[#E5E8ED]">
                     &ldquo;{app.notes}&rdquo;
                   </p>
                 )}
               </div>
 
               {/* Status Selector & Actions */}
-              <div className="flex items-center gap-2 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-[var(--border-color)]">
+              <div className="flex items-center gap-2.5 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-[#E5E8ED]">
                 {/* Inline Status Dropdown */}
                 <select
                   value={app.status}
                   onChange={(e) =>
                     handleQuickStatusChange(app.id, e.target.value as JobApplication['status'])
                   }
-                  className="text-xs font-semibold px-2.5 py-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] cursor-pointer"
+                  className="text-[14px] font-semibold px-3 py-1.5 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#20242B] focus:outline-none focus:border-[#3157C8] cursor-pointer"
                 >
                   <option value="Saved">Saved</option>
                   <option value="Ready to apply">Ready to apply</option>
@@ -445,45 +438,27 @@ function ApplicationsContent() {
                     href={app.job_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-all cursor-pointer"
+                    className="p-2 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#626B78] hover:text-[#20242B] hover:border-[#3157C8] transition-all cursor-pointer"
                     title="View Job Listing"
                   >
-                    <ExternalLink className="w-3.5 h-3.5" />
+                    <ExternalLink className="w-4 h-4" />
                   </a>
                 )}
 
-                <Link
-                  href={`/apply-assistant?id=${app.id}`}
-                  className="px-2.5 py-1.5 rounded-xl border border-[var(--accent)]/40 bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)] hover:text-white transition-all cursor-pointer inline-flex items-center gap-1.5 text-xs font-semibold"
-                  title="Open AI Job Application Assistant Studio"
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">AI Assistant</span>
-                </Link>
-
-                <Link
-                  href={`/interview-prep?role=${encodeURIComponent(app.job_title)}&company=${encodeURIComponent(app.company)}`}
-                  className="px-2.5 py-1.5 rounded-xl border border-[var(--accent)]/30 bg-[var(--accent)]/10 text-[var(--accent)] hover:bg-[var(--accent)]/20 transition-all cursor-pointer inline-flex items-center gap-1.5 text-xs font-semibold"
-                  title={`Practice AI Mock Interview for ${app.job_title} at ${app.company}`}
-                >
-                  <Sparkles className="w-3.5 h-3.5" />
-                  <span className="hidden sm:inline">Prep Interview</span>
-                </Link>
-
                 <button
                   onClick={() => openEditModal(app)}
-                  className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-all cursor-pointer"
+                  className="p-2 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#626B78] hover:text-[#20242B] hover:border-[#3157C8] transition-all cursor-pointer"
                   title="Edit details"
                 >
-                  <Edit2 className="w-3.5 h-3.5" />
+                  <Edit2 className="w-4 h-4" />
                 </button>
 
                 <button
                   onClick={() => handleDelete(app.id)}
-                  className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-secondary)] hover:text-red-400 hover:border-red-500/30 transition-all cursor-pointer"
+                  className="p-2 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#626B78] hover:text-rose-600 hover:border-rose-300 transition-all cursor-pointer"
                   title="Delete application"
                 >
-                  <Trash2 className="w-3.5 h-3.5" />
+                  <Trash2 className="w-4 h-4" />
                 </button>
               </div>
             </div>
@@ -493,31 +468,31 @@ function ApplicationsContent() {
 
       {/* Create / Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-color)] shadow-2xl p-6 space-y-4 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
-              <h3 className="text-base font-bold text-[var(--text-primary)]">
+        <div className="fixed inset-0 z-50 bg-[#20242B]/40 flex items-center justify-center p-4">
+          <div className="w-full max-w-lg rounded-2xl bg-white border border-[#E5E8ED] shadow-2xl p-6 sm:p-7 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-[#E5E8ED]">
+              <h3 className="heading-card">
                 {editingApp ? 'Edit Job Application' : 'Track New Job Application'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                className="p-1.5 rounded-lg text-[#626B78] hover:text-[#20242B] cursor-pointer"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
 
             {formError && (
-              <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 shrink-0" />
+              <div className="p-3.5 rounded-xl bg-rose-50 border border-rose-200 text-rose-800 text-[14px] flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 shrink-0 text-rose-600" />
                 <span>{formError}</span>
               </div>
             )}
 
-            <form onSubmit={handleSave} className="space-y-4 text-xs">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <form onSubmit={handleSave} className="space-y-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-semibold text-[var(--text-primary)] mb-1">
+                  <label className="label-form block mb-1">
                     Job Title *
                   </label>
                   <input
@@ -526,12 +501,12 @@ function ApplicationsContent() {
                     value={formTitle}
                     onChange={(e) => setFormTitle(e.target.value)}
                     placeholder="e.g. Senior Frontend Engineer"
-                    className="w-full px-3 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-[var(--text-primary)] mb-1">
+                  <label className="label-form block mb-1">
                     Company Name *
                   </label>
                   <input
@@ -540,14 +515,14 @@ function ApplicationsContent() {
                     value={formCompany}
                     onChange={(e) => setFormCompany(e.target.value)}
                     placeholder="e.g. Stripe"
-                    className="w-full px-3 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white"
                   />
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-semibold text-[var(--text-primary)] mb-1">
+                  <label className="label-form block mb-1">
                     Location
                   </label>
                   <input
@@ -555,12 +530,12 @@ function ApplicationsContent() {
                     value={formLocation}
                     onChange={(e) => setFormLocation(e.target.value)}
                     placeholder="e.g. San Francisco / Remote"
-                    className="w-full px-3 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-[var(--text-primary)] mb-1">
+                  <label className="label-form block mb-1">
                     Source
                   </label>
                   <input
@@ -568,13 +543,13 @@ function ApplicationsContent() {
                     value={formSource}
                     onChange={(e) => setFormSource(e.target.value)}
                     placeholder="e.g. LinkedIn / Naukri"
-                    className="w-full px-3 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white"
                   />
                 </div>
               </div>
 
               <div>
-                <label className="block font-semibold text-[var(--text-primary)] mb-1">
+                <label className="label-form block mb-1">
                   Job Posting URL
                 </label>
                 <input
@@ -582,31 +557,31 @@ function ApplicationsContent() {
                   value={formJobUrl}
                   onChange={(e) => setFormJobUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full px-3 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  className="w-full px-3.5 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white"
                 />
               </div>
 
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3.5">
                 <div>
-                  <label className="block font-semibold text-[var(--text-primary)] mb-1">
+                  <label className="label-form block mb-1">
                     Applied Date
                   </label>
                   <input
                     type="date"
                     value={formAppliedAt}
                     onChange={(e) => setFormAppliedAt(e.target.value)}
-                    className="w-full px-3 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-semibold text-[var(--text-primary)] mb-1">
+                  <label className="label-form block mb-1">
                     Status
                   </label>
                   <select
                     value={formStatus}
                     onChange={(e) => setFormStatus(e.target.value as JobApplication['status'])}
-                    className="w-full px-3 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white cursor-pointer"
                   >
                     <option value="Saved">Saved</option>
                     <option value="Ready to apply">Ready to apply</option>
@@ -621,7 +596,7 @@ function ApplicationsContent() {
               </div>
 
               <div>
-                <label className="block font-semibold text-[var(--text-primary)] mb-1">
+                <label className="label-form block mb-1">
                   Notes
                 </label>
                 <textarea
@@ -629,24 +604,24 @@ function ApplicationsContent() {
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
                   placeholder="Recruiter contact, interview questions asked, follow-up dates..."
-                  className="w-full px-3 py-2 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                  className="w-full p-3.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white"
                 />
               </div>
 
-              <div className="pt-2 flex items-center justify-end gap-2">
+              <div className="pt-2 flex items-center justify-end gap-3">
                 <button
                   type="button"
                   onClick={() => setIsModalOpen(false)}
-                  className="btn-secondary btn-sm text-xs cursor-pointer"
+                  className="btn-secondary-action cursor-pointer"
                 >
                   Cancel
                 </button>
                 <button
                   type="submit"
                   disabled={isSaving}
-                  className="btn-primary btn-sm text-xs font-semibold shadow-sm cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                  className="btn-primary-action py-2.5 px-5 text-[15px] cursor-pointer inline-flex items-center gap-1.5 disabled:opacity-50"
                 >
-                  {isSaving && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
+                  {isSaving && <Loader2 className="w-4 h-4 animate-spin" />}
                   <span>{editingApp ? 'Save Changes' : 'Create Application'}</span>
                 </button>
               </div>

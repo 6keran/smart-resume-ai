@@ -14,7 +14,8 @@ export async function GET(req: Request) {
     return NextResponse.json({
       success: true,
       profile,
-      isConfigured: Boolean(profile && profile.institution && profile.degree),
+      goalSet: Boolean(profile?.targetRole),
+      isConfigured: Boolean(profile && (profile.targetRole || (profile.institution && profile.degree))),
     });
   } catch (err: any) {
     console.error('[API /api/student/profile GET] Error:', err);
@@ -88,7 +89,7 @@ export async function PUT(req: Request) {
       currentSemester: typeof currentSemester === 'string' ? currentSemester.trim() : null,
       cgpa: typeof cgpa === 'string' ? cgpa.trim() : null,
       studentType: safeStudentType,
-      targetRole: typeof targetRole === 'string' && targetRole.trim() ? targetRole.trim() : 'Graduate Software Engineer',
+      targetRole: typeof targetRole === 'string' ? targetRole.trim() : '',
       targetWorkType: safeWorkType,
       preferredLocations: Array.isArray(preferredLocations)
         ? preferredLocations.map((l: any) => String(l).trim()).filter(Boolean)

@@ -6,6 +6,7 @@ import { recordResumeUpload, recordResumeAnalysis } from '@/lib/db';
 import { getOrCreateVisitorId } from '@/lib/visitor';
 import { getUserFromRequest } from '@/lib/userSession';
 import { performAdvancedResumeAudit } from '@/server/services/resumeIntelligence';
+import { normalizeAtsInput } from '@/server/services/deterministicAtsEngine';
 
 export async function POST(req: Request) {
   try {
@@ -93,6 +94,12 @@ export async function POST(req: Request) {
       }
     }
 
+    // Universal input normalization to guarantee deterministic scoring
+    resumeText = normalizeAtsInput(resumeText);
+    if (jobDescription) {
+      jobDescription = normalizeAtsInput(jobDescription);
+    }
+
     // 1. Structural and Document-Type Validation
     // Validates whether the document is authentic resume/CV before any ATS analysis
     const validation = validateResumeDocument(resumeText, {
@@ -121,11 +128,21 @@ export async function POST(req: Request) {
     // Run deterministic Advanced Resume Intelligence audit (section-level scores, evidence checks, readability)
     try {
       const advancedAudit = performAdvancedResumeAudit(resumeText, jobDescription, jobTitle, company);
-      result.sectionScores = advancedAudit.sectionScores;
-      result.evidenceConsistency = advancedAudit.evidenceConsistency;
-      result.duplicateContent = advancedAudit.duplicateContent;
-      result.readabilityMetrics = advancedAudit.readability;
-      result.missingInformationAlerts = advancedAudit.missingInformation;
+      if (advancedAudit.sectionScores) {
+        result.sectionScores = advancedAudit.sectionScores;
+      }
+      if (advancedAudit.evidenceConsistency) {
+        result.evidenceConsistency = advancedAudit.evidenceConsistency;
+      }
+      if (advancedAudit.duplicateContent) {
+        result.duplicateContent = advancedAudit.duplicateContent;
+      }
+      if (advancedAudit.readability) {
+        result.readabilityMetrics = advancedAudit.readability;
+      }
+      if (advancedAudit.missingInformation) {
+        result.missingInformationAlerts = advancedAudit.missingInformation;
+      }
       if (advancedAudit.jobAlignment) {
         result.jobAlignmentAnalysis = advancedAudit.jobAlignment;
       }

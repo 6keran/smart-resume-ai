@@ -20,6 +20,8 @@ import {
   FileSearch,
   Sparkles,
   Code2,
+  Database,
+  Compass,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useUserProfile } from '@/components/user/UserContext';
@@ -40,12 +42,13 @@ export function UserDashboardSidebar({ user }: UserDashboardSidebarProps) {
 
   const primaryNavItems: Array<{ label: string; href: string; icon: any; badge?: string }> = [
     { label: 'Overview', href: '/dashboard', icon: LayoutDashboard },
+    { label: 'Career Roadmap', href: '/guidance', icon: Compass },
+    { label: 'My Career Data', href: '/dashboard/my-data', icon: Database },
     { label: 'Resume Builder', href: '/builder', icon: FileEdit },
     { label: 'Project Mentor', href: '/projects', icon: Code2, badge: 'AI' },
     { label: 'My Resumes', href: '/dashboard/resumes', icon: FileText },
     { label: 'Job Search', href: '/jobs', icon: Briefcase },
     { label: 'Skill Assessment', href: '/skills', icon: Award },
-    { label: 'Apply Assistant', href: '/apply-assistant', icon: Sparkles, badge: 'AI' },
     { label: 'Application Tracker', href: '/dashboard/applications', icon: Send },
     { label: 'Profile & Settings', href: '/dashboard/profile', icon: User },
   ];

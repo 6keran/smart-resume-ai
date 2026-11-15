@@ -1,0 +1,29 @@
+{
+  "mode": "semi-autonomous",
+  "granularity": "standard",
+  "project_code": "SRA",
+  "workflow": {
+    "research": true,
+    "plan_check": true,
+    "verifier": true,
+    "auto_advance": true,
+    "nyquist_validation": true,
+    "security_enforcement": true,
+    "security_asvs_level": 1,
+    "security_block_on": "high",
+    "discuss_mode": "discuss",
+    "research_before_questions": false
+  },
+  "planning": {
+    "commit_docs": false,
+    "search_gitignored": false
+  },
+  "git": {
+    "create_tag": false
+  },
+  "safety": {
+    "always_confirm_destructive": true,
+    "always_confirm_external_services": true
+  }
+}
+

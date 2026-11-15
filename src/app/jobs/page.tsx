@@ -671,12 +671,12 @@ function JobSearchContent() {
       {pendingApplication && !showConfirmPrompt && (
         <div className="p-4 rounded-2xl bg-blue-600/10 border border-blue-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
           <div className="flex items-start gap-3">
-            <Send className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0 mt-0.5" />
+            <Send className="w-5 h-5 text-[var(--accent)] shrink-0 mt-0.5" />
             <div className="text-xs">
-              <span className="font-bold text-slate-900 dark:text-white block">
+              <span className="font-bold text-[var(--text-primary)] block">
                 Application in Progress
               </span>
-              <span className="text-slate-600 dark:text-slate-300">
+              <span className="text-[var(--text-secondary)]">
                 You opened the application for <strong>{pendingApplication.jobTitle}</strong> at{' '}
                 <strong>{pendingApplication.company}</strong> on {pendingApplication.source}.
               </span>
@@ -721,12 +721,12 @@ function JobSearchContent() {
             aria-labelledby="application-confirm-title"
             aria-describedby="application-confirm-description"
             tabIndex={-1}
-            className="w-full max-w-md rounded-2xl bg-[var(--glass-bg-elevated)] border border-[var(--glass-border)] shadow-[var(--shadow-glass-hover)] backdrop-blur-2xl p-6 space-y-5 animate-fade-in relative overflow-hidden focus:outline-none"
+            className="w-full max-w-md rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-xl p-6 space-y-5 animate-fade-in relative overflow-hidden focus:outline-none"
           >
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent pointer-events-none" />
             <div className="flex items-start justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-600/10 text-blue-600 dark:text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/20 shadow-xs">
+                <div className="w-10 h-10 rounded-xl bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center shrink-0 border border-[var(--accent)]/20 shadow-xs">
                   <Send className="w-5 h-5" />
                 </div>
                 <div>
@@ -742,13 +742,13 @@ function JobSearchContent() {
                 type="button"
                 onClick={() => setShowConfirmPrompt(false)}
                 aria-label="Close application confirmation"
-                className="p-1 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                className="p-1 rounded-lg text-[var(--text-muted)] hover:text-[var(--text-primary)]"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <p id="application-confirm-description" className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p id="application-confirm-description" className="text-xs text-[var(--text-secondary)] leading-relaxed">
               We opened the application page on <strong>{pendingApplication.source}</strong> in a new tab.
               Confirming your submission helps track your interview timeline and status accurately.
             </p>
@@ -781,7 +781,7 @@ function JobSearchContent() {
         </div>
       )}
       {/* Top Section Header */}
-      <div className="bento-card p-5 sm:p-6">
+      <div className="bg-white rounded-2xl border border-[#E5E8ED] p-5 sm:p-6 shadow-sm">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="space-y-1.5 max-w-2xl">
             <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight">
@@ -896,10 +896,10 @@ function JobSearchContent() {
           <div className="flex flex-wrap items-center gap-1.5 pt-0.5 text-[11px]">
             <span className="text-[var(--text-muted)] text-[10px] uppercase font-mono mr-1">Suggestions:</span>
             {[
-              'Software Engineering Intern',
-              'Graduate Software Engineer',
-              'Remote Junior React Developer',
-              'Junior Data Analyst',
+              'Data Analyst',
+              'Mechanical Engineer',
+              'Remote Software Engineer',
+              'Financial Analyst',
             ].map((suggestion) => (
               <button
                 key={suggestion}
@@ -999,8 +999,8 @@ function JobSearchContent() {
                 performSearch(1, false, { employmentType: next === 'any' ? 'all' : next });
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${jobType === 'Internship'
-                  ? 'bg-[var(--accent)] text-white shadow-xs'
-                  : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)]'
+                ? 'bg-[var(--accent)] text-white shadow-xs'
+                : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)]'
                 }`}
             >
               <GraduationCap className="w-3.5 h-3.5" />
@@ -1014,8 +1014,8 @@ function JobSearchContent() {
                 performSearch(1, false, { experienceLevel: next === 'any' ? 'all' : next });
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${experienceLevel === 'Fresher'
-                  ? 'bg-[var(--accent)] text-white shadow-xs'
-                  : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)]'
+                ? 'bg-[var(--accent)] text-white shadow-xs'
+                : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)]'
                 }`}
             >
               <Briefcase className="w-3.5 h-3.5" />
@@ -1029,8 +1029,8 @@ function JobSearchContent() {
                 performSearch(1, false, { workplaceType: next === 'any' ? 'all' : next });
               }}
               className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${workMode === 'Remote'
-                  ? 'bg-[var(--accent)] text-white shadow-xs'
-                  : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)]'
+                ? 'bg-[var(--accent)] text-white shadow-xs'
+                : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)]'
                 }`}
             >
               <Globe className="w-3.5 h-3.5" />
@@ -1132,8 +1132,8 @@ function JobSearchContent() {
                 aria-label="Grid view"
                 aria-pressed={viewMode === 'grid'}
                 className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${viewMode === 'grid'
-                    ? 'bg-[var(--accent)] text-white shadow-xs'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
               >
                 <LayoutGrid className="w-3.5 h-3.5" />
@@ -1144,8 +1144,8 @@ function JobSearchContent() {
                 aria-label="List view"
                 aria-pressed={viewMode === 'list'}
                 className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${viewMode === 'list'
-                    ? 'bg-[var(--accent)] text-white shadow-xs'
-                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
               >
                 <List className="w-3.5 h-3.5" />
@@ -1162,10 +1162,10 @@ function JobSearchContent() {
             <span
               key={src}
               className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg border font-semibold ${liveSources.includes(src)
-                  ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/20'
-                  : cachedSources.includes(src)
-                    ? 'bg-amber-500/10 text-amber-600 dark:text-amber-300 border-amber-500/20'
-                    : 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-300 border-emerald-500/20'
+                ? 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
+                : cachedSources.includes(src)
+                  ? 'bg-amber-500/10 text-amber-600 border-amber-500/20'
+                  : 'bg-emerald-500/10 text-emerald-600 border-emerald-500/20'
                 }`}
             >
               {liveSources.includes(src)
@@ -1456,40 +1456,36 @@ function JobSearchContent() {
             }
           >
             {jobs.map((job) => (
-              <GlassCard
+              <div
                 key={job.id}
-                className="flex flex-col justify-between p-5 hover:border-[var(--accent)]/60 transition-all duration-200 group relative text-left"
+                className="bg-white rounded-2xl border border-[#E5E8ED] hover:border-[#3157C8] hover:shadow-md transition-all p-5 flex flex-col justify-between group text-left space-y-4"
               >
-                <div className="space-y-3">
-                  {/* Top Badge: Source & Match Score */}
+                <div className="space-y-2.5">
+                  {/* Top: Match Badge & Workplace/Employment */}
                   <div className="flex items-center justify-between gap-2">
-                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)]">
-                      <ShieldCheck className="w-3 h-3 text-[var(--accent)]" />
-                      {job.source}
-                      {cachedJobIds.has(job.id) && <span className="text-amber-500">· Cached</span>}
-                    </span>
-
-                    {job.matchScore !== undefined && (
+                    {job.matchScore !== undefined ? (
                       <span
-                        className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md text-xs font-bold ${job.matchScore >= 80
-                            ? 'bg-emerald-500/15 text-emerald-400 border border-emerald-500/30'
-                            : job.matchScore >= 65
-                              ? 'bg-[var(--accent)]/15 text-[var(--accent)] border border-[var(--accent)]/30'
-                              : 'bg-amber-500/15 text-amber-400 border border-amber-500/30'
+                        className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-bold ${job.matchScore >= 80
+                          ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
+                          : job.matchScore >= 65
+                            ? 'bg-blue-50 text-[#3157C8] border border-blue-200'
+                            : 'bg-amber-50 text-amber-900 border border-amber-200'
                           }`}
                       >
-                        <Target className="w-3 h-3" />
+                        <Target className="w-3.5 h-3.5" />
                         {job.matchScore}% Match
                       </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[12px] font-semibold bg-[#F6F7F9] text-[#626B78] border border-[#E5E8ED]">
+                        <ShieldCheck className="w-3.5 h-3.5 text-[#3157C8]" />
+                        {job.source}
+                      </span>
                     )}
-                  </div>
 
-                  {formatPostedDate(job.postedAt) && (
-                    <p className="flex items-center gap-1 text-[11px] text-[var(--text-muted)]">
-                      <Clock className="h-3 w-3" />
-                      Posted {formatPostedDate(job.postedAt)}
-                    </p>
-                  )}
+                    <span className="text-[13px] text-[#626B78] font-medium">
+                      {job.workplaceType || job.employmentType}
+                    </span>
+                  </div>
 
                   {/* Title & Company */}
                   <div>
@@ -1501,80 +1497,52 @@ function JobSearchContent() {
                           : null;
                         setSelectedJob(job);
                       }}
-                      className="text-left text-base font-bold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] rounded-sm line-clamp-2"
+                      className="text-left text-[18px] font-bold text-[#20242B] group-hover:text-[#3157C8] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3157C8] rounded-sm line-clamp-1 cursor-pointer"
                     >
                       {job.title}
                     </button>
-                    <p className="text-xs text-[var(--text-secondary)] font-semibold flex items-center gap-1 mt-1">
-                      <Building className="w-3.5 h-3.5 text-[var(--accent)]" />
-                      {job.company}
+                    <p className="text-[15px] text-[#626B78] font-semibold flex items-center gap-1.5 mt-1">
+                      <Building className="w-4 h-4 text-[#3157C8]" />
+                      <span>{job.company}</span>
                     </p>
                   </div>
 
-                  {/* Metadata Chips: Location, Workplace, Employment Type, Salary */}
-                  <div className="flex flex-wrap items-center gap-1.5 text-[11px] text-[var(--text-secondary)]">
-                    <span className="flex items-center gap-1 px-2 py-0.5 rounded bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-                      <MapPin className="w-3 h-3 text-[var(--accent)]" />
-                      {job.location}
-                    </span>
-
-                    <span className="px-2 py-0.5 rounded bg-[var(--bg-secondary)] border border-[var(--border-color)] font-medium">
-                      {job.employmentType} · {job.workplaceType}
+                  {/* Clean Metadata: Location, Salary, Experience */}
+                  <div className="flex flex-wrap items-center gap-2 pt-1 text-[14px] text-[#626B78]">
+                    <span className="flex items-center gap-1">
+                      <MapPin className="w-3.5 h-3.5 text-[#626B78]" />
+                      <span>{job.location}</span>
                     </span>
 
                     {job.salary && (
-                      <span className="flex items-center gap-1 px-2 py-0.5 rounded font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/25">
+                      <span className="flex items-center gap-1 font-bold text-[#16845B] bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[13px]">
                         <DollarSign className="w-3 h-3" />
-                        {job.salary}
+                        <span>{job.salary}</span>
+                      </span>
+                    )}
+
+                    {job.employmentType && (
+                      <span className="text-[13px] text-[#626B78] bg-[#F6F7F9] px-2 py-0.5 rounded border border-[#E5E8ED]">
+                        {job.employmentType}
                       </span>
                     )}
                   </div>
-
-                  {/* Description Snippet */}
-                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed line-clamp-3">
-                    {job.snippet || job.description}
-                  </p>
-
-                  {/* Skills tags */}
-                  {job.skills && job.skills.length > 0 && (
-                    <div className="flex flex-wrap gap-1 pt-1">
-                      {job.skills.slice(0, 4).map((sk) => (
-                        <span
-                          key={sk}
-                          className="px-2 py-0.5 rounded text-[10px] font-medium bg-[var(--bg-secondary)] text-[var(--text-primary)] border border-[var(--border-color)]"
-                        >
-                          {sk}
-                        </span>
-                      ))}
-                      {job.skills.length > 4 && (
-                        <span className="text-[10px] text-[var(--text-secondary)] self-center">
-                          +{job.skills.length - 4}
-                        </span>
-                      )}
-                    </div>
-                  )}
                 </div>
 
-                {/* Card Actions: View Job, Prepare Resume, Save, & Apply */}
-                <div className="pt-4 mt-4 border-t border-[var(--border-color)] flex flex-wrap items-center justify-between gap-2">
+                {/* Card Actions: View Details, Save, & Apply */}
+                <div className="pt-3 border-t border-[#E5E8ED] flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
-                    <Link
-                      href={`/apply-assistant?title=${encodeURIComponent(job.title)}&company=${encodeURIComponent(job.company)}&location=${encodeURIComponent(job.location || '')}&jobUrl=${encodeURIComponent(job.applyUrl || job.sourceUrl || '')}`}
-                      title="Job Application Preparation Studio"
-                      className="btn-ghost btn-sm h-8 px-2.5 inline-flex items-center gap-1 text-xs text-[var(--accent)] hover:text-white hover:bg-[var(--accent)] cursor-pointer"
-                    >
-                      <Send className="w-3.5 h-3.5" />
-                      <span>Apply Assistant</span>
-                    </Link>
-
                     <button
                       type="button"
-                      onClick={() => handlePrepareResume(job)}
-                      title="Prepare & Tailor Resume for this Job"
-                      className="btn-ghost btn-sm h-8 px-2.5 inline-flex items-center gap-1 text-xs cursor-pointer"
+                      onClick={() => {
+                        returnFocusRef.current = document.activeElement instanceof HTMLElement
+                          ? document.activeElement
+                          : null;
+                        setSelectedJob(job);
+                      }}
+                      className="px-3 py-1.5 rounded-lg border border-[#E5E8ED] bg-white hover:bg-[#F6F7F9] text-[#20242B] text-[13px] font-semibold cursor-pointer"
                     >
-                      <FileEdit className="w-3.5 h-3.5" />
-                      <span>Prepare</span>
+                      View Details
                     </button>
 
                     <button
@@ -1582,13 +1550,12 @@ function JobSearchContent() {
                       onClick={() => handleSaveJob(job)}
                       disabled={savingJobId === job.id}
                       title={savedJobIds.has(job.id) ? "Remove from Saved Jobs" : "Save to Application Tracker"}
-                      className={`btn-sm h-8 px-2.5 inline-flex items-center gap-1 text-xs transition-colors cursor-pointer ${savedJobIds.has(job.id)
-                          ? 'btn-secondary text-emerald-500 font-semibold'
-                          : 'btn-ghost text-[var(--text-secondary)] hover:text-emerald-400'
+                      className={`p-2 rounded-lg text-[13px] transition-colors cursor-pointer ${savedJobIds.has(job.id)
+                        ? 'bg-emerald-50 text-[#16845B] border border-emerald-200'
+                        : 'hover:bg-[#F6F7F9] text-[#626B78]'
                         }`}
                     >
-                      <Bookmark className={`w-3.5 h-3.5 ${savedJobIds.has(job.id) ? 'fill-current' : ''}`} />
-                      <span>{savedJobIds.has(job.id) ? 'Saved' : 'Save'}</span>
+                      <Bookmark className={`w-4 h-4 ${savedJobIds.has(job.id) ? 'fill-current' : ''}`} />
                     </button>
                   </div>
 
@@ -1596,19 +1563,19 @@ function JobSearchContent() {
                     type="button"
                     onClick={() => handleApplyClick(job)}
                     disabled={applyingJobId === job.id}
-                    className="btn-primary btn-sm inline-flex items-center gap-1.5 text-xs shadow-sm cursor-pointer disabled:opacity-50"
+                    className="px-4 py-1.5 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
                   >
                     {applyingJobId === job.id ? (
-                      <Loader2 className="w-3 h-3 animate-spin" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     ) : (
                       <>
                         <span>Apply</span>
-                        <ExternalLink className="w-3 h-3" />
+                        <ExternalLink className="w-3.5 h-3.5" />
                       </>
                     )}
                   </button>
                 </div>
-              </GlassCard>
+              </div>
             ))}
           </div>
 
@@ -1653,7 +1620,7 @@ function JobSearchContent() {
             aria-modal="true"
             aria-labelledby="job-detail-title"
             tabIndex={-1}
-            className="w-full max-w-2xl h-full bg-[var(--glass-bg-elevated)] border-l border-[var(--glass-border)] backdrop-blur-2xl p-6 sm:p-8 flex flex-col justify-between overflow-y-auto shadow-2xl space-y-6 relative focus:outline-none"
+            className="w-full max-w-2xl h-full bg-[var(--bg-card)] border-l border-[var(--border-color)] p-6 sm:p-8 flex flex-col justify-between overflow-y-auto shadow-2xl space-y-6 relative focus:outline-none"
           >
             <div className="space-y-6">
               {/* Drawer Top Header */}
@@ -1864,14 +1831,6 @@ function JobSearchContent() {
                   <FileEdit className="w-3.5 h-3.5" />
                   <span>Prepare & Tailor Resume</span>
                 </button>
-
-                <Link
-                  href={`/apply-assistant?title=${encodeURIComponent(selectedJob.title)}&company=${encodeURIComponent(selectedJob.company)}&location=${encodeURIComponent(selectedJob.location || '')}&jobUrl=${encodeURIComponent(selectedJob.applyUrl || selectedJob.sourceUrl || '')}`}
-                  className="btn-secondary btn-sm inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer text-[var(--accent)] border-[var(--accent)]/30 hover:bg-[var(--accent)] hover:text-white"
-                >
-                  <Send className="w-3.5 h-3.5" />
-                  <span>Apply Assistant</span>
-                </Link>
               </div>
 
               <button

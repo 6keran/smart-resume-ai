@@ -438,7 +438,7 @@ export default function AdminUsersPage() {
                         <div className="flex items-center gap-3">
                           <div className={`w-8 h-8 rounded-full font-bold text-xs flex items-center justify-center shrink-0 border ${
                             isAdminRole
-                              ? 'bg-purple-500/15 text-purple-400 border-purple-500/30'
+                              ? 'bg-slate-900 text-white border-slate-700'
                               : 'bg-[var(--accent)]/15 text-[var(--accent)] border-[var(--accent)]/25'
                           }`}>
                             {u.name.charAt(0).toUpperCase()}
@@ -586,7 +586,7 @@ export default function AdminUsersPage() {
 
       {/* Add User Modal */}
       {showAddModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20242B]/40 animate-fade-in">
           <div className="w-full max-w-lg rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)] shadow-2xl p-6 space-y-5 text-left">
             <div className="flex items-start justify-between gap-3 border-b border-[var(--border-color)] pb-4">
               <div className="flex items-center gap-3">
@@ -724,7 +724,7 @@ export default function AdminUsersPage() {
 
       {/* Edit User Modal */}
       {userToEdit && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20242B]/40 animate-fade-in">
           <div className="w-full max-w-lg rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)] shadow-2xl p-6 space-y-5 text-left">
             <div className="flex items-start justify-between gap-3 border-b border-[var(--border-color)] pb-4">
               <div className="flex items-center gap-3">
@@ -859,7 +859,7 @@ export default function AdminUsersPage() {
 
       {/* Delete Confirmation Modal */}
       {userToDelete && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20242B]/40 animate-fade-in">
           <div className="w-full max-w-lg rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)] shadow-2xl p-6 space-y-5 text-left">
             <div className="flex items-start justify-between gap-3 border-b border-[var(--border-color)] pb-4">
               <div className="flex items-center gap-3">

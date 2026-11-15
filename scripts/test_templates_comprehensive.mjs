@@ -48,18 +48,18 @@ runTest('Template Registry contains at least 12 production templates', () => {
 });
 
 const EXPECTED_TEMPLATES = [
-  { id: 'ats-classic', name: 'ATS Classic', atsFriendly: true },
-  { id: 'software-engineer', name: 'Software Engineer', atsFriendly: true },
-  { id: 'graduate-fresher', name: 'Graduate / Fresher', atsFriendly: true },
-  { id: 'executive-professional', name: 'Executive Professional', atsFriendly: true },
+  { id: 'ats-classic', name: 'Classic Professional', atsFriendly: true },
+  { id: 'software-engineer', name: 'Engineering Professional', atsFriendly: true },
+  { id: 'graduate-fresher', name: 'Fresher & Graduate', atsFriendly: true },
+  { id: 'executive-professional', name: 'Executive Leadership', atsFriendly: true },
   { id: 'data-analyst', name: 'Data Analyst', atsFriendly: true },
   { id: 'ui-ux-designer', name: 'UI/UX Designer', atsFriendly: true },
-  { id: 'full-stack-developer', name: 'Full Stack Developer', atsFriendly: true },
+  { id: 'full-stack-developer', name: 'Software Developer', atsFriendly: true },
   { id: 'internship-applicant', name: 'Internship Applicant', atsFriendly: true },
-  { id: 'academic-research', name: 'Academic / Research', atsFriendly: true },
+  { id: 'academic-research', name: 'Academic & Research', atsFriendly: true },
   { id: 'sales-marketing', name: 'Sales & Marketing', atsFriendly: true },
-  { id: 'operations-management', name: 'Operations & Management', atsFriendly: true },
-  { id: 'modern-two-column', name: 'Modern Two-Column', atsFriendly: false, isVisualLayout: true },
+  { id: 'operations-management', name: 'Manufacturing & Operations', atsFriendly: true },
+  { id: 'modern-two-column', name: 'Professional Sidebar', atsFriendly: false, isVisualLayout: true },
 ];
 
 for (const expected of EXPECTED_TEMPLATES) {
@@ -99,9 +99,10 @@ runTest('Normalization Engine maps canonical and legacy aliases correctly', () =
   // Aliases
   assert.strictEqual(normalizeTemplateId('fresh-graduate'), 'graduate-fresher');
   assert.strictEqual(normalizeTemplateId('graduate-entry'), 'graduate-fresher');
-  assert.strictEqual(normalizeTemplateId('corporate-executive'), 'executive-professional');
+  assert.strictEqual(normalizeTemplateId('corporate-executive'), 'corporate-executive');
+  assert.strictEqual(normalizeTemplateId('corporate'), 'corporate-executive');
+  assert.strictEqual(normalizeTemplateId('executive-leadership'), 'executive-professional');
   assert.strictEqual(normalizeTemplateId('executive'), 'executive-professional');
-  assert.strictEqual(normalizeTemplateId('corporate'), 'executive-professional');
   assert.strictEqual(normalizeTemplateId('contemporary'), 'modern-two-column');
   assert.strictEqual(normalizeTemplateId('academic'), 'academic-research');
   assert.strictEqual(normalizeTemplateId('creative-professional'), 'ui-ux-designer');
@@ -132,9 +133,14 @@ runTest('Gallery filters accurately match templates', () => {
   const experienced = RESUME_TEMPLATES.filter(
     (t) => t.category === 'Experienced' || t.tags?.includes('Experienced')
   );
-  assert(experienced.some((t) => t.id === 'executive-professional'));
   assert(experienced.some((t) => t.id === 'sales-marketing'));
   assert(experienced.some((t) => t.id === 'operations-management'));
+
+  // Executive
+  const executive = RESUME_TEMPLATES.filter(
+    (t) => t.category === 'Executive' || t.tags?.includes('Executive')
+  );
+  assert(executive.some((t) => t.id === 'executive-professional'));
 
   // Technical
   const technical = RESUME_TEMPLATES.filter(

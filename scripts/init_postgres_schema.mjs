@@ -357,6 +357,10 @@ const TABLE_SCHEMAS = [
         skill_name TEXT NOT NULL,
         category TEXT NOT NULL,
         status TEXT NOT NULL DEFAULT 'not-verified',
+        source TEXT NOT NULL DEFAULT 'user_added',
+        confidence DOUBLE PRECISION,
+        confirmed_at TEXT,
+        resume_id TEXT,
         score INTEGER,
         certificate_id TEXT,
         verified_date TEXT,
@@ -366,6 +370,7 @@ const TABLE_SCHEMAS = [
         UNIQUE(user_id, skill_name)
       );
       CREATE INDEX IF NOT EXISTS idx_user_skills_user ON user_skills(user_id);
+      CREATE INDEX IF NOT EXISTS idx_user_skills_user_status ON user_skills(user_id, status);
       CREATE INDEX IF NOT EXISTS idx_user_skills_name ON user_skills(skill_name);
     `,
   },
@@ -551,12 +556,16 @@ const TABLE_SCHEMAS = [
         current_semester TEXT,
         cgpa TEXT,
         student_type TEXT DEFAULT 'college_student',
-        target_role TEXT NOT NULL DEFAULT 'Graduate Software Engineer',
+        target_role TEXT NOT NULL DEFAULT '',
         target_work_type TEXT DEFAULT 'both',
         preferred_locations TEXT,
         projects_data TEXT,
         coursework TEXT,
         achievements TEXT,
+        onboarding_status TEXT NOT NULL DEFAULT 'not_started',
+        onboarding_completed_at TEXT,
+        onboarding_skipped_at TEXT,
+        preferences_json TEXT,
         created_at TEXT NOT NULL,
         updated_at TEXT NOT NULL
       );
@@ -571,7 +580,7 @@ const TABLE_SCHEMAS = [
         user_id TEXT NOT NULL,
         title TEXT NOT NULL,
         difficulty TEXT NOT NULL DEFAULT 'Intermediate',
-        target_role TEXT NOT NULL DEFAULT 'Graduate Software Engineer',
+        target_role TEXT NOT NULL DEFAULT '',
         tech_stack TEXT NOT NULL DEFAULT '[]',
         problem_statement TEXT,
         real_world_use_case TEXT,
@@ -629,6 +638,25 @@ const TABLE_SCHEMAS = [
         updated_at TEXT NOT NULL
       );
       CREATE INDEX IF NOT EXISTS idx_ucg_user ON user_career_goals(user_id);
+    `,
+  },
+  {
+    name: 'user_roadmap_progress',
+    sql: `
+      CREATE TABLE IF NOT EXISTS user_roadmap_progress (
+        id TEXT PRIMARY KEY,
+        user_id TEXT NOT NULL,
+        role_slug TEXT NOT NULL,
+        item_type TEXT NOT NULL,
+        item_key TEXT NOT NULL,
+        status TEXT NOT NULL DEFAULT 'pending',
+        notes TEXT,
+        completed_at TEXT,
+        created_at TEXT NOT NULL,
+        updated_at TEXT NOT NULL,
+        UNIQUE(user_id, role_slug, item_type, item_key)
+      );
+      CREATE INDEX IF NOT EXISTS idx_user_roadmap_user_role ON user_roadmap_progress(user_id, role_slug);
     `,
   },
   {
@@ -725,6 +753,19 @@ async function initSchema() {
       'CREATE INDEX IF NOT EXISTS idx_users_lower_email ON users(LOWER(email))',
       'CREATE INDEX IF NOT EXISTS idx_improvements_resume ON resume_improvements(resume_id)',
       'CREATE INDEX IF NOT EXISTS idx_improvements_user_created ON resume_improvements(user_id, created_at DESC)',
+      "ALTER TABLE user_skills ADD COLUMN IF NOT EXISTS source TEXT NOT NULL DEFAULT 'user_added'",
+      'ALTER TABLE user_skills ADD COLUMN IF NOT EXISTS confidence DOUBLE PRECISION',
+      'ALTER TABLE user_skills ADD COLUMN IF NOT EXISTS confirmed_at TEXT',
+      'ALTER TABLE user_skills ADD COLUMN IF NOT EXISTS resume_id TEXT',
+      "ALTER TABLE student_profiles ADD COLUMN IF NOT EXISTS onboarding_status TEXT NOT NULL DEFAULT 'not_started'",
+      'ALTER TABLE student_profiles ADD COLUMN IF NOT EXISTS onboarding_completed_at TEXT',
+      'ALTER TABLE student_profiles ADD COLUMN IF NOT EXISTS onboarding_skipped_at TEXT',
+      'ALTER TABLE student_profiles ADD COLUMN IF NOT EXISTS preferences_json TEXT',
+      "ALTER TABLE student_profiles ALTER COLUMN target_role SET DEFAULT ''",
+      "ALTER TABLE guided_projects ALTER COLUMN target_role SET DEFAULT ''",
+      'CREATE INDEX IF NOT EXISTS idx_user_skills_user_status ON user_skills(user_id, status)',
+      'CREATE INDEX IF NOT EXISTS idx_verified_skills_user ON verified_skills(user_id)',
+      'CREATE INDEX IF NOT EXISTS idx_user_roadmap_user_role ON user_roadmap_progress(user_id, role_slug)',
     ];
 
     for (const ddl of columnReconciliations) {

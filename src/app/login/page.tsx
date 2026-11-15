@@ -264,7 +264,7 @@ function LoginForm() {
           {/* Error Banner */}
           {error && (
             <div
-              className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/25 text-red-500 dark:text-red-400 text-xs flex items-start gap-2.5 backdrop-blur-xs"
+              className="mb-5 p-3.5 rounded-xl bg-red-500/10 border border-red-500/25 text-[#C43D43] text-xs flex items-start gap-2.5 backdrop-blur-xs"
               role="alert"
               id="auth-error"
             >
@@ -423,12 +423,12 @@ function LoginForm() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="forgot-password-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-md"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20242B]/40"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md rounded-2xl border border-[var(--glass-border)] bg-[var(--glass-bg-elevated)] backdrop-blur-2xl p-6 shadow-2xl space-y-4"
+            className="w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-2xl space-y-4"
           >
             <div className="flex items-center justify-between pb-3 border-b border-[var(--glass-border)]">
               <div className="flex items-center gap-2 text-[var(--accent)]">
@@ -480,12 +480,7 @@ export default function LoginPage() {
     <div className="min-h-screen w-full flex items-center justify-center px-4 sm:px-6 lg:px-8 py-10 bg-[var(--bg-primary)] text-[var(--text-primary)] relative overflow-hidden">
       {/* Top Bar with Theme Toggle */}
       <div className="absolute top-4 right-4 sm:top-6 sm:right-6 z-30 flex items-center gap-2">
-        <div className="sm:hidden">
-          <ThemeToggle variant="icon" />
-        </div>
-        <div className="hidden sm:block">
-          <ThemeToggle variant="segmented" />
-        </div>
+        <ThemeToggle variant="segmented" />
       </div>
 
       <Suspense

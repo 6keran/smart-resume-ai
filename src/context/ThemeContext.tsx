@@ -15,151 +15,71 @@ interface ThemeContextType {
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
 
-const STORAGE_KEY = 'smart_resume_theme';
-
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
-  const [theme, setThemeState] = useState<string>('dark');
-  const [resolvedTheme, setResolvedTheme] = useState<'light' | 'dark'>('dark');
   const [mounted, setMounted] = useState(false);
+  const [theme, setThemeState] = useState<string>('light');
 
-  // Apply theme classes and attributes directly to document.documentElement and document.body
-  const applyThemeToDom = useCallback((targetTheme: 'light' | 'dark') => {
+  const applyThemeToDom = useCallback((targetTheme: string) => {
     if (typeof document === 'undefined') return;
     const root = document.documentElement;
     const body = document.body;
+    const isDark = targetTheme === 'dark';
 
-    if (targetTheme === 'light') {
-      root.classList.remove('dark');
-      root.classList.add('light');
-      root.setAttribute('data-theme', 'light');
-      root.style.colorScheme = 'light';
-      if (body) {
-        body.classList.remove('dark');
-        body.classList.add('light');
-        body.setAttribute('data-theme', 'light');
-        body.style.colorScheme = 'light';
-      }
-    } else {
-      root.classList.remove('light');
-      root.classList.add('dark');
-      root.setAttribute('data-theme', 'dark');
-      root.style.colorScheme = 'dark';
-      if (body) {
-        body.classList.remove('light');
-        body.classList.add('dark');
-        body.setAttribute('data-theme', 'dark');
-        body.style.colorScheme = 'dark';
-      }
+    root.classList.toggle('dark', isDark);
+    root.classList.toggle('light', !isDark);
+    root.setAttribute('data-theme', isDark ? 'dark' : 'light');
+    root.style.colorScheme = isDark ? 'dark' : 'light';
+    if (body) {
+      body.classList.toggle('dark', isDark);
+      body.classList.toggle('light', !isDark);
+      body.setAttribute('data-theme', isDark ? 'dark' : 'light');
+      body.style.colorScheme = isDark ? 'dark' : 'light';
     }
   }, []);
 
-  // Compute resolved theme based on preference
-  const resolveTheme = useCallback((pref: string): 'light' | 'dark' => {
-    if (pref === 'light') return 'light';
-    if (pref === 'dark') return 'dark';
-    if (typeof window !== 'undefined' && window.matchMedia) {
-      return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
-    }
-    return 'dark';
-  }, []);
-
-  // Initialize theme on client mount
   useEffect(() => {
     setMounted(true);
-    let savedTheme: string | null = null;
-    try {
-      savedTheme = localStorage.getItem(STORAGE_KEY) || localStorage.getItem('theme');
-    } catch {}
+    applyThemeToDom(theme);
+  }, [applyThemeToDom, theme]);
 
-    const initialTheme = savedTheme || 'dark';
-    const resolved = resolveTheme(initialTheme);
-    setThemeState(initialTheme);
-    setResolvedTheme(resolved);
-    applyThemeToDom(resolved);
-  }, [applyThemeToDom, resolveTheme]);
-
-  // Listen to system preference changes if theme is 'system'
-  useEffect(() => {
-    if (typeof window === 'undefined' || !window.matchMedia) return;
-    const media = window.matchMedia('(prefers-color-scheme: dark)');
-    const listener = () => {
-      if (theme === 'system') {
-        const resolved = media.matches ? 'dark' : 'light';
-        setResolvedTheme(resolved);
-        applyThemeToDom(resolved);
-      }
-    };
-    try {
-      media.addEventListener('change', listener);
-      return () => media.removeEventListener('change', listener);
-    } catch {
-      media.addListener(listener);
-      return () => media.removeListener(listener);
-    }
-  }, [theme, applyThemeToDom]);
-
-  // Sync across tabs via storage event
-  useEffect(() => {
-    if (typeof window === 'undefined') return;
-    const handleStorage = (e: StorageEvent) => {
-      if (e.key === STORAGE_KEY || e.key === 'theme') {
-        const next = e.newValue || 'dark';
-        const resolved = resolveTheme(next);
-        setThemeState(next);
-        setResolvedTheme(resolved);
-        applyThemeToDom(resolved);
-      }
-    };
-    window.addEventListener('storage', handleStorage);
-    return () => window.removeEventListener('storage', handleStorage);
-  }, [applyThemeToDom, resolveTheme]);
-
-  // User sets theme
   const setTheme = useCallback(
     (newTheme: string) => {
-      const resolved = resolveTheme(newTheme);
       setThemeState(newTheme);
-      setResolvedTheme(resolved);
-
-      // Instant DOM update
-      applyThemeToDom(resolved);
-
-      // Persist to storage
-      try {
-        localStorage.setItem(STORAGE_KEY, newTheme);
-        localStorage.setItem('theme', newTheme);
-      } catch {}
+      applyThemeToDom(newTheme);
     },
-    [applyThemeToDom, resolveTheme]
+    [applyThemeToDom]
   );
 
   const toggleTheme = useCallback(() => {
-    const next = resolvedTheme === 'dark' ? 'light' : 'dark';
+    const next = theme === 'dark' ? 'light' : 'dark';
     setTheme(next);
-  }, [resolvedTheme, setTheme]);
+  }, [theme, setTheme]);
 
-  const isDark = resolvedTheme === 'dark';
+  const isDark = theme === 'dark';
 
-  return (
-    <ThemeContext.Provider
-      value={{
-        theme,
-        resolvedTheme,
-        isDark,
-        toggleTheme,
-        setTheme,
-        mounted,
-      }}
-    >
-      {children}
-    </ThemeContext.Provider>
-  );
+  const value: ThemeContextType = {
+    theme,
+    resolvedTheme: (theme === 'dark' ? 'dark' : 'light'),
+    isDark,
+    toggleTheme,
+    setTheme,
+    mounted,
+  };
+
+  return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;
 }
 
-export function useTheme() {
+export function useTheme(): ThemeContextType {
   const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    return {
+      theme: 'light',
+      resolvedTheme: 'light',
+      isDark: false,
+      toggleTheme: () => {},
+      setTheme: () => {},
+      mounted: true,
+    };
   }
   return context;
 }

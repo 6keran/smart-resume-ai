@@ -15,6 +15,8 @@ import {
   Wand2,
   Target,
   BarChart3,
+  Sparkles,
+  Code2,
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme/ThemeToggle';
@@ -43,6 +45,7 @@ export function Sidebar() {
     { label: 'Home', href: '/', icon: Home },
     { label: 'ATS Score', href: '/ats-score', icon: BarChart3 },
     { label: 'Resume Analyzer', href: '/analyzer', icon: FileText },
+    { label: 'Project Mentor', href: '/projects', icon: Code2, badge: 'New' },
     { label: 'Skill Assessments', href: '/skills', icon: BadgeCheck },
     { label: 'Resume Builder', href: '/builder', icon: FileEdit },
     { label: 'Job Search', href: '/jobs', icon: BriefcaseBusiness },
@@ -113,7 +116,7 @@ export function Sidebar() {
                   href={item.href}
                   title={collapsed ? item.label : undefined}
                   className={cn(
-                    'w-full h-10 flex items-center rounded-full text-[13.5px] font-medium transition-all duration-200 group relative select-none',
+                    'w-full h-10 flex items-center rounded-lg text-[15px] font-medium transition-all duration-200 group relative select-none',
                     collapsed ? 'justify-center px-0' : 'justify-start gap-3 px-3.5',
                     isActive
                       ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border-color)] shadow-xs font-semibold'
@@ -133,7 +136,7 @@ export function Sidebar() {
                     <span className="truncate flex-1 text-left leading-normal">{item.label}</span>
                   )}
                   {!collapsed && isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)] shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0" />
                   )}
                   {!collapsed && item.badge && !isActive && (
                     <span
@@ -169,7 +172,7 @@ export function Sidebar() {
                   href={item.href}
                   title={collapsed ? item.label : undefined}
                   className={cn(
-                    'w-full h-10 flex items-center rounded-full text-[13.5px] font-medium transition-all duration-200 group relative select-none',
+                    'w-full h-10 flex items-center rounded-lg text-[15px] font-medium transition-all duration-200 group relative select-none',
                     collapsed ? 'justify-center px-0' : 'justify-start gap-3 px-3.5',
                     isActive
                       ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border-color)] shadow-xs font-semibold'
@@ -189,7 +192,7 @@ export function Sidebar() {
                     <span className="truncate flex-1 text-left leading-normal">{item.label}</span>
                   )}
                   {!collapsed && isActive && (
-                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shadow-[0_0_8px_var(--accent)] shrink-0" />
+                    <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0" />
                   )}
                 </Link>
               );
@@ -198,18 +201,12 @@ export function Sidebar() {
         </div>
       </div>
 
-      {/* Sidebar Footer with Theme Toggle */}
+      {/* Sidebar Footer */}
       <div className="p-3 border-t border-[var(--glass-border)] shrink-0">
-        {collapsed ? (
-          <div className="flex items-center justify-center">
-            <ThemeToggle variant="icon" />
-          </div>
-        ) : (
-          <div className="w-full flex items-center justify-between gap-2 px-3 py-2.5 rounded-xl bg-[var(--glass-bg)] border border-[var(--glass-border)] overflow-hidden">
-            <span className="text-[11px] font-medium text-[var(--text-muted)] shrink-0 select-none">
-              Theme
-            </span>
-            <ThemeToggle className="shrink-0" />
+        {!collapsed && (
+          <div className="w-full flex items-center justify-between px-3 py-2 text-[12px] text-[var(--text-muted)]">
+            <span>Career Platform</span>
+            <span className="font-semibold text-[var(--accent)]">v2.0</span>
           </div>
         )}
       </div>

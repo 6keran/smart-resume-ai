@@ -25,12 +25,69 @@ export function cleanDomain(url?: string): string {
   return url.replace(/^https?:\/\/(www\.)?/i, '').replace(/\/$/, '');
 }
 
+export function isSectionVisible(sectionId: string, hiddenSections?: string[]): boolean {
+  if (!hiddenSections || !Array.isArray(hiddenSections)) return true;
+  return !hiddenSections.includes(sectionId);
+}
+
+export function formatAchievement(item: string | any): { title: string; description?: string; date?: string; result?: string } {
+  if (typeof item === 'string') {
+    return { title: item };
+  }
+  if (item && typeof item === 'object') {
+    return {
+      title: item.title || '',
+      description: item.description,
+      date: item.date,
+      result: item.result,
+    };
+  }
+  return { title: '' };
+}
+
+export function formatLanguage(item: string | any): { name: string; proficiency?: string } {
+  if (typeof item === 'string') {
+    // Check if format is "Language (Proficiency)"
+    const match = item.match(/^(.+?)\s*\((.+?)\)$/);
+    if (match) {
+      return { name: match[1].trim(), proficiency: match[2].trim() };
+    }
+    return { name: item.trim() };
+  }
+  if (item && typeof item === 'object') {
+    return {
+      name: item.name || '',
+      proficiency: item.proficiency,
+    };
+  }
+  return { name: '' };
+}
+
+export function hasAdditionalInfo(info?: any): boolean {
+  if (!info || typeof info !== 'object') return false;
+  return Boolean(
+    info.noticePeriod?.trim() ||
+    info.relocation?.trim() ||
+    info.shiftAvailability?.trim() ||
+    info.shiftPreference?.trim() ||
+    info.drivingLicence?.trim() ||
+    (info.memberships && info.memberships.length > 0) ||
+    info.other?.trim()
+  );
+}
+
+export function hasCustomSections(customSections?: any[]): boolean {
+  if (!customSections || !Array.isArray(customSections)) return false;
+  return customSections.some((s) => Boolean(s.title?.trim() && (s.content?.trim() || (s.items && s.items.length > 0))));
+}
+
 export function hasSkillsData(skills?: ResumeData['skills']): boolean {
   if (!skills) return false;
-  return (
+  return Boolean(
     (skills.technical && skills.technical.length > 0) ||
     (skills.tools && skills.tools.length > 0) ||
-    (skills.soft && skills.soft.length > 0)
+    (skills.soft && skills.soft.length > 0) ||
+    (skills.categories && skills.categories.some((c) => c.skills && c.skills.length > 0))
   );
 }
 

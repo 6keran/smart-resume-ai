@@ -71,10 +71,10 @@ export default function UserProfilePage() {
   const [currentSemester, setCurrentSemester] = useState('');
   const [cgpa, setCgpa] = useState('');
   const [studentType, setStudentType] = useState<'college_student' | 'recent_graduate' | 'fresher'>('college_student');
-  const [targetRole, setTargetRole] = useState('Graduate Software Engineer (SDE-1)');
+  const [targetRole, setTargetRole] = useState('');
   const [targetWorkType, setTargetWorkType] = useState<'internship' | 'full_time' | 'both'>('both');
-  const [preferredLocationsStr, setPreferredLocationsStr] = useState('Bangalore, Remote');
-  const [courseworkStr, setCourseworkStr] = useState('Data Structures & Algorithms, DBMS, Operating Systems, Computer Networks');
+  const [preferredLocationsStr, setPreferredLocationsStr] = useState('');
+  const [courseworkStr, setCourseworkStr] = useState('');
   const [achievementsStr, setAchievementsStr] = useState('');
   const [projects, setProjects] = useState<StudentProjectItem[]>([]);
   const [isLoadingStudent, setIsLoadingStudent] = useState(true);
@@ -105,7 +105,7 @@ export default function UserProfilePage() {
             setCurrentSemester(data.profile.currentSemester || '');
             setCgpa(data.profile.cgpa || '');
             setStudentType(data.profile.studentType || 'college_student');
-            setTargetRole(data.profile.targetRole || 'Graduate Software Engineer (SDE-1)');
+            setTargetRole(data.profile.targetRole || '');
             setTargetWorkType(data.profile.targetWorkType || 'both');
             setPreferredLocationsStr((data.profile.preferredLocations || []).join(', '));
             setCourseworkStr((data.profile.coursework || []).join(', '));
@@ -241,7 +241,7 @@ export default function UserProfilePage() {
         currentSemester: currentSemester.trim() || null,
         cgpa: cgpa.trim() || null,
         studentType,
-        targetRole: targetRole.trim() || 'Graduate Software Engineer (SDE-1)',
+        targetRole: targetRole.trim(),
         targetWorkType,
         preferredLocations: preferredLocationsStr.split(',').map((s) => s.trim()).filter(Boolean),
         coursework: courseworkStr.split(',').map((s) => s.trim()).filter(Boolean),
@@ -297,9 +297,9 @@ export default function UserProfilePage() {
   return (
     <div className="space-y-6 animate-fade-in max-w-5xl text-left pb-16">
       {/* Header Banner */}
-      <div className="bento-card p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
         <div>
-          <div className="flex items-center gap-2 mb-1">
+          <div className="flex items-center gap-2 mb-1.5">
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 flex items-center gap-1">
               <GraduationCap className="w-3.5 h-3.5" />
               <span>Student Career Center</span>
@@ -308,35 +308,35 @@ export default function UserProfilePage() {
           <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
             Student Profile & Career Goals
           </h1>
-          <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
+          <p className="text-sm text-[var(--text-secondary)] mt-1">
             Configure your college academic standing, projects, and target role to power AI career readiness.
           </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1 p-1 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl self-start sm:self-auto">
+        <div className="flex items-center gap-1.5 p-1 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl self-start sm:self-auto shadow-xs">
           <button
             type="button"
             onClick={() => setActiveTab('student')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === 'student'
                 ? 'bg-[var(--accent)] text-white shadow-sm'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
-            <GraduationCap className="w-3.5 h-3.5" />
+            <GraduationCap className="w-4 h-4" />
             <span>Student Career Profile</span>
           </button>
           <button
             type="button"
             onClick={() => setActiveTab('account')}
-            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
+            className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 ${
               activeTab === 'account'
                 ? 'bg-[var(--accent)] text-white shadow-sm'
                 : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
-            <User className="w-3.5 h-3.5" />
+            <User className="w-4 h-4" />
             <span>Account & Security</span>
           </button>
         </div>
@@ -346,14 +346,14 @@ export default function UserProfilePage() {
         /* TAB 1: STUDENT CAREER PROFILE */
         <form onSubmit={handleSaveStudentProfile} className="space-y-6">
           {studentSuccess && (
-            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[var(--color-success)] text-sm flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
               <span>{studentSuccess}</span>
             </div>
           )}
 
           {studentError && (
-            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+            <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-[var(--color-error)] text-sm flex items-center gap-2">
               <AlertCircle className="w-4 h-4 flex-shrink-0" />
               <span>{studentError}</span>
             </div>
@@ -363,15 +363,15 @@ export default function UserProfilePage() {
             {/* Left 2 Cols: Form Fields */}
             <div className="lg:col-span-2 space-y-6">
               {/* Section 1: Academic Standing */}
-              <div className="bento-card p-6 space-y-4">
+              <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm">
                 <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color)]">
                   <GraduationCap className="w-4 h-4 text-[var(--accent)]" />
-                  <h2 className="text-sm font-bold text-[var(--text-primary)]">
+                  <h2 className="text-base font-bold text-[var(--text-primary)]">
                     1. Academic Education & University Standing
                   </h2>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div className="sm:col-span-2">
                     <label className="block font-semibold text-[var(--text-primary)] mb-1.5">
                       College / University Name *
@@ -382,7 +382,7 @@ export default function UserProfilePage() {
                       value={institution}
                       onChange={(e) => setInstitution(e.target.value)}
                       placeholder="e.g. State Institute of Technology or University of California"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     />
                   </div>
 
@@ -396,7 +396,7 @@ export default function UserProfilePage() {
                       value={degree}
                       onChange={(e) => setDegree(e.target.value)}
                       placeholder="e.g. B.Tech, B.S., M.S., BCA"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     />
                   </div>
 
@@ -410,7 +410,7 @@ export default function UserProfilePage() {
                       value={fieldOfStudy}
                       onChange={(e) => setFieldOfStudy(e.target.value)}
                       placeholder="e.g. Computer Science, AI & ML, IT"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     />
                   </div>
 
@@ -421,7 +421,7 @@ export default function UserProfilePage() {
                     <select
                       value={graduationYear}
                       onChange={(e) => setGraduationYear(Number(e.target.value))}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     >
                       {[2023, 2024, 2025, 2026, 2027, 2028, 2029].map((y) => (
                         <option key={y} value={y}>
@@ -440,7 +440,7 @@ export default function UserProfilePage() {
                       value={currentSemester}
                       onChange={(e) => setCurrentSemester(e.target.value)}
                       placeholder="e.g. 6th Semester or Final Year"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     />
                   </div>
 
@@ -453,7 +453,7 @@ export default function UserProfilePage() {
                       value={cgpa}
                       onChange={(e) => setCgpa(e.target.value)}
                       placeholder="e.g. 3.8 / 4.0 or 8.6 CGPA"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     />
                   </div>
 
@@ -464,7 +464,7 @@ export default function UserProfilePage() {
                     <select
                       value={studentType}
                       onChange={(e) => setStudentType(e.target.value as any)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     >
                       <option value="college_student">Enrolled College Student</option>
                       <option value="recent_graduate">Recent Graduate (Class of 2024/2025)</option>
@@ -475,32 +475,26 @@ export default function UserProfilePage() {
               </div>
 
               {/* Section 2: Career Targets */}
-              <div className="bento-card p-6 space-y-4">
+              <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm">
                 <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color)]">
                   <Briefcase className="w-4 h-4 text-[var(--accent)]" />
-                  <h2 className="text-sm font-bold text-[var(--text-primary)]">
+                  <h2 className="text-base font-bold text-[var(--text-primary)]">
                     2. Target Role & Opportunity Preferences
                   </h2>
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-xs">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                   <div>
                     <label className="block font-semibold text-[var(--text-primary)] mb-1.5">
-                      Target Role Specification *
+                      Target Role (Optional — leave blank if undecided)
                     </label>
-                    <select
+                    <input
+                      type="text"
                       value={targetRole}
                       onChange={(e) => setTargetRole(e.target.value)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
-                    >
-                      <option value="Graduate Software Engineer (SDE-1)">Graduate Software Engineer (SDE-1)</option>
-                      <option value="Junior Full Stack Developer">Junior Full Stack Developer</option>
-                      <option value="Junior Frontend Developer">Junior Frontend Developer</option>
-                      <option value="Junior Backend Developer">Junior Backend Developer</option>
-                      <option value="Junior Data Analyst">Junior Data Analyst</option>
-                      <option value="Cloud & DevOps Intern">Cloud & DevOps Intern</option>
-                      <option value="AI / Machine Learning Engineer">AI / Machine Learning Trainee</option>
-                    </select>
+                      placeholder="e.g. Data Analyst, Mechanical Engineer, Financial Analyst"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                    />
                   </div>
 
                   <div>
@@ -510,7 +504,7 @@ export default function UserProfilePage() {
                     <select
                       value={targetWorkType}
                       onChange={(e) => setTargetWorkType(e.target.value as any)}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     >
                       <option value="both">Both (Internships & Full-Time Fresher)</option>
                       <option value="internship">Internships Only</option>
@@ -527,22 +521,22 @@ export default function UserProfilePage() {
                       value={preferredLocationsStr}
                       onChange={(e) => setPreferredLocationsStr(e.target.value)}
                       placeholder="e.g. Bangalore, Hyderabad, Pune, Remote"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     />
                   </div>
                 </div>
               </div>
 
               {/* Section 3: Academic & Capstone Projects */}
-              <div className="bento-card p-6 space-y-4">
+              <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
                   <div className="flex items-center gap-2">
                     <FolderGit2 className="w-4 h-4 text-[var(--accent)]" />
                     <div>
-                      <h2 className="text-sm font-bold text-[var(--text-primary)]">
+                      <h2 className="text-base font-bold text-[var(--text-primary)]">
                         3. Capstone & Personal Projects
                       </h2>
-                      <p className="text-[11px] text-[var(--text-secondary)]">
+                      <p className="text-xs text-[var(--text-secondary)]">
                         Real project code and live demos power your practical competency score.
                       </p>
                     </div>
@@ -558,7 +552,7 @@ export default function UserProfilePage() {
                 </div>
 
                 {projects.length === 0 ? (
-                  <div className="p-6 text-center rounded-xl bg-[var(--bg-secondary)] border border-dashed border-[var(--border-color)] text-xs space-y-2">
+                  <div className="p-6 text-center rounded-xl bg-[var(--bg-secondary)] border border-dashed border-[var(--border-color)] text-sm space-y-2">
                     <p className="text-[var(--text-secondary)]">
                       No projects added yet. Freshers with 2+ documented projects score 35% higher in AI career readiness.
                     </p>
@@ -576,10 +570,10 @@ export default function UserProfilePage() {
                     {projects.map((proj, idx) => (
                       <div
                         key={proj.id}
-                        className="p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-3 relative text-xs"
+                        className="p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-3 relative text-sm"
                       >
                         <div className="flex items-center justify-between">
-                          <span className="font-bold text-[var(--text-primary)]">
+                          <span className="font-bold text-[var(--text-primary)] text-sm">
                             Project #{idx + 1}
                           </span>
                           <button
@@ -588,13 +582,13 @@ export default function UserProfilePage() {
                             className="text-red-500 hover:text-red-600 transition-colors p-1 rounded cursor-pointer"
                             title="Remove project"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
+                            <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                           <div className="sm:col-span-2">
-                            <label className="block text-[11px] font-semibold text-[var(--text-secondary)] mb-1">
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
                               Project Title *
                             </label>
                             <input
@@ -603,12 +597,12 @@ export default function UserProfilePage() {
                               value={proj.title}
                               onChange={(e) => handleUpdateProject(proj.id, 'title', e.target.value)}
                               placeholder="e.g. Distributed Task Orchestrator or Smart Healthcare Portal"
-                              className="w-full px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                              className="w-full px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                             />
                           </div>
 
                           <div className="sm:col-span-2">
-                            <label className="block text-[11px] font-semibold text-[var(--text-secondary)] mb-1">
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
                               Technical Description & Problem Solved *
                             </label>
                             <textarea
@@ -617,12 +611,12 @@ export default function UserProfilePage() {
                               value={proj.description}
                               onChange={(e) => handleUpdateProject(proj.id, 'description', e.target.value)}
                               placeholder="Describe the architecture, problem solved, and key technical achievements..."
-                              className="w-full px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                              className="w-full px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-semibold text-[var(--text-secondary)] mb-1">
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
                               Technologies Used (comma separated)
                             </label>
                             <input
@@ -636,12 +630,12 @@ export default function UserProfilePage() {
                                 )
                               }
                               placeholder="e.g. React, Node.js, PostgreSQL, Docker"
-                              className="w-full px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                              className="w-full px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                             />
                           </div>
 
                           <div>
-                            <label className="block text-[11px] font-semibold text-[var(--text-secondary)] mb-1">
+                            <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">
                               GitHub Repository URL
                             </label>
                             <input
@@ -649,7 +643,7 @@ export default function UserProfilePage() {
                               value={proj.repoUrl || ''}
                               onChange={(e) => handleUpdateProject(proj.id, 'repoUrl', e.target.value)}
                               placeholder="https://github.com/your-username/repo"
-                              className="w-full px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                              className="w-full px-3 py-2 rounded-lg bg-[var(--bg-secondary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                             />
                           </div>
                         </div>
@@ -660,15 +654,15 @@ export default function UserProfilePage() {
               </div>
 
               {/* Section 4: Coursework & Academic Honors */}
-              <div className="bento-card p-6 space-y-4">
+              <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm">
                 <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color)]">
                   <BookOpen className="w-4 h-4 text-[var(--accent)]" />
-                  <h2 className="text-sm font-bold text-[var(--text-primary)]">
+                  <h2 className="text-base font-bold text-[var(--text-primary)]">
                     4. Relevant Coursework & Academic Honors
                   </h2>
                 </div>
 
-                <div className="space-y-4 text-xs">
+                <div className="space-y-4 text-sm">
                   <div>
                     <label className="block font-semibold text-[var(--text-primary)] mb-1.5">
                       Core Computer Science / Engineering Coursework (comma separated)
@@ -678,7 +672,7 @@ export default function UserProfilePage() {
                       value={courseworkStr}
                       onChange={(e) => setCourseworkStr(e.target.value)}
                       placeholder="e.g. Data Structures & Algorithms, DBMS, Operating Systems, Computer Networks"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     />
                   </div>
 
@@ -691,7 +685,7 @@ export default function UserProfilePage() {
                       value={achievementsStr}
                       onChange={(e) => setAchievementsStr(e.target.value)}
                       placeholder="e.g. Hackathon Finalist 2025, Dean's Honor Roll, ACM Student Chapter Lead"
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-full px-3.5 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     />
                   </div>
                 </div>
@@ -702,7 +696,7 @@ export default function UserProfilePage() {
                 <button
                   type="submit"
                   disabled={isSavingStudent}
-                  className="btn-primary btn-md flex items-center gap-2 text-xs font-semibold cursor-pointer shadow-md disabled:opacity-50"
+                  className="btn-primary btn-md flex items-center gap-2 text-sm font-semibold cursor-pointer shadow-sm disabled:opacity-50"
                 >
                   {isSavingStudent ? (
                     <>
@@ -721,7 +715,7 @@ export default function UserProfilePage() {
 
             {/* Right Column: AI Ecosystem Quick Links & Summary */}
             <div className="space-y-6">
-              <div className="bento-card p-6 space-y-4 text-xs">
+              <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm text-sm">
                 <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-color)]">
                   <Target className="w-4 h-4 text-[var(--accent)]" />
                   <h3 className="font-bold text-[var(--text-primary)]">Career Intelligence</h3>
@@ -729,21 +723,21 @@ export default function UserProfilePage() {
                 <p className="text-[var(--text-secondary)] leading-relaxed">
                   Your academic profile directly calibrates our 4-quadrant readiness engine:
                 </p>
-                <ul className="space-y-2 text-[var(--text-secondary)]">
+                <ul className="space-y-2 text-[var(--text-secondary)] text-sm">
                   <li className="flex items-start gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                     <span><strong>Technical Skills</strong> verified via proctored assessments.</span>
                   </li>
                   <li className="flex items-start gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                     <span><strong>Project Evidence</strong> evaluated from GitHub & demo links.</span>
                   </li>
                   <li className="flex items-start gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                     <span><strong>ATS Resume</strong> scored for entry-level hiring criteria.</span>
                   </li>
                   <li className="flex items-start gap-1.5">
-                    <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 mt-0.5 flex-shrink-0" />
+                    <CheckCircle2 className="w-4 h-4 text-emerald-500 mt-0.5 flex-shrink-0" />
                     <span><strong>Mock Interviews</strong> targeted to {targetRole}.</span>
                   </li>
                 </ul>
@@ -751,17 +745,17 @@ export default function UserProfilePage() {
                 <div className="pt-3 border-t border-[var(--border-color)] space-y-2">
                   <Link
                     href="/guidance"
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl bg-[var(--bg-secondary)] hover:bg-[var(--accent)]/10 text-[var(--text-primary)] hover:text-[var(--accent)] transition-all font-semibold"
+                    className="w-full flex items-center justify-between p-2.5 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--accent)]/10 text-[var(--text-primary)] hover:text-[var(--accent)] transition-all font-semibold text-sm"
                   >
                     <span>View Career Studio</span>
-                    <ArrowRight className="w-3.5 h-3.5" />
+                    <ArrowRight className="w-4 h-4" />
                   </Link>
                   <Link
                     href="/jobs"
-                    className="w-full flex items-center justify-between p-2.5 rounded-xl bg-[var(--bg-secondary)] hover:bg-[var(--accent)]/10 text-[var(--text-primary)] hover:text-[var(--accent)] transition-all font-semibold"
+                    className="w-full flex items-center justify-between p-2.5 rounded-lg bg-[var(--bg-secondary)] hover:bg-[var(--accent)]/10 text-[var(--text-primary)] hover:text-[var(--accent)] transition-all font-semibold text-sm"
                   >
                     <span>Browse Fresher & Internship Jobs</span>
-                    <ExternalLink className="w-3.5 h-3.5" />
+                    <ExternalLink className="w-4 h-4" />
                   </Link>
                 </div>
               </div>
@@ -772,9 +766,9 @@ export default function UserProfilePage() {
         /* TAB 2: ACCOUNT & SECURITY SETTINGS */
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Account Overview Card */}
-          <div className="bento-card p-6 space-y-6 h-fit">
+          <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-6 h-fit shadow-sm">
             <div className="text-center space-y-3">
-              <div className="w-16 h-16 rounded-2xl bg-[var(--accent)] text-white font-bold text-xl flex items-center justify-center mx-auto shadow-md shadow-[var(--accent)]/20">
+              <div className="w-16 h-16 rounded-2xl bg-[var(--accent)] text-white font-bold text-xl flex items-center justify-center mx-auto shadow-sm">
                 {name ? name.charAt(0).toUpperCase() : 'U'}
               </div>
               <div>
@@ -791,10 +785,10 @@ export default function UserProfilePage() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-[var(--border-color)] space-y-3 text-xs">
+            <div className="pt-4 border-t border-[var(--border-color)] space-y-3 text-sm">
               <div className="flex items-center justify-between text-[var(--text-secondary)]">
-                <span className="flex items-center gap-1.5">
-                  <Calendar className="w-3.5 h-3.5" />
+                <span className="flex items-center gap-2">
+                  <Calendar className="w-4 h-4" />
                   <span>Account Created</span>
                 </span>
                 <span className="font-semibold text-[var(--text-primary)]">
@@ -802,11 +796,11 @@ export default function UserProfilePage() {
                 </span>
               </div>
               <div className="flex items-center justify-between text-[var(--text-secondary)]">
-                <span className="flex items-center gap-1.5">
-                  <Clock className="w-3.5 h-3.5" />
+                <span className="flex items-center gap-2">
+                  <Clock className="w-4 h-4" />
                   <span>Session Status</span>
                 </span>
-                <span className="font-semibold text-emerald-600 dark:text-emerald-400">
+                <span className="font-semibold text-[var(--color-success)]">
                   Active Now
                 </span>
               </div>
@@ -820,27 +814,27 @@ export default function UserProfilePage() {
           {/* Right 2 Columns: Forms */}
           <div className="lg:col-span-2 space-y-6">
             {/* Personal Info Form */}
-            <div className="bento-card p-6 space-y-4">
+            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm">
               <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color)]">
                 <User className="w-4 h-4 text-[var(--accent)]" />
-                <h2 className="text-sm font-bold text-[var(--text-primary)]">Personal Details</h2>
+                <h2 className="text-base font-bold text-[var(--text-primary)]">Personal Details</h2>
               </div>
 
               {profileSuccess && (
-                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
+                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[var(--color-success)] text-sm flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                   <span>{profileSuccess}</span>
                 </div>
               )}
 
               {profileError && (
-                <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-[var(--color-error)] text-sm flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span>{profileError}</span>
                 </div>
               )}
 
-              <form onSubmit={handleUpdateProfile} className="space-y-4 text-xs">
+              <form onSubmit={handleUpdateProfile} className="space-y-4 text-sm">
                 <div>
                   <label className="block font-semibold text-[var(--text-primary)] mb-1.5">
                     Full Name *
@@ -854,7 +848,7 @@ export default function UserProfilePage() {
                       value={name}
                       onChange={(e) => setName(e.target.value)}
                       placeholder="e.g. Alex Rivera"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     />
                   </div>
                 </div>
@@ -871,7 +865,7 @@ export default function UserProfilePage() {
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       placeholder="alex.rivera@university.edu"
-                      className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+                      className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                     />
                   </div>
                 </div>
@@ -880,7 +874,7 @@ export default function UserProfilePage() {
                   <button
                     type="submit"
                     disabled={isSavingProfile}
-                    className="btn-primary btn-sm flex items-center gap-1.5 text-xs font-semibold cursor-pointer shadow-sm disabled:opacity-50"
+                    className="btn-primary btn-sm flex items-center gap-1.5 text-xs sm:text-sm font-semibold cursor-pointer shadow-sm disabled:opacity-50"
                   >
                     {isSavingProfile && <Loader2 className="w-3.5 h-3.5 animate-spin" />}
                     <span>Save Personal Info</span>
@@ -890,21 +884,21 @@ export default function UserProfilePage() {
             </div>
 
             {/* Change Password Form */}
-            <div className="bento-card p-6 space-y-4">
+            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm">
               <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color)]">
                 <Lock className="w-4 h-4 text-[var(--accent)]" />
                 <h2 className="text-sm font-bold text-[var(--text-primary)]">Security & Password</h2>
               </div>
 
               {passSuccess && (
-                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 text-xs flex items-center gap-2">
+                <div className="p-3.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-[var(--color-success)] text-xs flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
                   <span>{passSuccess}</span>
                 </div>
               )}
 
               {passError && (
-                <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs flex items-center gap-2">
+                <div className="p-3.5 rounded-xl bg-red-500/10 border border-red-500/20 text-[var(--color-error)] text-xs flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 flex-shrink-0" />
                   <span>{passError}</span>
                 </div>

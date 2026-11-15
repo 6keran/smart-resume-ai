@@ -474,14 +474,14 @@ export default function ProjectMentorPage() {
         {/* Header Hero */}
         <div className="border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/50 backdrop-blur-md">
           <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6">
-            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+            <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
                 <div className="flex items-center gap-2 mb-1.5">
-                  <span className="px-2 py-0.5 rounded-full text-[10px] font-bold font-mono uppercase bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20">
+                  <span className="px-2.5 py-0.5 rounded-full text-xs font-bold font-mono uppercase bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20">
                     AI Project Mentor
                   </span>
                   {studentSummary?.institution && (
-                    <span className="text-[11px] text-[var(--text-secondary)]">
+                    <span className="text-xs text-[var(--text-secondary)]">
                       {studentSummary.institution} · {studentSummary.degree || 'Student'}
                     </span>
                   )}
@@ -489,24 +489,24 @@ export default function ProjectMentorPage() {
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-[var(--text-primary)]">
                   Portfolio Engineering & Milestone Workspace
                 </h1>
-                <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1 max-w-2xl">
-                  Build production-grade software projects tailored to your skill gaps and target role of{' '}
-                  <strong className="text-[var(--text-primary)]">{studentSummary?.targetRole || 'Software Professional'}</strong>.
+                <p className="text-sm sm:text-base text-[var(--text-secondary)] mt-1 max-w-2xl">
+                  Build structured portfolio projects aligned to your skills and career goal:{' '}
+                  <strong className="text-[var(--text-primary)]">{studentSummary?.targetRole || 'Goal not set'}</strong>.
                 </p>
               </div>
 
               {/* Navigation Tabs */}
-              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] self-start md:self-auto shrink-0 shadow-xs">
+              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] self-start lg:self-auto shrink-0 shadow-xs">
                 <button
                   type="button"
                   onClick={() => setMainTab('recommendations')}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                     mainTab === 'recommendations'
                       ? 'bg-[var(--accent)] text-white shadow-xs'
                       : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
-                  <Compass className="w-3.5 h-3.5" />
+                  <Compass className="w-4 h-4" />
                   <span>Recommendations</span>
                 </button>
                 <button
@@ -517,16 +517,16 @@ export default function ProjectMentorPage() {
                       setActiveProject(guidedProjects[0]);
                     }
                   }}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                     mainTab === 'workspace'
                       ? 'bg-[var(--accent)] text-white shadow-xs'
                       : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
-                  <Code2 className="w-3.5 h-3.5" />
+                  <Code2 className="w-4 h-4" />
                   <span>Active Workspace</span>
                   {guidedProjects.length > 0 && (
-                    <span className="px-1.5 py-0.2 rounded-full text-[9px] bg-white/20 text-white font-mono">
+                    <span className="px-2 py-0.5 rounded-full text-xs bg-white/20 text-white font-mono">
                       {guidedProjects.length}
                     </span>
                   )}
@@ -534,13 +534,13 @@ export default function ProjectMentorPage() {
                 <button
                   type="button"
                   onClick={() => setMainTab('portfolio')}
-                  className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
+                  className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
                     mainTab === 'portfolio'
                       ? 'bg-[var(--accent)] text-white shadow-xs'
                       : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
                 >
-                  <Award className="w-3.5 h-3.5" />
+                  <Award className="w-4 h-4" />
                   <span>Portfolio</span>
                 </button>
               </div>
@@ -555,25 +555,34 @@ export default function ProjectMentorPage() {
             <div className="space-y-6">
               {/* Context Banner */}
               {studentSummary && (
-                <div className="p-4 rounded-2xl bg-[var(--accent-subtle)]/30 border border-[var(--accent)]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-xs">
+                <div className="p-4 rounded-xl bg-[var(--accent-subtle)]/30 border border-[var(--accent)]/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 text-sm">
                   <div className="space-y-1">
-                    <p className="font-semibold text-[var(--text-primary)] flex items-center gap-1.5">
+                    <p className="font-semibold text-[var(--text-primary)] flex items-center gap-2 text-sm sm:text-base">
                       <Compass className="w-4 h-4 text-[var(--accent)]" />
                       Grounded in your Career Intelligence Profile
                     </p>
-                    <p className="text-[var(--text-secondary)]">
-                      Target Role: <strong>{studentSummary.targetRole}</strong> · Top Skill Gaps to Resolve:{' '}
+                    <p className="text-sm text-[var(--text-secondary)]">
+                      {studentSummary.targetRole ? (
+                        <>
+                          Target Role: <strong>{studentSummary.targetRole}</strong> ·{' '}
+                        </>
+                      ) : (
+                        <>
+                          Target Role: <strong>Goal not set</strong> ·{' '}
+                        </>
+                      )}
+                      Top Skill Gaps to Resolve:{' '}
                       <span className="text-[var(--accent)] font-medium">
                         {studentSummary.topSkillGaps && studentSummary.topSkillGaps.length > 0
                           ? studentSummary.topSkillGaps.join(', ')
-                          : 'Advanced System Architecture'}
+                          : 'Set a target role to identify priority skills'}
                       </span>
                     </p>
                   </div>
                   <div className="flex items-center gap-2 shrink-0">
                     <Link
                       href="/guidance"
-                      className="px-3 py-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all font-medium text-[11px]"
+                      className="px-3.5 py-1.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-all font-medium text-xs sm:text-sm"
                     >
                       View Readiness ({studentSummary.readinessScore || 65}%)
                     </Link>
@@ -585,36 +594,63 @@ export default function ProjectMentorPage() {
               {recsLoading ? (
                 <div className="py-20 flex flex-col items-center justify-center gap-3 text-[var(--text-secondary)]">
                   <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)]" />
-                  <span className="text-xs font-medium">Generating student-specific project blueprints...</span>
+                  <span className="text-sm font-medium">Generating student-specific project blueprints...</span>
                 </div>
               ) : recsError ? (
-                <div className="p-6 rounded-2xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs">
+                <div className="p-6 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-sm">
                   <p className="font-semibold">Failed to load recommendations</p>
                   <p className="mt-1">{recsError}</p>
                 </div>
+              ) : recommendations.length === 0 ? (
+                <GlassCard className="p-10 text-center max-w-xl mx-auto rounded-xl space-y-4 bg-white border border-[#E5E8ED]">
+                  <div className="w-12 h-12 rounded-xl bg-[#F6F7F9] text-[#3157C8] flex items-center justify-center mx-auto border border-[#E5E8ED]">
+                    <Compass className="w-6 h-6" />
+                  </div>
+                  <h3 className="text-lg font-bold text-[#20242B]">
+                    Set your career goal to unlock project blueprints
+                  </h3>
+                  <p className="text-sm text-[#626B78] leading-relaxed">
+                    Choose a target role first so recommendations match the real tools, deliverables, and skill gaps employers look for in your field.
+                  </p>
+                  <div className="flex flex-wrap items-center justify-center gap-3 pt-1">
+                    <Link
+                      href="/onboarding"
+                      className="btn-primary px-5 py-2.5 rounded-lg text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>Set career goal</span>
+                      <ArrowRight className="w-4 h-4" />
+                    </Link>
+                    <Link
+                      href="/dashboard/my-data"
+                      className="btn-secondary px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <span>My Career Data</span>
+                    </Link>
+                  </div>
+                </GlassCard>
               ) : (
                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
                   {recommendations.map((rec) => (
                     <GlassCard
                       key={rec.id}
                       variant="elevated"
-                      className="p-6 rounded-xl flex flex-col justify-between border border-[var(--border-color)] space-y-4 hover:border-[var(--accent)]/50 transition-all shadow-md group"
+                      className="p-6 rounded-xl flex flex-col justify-between border border-[var(--border-color)] space-y-4 hover:border-[var(--accent)]/50 transition-all shadow-sm group"
                     >
                       <div className="space-y-3.5">
                         {/* Top Badges */}
                         <div className="flex items-center justify-between gap-2 flex-wrap">
                           <span
-                            className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono uppercase ${
+                            className={`px-2.5 py-0.5 rounded-full text-xs font-bold font-mono uppercase ${
                               rec.difficulty === 'Beginner'
-                                ? 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20'
+                                ? 'bg-emerald-500/10 text-emerald-600 border border-emerald-500/20'
                                 : rec.difficulty === 'Intermediate'
-                                ? 'bg-blue-500/10 text-blue-600 dark:text-blue-400 border border-blue-500/20'
-                                : 'bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20'
+                                ? 'bg-blue-500/10 text-blue-600 border border-blue-500/20'
+                                : 'bg-amber-500/10 text-amber-600 border border-amber-500/20'
                             }`}
                           >
                             {rec.difficulty}
                           </span>
-                          <span className="text-[11px] text-[var(--text-secondary)] flex items-center gap-1 font-mono">
+                          <span className="text-xs text-[var(--text-secondary)] flex items-center gap-1.5 font-mono">
                             <Clock className="w-3.5 h-3.5" />
                             {rec.estimatedComplexity}
                           </span>
@@ -622,16 +658,16 @@ export default function ProjectMentorPage() {
 
                         {/* Title & Problem Statement */}
                         <div>
-                          <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
+                          <h3 className="text-lg font-bold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors">
                             {rec.title}
                           </h3>
-                          <p className="text-xs text-[var(--text-secondary)] mt-1.5 leading-relaxed">
+                          <p className="text-[15px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">
                             {rec.problemStatement}
                           </p>
                         </div>
 
                         {/* Real-World Use Case */}
-                        <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-xs text-[var(--text-secondary)]">
+                        <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-sm text-[var(--text-secondary)]">
                           <strong className="text-[var(--text-primary)] font-semibold block mb-0.5">
                             Industry Application:
                           </strong>
@@ -640,7 +676,7 @@ export default function ProjectMentorPage() {
 
                         {/* Tech Stack Chips */}
                         <div>
-                          <span className="text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-1.5">
+                          <span className="text-xs font-mono font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-1.5">
                             Technologies & Gap Bridges
                           </span>
                           <div className="flex flex-wrap gap-1.5">
@@ -651,7 +687,7 @@ export default function ProjectMentorPage() {
                               return (
                                 <span
                                   key={idx}
-                                  className={`px-2.5 py-1 rounded-lg text-[11px] font-medium ${
+                                  className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
                                     isGap
                                       ? 'bg-[var(--accent)] text-white shadow-xs font-semibold'
                                       : 'bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-secondary)]'
@@ -668,13 +704,13 @@ export default function ProjectMentorPage() {
 
                         {/* Learning Outcomes */}
                         <div>
-                          <span className="text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-1">
+                          <span className="text-xs font-mono font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-1.5">
                             Expected Learning Outcomes
                           </span>
-                          <ul className="space-y-1">
+                          <ul className="space-y-1.5">
                             {rec.learningOutcomes.slice(0, 3).map((out, i) => (
-                              <li key={i} className="text-xs text-[var(--text-secondary)] flex items-start gap-1.5 leading-relaxed">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-500 shrink-0 mt-0.5" />
+                              <li key={i} className="text-sm text-[var(--text-secondary)] flex items-start gap-2 leading-relaxed">
+                                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                                 <span>{out}</span>
                               </li>
                             ))}
@@ -684,24 +720,24 @@ export default function ProjectMentorPage() {
 
                       {/* Action Button */}
                       <div className="pt-4 border-t border-[var(--border-color)] flex items-center justify-between gap-3">
-                        <span className="text-[11px] text-[var(--text-muted)] italic truncate max-w-[200px] sm:max-w-xs">
+                        <span className="text-xs text-[var(--text-muted)] italic truncate max-w-[200px] sm:max-w-xs">
                           {rec.resumeValue}
                         </span>
                         <button
                           type="button"
                           onClick={() => handleStartProject(rec)}
                           disabled={startingProjectId === rec.id}
-                          className="btn-primary px-4 py-2 rounded-xl text-xs font-semibold shrink-0 flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                          className="btn-primary px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold shrink-0 flex items-center gap-2 cursor-pointer disabled:opacity-50"
                         >
                           {startingProjectId === rec.id ? (
                             <>
-                              <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              <Loader2 className="w-4 h-4 animate-spin" />
                               <span>Generating Spec...</span>
                             </>
                           ) : (
                             <>
                               <span>Start Project</span>
-                              <ArrowRight className="w-3.5 h-3.5" />
+                              <ArrowRight className="w-4 h-4" />
                             </>
                           )}
                         </button>
@@ -772,7 +808,7 @@ export default function ProjectMentorPage() {
                           <div className="space-y-1.5">
                             <div className="flex items-center gap-2 flex-wrap">
                               <span
-                                className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold font-mono uppercase ${
+                                className={`px-2.5 py-0.5 rounded-full text-xs font-bold font-mono uppercase ${
                                   activeProject.difficulty === 'Beginner'
                                     ? 'bg-emerald-500/10 text-emerald-500'
                                     : activeProject.difficulty === 'Intermediate'
@@ -782,24 +818,24 @@ export default function ProjectMentorPage() {
                               >
                                 {activeProject.difficulty}
                               </span>
-                              <span className="text-[11px] text-[var(--text-secondary)] font-mono">
+                              <span className="text-xs text-[var(--text-secondary)] font-mono">
                                 Target Role: {activeProject.targetRole}
                               </span>
-                              <span className="text-[11px] text-[var(--text-muted)]">
+                              <span className="text-xs text-[var(--text-muted)]">
                                 Milestone {activeProject.currentMilestone} of 8
                               </span>
                             </div>
                             <h2 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)]">
                               {activeProject.title}
                             </h2>
-                            <p className="text-xs text-[var(--text-secondary)] max-w-3xl leading-relaxed">
+                            <p className="text-sm sm:text-base text-[var(--text-secondary)] max-w-3xl leading-relaxed">
                               {activeProject.problemStatement}
                             </p>
                           </div>
 
                           {/* Progress Meter */}
-                          <div className="p-4 rounded-2xl bg-[var(--bg-secondary)] border border-[var(--border-color)] lg:w-72 shrink-0 space-y-2">
-                            <div className="flex items-center justify-between text-xs">
+                          <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] lg:w-72 shrink-0 space-y-2">
+                            <div className="flex items-center justify-between text-sm">
                               <span className="font-semibold text-[var(--text-primary)]">Completion Progress</span>
                               <span className="font-mono font-bold text-[var(--accent)]">
                                 {activeProject.progressPercent}%
@@ -811,7 +847,7 @@ export default function ProjectMentorPage() {
                                 style={{ width: `${activeProject.progressPercent}%` }}
                               />
                             </div>
-                            <div className="flex items-center justify-between text-[10px] text-[var(--text-muted)]">
+                            <div className="flex items-center justify-between text-xs text-[var(--text-muted)]">
                               <span>
                                 {activeProject.milestones.filter((m) => m.isCompleted).length} of 8 milestones
                               </span>
@@ -824,23 +860,23 @@ export default function ProjectMentorPage() {
                         <div className="pt-3 border-t border-[var(--border-color)] flex flex-col sm:flex-row items-center gap-3">
                           <div className="flex-1 w-full flex items-center gap-2">
                             <div className="relative flex-1">
-                              <GithubIcon className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                              <GithubIcon className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
                               <input
                                 type="url"
                                 value={repoUrlInput}
                                 onChange={(e) => setRepoUrlInput(e.target.value)}
                                 placeholder="GitHub Repository (e.g. https://github.com/...)"
-                                className="w-full py-1.5 pl-8 pr-3 rounded-xl bg-[var(--input-bg)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
+                                className="w-full py-2 pl-9 pr-3 rounded-lg bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
                               />
                             </div>
                             <div className="relative flex-1">
-                              <ExternalLink className="w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
+                              <ExternalLink className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
                               <input
                                 type="url"
                                 value={liveUrlInput}
                                 onChange={(e) => setLiveUrlInput(e.target.value)}
                                 placeholder="Live Demonstration URL (e.g. https://...)"
-                                className="w-full py-1.5 pl-8 pr-3 rounded-xl bg-[var(--input-bg)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
+                                className="w-full py-2 pl-9 pr-3 rounded-lg bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)]"
                               />
                             </div>
                           </div>
@@ -848,7 +884,7 @@ export default function ProjectMentorPage() {
                             type="button"
                             onClick={handleSaveUrls}
                             disabled={savingUrls}
-                            className="px-3.5 py-1.5 rounded-xl btn-secondary text-xs font-semibold shrink-0 cursor-pointer disabled:opacity-50"
+                            className="px-4 py-2 rounded-lg btn-secondary text-sm font-semibold shrink-0 cursor-pointer disabled:opacity-50"
                           >
                             {savingUrls ? 'Saving...' : urlSaveSuccess ? 'Saved ✓' : 'Save Links'}
                           </button>
@@ -860,7 +896,7 @@ export default function ProjectMentorPage() {
                         <button
                           type="button"
                           onClick={() => setWorkspaceTab('milestones')}
-                          className={`flex items-center gap-1.5 px-4 py-2 border-b-2 font-semibold text-xs transition-all cursor-pointer ${
+                          className={`flex items-center gap-2 px-4 py-2.5 border-b-2 font-semibold text-sm transition-all cursor-pointer ${
                             workspaceTab === 'milestones'
                               ? 'border-[var(--accent)] text-[var(--accent)]'
                               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -872,7 +908,7 @@ export default function ProjectMentorPage() {
                         <button
                           type="button"
                           onClick={() => setWorkspaceTab('specification')}
-                          className={`flex items-center gap-1.5 px-4 py-2 border-b-2 font-semibold text-xs transition-all cursor-pointer ${
+                          className={`flex items-center gap-2 px-4 py-2.5 border-b-2 font-semibold text-sm transition-all cursor-pointer ${
                             workspaceTab === 'specification'
                               ? 'border-[var(--accent)] text-[var(--accent)]'
                               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -884,7 +920,7 @@ export default function ProjectMentorPage() {
                         <button
                           type="button"
                           onClick={() => setWorkspaceTab('mentor')}
-                          className={`flex items-center gap-1.5 px-4 py-2 border-b-2 font-semibold text-xs transition-all cursor-pointer ${
+                          className={`flex items-center gap-2 px-4 py-2.5 border-b-2 font-semibold text-sm transition-all cursor-pointer ${
                             workspaceTab === 'mentor'
                               ? 'border-[var(--accent)] text-[var(--accent)]'
                               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -896,7 +932,7 @@ export default function ProjectMentorPage() {
                         <button
                           type="button"
                           onClick={() => setWorkspaceTab('resume')}
-                          className={`flex items-center gap-1.5 px-4 py-2 border-b-2 font-semibold text-xs transition-all cursor-pointer ${
+                          className={`flex items-center gap-2 px-4 py-2.5 border-b-2 font-semibold text-sm transition-all cursor-pointer ${
                             workspaceTab === 'resume'
                               ? 'border-[var(--accent)] text-[var(--accent)]'
                               : 'border-transparent text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
@@ -915,7 +951,7 @@ export default function ProjectMentorPage() {
                             return (
                               <GlassCard
                                 key={m.id}
-                                className={`p-5 rounded-2xl border transition-all ${
+                                className={`p-5 rounded-xl border transition-all ${
                                   m.isCompleted
                                     ? 'border-emerald-500/30 bg-emerald-500/[0.02]'
                                     : m.id === activeProject.currentMilestone
@@ -942,17 +978,17 @@ export default function ProjectMentorPage() {
                                       onClick={() => setExpandedMilestoneId(isExpanded ? null : m.id)}
                                     >
                                       <div className="flex items-center gap-2 flex-wrap">
-                                        <span className="text-[10px] font-mono uppercase px-2 py-0.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-muted)]">
+                                        <span className="text-xs font-mono uppercase px-2 py-0.5 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-muted)]">
                                           Step {m.id} · {m.phase}
                                         </span>
                                         {m.isCompleted && (
-                                          <span className="text-[10px] text-emerald-500 font-semibold font-mono">
+                                          <span className="text-xs text-emerald-500 font-semibold font-mono">
                                             Completed ✓
                                           </span>
                                         )}
                                       </div>
                                       <h4
-                                        className={`text-sm sm:text-base font-bold mt-1 ${
+                                        className={`text-base font-bold mt-1 ${
                                           m.isCompleted
                                             ? 'line-through text-[var(--text-muted)]'
                                             : 'text-[var(--text-primary)]'
@@ -960,7 +996,7 @@ export default function ProjectMentorPage() {
                                       >
                                         {m.title}
                                       </h4>
-                                      <p className="text-xs text-[var(--text-secondary)] mt-0.5 leading-relaxed">
+                                      <p className="text-sm text-[var(--text-secondary)] mt-0.5 leading-relaxed">
                                         {m.description}
                                       </p>
                                     </div>
@@ -978,9 +1014,9 @@ export default function ProjectMentorPage() {
 
                                 {/* Expanded Milestone Checklist & Deliverables */}
                                 {isExpanded && (
-                                  <div className="mt-4 pt-4 border-t border-[var(--border-color)] space-y-3.5 pl-8 text-xs">
+                                  <div className="mt-4 pt-4 border-t border-[var(--border-color)] space-y-3.5 pl-8 text-sm">
                                     <div>
-                                      <span className="text-[10px] font-mono font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-2">
+                                      <span className="text-xs font-mono font-bold text-[var(--text-muted)] uppercase tracking-wider block mb-2">
                                         Actionable Development Tasks
                                       </span>
                                       <div className="space-y-2">
@@ -1011,23 +1047,23 @@ export default function ProjectMentorPage() {
 
                                     {/* Tips & Deliverable */}
                                     <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-2">
-                                      <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-                                        <span className="text-[10px] font-semibold text-[var(--text-primary)] flex items-center gap-1 mb-1">
-                                          <Lightbulb className="w-3.5 h-3.5 text-[var(--accent)]" />
+                                      <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+                                        <span className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5 mb-1">
+                                          <Lightbulb className="w-4 h-4 text-[var(--accent)]" />
                                           <span>Pro Tips:</span>
                                         </span>
-                                        <ul className="space-y-1 text-[11px] text-[var(--text-secondary)]">
+                                        <ul className="space-y-1 text-xs text-[var(--text-secondary)]">
                                           {m.tips.map((tip: string, i: number) => (
                                             <li key={i}>• {tip}</li>
                                           ))}
                                         </ul>
                                       </div>
-                                      <div className="p-3 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-                                        <span className="text-[10px] font-semibold text-[var(--text-primary)] flex items-center gap-1 mb-1">
-                                          <Target className="w-3.5 h-3.5 text-[var(--accent)]" />
+                                      <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)]">
+                                        <span className="text-xs font-semibold text-[var(--text-primary)] flex items-center gap-1.5 mb-1">
+                                          <Target className="w-4 h-4 text-[var(--accent)]" />
                                           <span>Milestone Deliverable:</span>
                                         </span>
-                                        <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                                        <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
                                           {m.deliverable}
                                         </p>
                                       </div>
@@ -1139,8 +1175,8 @@ export default function ProjectMentorPage() {
                                 </div>
                               </div>
 
-                              <div className="p-4 rounded-xl bg-slate-900 text-slate-100 font-mono text-[11px] space-y-2 border border-slate-800">
-                                <span className="text-[10px] text-slate-400 uppercase tracking-wider block font-sans font-semibold">
+                              <div className="p-4 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] font-mono text-[11px] space-y-2 border border-[var(--border-color)]">
+                                <span className="text-[10px] text-[var(--text-secondary)] uppercase tracking-wider block font-sans font-semibold">
                                   End-to-End Request Pipeline
                                 </span>
                                 <p className="leading-relaxed whitespace-pre-wrap">
@@ -1217,7 +1253,7 @@ export default function ProjectMentorPage() {
                                     </div>
                                     <p className="text-[var(--text-secondary)] font-sans text-xs">{ep.description}</p>
                                     {ep.requestBody && (
-                                      <div className="text-[10px] text-slate-400 bg-slate-900 p-2 rounded-lg">
+                                      <div className="text-[10px] text-[var(--text-secondary)] bg-[var(--bg-secondary)] p-2 rounded-lg border border-[var(--border-color)]">
                                         Request: {ep.requestBody}
                                       </div>
                                     )}
@@ -1233,7 +1269,7 @@ export default function ProjectMentorPage() {
                               <h4 className="text-sm font-bold text-[var(--text-primary)]">
                                 Recommended Project Folder Structure
                               </h4>
-                              <pre className="p-4 rounded-xl bg-slate-900 text-slate-100 font-mono text-xs overflow-x-auto leading-relaxed border border-slate-800">
+                              <pre className="p-4 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] font-mono text-xs overflow-x-auto leading-relaxed border border-[var(--border-color)]">
                                 {activeProject.specification?.folderStructure}
                               </pre>
                             </GlassCard>
@@ -1379,7 +1415,7 @@ export default function ProjectMentorPage() {
                                 onChange={(e) => setCodeSnippet(e.target.value)}
                                 rows={3}
                                 placeholder="Paste your error trace, controller function, or schema snippet here..."
-                                className="w-full p-2.5 font-mono text-[11px] rounded-xl bg-slate-900 text-slate-100 border border-slate-700 resize-none focus:outline-none focus:border-[var(--accent)]"
+                                className="w-full p-2.5 font-mono text-[11px] rounded-xl bg-[var(--input-bg)] text-[var(--text-primary)] border border-[var(--border-color)] resize-none focus:outline-none focus:border-[var(--accent)]"
                               />
                             </div>
                           )}
@@ -1468,7 +1504,7 @@ export default function ProjectMentorPage() {
                           </div>
 
                           {exportResult && (
-                            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 dark:text-emerald-400 space-y-1">
+                            <div className="p-4 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-600 space-y-1">
                               <p className="font-semibold flex items-center gap-1.5">
                                 <CheckCircle2 className="w-4 h-4" />
                                 Successfully imported into your Student Career Profile and active Resume!
@@ -1530,16 +1566,16 @@ export default function ProjectMentorPage() {
                   <h3 className="text-xl font-bold text-[var(--text-primary)]">
                     Student Project Portfolio
                   </h3>
-                  <p className="text-xs text-[var(--text-secondary)] mt-0.5">
+                  <p className="text-sm text-[var(--text-secondary)] mt-0.5">
                     Your complete portfolio of documented academic, personal, and guided engineering systems.
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => setMainTab('recommendations')}
-                  className="btn-primary px-4 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 cursor-pointer self-start sm:self-auto"
+                  className="btn-primary px-4 py-2.5 rounded-lg text-sm font-semibold flex items-center gap-2 cursor-pointer self-start sm:self-auto"
                 >
-                  <Plus className="w-3.5 h-3.5" />
+                  <Plus className="w-4 h-4" />
                   <span>Start New Project</span>
                 </button>
               </div>
@@ -1547,8 +1583,8 @@ export default function ProjectMentorPage() {
               {guidedProjects.length === 0 ? (
                 <GlassCard className="p-12 text-center max-w-md mx-auto rounded-xl space-y-3">
                   <BookOpen className="w-8 h-8 mx-auto text-[var(--text-muted)]" />
-                  <p className="text-sm font-bold text-[var(--text-primary)]">No projects in portfolio</p>
-                  <p className="text-xs text-[var(--text-secondary)]">
+                  <p className="text-base font-bold text-[var(--text-primary)]">No projects in portfolio</p>
+                  <p className="text-sm text-[var(--text-secondary)]">
                     Select a project blueprint from Recommendations to start building your verified portfolio.
                   </p>
                 </GlassCard>
@@ -1557,12 +1593,12 @@ export default function ProjectMentorPage() {
                   {guidedProjects.map((p) => (
                     <GlassCard
                       key={p.id}
-                      className="p-5 rounded-2xl border border-[var(--border-color)] flex flex-col justify-between space-y-4 hover:border-[var(--accent)]/40 transition-all shadow-sm"
+                      className="p-5 rounded-xl border border-[var(--border-color)] flex flex-col justify-between space-y-4 hover:border-[var(--accent)]/40 transition-all shadow-sm"
                     >
                       <div className="space-y-3">
                         <div className="flex items-center justify-between gap-2">
                           <span
-                            className={`px-2 py-0.5 rounded-full text-[9px] font-bold font-mono uppercase ${
+                            className={`px-2.5 py-0.5 rounded-full text-xs font-bold font-mono uppercase ${
                               p.status === 'completed'
                                 ? 'bg-emerald-500/10 text-emerald-500'
                                 : 'bg-blue-500/10 text-blue-500'
@@ -1570,25 +1606,25 @@ export default function ProjectMentorPage() {
                           >
                             {p.status.replace('_', ' ')}
                           </span>
-                          <span className="text-[10px] font-mono font-bold text-[var(--accent)]">
+                          <span className="text-xs font-mono font-bold text-[var(--accent)]">
                             {p.progressPercent}%
                           </span>
                         </div>
 
                         <div>
-                          <h4 className="text-sm font-bold text-[var(--text-primary)] leading-snug">
+                          <h4 className="text-base font-bold text-[var(--text-primary)] leading-snug">
                             {p.title}
                           </h4>
-                          <p className="text-[11px] text-[var(--text-secondary)] mt-1 line-clamp-2 leading-relaxed">
+                          <p className="text-sm text-[var(--text-secondary)] mt-1 line-clamp-2 leading-relaxed">
                             {p.problemStatement}
                           </p>
                         </div>
 
-                        <div className="flex flex-wrap gap-1">
+                        <div className="flex flex-wrap gap-1.5">
                           {p.techStack.slice(0, 4).map((tech, i) => (
                             <span
                               key={i}
-                              className="px-2 py-0.5 rounded-md text-[10px] bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-secondary)] font-mono"
+                              className="px-2 py-0.5 rounded-md text-xs bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-secondary)] font-mono"
                             >
                               {tech}
                             </span>
@@ -1597,16 +1633,16 @@ export default function ProjectMentorPage() {
                       </div>
 
                       <div className="pt-3 border-t border-[var(--border-color)] flex items-center justify-between gap-2">
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2">
                           {p.githubUrl && (
                             <a
                               href={p.githubUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-1.5 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                              className="p-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                               title="GitHub Repository"
                             >
-                              <GithubIcon className="w-3.5 h-3.5" />
+                              <GithubIcon className="w-4 h-4" />
                             </a>
                           )}
                           {p.liveUrl && (
@@ -1614,10 +1650,10 @@ export default function ProjectMentorPage() {
                               href={p.liveUrl}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="p-1.5 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]"
+                              className="p-2 rounded-lg bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] transition-colors"
                               title="Live Demo"
                             >
-                              <ExternalLink className="w-3.5 h-3.5" />
+                              <ExternalLink className="w-4 h-4" />
                             </a>
                           )}
                         </div>
@@ -1631,7 +1667,7 @@ export default function ProjectMentorPage() {
                             setMainTab('workspace');
                             setWorkspaceTab('milestones');
                           }}
-                          className="btn-secondary px-3 py-1 rounded-lg text-xs font-semibold cursor-pointer"
+                          className="btn-secondary px-3.5 py-1.5 rounded-lg text-sm font-semibold cursor-pointer"
                         >
                           Open Workspace
                         </button>

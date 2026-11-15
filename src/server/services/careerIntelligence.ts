@@ -13,8 +13,14 @@ import {
 } from '@/server/db';
 import { CANDIDATE_GEMINI_MODELS, recordGeminiProviderStatus } from '@/server/services/gemini';
 import { YOUTUBE_ROADMAPS } from '@/lib/learning/youtubeResources';
+import { findCuratedRoleProfile, getAllCuratedSkillSuggestions, type RoleDomain } from '@/lib/career/roleProfiles';
 import { SupportedSkill } from '@/types/skills';
 import { WorkplaceType, EmploymentType } from '@/types/jobs';
+import {
+  buildUnifiedStudentContext,
+  mapUnifiedToCareerProfileSummary,
+  type UnifiedStudentContext,
+} from './unifiedStudentContext';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
 const GEMINI_REQUEST_TIMEOUT_MS = 20_000;
@@ -44,7 +50,7 @@ if (GEMINI_API_KEY) {
 
 export interface RoleSpecification {
   title: string;
-  category: 'Software Engineering' | 'Data & AI' | 'Cloud & DevOps' | 'Product & Management';
+  category: 'Software Engineering' | 'Data & AI' | 'Cloud & DevOps' | 'Product & Management' | RoleDomain | 'Unset' | 'Custom';
   criticalSkills: string[];
   recommendedSkills: string[];
   description: string;
@@ -148,7 +154,30 @@ export const ROLE_TAXONOMY: Record<string, RoleSpecification> = {
  * Finds the closest matched role specification from taxonomy.
  */
 export function findRoleSpecification(roleQuery: string): RoleSpecification {
-  const normalized = (roleQuery || '').trim().toLowerCase();
+  const trimmed = (roleQuery || '').trim();
+  const normalized = trimmed.toLowerCase();
+
+  if (!normalized) {
+    return {
+      title: '',
+      category: 'Unset',
+      criticalSkills: [],
+      recommendedSkills: [],
+      description: 'Target role has not been set yet.',
+    };
+  }
+
+  const curated = findCuratedRoleProfile(trimmed);
+  if (curated) {
+    return {
+      title: curated.title,
+      category: curated.domain,
+      criticalSkills: curated.coreSkills,
+      recommendedSkills: curated.recommendedTools,
+      description: curated.summary,
+    };
+  }
+
   if (ROLE_TAXONOMY[normalized]) {
     return ROLE_TAXONOMY[normalized];
   }
@@ -159,13 +188,13 @@ export function findRoleSpecification(roleQuery: string): RoleSpecification {
     }
   }
 
-  // Fallback generic software engineering spec
+  // Return custom role transparently without inventing unrelated software requirements
   return {
-    title: roleQuery || 'Software Professional',
-    category: 'Software Engineering',
-    criticalSkills: ['JavaScript', 'Python', 'SQL', 'Git', 'Problem Solving'],
-    recommendedSkills: ['Docker', 'AWS', 'Testing', 'System Design'],
-    description: `Specialized engineering role focused on ${roleQuery || 'modern technology'}.`,
+    title: trimmed,
+    category: 'Custom',
+    criticalSkills: [],
+    recommendedSkills: [],
+    description: `Custom target role "${trimmed}".`,
   };
 }
 
@@ -499,300 +528,8 @@ export function calculateExplainableReadiness(
 }
 
 export async function getCareerProfileSummary(userId: string): Promise<CareerProfileSummary> {
-  const db = getDb();
-
-  // 1. User basic info
-  const userRow = (await db.prepare('SELECT id, name, email FROM users WHERE id = ?').get(userId)) as any;
-  const userName = userRow?.name || 'Candidate';
-  const userEmail = userRow?.email || null;
-
-  // 2. Student Profile & Career Goal
-  const studentProfile = await getStudentProfile(userId);
-  const careerGoal = await getUserCareerGoal(userId);
-  const targetRole = studentProfile?.targetRole || careerGoal?.target_role || 'Graduate Software Engineer';
-  const experienceLevel = careerGoal?.experience_level || (studentProfile ? 'Fresher / Entry Level' : 'Entry Level');
-
-  // 3. User profile tracked skills
-  const userSkills = await getUserSkills(userId);
-  const verifiedList: Array<{ name: string; score: number; certificateId?: string; verifiedDate?: string }> = [];
-  const claimedList: Array<{ name: string; claimedDate?: string }> = [];
-
-  for (const s of userSkills) {
-    if (s.status === 'verified') {
-      verifiedList.push({
-        name: s.name,
-        score: s.score || 80,
-        certificateId: s.certificateId,
-        verifiedDate: s.verifiedDate,
-      });
-    } else if (s.status === 'claimed') {
-      claimedList.push({
-        name: s.name,
-        claimedDate: s.claimedDate,
-      });
-    }
-  }
-
-  // 4. Inferred skills from latest saved resume & student projects
-  const resumeRow = (await db
-    .prepare('SELECT resume_data FROM resumes WHERE user_id = ? ORDER BY created_at DESC LIMIT 1')
-    .get(userId)) as any;
-
-  const inferredList: Array<{ name: string; source: 'resume_experience' | 'resume_project' | 'skills_section' }> = [];
-  const inferredSet = new Set<string>();
-
-  if (resumeRow?.resume_data) {
-    try {
-      const parsedResume = JSON.parse(resumeRow.resume_data);
-      if (Array.isArray(parsedResume.skills)) {
-        for (const sk of parsedResume.skills) {
-          const skName = typeof sk === 'string' ? sk.trim() : sk.name?.trim();
-          if (skName && !inferredSet.has(skName.toLowerCase())) {
-            inferredSet.add(skName.toLowerCase());
-            inferredList.push({ name: skName, source: 'skills_section' });
-          }
-        }
-      }
-      // Inspect project and experience bullets for known tech skills
-      const knownTechTerms = ['React', 'Python', 'JavaScript', 'TypeScript', 'Java', 'SQL', 'AWS', 'Docker', 'Git', 'Next.js', 'Node.js', 'PostgreSQL', 'Tailwind', 'GraphQL', 'Redis', 'Kubernetes'];
-      const rawText = JSON.stringify(parsedResume).toLowerCase();
-      for (const term of knownTechTerms) {
-        if (rawText.includes(term.toLowerCase()) && !inferredSet.has(term.toLowerCase())) {
-          inferredSet.add(term.toLowerCase());
-          inferredList.push({ name: term, source: 'resume_experience' });
-        }
-      }
-    } catch {}
-  }
-
-  // Also infer technologies demonstrated in student portfolio projects
-  if (studentProfile?.projects && Array.isArray(studentProfile.projects)) {
-    for (const proj of studentProfile.projects) {
-      if (Array.isArray(proj.techStack)) {
-        for (const tech of proj.techStack) {
-          const tClean = tech.trim();
-          if (tClean && !inferredSet.has(tClean.toLowerCase())) {
-            inferredSet.add(tClean.toLowerCase());
-            inferredList.push({ name: tClean, source: 'resume_project' });
-          }
-        }
-      }
-    }
-  }
-
-  // 5. Skills needing assessment (claimed or inferred, but not verified)
-  const verifiedNames = new Set(verifiedList.map((v) => v.name.toLowerCase()));
-  const needingAssessmentSet = new Set<string>();
-
-  for (const c of claimedList) {
-    if (!verifiedNames.has(c.name.toLowerCase())) {
-      needingAssessmentSet.add(c.name);
-    }
-  }
-  for (const inf of inferredList) {
-    if (!verifiedNames.has(inf.name.toLowerCase())) {
-      needingAssessmentSet.add(inf.name);
-    }
-  }
-
-  // 6. Recent Assessments
-  const assessmentRows = (await db
-    .prepare('SELECT id, skill, score, total_questions, passed, created_at FROM assessments WHERE user_id = ? ORDER BY created_at DESC LIMIT 5')
-    .all(userId)) as any[];
-
-  const recentAssessments = assessmentRows.map((a) => ({
-    id: a.id,
-    skill: a.skill,
-    score: Number(a.score) || 0,
-    totalQuestions: Number(a.total_questions) || 10,
-    passed: Boolean(Number(a.passed) === 1 || a.passed === true),
-    date: a.created_at,
-  }));
-
-  // 7. Counts
-  const appsCount = ((await db.prepare('SELECT COUNT(*) as c FROM job_applications WHERE user_id = ?').get(userId)) as any)?.c || 0;
-  const resumesCount = ((await db.prepare('SELECT COUNT(*) as c FROM resumes WHERE user_id = ?').get(userId)) as any)?.c || 0;
-
-  // 8. Role specification alignment score
-  const roleSpec = findRoleSpecification(targetRole);
-  const allUserSkillNames = new Set([
-    ...verifiedList.map((v) => v.name.toLowerCase()),
-    ...claimedList.map((c) => c.name.toLowerCase()),
-    ...inferredList.map((i) => i.name.toLowerCase()),
-  ]);
-
-  let criticalHits = 0;
-  for (const crit of roleSpec.criticalSkills) {
-    if (allUserSkillNames.has(crit.toLowerCase())) {
-      criticalHits++;
-    }
-  }
-  const readinessPercent = Math.min(
-    100,
-    Math.round((criticalHits / Math.max(1, roleSpec.criticalSkills.length)) * 85 + (verifiedList.length > 0 ? 15 : 0))
-  );
-
-  // 9. Recommended Next Steps
-  const nextRecommendedActions: CareerProfileSummary['nextRecommendedActions'] = [];
-
-  if (resumesCount === 0) {
-    nextRecommendedActions.push({
-      title: 'Create Your Professional Resume',
-      description: 'Build an ATS-optimized A4 resume tailored for your target role in the builder.',
-      href: '/builder',
-      priority: 'high',
-      actionText: 'Build Resume',
-    });
-  }
-
-  if (needingAssessmentSet.size > 0) {
-    const unverifiedSkill = Array.from(needingAssessmentSet)[0];
-    nextRecommendedActions.push({
-      title: `Verify ${unverifiedSkill} Assessment`,
-      description: `Take the 10-question proctored evaluation to earn a cryptographic certificate in ${unverifiedSkill}.`,
-      href: `/skills/assess/${encodeURIComponent(unverifiedSkill)}`,
-      priority: 'high',
-      actionText: 'Start Assessment',
-    });
-  }
-
-  nextRecommendedActions.push({
-    title: `Practice ${targetRole} AI Interview`,
-    description: `Prepare for technical, behavioral, and scenario interview questions with instant AI evaluation.`,
-    href: '/interview-prep',
-    priority: 'medium',
-    actionText: 'Practice Interview',
-  });
-
-  nextRecommendedActions.push({
-    title: 'Explore Matching Job Openings',
-    description: `Discover verified live job openings matching your verified skills and qualifications.`,
-    href: '/jobs',
-    priority: 'medium',
-    actionText: 'Browse Jobs',
-  });
-
-  // 10. Compute Explainable Readiness & Rich Profile Context
-  let latestAtsScore: number | null = null;
-  let latestAtsAnalysis: CareerProfileSummary['latestAtsAnalysis'] = null;
-  try {
-    const atsRow = (await db
-      .prepare('SELECT ats_score, keyword_score, formatting_score, section_score, detected_keywords, missing_keywords, created_at, analyzed_at FROM resume_analyses WHERE user_id = ? ORDER BY analyzed_at DESC LIMIT 1')
-      .get(userId)) as any;
-    if (atsRow && atsRow.ats_score !== undefined && atsRow.ats_score !== null) {
-      latestAtsScore = Number(atsRow.ats_score);
-      const parseKeywords = (raw: any): string[] => {
-        if (!raw) return [];
-        if (Array.isArray(raw)) return raw;
-        if (typeof raw === 'string') {
-          try {
-            const parsed = JSON.parse(raw);
-            if (Array.isArray(parsed)) return parsed;
-          } catch {}
-          return raw.split(',').map((s: string) => s.trim()).filter(Boolean);
-        }
-        return [];
-      };
-
-      latestAtsAnalysis = {
-        atsScore: latestAtsScore,
-        keywordScore: Number(atsRow.keyword_score) || 0,
-        formattingScore: Number(atsRow.formatting_score) || 0,
-        sectionScore: Number(atsRow.section_score) || 0,
-        detectedKeywords: parseKeywords(atsRow.detected_keywords),
-        missingKeywords: parseKeywords(atsRow.missing_keywords),
-        createdAt: atsRow.analyzed_at || atsRow.created_at,
-      };
-    }
-  } catch {}
-
-  let interviewAverageScore: number | null = null;
-  try {
-    const intRows = (await db
-      .prepare('SELECT overall_score FROM user_interview_sessions WHERE user_id = ? AND overall_score IS NOT NULL ORDER BY created_at DESC LIMIT 5')
-      .all(userId)) as any[];
-    if (intRows && intRows.length > 0) {
-      const total = intRows.reduce((sum, r) => sum + Number(r.overall_score || 0), 0);
-      interviewAverageScore = Math.round(total / intRows.length);
-    }
-  } catch {}
-
-  let recentApplications: CareerProfileSummary['recentApplications'] = [];
-  try {
-    const appRows = (await db
-      .prepare('SELECT id, job_title, company, location, status, applied_at FROM job_applications WHERE user_id = ? ORDER BY applied_at DESC LIMIT 5')
-      .all(userId)) as any[];
-    if (Array.isArray(appRows)) {
-      recentApplications = appRows.map((app) => ({
-        id: String(app.id),
-        jobTitle: app.job_title || 'Software Role',
-        company: app.company || 'Tech Company',
-        location: app.location || null,
-        status: app.status || 'Applied',
-        appliedAt: app.applied_at || '',
-      }));
-    }
-  } catch {}
-
-  const missingCriticalSkills = roleSpec.criticalSkills.filter(
-    (crit) => !allUserSkillNames.has(crit.toLowerCase())
-  );
-  const missingRecommendedSkills = roleSpec.recommendedSkills.filter(
-    (rec) => !allUserSkillNames.has(rec.toLowerCase())
-  );
-  const matchingSkills = roleSpec.criticalSkills.filter(
-    (crit) => allUserSkillNames.has(crit.toLowerCase())
-  );
-  const skillGaps = {
-    missingCriticalSkills,
-    missingRecommendedSkills,
-    matchingSkills,
-  };
-
-  const baseSummary: CareerProfileSummary = {
-    userId,
-    name: userName,
-    email: userEmail,
-    targetRole,
-    targetIndustry: careerGoal?.target_industry || null,
-    experienceLevel,
-    preferredLocation: studentProfile?.preferredLocations?.[0] || careerGoal?.preferred_location || null,
-    targetSalary: careerGoal?.target_salary || null,
-    skills: {
-      verified: verifiedList,
-      claimed: claimedList,
-      inferred: inferredList,
-      needingAssessment: Array.from(needingAssessmentSet),
-    },
-    metrics: {
-      verifiedCount: verifiedList.length,
-      claimedCount: claimedList.length,
-      inferredCount: inferredList.length,
-      readinessScore: readinessPercent,
-      activeApplicationsCount: appsCount,
-      savedResumesCount: resumesCount,
-    },
-    recentAssessments,
-    nextRecommendedActions,
-    studentProfile,
-    latestAtsAnalysis,
-    recentApplications,
-    skillGaps,
-  };
-
-  const explainableReadiness = calculateExplainableReadiness(baseSummary, {
-    latestAtsScore,
-    interviewAverageScore,
-  });
-
-  return {
-    ...baseSummary,
-    metrics: {
-      ...baseSummary.metrics,
-      readinessScore: explainableReadiness.overallScore,
-    },
-    explainableReadiness,
-  };
+  const unified = await buildUnifiedStudentContext(userId);
+  return mapUnifiedToCareerProfileSummary(unified);
 }
 
 // ============================================================================
@@ -1849,17 +1586,73 @@ Return a valid JSON object matching this schema:
 
 export function getDeterministicCareerChatResponse(
   userMessage: string,
-  profile?: CareerProfileSummary | null
+  profile?: CareerProfileSummary | null,
+  unifiedContext?: UnifiedStudentContext | null
 ): string {
   const msg = (userMessage || '').toLowerCase();
-  const target = profile?.targetRole || 'Graduate Software Engineer';
-  const name = profile?.name || 'Student';
-  const sp = profile?.studentProfile;
-  const ats = profile?.latestAtsAnalysis;
-  const readiness = profile?.metrics?.readinessScore ?? 65;
-  const verifiedList = profile?.skills?.verified?.map((v) => v.name) || [];
-  const missingCrits = profile?.skillGaps?.missingCriticalSkills || ['Data Structures', 'Git', 'SQL'];
-  const apps = profile?.recentApplications || [];
+  const target = (profile?.targetRole || unifiedContext?.careerGoal?.targetRole || '').trim();
+  const displayTarget = target || 'your target role (goal not set yet)';
+  const name = profile?.name || 'Candidate';
+
+  // Extract student profile, checking profile first then falling back to unifiedContext.academic
+  const sp = profile?.studentProfile || (unifiedContext?.academic ? {
+    institution: unifiedContext.academic.institution,
+    degree: unifiedContext.academic.degree,
+    fieldOfStudy: unifiedContext.academic.fieldOfStudy,
+    graduationYear: unifiedContext.academic.graduationYear,
+    graduationMonth: unifiedContext.academic.graduationMonth,
+    currentSemester: unifiedContext.academic.currentSemester,
+    cgpa: unifiedContext.academic.cgpa,
+    targetRole: unifiedContext.careerGoal?.targetRole,
+    targetWorkType: unifiedContext.academic.targetWorkType,
+    preferredLocations: unifiedContext.careerGoal?.preferredLocations || [],
+    coursework: unifiedContext.academic.coursework || [],
+    projects: (unifiedContext.academic.documentedProjects || []).map((p) => ({
+      id: p.id || '',
+      title: p.title,
+      description: p.description || '',
+      role: '',
+      techStack: p.techStack || [],
+      repoUrl: p.repoUrl || null,
+      liveUrl: p.liveUrl || null,
+      highlights: [],
+    })),
+    achievements: [],
+    updatedAt: unifiedContext.updatedAt,
+  } : undefined);
+
+  // If student profile exists but projects is empty, incorporate any guided projects from unifiedContext
+  if (sp && (!sp.projects || sp.projects.length === 0) && unifiedContext?.projects?.projects && unifiedContext.projects.projects.length > 0) {
+    sp.projects = unifiedContext.projects.projects.map((gp) => ({
+      id: gp.id,
+      title: gp.title,
+      description: '',
+      role: 'Project Builder',
+      techStack: gp.techStack,
+      repoUrl: null,
+      liveUrl: null,
+      highlights: [],
+    }));
+  }
+
+  const ats = profile?.latestAtsAnalysis || (unifiedContext?.resume?.latestAtsScore ? {
+    atsScore: unifiedContext.resume.latestAtsScore,
+    missingKeywords: unifiedContext.resume.missingKeywords || [],
+    detectedKeywords: unifiedContext.resume.detectedKeywords || [],
+    keywordScore: unifiedContext.resume.keywordScore ?? 0,
+    formattingScore: unifiedContext.resume.formattingScore ?? 0,
+  } : undefined);
+
+  const readiness = profile?.metrics?.readinessScore ?? unifiedContext?.readiness?.overallScore ?? 0;
+  const verifiedList = profile?.skills?.verified?.map((v) => v.name) || unifiedContext?.skills?.verified?.map((v) => v.name) || [];
+  const missingCrits = profile?.skillGaps?.missingCriticalSkills || unifiedContext?.skills?.missingCritical || [];
+  const apps = profile?.recentApplications || (unifiedContext?.applications?.recentApplications || []).map((a) => ({
+    id: a.id,
+    company: a.company,
+    jobTitle: a.jobTitle,
+    status: a.status,
+    appliedAt: a.appliedAt || '',
+  }));
 
   // 0. AI IDENTITY & NAME INQUIRIES
   if (
@@ -1887,14 +1680,14 @@ export function getDeterministicCareerChatResponse(
     msg.includes('study plan') ||
     msg.includes('10-week')
   ) {
-    return `Here is a structured 10-week learning path tailored for an entry-level **${target}**:
-
-- **Weeks 1–3 (Core Foundations)**: Algorithmic problem solving, Big-O analysis, Data Structures (Hash Maps, Trees, Graphs), and Git version control workflows.
-- **Weeks 4–6 (Systems & Data)**: REST/GraphQL APIs, relational database normalization with SQL, ORM patterns, and authentication (JWT/OAuth).
-- **Weeks 7–8 (DevOps & Cloud)**: Docker containerization, CI/CD with GitHub Actions, and cloud deployment on Vercel/AWS.
-- **Weeks 9–10 (Capstone & Interview Mastery)**: End-to-end production capstone deployment, ATS resume tailoring, and mock interview simulations.
-
-Explore your interactive week-by-week curriculum with curated YouTube masterclasses in [Learning Roadmap](/career/roadmap)!`;
+    if (!target) {
+      return `Your target role is **not set** yet, so I have not assumed a career path for you.\n\nSet your target role in [Onboarding](/onboarding) or [My Career Data](/dashboard/my-data), then open [Career Guidance](/guidance) to see a curated roadmap for your field.`;
+    }
+    const curated = findCuratedRoleProfile(target);
+    if (curated) {
+      return `Here is your curated learning path for **${curated.title}** (${curated.domain}):\n\n- **Core Skills Suggested**: ${curated.coreSkills.join(', ')}\n- **Recommended Tools**: ${curated.recommendedTools.join(', ')}\n- **Practice Projects**: ${curated.projectIdeas.map((p) => p.title).join('; ')}\n\nReview verified resources and track your progress on [Career Guidance](/guidance).`;
+    }
+    return `Your target role is set to **${target}**. Explore your verified profile skills, resume strengths, and custom learning steps on [Career Guidance](/guidance).`;
   }
 
   // 2. APPLICATION GUIDANCE (Follow-ups, pipeline, email outreach)
@@ -1917,15 +1710,15 @@ Explore your interactive week-by-week curriculum with curated YouTube masterclas
 
 ### Professional Follow-Up Email Template:
 \`\`\`text
-Subject: Following Up on Application – ${target} – ${name}
+Subject: Following Up on Application – ${displayTarget} – ${name}
 
 Hi [Recruiter / Hiring Manager Name],
 
 I hope your week is going well.
 
-I recently submitted my application for the ${target} position at [Company]. As a ${sp?.degree || 'Computer Science'} graduate from ${sp?.institution || 'university'} with hands-on experience building full-stack systems, I am very excited about [Company]'s mission.
+I recently submitted my application for the ${target || '[Target Role]'} position at [Company]. As a ${sp?.degree || 'candidate'}${sp?.institution ? ` from ${sp.institution}` : ''}, I am excited about contributing to [Company]'s work.
 
-I wanted to politely follow up to see if you need any additional details or code samples regarding my background. My portfolio and resume are available on my profile.
+I wanted to politely follow up to see if you need any additional details or work samples regarding my background. My portfolio and resume are available on my profile.
 
 Thank you for your time and consideration!
 
@@ -1977,8 +1770,8 @@ You can practice interactive mock interviews tailored to **${target}** with inst
     msg.includes('repo') ||
     msg.includes('side project')
   ) {
-    const studentContext = sp
-      ? `As a student at **${sp.institution}** (${sp.degree}, Class of ${sp.graduationYear})${
+    const studentContext = sp && sp.institution
+      ? `As a student at **${sp.institution}** (${sp.degree || 'Degree Candidate'}${sp.graduationYear ? `, Class of ${sp.graduationYear}` : ''})${
           sp.coursework && sp.coursework.length > 0
             ? ` with coursework in **${sp.coursework.slice(0, 3).join(', ')}**`
             : ''
@@ -2048,8 +1841,8 @@ Take action right now:
     msg.includes('transition') ||
     msg.includes('what role')
   ) {
-    const studentContext = sp
-      ? `Based on your **${sp.degree}** in **${sp.fieldOfStudy}** at **${sp.institution}** (Class of ${sp.graduationYear}), `
+    const studentContext = sp && sp.institution && sp.degree
+      ? `Based on your **${sp.degree}** in **${sp.fieldOfStudy || 'your field'}** at **${sp.institution}**${sp.graduationYear ? ` (Class of ${sp.graduationYear})` : ''}, `
       : '';
 
     return `### Recommended Career Pathways for Entry-Level Candidates
@@ -2127,8 +1920,8 @@ Start your skill verification now:
   }
 
   // 9. GENERAL AI ASSISTANT OVERVIEW (Fallback)
-  const studentHeadline = sp
-    ? `Student at **${sp.institution}** · ${sp.degree} (Class of ${sp.graduationYear})`
+  const studentHeadline = sp && sp.institution && sp.degree
+    ? `Student at **${sp.institution}** · ${sp.degree}${sp.graduationYear ? ` (Class of ${sp.graduationYear})` : ''}`
     : `Candidate pursuing **${target}**`;
 
   return `### Smart Resume AI Assistant

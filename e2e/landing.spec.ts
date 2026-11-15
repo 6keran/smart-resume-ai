@@ -27,7 +27,7 @@ test('landing links, preview interactions and responsive navigation work', async
   await page.getByRole('button', { name: 'ATS Audit' }).click();
   await expect(page.getByText('Resume structure')).toBeVisible();
   await page.getByRole('button', { name: 'Phrasing Diff' }).click();
-  await expect(page.getByText('ILLUSTRATIVE EXAMPLE')).toBeVisible();
+  await expect(page.getByText('ILLUSTRATIVE EXAMPLE').first()).toBeVisible();
 
   await page.getByRole('link', { name: 'Check ATS Score' }).click();
   await expect(page).toHaveURL(/\/ats-score$/);
