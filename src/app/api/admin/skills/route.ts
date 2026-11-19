@@ -35,7 +35,10 @@ export async function PATCH(req: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ message: 'Invalid or malformed JSON payload' }, { status: 400 });
+    }
     const { id, is_active } = body;
 
     if (!id || typeof is_active !== 'boolean') {
@@ -61,7 +64,10 @@ export async function PUT(req: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ message: 'Invalid or malformed JSON payload' }, { status: 400 });
+    }
     const { id, name, category, description } = body;
 
     if (!id) {

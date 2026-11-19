@@ -1,10 +1,9 @@
 import 'server-only';
 import { GoogleGenAI } from '@google/genai';
 import {
-  getCareerProfileSummary,
   findRoleSpecification,
-  type CareerProfileSummary,
 } from '@/server/services/careerIntelligence';
+import { buildUnifiedStudentContext } from '@/server/services/unifiedStudentContext';
 import {
   getGuidedProjectById,
   type GuidedProjectDTO,
@@ -12,6 +11,12 @@ import {
 } from '@/server/db';
 import { CANDIDATE_GEMINI_MODELS } from '@/server/services/gemini';
 import { findCuratedRoleProfile } from '@/lib/career/roleProfiles';
+import {
+  buildProjectRecommendationsPrompt,
+  buildProjectMentorSystemInstruction,
+  buildProjectInterviewPrepPrompt,
+} from '@/server/prompts/projectMentor';
+import { generateCareerIntelligence } from '@/server/services/careerIntelligenceEngine';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
 
@@ -419,6 +424,8 @@ function getDeterministicProjectBlueprints(
  * Generates 3–5 personalized project recommendations based on student's degree,
  * target role, verified skills, and identified skill gaps.
  */
+export const getRecommendedProjects = getProjectRecommendations;
+
 export async function getProjectRecommendations(userId: string): Promise<{
   recommendations: RecommendedProject[];
   studentSummary: {
@@ -431,15 +438,15 @@ export async function getProjectRecommendations(userId: string): Promise<{
     existingProjectsCount: number;
   };
 }> {
-  const profileSummary = await getCareerProfileSummary(userId);
-  const targetRole = (profileSummary.targetRole || '').trim();
+  const context = await buildUnifiedStudentContext(userId);
+  const targetRole = (context.careerGoal?.targetRole || '').trim();
   const roleSpec = findRoleSpecification(targetRole);
-  const student = profileSummary.studentProfile;
+  const student = context.studentProfile;
   const existingProjects = student?.projects || [];
   const existingTitles = existingProjects.map((p) => p.title);
 
-  const missingCrits = profileSummary.skillGaps?.missingCriticalSkills || roleSpec.criticalSkills;
-  const missingRecs = profileSummary.skillGaps?.missingRecommendedSkills || roleSpec.recommendedSkills;
+  const missingCrits = context.skills.missingCritical.length > 0 ? context.skills.missingCritical : roleSpec.criticalSkills;
+  const missingRecs = context.skills.missingRecommended.length > 0 ? context.skills.missingRecommended : roleSpec.recommendedSkills;
   const allGaps = [...missingCrits, ...missingRecs];
 
   if (!targetRole) {
@@ -448,10 +455,10 @@ export async function getProjectRecommendations(userId: string): Promise<{
       studentSummary: {
         targetRole: '',
         goalSet: false,
-        institution: student?.institution,
-        degree: student?.degree,
+        institution: context.academic?.institution || student?.institution,
+        degree: context.academic?.degree || student?.degree,
         topSkillGaps: [],
-        readinessScore: profileSummary.metrics?.readinessScore || 0,
+        readinessScore: context.readiness?.overallScore || 0,
         existingProjectsCount: existingProjects.length,
       },
     };
@@ -468,40 +475,13 @@ export async function getProjectRecommendations(userId: string): Promise<{
   // If Gemini is available, attempt to enrich projects with student-specific context
   if (aiClient && deterministicRecs.length > 0) {
     try {
-      const prompt = `You are a Principal Domain Specialist and Career Mentor.
-Candidate Profile:
-- Background: ${student?.degree || 'Not specified'}${student?.institution ? ` at ${student.institution}` : ''}
-- Target Role: ${targetRole}
-- Identified Skill Gaps to Resolve: ${allGaps.slice(0, 5).join(', ') || 'None identified'}
-- Existing Documented Projects: ${existingTitles.join(', ') || 'None'}
-
-Review these recommended project ideas and return a JSON array of 3 to 4 tailored projects that will provide the highest hiring leverage for this student:
-${JSON.stringify(deterministicRecs.map((d) => ({ title: d.title, difficulty: d.difficulty, techStack: d.techStack })))}
-
-Return ONLY a valid JSON array matching this exact schema:
-[
-  {
-    "id": "string",
-    "title": "string",
-    "difficulty": "Beginner" | "Intermediate" | "Advanced",
-    "targetRole": "${targetRole}",
-    "matchedGaps": ["skill1", "skill2"],
-    "techStack": ["tech1", "tech2", "tech3"],
-    "problemStatement": "2 sentences describing the real engineering challenge.",
-    "realWorldUseCase": "Where this pattern is used in production tech companies.",
-    "learningOutcomes": ["outcome 1", "outcome 2", "outcome 3"],
-    "mainFeatures": ["feature 1", "feature 2", "feature 3", "feature 4"],
-    "suggestedDatabaseDesign": {
-      "overview": "Summary of relational schema.",
-      "entities": [
-        {"name": "table_name", "description": "purpose", "fields": ["col1", "col2"]}
-      ]
-    },
-    "architectureOverview": "Architecture description.",
-    "estimatedComplexity": "2 to 3 weeks",
-    "resumeValue": "Why recruiters value this on an entry-level resume."
-  }
-]`;
+      const prompt = buildProjectRecommendationsPrompt({
+        student,
+        targetRole,
+        allGaps,
+        existingTitles,
+        deterministicRecs,
+      });
 
       for (const model of CANDIDATE_GEMINI_MODELS) {
         try {
@@ -545,7 +525,7 @@ Return ONLY a valid JSON array matching this exact schema:
                   institution: student?.institution,
                   degree: student?.degree,
                   topSkillGaps: allGaps.slice(0, 4),
-                  readinessScore: profileSummary.metrics.readinessScore,
+                  readinessScore: context.readiness?.overallScore || 0,
                   existingProjectsCount: existingProjects.length,
                 },
               };
@@ -568,7 +548,7 @@ Return ONLY a valid JSON array matching this exact schema:
       institution: student?.institution,
       degree: student?.degree,
       topSkillGaps: allGaps.slice(0, 4),
-      readinessScore: profileSummary.metrics.readinessScore,
+      readinessScore: context.readiness?.overallScore || 0,
       existingProjectsCount: existingProjects.length,
     },
   };
@@ -1007,18 +987,11 @@ export async function getAiCodingMentorResponse(params: {
   }
 
   // System instruction
-  const systemInstruction = `You are the AI Assistant, the AI Coding & Project Mentor for Smart Resume AI.
-You are helping a college student/graduate build their portfolio project: "${projectTitle}".
-Technologies Used: ${techStack.join(', ')}
-Current Active Milestone: Milestone ${currentMilestone} of 8
-
-YOUR PEDAGOGICAL DIRECTIVES:
-1. Explain the "Why": Never just dump raw code. Explain the underlying computer science and architectural concepts clearly.
-2. Beginner-Friendly & Constructive: Use encouraging, clear explanations. Break down complex patterns into step-by-step logic.
-3. Code Quality & Security: Enforce clean code principles, input validation, SQL injection prevention, and proper error boundaries.
-4. Factual Transparency: Never claim that code was executed or verified on a live runner unless it actually was. Provide clean markdown code blocks with language identifiers.
-5. Project Grounding: Keep advice aligned with the project's selected tech stack (${techStack.join(', ')}).
-6. Scope: Focus strictly on code, architecture, debugging, testing, database design, and deployment. Decline unrelated non-technical questions politely.`;
+  const systemInstruction = buildProjectMentorSystemInstruction({
+    projectTitle,
+    techStack,
+    currentMilestone,
+  });
 
   if (aiClient) {
     try {
@@ -1248,5 +1221,500 @@ export function generateProjectResumeBullets(
     techStackFormatted: techStr,
     advice:
       'These bullet points use the Google XYZ framework ("Accomplished [X] as measured by [Y] by doing [Z]") to showcase measurable technical impact without exaggerating commercial user metrics.',
+  };
+}
+
+// ============================================================================
+// AI PROJECT COACH EXTENSIONS (Phase 4B)
+// ============================================================================
+
+export interface ProjectCoachArchitectureGuidance {
+  folderStructure: string;
+  componentArchitecture: {
+    clientLayers: string[];
+    serverLayers: string[];
+    dataLayers: string[];
+  };
+  databaseDesign: {
+    overview: string;
+    entities: Array<{ name: string; description: string; fields: string[] }>;
+  };
+  apiDesign: Array<{ method: string; path: string; description: string }>;
+  testingStrategy: {
+    unitTests: string[];
+    integrationTests: string[];
+    e2eScenarios: string[];
+  };
+  deploymentStrategy: {
+    platform: string;
+    steps: string[];
+    envVariables: string[];
+  };
+}
+
+export interface ProjectCoachRecommendationItem {
+  id: string;
+  title: string;
+  difficulty: ProjectDifficulty;
+  targetRole: string;
+  techStack: string[];
+  addressedGaps: string[];
+  problemStatement: string;
+  realWorldUseCase: string;
+  mvpScope: string;
+  learningRoadmapAlignment: string;
+  architectureGuidance: ProjectCoachArchitectureGuidance;
+  resumeBulletDrafts: {
+    label: 'DRAFT - EDIT AFTER BUILDING';
+    bullets: string[];
+    disclaimer: string;
+  };
+  portfolioGuidance: {
+    readmeStructure: string[];
+    demoVideoPointers: string[];
+    githubPresentationTips: string[];
+  };
+}
+
+export interface ProjectInterviewQuestion {
+  id: string;
+  type: 'technical' | 'architecture' | 'tradeoff' | 'scalability' | 'star_behavioral';
+  question: string;
+  keyConcepts: string[];
+  starDiscussionGuidance: {
+    situation: string;
+    task: string;
+    action: string;
+    result: string;
+  };
+}
+
+export interface AiProjectCoachRecommendationsResult {
+  studentContextSummary: {
+    targetRole: string;
+    skillLevel: ProjectDifficulty;
+    readinessScore: number;
+    verifiedSkills: string[];
+    criticalGaps: string[];
+    hasActiveRoadmap: boolean;
+    currentRoadmapFocus: string | null;
+  };
+  recommendations: ProjectCoachRecommendationItem[];
+  interviewPrepGuidance: Array<{
+    projectId: string;
+    projectTitle: string;
+    interviewQuestions: ProjectInterviewQuestion[];
+  }>;
+  generatedAt: string;
+}
+
+/**
+ * Determines appropriate project difficulty based on student's authentic context.
+ * Strictly prevents overengineering recommendations for beginners.
+ */
+export function determineStudentSkillLevel(context: any): ProjectDifficulty {
+  const completedCount = (context?.projects?.completedCount || 0) + (context?.academic?.documentedProjects?.length || 0);
+  const readiness = context?.readiness?.overallScore || 0;
+  const verifiedCount = context?.skills?.verified?.length || 0;
+
+  if (completedCount >= 3 && readiness >= 75 && verifiedCount >= 2) {
+    return 'Advanced';
+  }
+  if (completedCount >= 1 || readiness >= 50 || verifiedCount >= 1) {
+    return 'Intermediate';
+  }
+  return 'Beginner';
+}
+
+/**
+ * Generates realistic folder structure for a recommended project based on domain and tech stack.
+ */
+export function generateProjectFolderStructure(title: string, techStack: string[], targetRole: string): string {
+  const roleLower = targetRole.toLowerCase();
+
+  if (roleLower.includes('mechanical') || roleLower.includes('cad')) {
+    return [
+      'cad/',
+      '├── models/',
+      '│   ├── 3d_parts/            # Parametric CAD models (SolidWorks / Inventor)',
+      '│   └── assemblies/          # Sub-assembly constraint models',
+      '├── drawings/',
+      '│   └── 2d_prints_gdt/       # ASME Y14.5 manufacturing drawings with GD&T',
+      '├── simulations/',
+      '│   ├── fea_mesh/            # Meshing and grid convergence setups',
+      '│   └── static_structural/   # FEA stress & displacement runs (ANSYS)',
+      '├── calculations/',
+      '│   └── tolerance_stack.xlsx # RSS & Worst-Case tolerance spreadsheets',
+      '└── documentation/',
+      '    └── dvpr_compliance.md   # Design Verification Plan and Report (DVP&R)',
+    ].join('\n');
+  }
+
+  if (roleLower.includes('data') || roleLower.includes('analyst')) {
+    return [
+      'analytics/',
+      '├── data/',
+      '│   ├── raw/                 # Immutable source records',
+      '│   └── processed/           # Transformed clean tables',
+      '├── sql/',
+      '│   ├── transformations/     # SQL window functions & aggregations',
+      '│   └── marts/               # Dimensional star schema models',
+      '├── notebooks/',
+      '│   └── exploratory/         # Jupyter / Python exploratory notebooks',
+      '├── dashboards/',
+      '│   └── semantic_models/     # PowerBI / Tableau measures and DAX formulas',
+      '└── tests/',
+      '    └── data_quality.py      # Assertion tests for nulls and duplicate IDs',
+    ].join('\n');
+  }
+
+  // Web / Full-Stack / Software Engineering
+  return [
+    'src/',
+    '├── app/                     # Next.js App Router (pages & layouts)',
+    '│   ├── (auth)/              # Route grouping for login and onboarding',
+    '│   ├── dashboard/           # Authenticated user workflow views',
+    '│   └── api/                 # Secure REST route handlers',
+    '├── components/',
+    '│   ├── ui/                  # Reusable accessible atomic UI elements',
+    '│   └── modules/             # Feature-specific domain components',
+    '├── lib/',
+    '│   ├── db.ts                # Database connection & connection pool',
+    '│   └── validations.ts       # Zod schemas for input validation',
+    '├── server/',
+    '│   ├── services/            # Pure business logic and domain services',
+    '│   └── middleware/          # Rate limiting and auth guard middleware',
+    '└── tests/',
+    '    ├── unit/                # Jest / Vitest unit tests',
+    '    └── e2e/                 # Playwright end-to-end integration flows',
+  ].join('\n');
+}
+
+/**
+ * Generates comprehensive architectural guidance for a recommended project.
+ */
+export function generateProjectArchitectureGuidance(
+  title: string,
+  techStack: string[],
+  targetRole: string
+): ProjectCoachArchitectureGuidance {
+  const stackLower = techStack.join(' ').toLowerCase();
+  const roleLower = targetRole.toLowerCase();
+
+  const folderStructure = generateProjectFolderStructure(title, techStack, targetRole);
+
+  if (roleLower.includes('mechanical') || roleLower.includes('cad')) {
+    return {
+      folderStructure,
+      componentArchitecture: {
+        clientLayers: ['3D Parametric CAD Modeler (SolidWorks)', '2D GD&T Drafting Workbench (AutoCAD)'],
+        serverLayers: ['FEA Simulation Solver (ANSYS)', 'Mesh Convergence Evaluation Engine'],
+        dataLayers: ['Material Property Database (Yield, Ultimate, Poisson)', 'Safety Factor & Load Case Worksheets'],
+      },
+      databaseDesign: {
+        overview: 'Structured engineering tables tracking component dimensions, load cases, material properties, and stress convergence ratios.',
+        entities: [
+          { name: 'materials_catalog', description: 'Standard alloy properties (E, nu, yield strength)', fields: ['id', 'alloy_grade', 'yield_mpa', 'density_kg_m3'] },
+          { name: 'load_case_conditions', description: 'Operating loads and cyclic fatigue boundary conditions', fields: ['id', 'case_name', 'axial_force_kn', 'safety_factor_target'] },
+          { name: 'simulation_runs', description: 'FEA solver outputs and convergence percentages', fields: ['id', 'mesh_elements_count', 'max_von_mises_mpa', 'converged'] },
+        ],
+      },
+      apiDesign: [
+        { method: 'GET', path: '/specs/load-cases', description: 'Retrieve boundary condition parameters for assembly' },
+        { method: 'POST', path: '/simulations/convergence', description: 'Validate element mesh convergence divergence < 3%' },
+      ],
+      testingStrategy: {
+        unitTests: ['Verify manual hand-calculation stress equations match FEA within 10% bounds', 'Verify RSS tolerance sum equations'],
+        integrationTests: ['Interference check across 3D assembly mate limits in SolidWorks', 'Mesh refinement check across 3 element sizes'],
+        e2eScenarios: ['Export neutral STEP file, generate complete ASME Y14.5 drawing PDF with all datum features verified'],
+      },
+      deploymentStrategy: {
+        platform: 'Engineering Drawing Archive & CNC Machining Package',
+        steps: ['Export production PDF drawing with revision block', 'Generate neutral STEP/IGES CAD model package', 'Complete DVP&R sign-off sheet'],
+        envVariables: ['ASME_STANDARD=Y14.5-2018', 'MATERIAL_SPEC=AISI_4140'],
+      },
+    };
+  }
+
+  if (roleLower.includes('data') || roleLower.includes('analyst')) {
+    return {
+      folderStructure,
+      componentArchitecture: {
+        clientLayers: ['Interactive PowerBI / Tableau BI Dashboards', 'Self-Serve Parameter Controls'],
+        serverLayers: ['SQL Data Transformation Pipeline', 'Python Validation & Anomaly Checks'],
+        dataLayers: ['Raw Ingestion Tables', 'Dimensional Star Schema (Fact & Dim Marts)'],
+      },
+      databaseDesign: {
+        overview: 'Dimensional star-schema optimized for fast analytical aggregations and cohort filtering.',
+        entities: [
+          { name: 'dim_customers', description: 'Customer demographics and tier attributes', fields: ['customer_id', 'tier', 'signup_date', 'country'] },
+          { name: 'fact_revenue_events', description: 'Monthly subscription and billing ledger records', fields: ['event_id', 'customer_id', 'amount_usd', 'transaction_date'] },
+          { name: 'mart_monthly_cohorts', description: 'Pre-aggregated cohort retention matrix', fields: ['cohort_month', 'active_month_index', 'retained_ratio'] },
+        ],
+      },
+      apiDesign: [
+        { method: 'GET', path: '/api/analytics/retention', description: 'Fetch monthly cohort retention percentages' },
+        { method: 'GET', path: '/api/analytics/mrr-breakdown', description: 'Fetch new, expansion, contraction, and churned MRR' },
+      ],
+      testingStrategy: {
+        unitTests: ['Verify SQL window function logic for customer churn attribution', 'Check non-negative constraint on billing amounts'],
+        integrationTests: ['Reconciliation between raw billing event sums and aggregated monthly revenue mart', 'Null check on customer dimension keys'],
+        e2eScenarios: ['Run automated end-to-end ingestion pipeline and verify dashboard refresh completes without errors'],
+      },
+      deploymentStrategy: {
+        platform: 'Cloud Data Warehouse & BI Cloud Service',
+        steps: ['Deploy SQL transformations to PostgreSQL/BigQuery', 'Configure automated daily incremental sync', 'Publish semantic model to BI workspace'],
+        envVariables: ['DATABASE_URL=postgresql://...', 'BI_WORKSPACE_ID=...'],
+      },
+    };
+  }
+
+  // Web & Full-Stack Applications
+  const hasRedis = stackLower.includes('redis');
+  const hasDocker = stackLower.includes('docker');
+
+  return {
+    folderStructure,
+    componentArchitecture: {
+      clientLayers: ['Next.js React UI (App Router)', 'Tailwind CSS Component System', 'Client-side State Store'],
+      serverLayers: ['Next.js API Route Handlers / Server Actions', 'Validation Layer (Zod)', 'Service Logic Layer'],
+      dataLayers: ['Relational Database (PostgreSQL / SQLite)', ...(hasRedis ? ['In-Memory Redis Cache'] : []), 'Connection Pool'],
+    },
+    databaseDesign: {
+      overview: 'Normalized relational schema with foreign key constraints, composite indexes, and audit timestamps.',
+      entities: [
+        { name: 'users', description: 'Registered application accounts and auth credentials', fields: ['id', 'email', 'name', 'created_at'] },
+        { name: 'resources', description: 'Primary domain entities managed by the application', fields: ['id', 'user_id', 'title', 'status', 'updated_at'] },
+        { name: 'audit_logs', description: 'Chronological event history of state transitions', fields: ['id', 'resource_id', 'action', 'timestamp'] },
+      ],
+    },
+    apiDesign: [
+      { method: 'GET', path: '/api/resources', description: 'List user resources with pagination and status filters' },
+      { method: 'POST', path: '/api/resources', description: 'Create new resource with validated payload' },
+      { method: 'PATCH', path: '/api/resources/:id', description: 'Update resource state with permission check' },
+    ],
+    testingStrategy: {
+      unitTests: ['Test input validation schemas reject malformed payloads', 'Test domain calculations and permission checks in isolation'],
+      integrationTests: ['Test API endpoints with Supertest against test database sandbox', 'Verify transactions roll back cleanly on errors'],
+      e2eScenarios: ['Complete critical user workflow in Playwright browser (Sign up -> Create item -> Update state -> Verify UI)'],
+    },
+    deploymentStrategy: {
+      platform: hasDocker ? 'Dockerized Cloud Host (Fly.io / AWS ECS)' : 'Vercel Serverless + Managed PostgreSQL',
+      steps: [
+        'Set up GitHub Actions continuous integration pipeline (lint, typecheck, test)',
+        'Configure database connection pooling with SSL certificate verification',
+        'Deploy application and run automated smoke checks on health endpoint',
+      ],
+      envVariables: [
+        'DATABASE_URL=postgresql://user:pass@host/dbname?sslmode=require',
+        ...(hasRedis ? ['REDIS_URL=redis://default:pass@host:6379'] : []),
+        'SESSION_SECRET=strong-random-secret-key-32-chars-min',
+      ],
+    },
+  };
+}
+
+/**
+ * Generates verified resume bullet drafts labeled "DRAFT - EDIT AFTER BUILDING".
+ * Enforces Rule 16 anti-fabrication: never fabricates metrics, percentages, scale, or user counts.
+ */
+export function generateCoachResumeBullets(
+  title: string,
+  targetRole: string,
+  techStack: string[],
+  difficulty: ProjectDifficulty
+): {
+  label: 'DRAFT - EDIT AFTER BUILDING';
+  bullets: string[];
+  disclaimer: string;
+} {
+  const stackStr = techStack.slice(0, 4).join(', ');
+  const bullets: string[] = [
+    `DRAFT - EDIT AFTER BUILDING: Engineered a ${difficulty.toLowerCase()} ${targetRole.toLowerCase()} application using ${stackStr}, implementing modular architecture and strict schema validation across core workflows.`,
+    `DRAFT - EDIT AFTER BUILDING: Designed and implemented data persistence layer with relational modeling, foreign key constraints, and structured error handling boundaries.`,
+    `DRAFT - EDIT AFTER BUILDING: Built automated unit and integration test suites verifying API contracts and user authentication flows prior to deployment.`,
+  ];
+
+  return {
+    label: 'DRAFT - EDIT AFTER BUILDING',
+    bullets,
+    disclaimer: 'These bullets are structured drafting templates using the Google XYZ format. Fill in your genuine benchmarks and results only after building and testing the project.',
+  };
+}
+
+/**
+ * Generates portfolio presentation tips (README structure, demo video pointers, GitHub presentation).
+ */
+export function generatePortfolioGuidance(title: string, techStack: string[]): {
+  readmeStructure: string[];
+  demoVideoPointers: string[];
+  githubPresentationTips: string[];
+} {
+  return {
+    readmeStructure: [
+      'Project Title & High-Level 2-Sentence Value Proposition',
+      'Architecture Diagram (Visual data flow from Client -> Server -> Database)',
+      'Tech Stack Badges & Rationale (Why this stack was chosen)',
+      'Key Features with Annotated Screenshots or GIF Walkthroughs',
+      'Local Development Setup & Environment Variables Guide',
+      'Automated Testing Instructions (How to run unit & e2e tests)',
+    ],
+    demoVideoPointers: [
+      'Keep video under 2 minutes: introduce the problem in the first 20 seconds',
+      'Demonstrate the happy path with live realistic data rather than "test123"',
+      'Show one edge case or validation error handled gracefully in the UI',
+      'Briefly showcase the codebase architecture or tests passing in terminal',
+    ],
+    githubPresentationTips: [
+      'Ensure git commit history reflects clear atomic commits with imperative verbs',
+      'Add a clean LICENSE and comprehensive .gitignore (no credentials or build artifacts)',
+      'Include clear ARCHITECTURE.md explaining trade-offs and future scaling considerations',
+      'Pin repository on GitHub profile with appropriate technology topic tags',
+    ],
+  };
+}
+
+/**
+ * Generates rigorous, project-specific technical and STAR behavioral interview preparation questions.
+ */
+export function generateProjectInterviewPrep(
+  projectTitle: string,
+  techStack: string[],
+  targetRole?: string
+): ProjectInterviewQuestion[] {
+  const primaryTech = techStack[0] || 'Core Framework';
+
+  return [
+    {
+      id: 'iq-tech-1',
+      type: 'technical',
+      question: `How did you structure the core logic and manage state or data processing in ${primaryTech} for "${projectTitle}"?`,
+      keyConcepts: [`${primaryTech} state management`, 'Separation of concerns', 'Error handling boundaries'],
+      starDiscussionGuidance: {
+        situation: `In ${projectTitle}, I needed reliable state and data flow between client interactions and backend persistence.`,
+        task: `Ensure data mutations were atomic and prevented inconsistent UI states.`,
+        action: `Implemented structured services and explicit validation using ${techStack.slice(0, 2).join(' and ')}.`,
+        result: `Achieved predictable data flow and seamless user experience without runtime state drift.`
+      }
+    },
+    {
+      id: 'iq-arch-2',
+      type: 'architecture',
+      question: `Walk me through the layer boundaries of "${projectTitle}". How did components communicate from UI to storage?`,
+      keyConcepts: ['Layered architecture', 'API interface design', 'Persistence abstraction'],
+      starDiscussionGuidance: {
+        situation: `A common anti-pattern in project builds is tight coupling between presentation and database operations.`,
+        task: `Isolate presentation, business validation, and data persistence into distinct modules.`,
+        action: `Organized the project into clear client routes, API controller handlers, and dedicated repository data layers.`,
+        result: `Made the codebase modular, straightforward to unit test, and easy to maintain.`
+      }
+    },
+    {
+      id: 'iq-tradeoff-3',
+      type: 'tradeoff',
+      question: `Why did you choose ${techStack.slice(0, 3).join(', ')} over competing alternative tools or frameworks?`,
+      keyConcepts: ['Technology evaluation', 'Ecosystem trade-offs', 'Developer velocity vs performance'],
+      starDiscussionGuidance: {
+        situation: `When starting ${projectTitle}, multiple technological approaches were viable.`,
+        task: `Select a toolchain balancing developer velocity, type safety, and real-world industry adoption.`,
+        action: `Evaluated alternatives and chose ${primaryTech} for its strong typing, modular ecosystem, and community support.`,
+        result: `Accelerated development velocity while catching interface defects at compile time.`
+      }
+    },
+    {
+      id: 'iq-scale-4',
+      type: 'scalability',
+      question: `If the user or data volume in "${projectTitle}" grew by 100x, where would the primary bottleneck occur and how would you address it?`,
+      keyConcepts: ['Database indexing', 'Query optimization', 'Horizontal scaling', 'Caching strategies'],
+      starDiscussionGuidance: {
+        situation: `Under high load, database queries and synchronous network operations become throughput bottlenecks.`,
+        task: `Identify the first component likely to hit resource limits and plan mitigation.`,
+        action: `Identified database query execution as the primary bottleneck and proposed adding composite indices and a read-through cache layer.`,
+        result: `Prevented database connection saturation and established a clear horizontal scaling path.`
+      }
+    },
+    {
+      id: 'iq-star-5',
+      type: 'star_behavioral',
+      question: `Describe the most difficult technical defect or design roadblock you encountered while building "${projectTitle}". How did you resolve it?`,
+      keyConcepts: ['Root cause analysis', 'Systematic debugging', 'Engineering resilience'],
+      starDiscussionGuidance: {
+        situation: `During the implementation of ${projectTitle}, an unexpected bug caused intermittent data failures.`,
+        task: `Diagnose the root cause without guessing and implement a permanent regression safeguard.`,
+        action: `Reproduced the issue with an isolated test case, inspected payload headers and logs, and corrected the data transformation logic.`,
+        result: `Resolved the defect cleanly and added an automated test case preventing future regressions.`
+      }
+    }
+  ];
+}
+
+/**
+ * AI Project Coach Recommendation Engine.
+ * Integrates UnifiedStudentContext and CareerIntelligenceEngine to provide personalized,
+ * level-appropriate project roadmaps, architectures, resume drafts, and interview prep.
+ */
+export async function getAiProjectCoachRecommendations(
+  userId: string
+): Promise<AiProjectCoachRecommendationsResult> {
+  const context = await buildUnifiedStudentContext(userId);
+  const intelligence = generateCareerIntelligence(context);
+  const skillLevel = determineStudentSkillLevel(context);
+  const targetRole = intelligence.skillGaps.targetRole || context.careerGoal?.targetRole || 'Software Engineer';
+
+  let rawProjects = intelligence.projectRecommendations;
+  if (skillLevel === 'Beginner') {
+    rawProjects = [...rawProjects].sort((a, b) => {
+      const order: Record<ProjectDifficulty, number> = { Beginner: 0, Intermediate: 1, Advanced: 2 };
+      return (order[a.difficulty] || 1) - (order[b.difficulty] || 1);
+    });
+  } else if (skillLevel === 'Advanced') {
+    rawProjects = [...rawProjects].sort((a, b) => {
+      const order: Record<ProjectDifficulty, number> = { Advanced: 0, Intermediate: 1, Beginner: 2 };
+      return (order[a.difficulty] || 1) - (order[b.difficulty] || 1);
+    });
+  }
+
+  const recommendations: ProjectCoachRecommendationItem[] = rawProjects.slice(0, 3).map((proj) => {
+    const diff = proj.difficulty as ProjectDifficulty;
+    const archGuidance = generateProjectArchitectureGuidance(proj.title, proj.techStack, targetRole);
+    const resumeBullets = generateCoachResumeBullets(proj.title, targetRole, proj.techStack, diff);
+    const portfolioTips = generatePortfolioGuidance(proj.title, proj.techStack);
+
+    return {
+      id: proj.id,
+      title: proj.title,
+      difficulty: diff,
+      targetRole,
+      techStack: proj.techStack,
+      addressedGaps: proj.addressedGaps,
+      problemStatement: proj.problemStatement,
+      realWorldUseCase: proj.realWorldContext,
+      mvpScope: `Build core functional MVP in ${proj.estimatedTime}: focus on ${proj.addressedGaps.slice(0, 2).join(' and ') || 'primary workflows'}.`,
+      learningRoadmapAlignment: intelligence.learningRoadmap.currentFocus || `Supports ${targetRole} portfolio readiness`,
+      architectureGuidance: archGuidance,
+      resumeBulletDrafts: resumeBullets,
+      portfolioGuidance: portfolioTips,
+    };
+  });
+
+  const interviewPrepGuidance = recommendations.map((rec) => ({
+    projectId: rec.id,
+    projectTitle: rec.title,
+    interviewQuestions: generateProjectInterviewPrep(rec.title, rec.techStack, targetRole),
+  }));
+
+  return {
+    studentContextSummary: {
+      targetRole,
+      skillLevel,
+      readinessScore: intelligence.careerReadinessScore.overallScore,
+      verifiedSkills: intelligence.skillGaps.verifiedSkills,
+      criticalGaps: intelligence.skillGaps.criticalGaps.map((g) => g.skill),
+      hasActiveRoadmap: intelligence.learningRoadmap.hasActiveRoadmap,
+      currentRoadmapFocus: intelligence.learningRoadmap.currentFocus,
+    },
+    recommendations,
+    interviewPrepGuidance,
+    generatedAt: new Date().toISOString(),
   };
 }

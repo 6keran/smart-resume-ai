@@ -3,8 +3,8 @@ import { getUserFromRequest } from '@/lib/userSession';
 import {
   getUserGuidedProjects,
   createGuidedProject,
-  getStudentProfile,
 } from '@/server/db';
+import { buildUnifiedStudentContext } from '@/server/services/unifiedStudentContext';
 import {
   generateProjectSpecification,
   buildStandardProjectMilestones,
@@ -79,10 +79,11 @@ export async function POST(req: Request) {
       ? techStack.map((t: any) => String(t).trim()).filter(Boolean)
       : ['TypeScript', 'PostgreSQL'];
 
-    const studentProfile = await getStudentProfile(user.id).catch(() => null);
+    const context = await buildUnifiedStudentContext(user.id).catch(() => null);
     const resolvedTargetRole =
       (typeof targetRole === 'string' && targetRole.trim()) ||
-      studentProfile?.targetRole ||
+      context?.careerGoal.targetRole ||
+      context?.studentProfile?.targetRole ||
       '';
 
     const recProject: RecommendedProject = {
@@ -102,7 +103,7 @@ export async function POST(req: Request) {
       resumeValue: (resumeValue || '').trim(),
     };
 
-    const specification = await generateProjectSpecification(recProject, studentProfile);
+    const specification = await generateProjectSpecification(recProject, context?.studentProfile);
     const milestones = buildStandardProjectMilestones(recProject.title, recProject.techStack);
 
     const project = await createGuidedProject(user.id, {

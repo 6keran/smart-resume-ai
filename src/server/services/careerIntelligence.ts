@@ -21,6 +21,16 @@ import {
   mapUnifiedToCareerProfileSummary,
   type UnifiedStudentContext,
 } from './unifiedStudentContext';
+import {
+  generateCareerIntelligence,
+  type CareerIntelligenceRecommendation,
+} from './careerIntelligenceEngine';
+import { buildCareerRoadmapEnrichmentPrompt } from '@/server/prompts/careerRoadmap';
+import {
+  buildInterviewQuestionsPrompt,
+  buildInterviewAnswerEvaluationPrompt,
+} from '@/server/prompts/interviewCoach';
+import { buildJobSearchNlpPrompt } from '@/server/prompts/jobMatcher';
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
 const GEMINI_REQUEST_TIMEOUT_MS = 20_000;
@@ -167,6 +177,10 @@ export function findRoleSpecification(roleQuery: string): RoleSpecification {
     };
   }
 
+  if (ROLE_TAXONOMY[normalized]) {
+    return ROLE_TAXONOMY[normalized];
+  }
+
   const curated = findCuratedRoleProfile(trimmed);
   if (curated) {
     return {
@@ -176,10 +190,6 @@ export function findRoleSpecification(roleQuery: string): RoleSpecification {
       recommendedSkills: curated.recommendedTools,
       description: curated.summary,
     };
-  }
-
-  if (ROLE_TAXONOMY[normalized]) {
-    return ROLE_TAXONOMY[normalized];
   }
 
   for (const [key, spec] of Object.entries(ROLE_TAXONOMY)) {
@@ -610,18 +620,13 @@ export async function performSkillGapAnalysis(
   // If Gemini is available, attempt qualitative summary enrichment
   if (aiClient) {
     try {
-      const prompt = `You are an elite Career Advisor and Technical Recruiter.
-Analyze this candidate's skill gap for the target role: "${roleSpec.title}".
-Current Candidate Skills: ${currentSkills.join(', ')}
-Missing Critical Skills: ${missingCriticalSkills.join(', ')}
-Missing Recommended Skills: ${missingRecommendedSkills.join(', ')}
-${targetJobDescription ? `Target Job Description: ${targetJobDescription.slice(0, 1000)}` : ''}
-
-Return a valid JSON object strictly matching this schema:
-{
-  "analysisSummary": "A concise, empowering 2-sentence evaluation of candidate readiness and greatest hiring leverage.",
-  "priorityActions": ["action 1", "action 2", "action 3"]
-}`;
+      const prompt = buildCareerRoadmapEnrichmentPrompt({
+        roleTitle: roleSpec.title,
+        currentSkills,
+        missingCriticalSkills,
+        missingRecommendedSkills,
+        targetJobDescription,
+      });
 
       for (const model of CANDIDATE_GEMINI_MODELS) {
         try {
@@ -1197,28 +1202,11 @@ export async function generateInterviewQuestions(
   // If Gemini is available, generate dynamically tailored questions
   if (aiClient) {
     try {
-      const prompt = `You are an elite Staff Software Engineer and Technical Hiring Manager conducting an interview for the role: "${roleSpec.title}".
-${jobDescription ? `Job Description Context: ${jobDescription.slice(0, 1500)}` : ''}
-${resumeSnippet ? `Candidate Background: ${resumeSnippet.slice(0, 1000)}` : ''}
-
-Generate exactly 5 realistic, rigorous interview questions:
-1. Technical Fundamentals & Architecture
-2. Practical Problem Solving / Code Design
-3. Scenario / Behavioral (STAR Method)
-4. Database / Performance / Edge Case Challenge
-5. System Design / Production Reliability
-
-Return a JSON array of 5 objects strictly conforming to this schema:
-[
-  {
-    "id": "q-1",
-    "category": "technical" | "behavioral" | "system_design" | "practical",
-    "question": "The interview question",
-    "context": "Why this question matters for ${roleSpec.title}",
-    "gradingCriteria": ["Key concept 1", "Key concept 2", "Key concept 3"],
-    "sampleStrongAnswer": "A high-scoring model answer explaining core principles concisely."
-  }
-]`;
+      const prompt = buildInterviewQuestionsPrompt({
+        roleTitle: roleSpec.title,
+        jobDescription,
+        resumeSnippet,
+      });
 
       for (const model of CANDIDATE_GEMINI_MODELS) {
         try {
@@ -1317,37 +1305,13 @@ export async function evaluateInterviewAnswer(
   // If Gemini is available, perform deep semantic evaluation
   if (aiClient) {
     try {
-      const prompt = `You are a Senior Technical Recruiter and Staff Engineering Interviewer.
-Evaluate the candidate's interview response for the role "${targetRole}".
-
-Question:
-"${normalizedQuestion.question}"
-
-Expected Core Concepts / Grading Criteria:
-${normalizedQuestion.gradingCriteria.map((c) => `- ${c}`).join('\n')}
-
-Model Strong Answer:
-"${normalizedQuestion.sampleStrongAnswer}"
-
-Candidate's Answer:
-"${cleanAnswer}"
-
-Score the answer on a scale of 0 to 100 based on technical accuracy, completeness, depth, and communication clarity.
-Return a valid JSON object matching this schema:
-{
-  "score": 85,
-  "technicalAccuracyScore": 88,
-  "communicationScore": 82,
-  "readinessLevel": "Strong" | "Exemplary" | "Developing" | "Needs Improvement",
-  "strengths": ["Clear strength 1", "Clear strength 2"],
-  "areasForImprovement": ["Key gap or missing detail 1", "Refinement suggestion 2"],
-  "sampleRefinement": "An enhanced version of the candidate's answer preserving their personal experiences while polishing technical terminology.",
-  "starFeedback": {
-    "situationTask": "Feedback on the situation/task context provided",
-    "action": "Feedback on technical actions explained",
-    "result": "Feedback on business or performance outcome described"
-  }
-}`;
+      const prompt = buildInterviewAnswerEvaluationPrompt({
+        targetRole,
+        question: normalizedQuestion.question,
+        gradingCriteria: normalizedQuestion.gradingCriteria,
+        sampleStrongAnswer: normalizedQuestion.sampleStrongAnswer,
+        candidateAnswer: cleanAnswer,
+      });
 
       for (const model of CANDIDATE_GEMINI_MODELS) {
         try {
@@ -1500,20 +1464,7 @@ export async function parseNaturalLanguageJobQuery(
   // Attempt Gemini NLP parsing if available
   if (aiClient) {
     try {
-      const prompt = `You are a search query understanding engine for a job search platform.
-Parse the user's natural language search prompt into structured query filters.
-
-User Prompt: "${query}"
-
-Return a valid JSON object matching this schema:
-{
-  "keywords": "Clean role title and primary technical keywords (e.g. React Frontend Developer)",
-  "location": "City or Country if specified, otherwise empty string",
-  "workplaceType": "remote" | "hybrid" | "on-site" | null,
-  "experienceLevel": "entry" | "mid" | "senior" | null,
-  "contractType": "full-time" | "part-time" | "contract" | "internship" | null,
-  "explanation": "Brief explanation of how the query was interpreted"
-}`;
+      const prompt = buildJobSearchNlpPrompt({ query });
 
       for (const model of CANDIDATE_GEMINI_MODELS) {
         try {
@@ -1587,10 +1538,20 @@ Return a valid JSON object matching this schema:
 export function getDeterministicCareerChatResponse(
   userMessage: string,
   profile?: CareerProfileSummary | null,
-  unifiedContext?: UnifiedStudentContext | null
+  unifiedContext?: UnifiedStudentContext | null,
+  careerIntelligence?: CareerIntelligenceRecommendation | null
 ): string {
   const rawMsg = (userMessage || '').trim();
   const msg = rawMsg.toLowerCase();
+
+  let ci = careerIntelligence;
+  if (!ci && unifiedContext) {
+    try {
+      ci = generateCareerIntelligence(unifiedContext);
+    } catch {
+      ci = null;
+    }
+  }
 
   // 1. PROMPT INJECTION DEFENSE (Condition 3/5: Ignore previous instructions, reveal prompt, developer mode)
   const injectionPatterns = [
@@ -1845,9 +1806,18 @@ export function getDeterministicCareerChatResponse(
       return `Your target role is **not set** yet, so I have not assumed a career path for you.\n\nSet your target role in [Onboarding](/onboarding) or [My Career Data](/dashboard/my-data), then open [Career Guidance](/guidance) to see a curated roadmap for your field.`;
     }
     if (curated) {
-      return `Here is your curated learning path for **${curated.title}** (${curated.domain}):\n\n- **Core Skills Suggested**: ${curated.coreSkills.join(', ')}\n- **Recommended Tools**: ${curated.recommendedTools.join(', ')}\n- **Practice Projects**: ${curated.projectIdeas.map((p) => p.title).join('; ')}\n\nReview verified resources and track your progress on [Career Guidance](/guidance).`;
+      const roadmapPhaseSummary = ci?.learningRoadmap?.phases && ci.learningRoadmap.phases.length > 0
+        ? `\n\n### Learning Phases:\n${ci.learningRoadmap.phases.map((p) => `- **${p.phase}** (${p.duration}): ${p.focus}`).join('\n')}`
+        : '';
+      const readinessNote = ci?.careerReadinessScore
+        ? `\n\nOverall Career Readiness: **${ci.careerReadinessScore.overallScore}/100** (${ci.careerReadinessScore.readinessBand}).`
+        : '';
+      return `Here is your curated learning path for **${target || curated.title}** (${curated.title}, ${curated.domain}):\n\n- **Core Skills Suggested**: ${curated.coreSkills.join(', ')}\n- **Recommended Tools**: ${curated.recommendedTools.join(', ')}\n- **Practice Projects**: ${curated.projectIdeas.map((p) => p.title).join('; ')}${roadmapPhaseSummary}${readinessNote}\n\nReview verified resources and track your progress on [Career Guidance](/guidance).`;
     }
-    return `Your target role is set to **${target}**. Explore your verified profile skills, resume strengths, and custom learning steps on [Career Guidance](/guidance).`;
+    const readinessCustomNote = ci?.careerReadinessScore
+      ? `\n\nOverall Career Readiness: **${ci.careerReadinessScore.overallScore}/100** (${ci.careerReadinessScore.readinessBand}).`
+      : '';
+    return `Your target role is set to **${target}**. Explore your verified profile skills, resume strengths, and custom learning steps on [Career Guidance](/guidance).${readinessCustomNote}`;
   }
 
   // 6. APPLICATION GUIDANCE (Follow-ups, pipeline, email outreach)
@@ -1985,7 +1955,18 @@ You can practice interactive mock interviews tailored to **${target}** with inst
     let projectBullet = `"Architected and deployed a containerized microservice handling 1,500 RPS with sub-40ms P95 latency using Node.js, PostgreSQL, and Docker."`;
     let gapSkills = missingCrits.slice(0, 3).join(', ') || 'Docker, Redis, and SQL';
 
-    if (curated) {
+    if (ci?.projectRecommendations && ci.projectRecommendations.length > 0) {
+      const pRec = ci.projectRecommendations[0];
+      projectTitle = pRec.title;
+      projectArch = `${pRec.problemStatement} (${pRec.techStack.join(', ')}).`;
+      if (pRec.architecturalGuidance?.layers && pRec.architecturalGuidance.layers.length > 0) {
+        projectHighlights = pRec.architecturalGuidance.layers.slice(0, 3).map((l) => `- ${l}`).join('\n  ');
+      }
+      projectBullet = pRec.resumeBulletDraft;
+      if (pRec.addressedGaps && pRec.addressedGaps.length > 0) {
+        gapSkills = pRec.addressedGaps.join(', ');
+      }
+    } else if (curated) {
       gapSkills = missingCrits.slice(0, 3).join(', ') || curated.coreSkills.slice(0, 3).join(', ');
       if (curated.projectIdeas && curated.projectIdeas.length > 0) {
         const pIdea = curated.projectIdeas[0];
@@ -2040,7 +2021,12 @@ You can explore step-by-step milestone guidance, architectural blueprints, and i
       }\n\n`;
     }
 
-    return `${atsContext}To optimize your fresher resume for **${target}** roles:
+    let prioritiesText = '';
+    if (ci?.resumeImprovementPriorities && ci.resumeImprovementPriorities.length > 0) {
+      prioritiesText = `### Top Improvement Priorities (Career Intelligence):\n${ci.resumeImprovementPriorities.slice(0, 3).map((r) => `- **[${r.priority.toUpperCase()}] ${r.area}**: ${r.issue} → *${r.recommendation}*`).join('\n')}\n\n`;
+    }
+
+    return `${atsContext}${prioritiesText}To optimize your fresher resume for **${target}** roles:
 
 1. **Lead with Strong Action Verbs**: Start every bullet with high-impact engineering verbs like *Architected*, *Implemented*, *Optimized*, *Containerized*, or *Benchmarked*. Avoid weak passive phrases like *"Helped with"* or *"Responsible for"*.
 2. **Apply the Google XYZ Formula**: Frame accomplishments as:
@@ -2215,15 +2201,22 @@ Start your skill verification now:
     ? verifiedList.map((v) => `${v.name} (${v.score}%)`).join(', ')
     : 'None yet';
 
+  const readinessVal = ci?.careerReadinessScore?.overallScore ?? readiness;
+  const readinessBandText = ci?.careerReadinessScore?.readinessBand ? ` (${ci.careerReadinessScore.readinessBand})` : '';
+
+  const nextActionsBlock = ci?.recommendedNextActions && ci.recommendedNextActions.length > 0
+    ? `\n### Recommended Next Actions:\n${ci.recommendedNextActions.slice(0, 3).map((a, idx) => `${idx + 1}. **${a.title}**: ${a.description} ([Open](${a.href}))`).join('\n')}\n`
+    : '';
+
   return `### Smart Resume AI Assistant
 
 👋 Hello ${name}! Here is your current profile snapshot:
 - **Profile**: ${studentHeadline}
 - **Target Role**: ${targetRoleDisplay}
-- **Career Readiness Score**: **${readiness}/100**
+- **Career Readiness Score**: **${readinessVal}/100**${readinessBandText}
 - **ATS Resume Status**: ${resumeStatusDisplay}
 - **Verified Skills**: ${verifiedDisplay}
-
+${nextActionsBlock}
 ### How I Can Guide You Today:
 1. **Resume Optimization**: Improve bullet points with the Google XYZ formula in the [Resume Builder](/builder) and check scores in the [ATS Score Checker](/ats-score).
 2. **Close Skill Gaps**: Practice and earn certificates in [Skill Assessments](/skills) and explore roadmaps in [Career Guidance](/guidance).

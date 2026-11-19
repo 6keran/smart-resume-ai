@@ -11,6 +11,10 @@ import {
   mapUnifiedToCareerProfileSummary,
   type UnifiedStudentContext,
 } from '@/server/services/unifiedStudentContext';
+import {
+  generateCareerIntelligence,
+  type CareerIntelligenceRecommendation,
+} from '@/server/services/careerIntelligenceEngine';
 import { buildCareerAssistantPrompt } from '@/server/prompts/careerAssistant';
 import {
   chatConcurrencyGate,
@@ -39,12 +43,14 @@ async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T
 function buildSystemInstruction(
   context?: SafeChatContext,
   userProfile?: CareerProfileSummary | null,
-  unifiedContext?: UnifiedStudentContext | null
+  unifiedContext?: UnifiedStudentContext | null,
+  careerIntelligence?: CareerIntelligenceRecommendation | null
 ): string {
   return buildCareerAssistantPrompt({
     context,
     userProfile,
     unifiedContext,
+    careerIntelligence,
   });
 }
 
@@ -99,6 +105,7 @@ export async function POST(req: Request) {
   let parsedPayload: ReturnType<typeof sanitizeChatPayload>['payload'] = undefined;
   let cachedProfile: CareerProfileSummary | null = null;
   let cachedUnified: UnifiedStudentContext | null = null;
+  let cachedIntelligence: CareerIntelligenceRecommendation | null = null;
   try {
     // Reject oversized bodies before parsing them. This route never needs attachments.
     const contentLength = Number(req.headers.get('content-length') || 0);
@@ -177,18 +184,30 @@ export async function POST(req: Request) {
     }
     activeUserId = user.id;
 
-    // Fetch unified student context once; derive career profile summary without duplicate database queries
+    // Fetch unified student context and generate career intelligence once
     const unifiedStudentContext = await buildUnifiedStudentContext(user.id).catch(() => null);
     const userCareerProfile = unifiedStudentContext
       ? mapUnifiedToCareerProfileSummary(unifiedStudentContext)
       : null;
+    const careerIntelligence = unifiedStudentContext
+      ? generateCareerIntelligence(unifiedStudentContext, {
+          targetRoleOverride: payload.context?.jobTitle || undefined,
+          jobDescriptionOverride: payload.context?.jobDescription || undefined,
+        })
+      : null;
     cachedUnified = unifiedStudentContext;
     cachedProfile = userCareerProfile;
+    cachedIntelligence = careerIntelligence;
 
     const apiKey = (process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY)?.trim();
 
     if (!apiKey) {
-      const fallbackReply = getDeterministicCareerChatResponse(payload.message, userCareerProfile, unifiedStudentContext);
+      const fallbackReply = getDeterministicCareerChatResponse(
+        payload.message,
+        userCareerProfile,
+        unifiedStudentContext,
+        careerIntelligence
+      );
       return NextResponse.json({
         reply: fallbackReply,
         provider: 'AI Assistant Deterministic Engine',
@@ -197,7 +216,12 @@ export async function POST(req: Request) {
     }
 
     const ai = new GoogleGenAI({ apiKey });
-    const systemInstruction = buildSystemInstruction(payload.context, userCareerProfile, unifiedStudentContext);
+    const systemInstruction = buildSystemInstruction(
+      payload.context,
+      userCareerProfile,
+      unifiedStudentContext,
+      careerIntelligence
+    );
     const contents = formatChatContents(payload.history, payload.message);
 
     let lastError: Error | null = null;
@@ -249,7 +273,12 @@ export async function POST(req: Request) {
 
     if (!replyText) {
       // Gracefully fall back to deterministic career copilot response
-      const fallbackReply = getDeterministicCareerChatResponse(payload.message, userCareerProfile, unifiedStudentContext);
+      const fallbackReply = getDeterministicCareerChatResponse(
+        payload.message,
+        userCareerProfile,
+        unifiedStudentContext,
+        careerIntelligence
+      );
       return NextResponse.json({
         reply: fallbackReply,
         provider: 'AI Assistant Deterministic Engine',
@@ -268,7 +297,8 @@ export async function POST(req: Request) {
       const fallbackReply = getDeterministicCareerChatResponse(
         parsedPayload.message,
         cachedProfile,
-        cachedUnified
+        cachedUnified,
+        cachedIntelligence
       );
       return NextResponse.json({
         reply: fallbackReply,

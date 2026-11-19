@@ -14,6 +14,9 @@ import {
   calculateDeterministicAtsScore,
   normalizeAtsInput,
 } from './deterministicAtsEngine';
+import { buildResumeAnalysisPrompt } from '@/server/prompts/resumeAnalyzer';
+import { buildResumeSectionImprovementPrompt } from '@/server/prompts/resumeImprover';
+import { buildJobMatchPrompt, buildResumeTailoringPrompt } from '@/server/prompts/jobMatcher';
 
 // Safe server-side accessor for Gemini API key
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY || '';
@@ -350,41 +353,13 @@ export async function analyzeResume(
 
   // 2. Query Gemini solely for qualitative recommendations and rewrites (numerical scores remain deterministic)
   if (aiClient && normResume.length > 50) {
-    const prompt = `You are a Principal Technical Recruiter and ATS parsing algorithm expert. Analyze the following resume text${
-      jdProvided ? ` against the target role (${targetRole || 'Target Role'} at ${targetCompany || 'Target Company'}) and Job Description` : ''
-    }.
-
-${jdProvided ? `Target Role: ${targetRole || 'Not specified'}\nTarget Company: ${targetCompany || 'Not specified'}\nTarget Job Description:\n${normJd}\n` : ''}
-Resume Text:
-${normResume}
-
-CRITICAL RULES:
-1. The deterministic ATS scoring engine has already evaluated this resume. Numerical scores are fixed and must NOT be generated or modified.
-2. Select the top prioritized improvements based on this specific resume${jdProvided ? ' and target job description' : ''}.
-3. Each suggestion must identify:
-   - priority: "High" | "Medium" | "Low"
-   - section: specific resume area (e.g. "Work Experience", "ATS Keywords", "Professional Summary")
-   - whatNeedsImprovement: the specific weakness
-   - whyItMatters: brief explanation of clarity, relevance, or ATS impact
-   - howToImprove: concrete actionable recommendation
-   - extractedText: exact quote or text segment from the resume that needs improvement
-   - example: a rewritten example based on the candidate's actual text without inventing facts or false metrics.
-4. Return ONLY a valid JSON object matching this schema:
-{
-  "strengths": [{"id": string, "section": string, "title": string, "description": string}],
-  "topSuggestions": [
-    {
-      "priority": "High" | "Medium" | "Low",
-      "section": string,
-      "whatNeedsImprovement": string,
-      "whyItMatters": string,
-      "howToImprove": string,
-      "extractedText": "exact quote or text segment from the resume that needs improvement",
-      "example": string
-    }
-  ],
-  "summaryFeedback": string
-}`;
+    const prompt = buildResumeAnalysisPrompt({
+      normResume,
+      normJd,
+      targetRole,
+      targetCompany,
+      jdProvided,
+    });
 
     const rawCall = await callGeminiWithRetry(async (client, model) => {
       const response = await client.models.generateContent({
@@ -830,46 +805,13 @@ export async function improveResumeSection(
   const hasJd = Boolean(jobDescription && jobDescription.trim().length > 20);
 
   if (aiClient && trimmed.length >= 5) {
-    const prompt = `You are a professional resume editor. Your task is to edit and refine the user's resume content to make it sound professional, clear, and impactful, while STRICTLY PRESERVING ALL FACTS.
-
-CONTENT TYPE / SECTION: ${sectionName}
-${hasJd ? `TARGET ROLE CONTEXT (Use ONLY for tone and standard terminology; NEVER import unverified qualifications, tools, or metrics from this job description into the candidate's experience):\nRole: ${jobTitle || 'Target Role'}\nJob Description Excerpt: ${jobDescription?.slice(0, 300)}` : ''}
-
-INPUT TEXT TO EDIT:
-"""
-${trimmed}
-"""
-
-STRICT EDITING RULES:
-1. TREAT THE USER'S INPUT AS THE ABSOLUTE SOURCE OF TRUTH.
-2. PRESERVE THE ORIGINAL MEANING, SCOPE, AND INTENT:
-   - Retain the exact same project, job role, experience, responsibilities, and achievements.
-   - Retain all factual details, including dates, numbers, technologies, tools, and metrics.
-3. IMPROVE PHRASING AND TECHNICAL ACCURACY:
-   - Improve grammar, readability, and sentence structure.
-   - Replace weak or informal phrasing with precise, professional terminology only when it directly describes the user's work:
-     * "Made a website" -> "Developed a web application"
-     * "Users can register and login" -> "Implemented user registration and authentication functionality"
-     * "Stored information in a database" -> "Implemented database persistence"
-     * "Found and fixed errors" -> "Identified and resolved software defects"
-     * "The page works on mobile" -> "Implemented responsive user interface behavior"
-     * "Connected frontend to backend" -> "Integrated frontend components with backend APIs"
-4. ABSOLUTELY FORBIDDEN:
-   - DO NOT invent technologies, frameworks, or tools the user did not mention (e.g., do NOT add Kubernetes, Docker, Redis, AWS, Microservices, CI/CD unless already in the input).
-   - DO NOT invent performance metrics, percentages (e.g., "by 40%"), dollar amounts, or numbers not in the input.
-   - DO NOT invent certifications, awards, or job titles.
-   - DO NOT change the user's project into an unrelated project or platform.
-   - DO NOT append generic boilerplate slogans (e.g., "driving delivery velocity and reliability").
-5. PRESERVE STRUCTURE:
-   - If the input is a single bullet point or line, return a single improved bullet point or line.
-   - If the input has multiple lines or bullet points, preserve the corresponding line breaks and bullet points.
-
-Return ONLY a valid JSON object:
-{
-  "improvedContent": string,
-  "reasoning": string,
-  "metricImpact": string
-}`;
+    const prompt = buildResumeSectionImprovementPrompt({
+      sectionName,
+      originalContent: trimmed,
+      hasJd,
+      jobTitle,
+      jobDescription,
+    });
 
     try {
       const rawResponse = await callGeminiWithRetry(async (client, model) => {
@@ -929,34 +871,12 @@ export async function matchResumeToJob(
   jobDescription: string
 ): Promise<JobMatchResult> {
   if (aiClient && resumeText.length > 50 && jobDescription.length > 50) {
-    const prompt = `You are an AI Talent Intelligence Engine. Compare this resume against the specified job description.
-Job: ${jobTitle} at ${company}
-Job Description:
-${jobDescription}
-
-Resume:
-${resumeText}
-
-Analyze alignment accurately. NEVER invent candidate experience or qualifications.
-Distinguish between required skills and preferred/bonus skills mentioned in the job description.
-Scores should be realistic advisory percentages (0-100) reflecting actual evidence, not hardcoded.
-Return ONLY valid JSON:
-{
-  "jobTitle": "${jobTitle}",
-  "company": "${company}",
-  "overallMatchScore": number (0-100),
-  "skillsMatchScore": number (0-100),
-  "experienceMatchScore": number (0-100),
-  "educationMatchScore": number (0-100),
-  "keywordMatchScore": number (0-100),
-  "projectRelevanceScore": number (0-100),
-  "matchedSkills": [{"skill": string, "status": "matched", "importance": "required"|"preferred", "context": string}],
-  "partialSkills": [{"skill": string, "status": "partial", "importance": "required"|"preferred", "context": string}],
-  "missingSkills": [{"skill": string, "status": "missing", "importance": "required"|"preferred", "context": string}],
-  "keyStrengths": [string],
-  "gapsToAddress": [string],
-  "recommendationSummary": string
-}`;
+    const prompt = buildJobMatchPrompt({
+      jobTitle,
+      company,
+      jobDescription,
+      resumeText,
+    });
 
     const rawResponse = await callGeminiWithRetry(async (client, model) => {
       const response = await client.models.generateContent({
@@ -1258,29 +1178,12 @@ export async function tailorResumeToJob(
 
   // If AI client is available, generate tailored summary and rewrites
   if (aiClient && resumeText.length > 50 && jobDescription.length > 30) {
-    const prompt = `You are an elite career intelligence engine. Tailor the candidate's resume for the role "${jobTitle}" at "${company}".
-Target Job Description:
-${jobDescription.slice(0, 800)}
-
-Resume Text:
-${resumeText.slice(0, 1500)}
-
-STRICT RULES:
-1. NEVER fabricate facts, employment history, degrees, or false metrics.
-2. Refocus the professional summary to align with the target role.
-3. Rewrite the candidate's actual bullet points with high-impact action verbs and quantified impact placeholders.
-Return ONLY valid JSON matching this schema:
-{
-  "tailoredSummary": string,
-  "suggestedBullets": [
-    {
-      "original": string,
-      "tailored": string,
-      "impactReason": string
-    }
-  ],
-  "recommendedSkills": string[]
-}`;
+    const prompt = buildResumeTailoringPrompt({
+      jobTitle,
+      company,
+      jobDescription,
+      resumeText,
+    });
 
     const rawResponse = await callGeminiWithRetry(async (client, model) => {
       const response = await client.models.generateContent({

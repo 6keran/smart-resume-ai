@@ -241,6 +241,62 @@ export function checkParseResumeRateLimit(
 }
 
 /**
+ * Rate limits public certificate verification lookups.
+ * Default: 20 lookups per 1 minute per IP.
+ */
+export function checkCertificateRateLimit(
+  request: Request,
+  options: RateLimitOptions = {}
+): RateLimitResult {
+  const limit = options.limit ?? 20;
+  const windowMs = options.windowMs ?? 60 * 1000;
+  const now = Date.now();
+
+  cleanupStaleEntries(windowMs);
+
+  const forwardedFor = request.headers.get('x-forwarded-for');
+  const realIp = request.headers.get('x-real-ip');
+  const ip = forwardedFor ? forwardedFor.split(',')[0].trim() : realIp || '127.0.0.1';
+  const key = `cert_verify:${ip}`;
+
+  let record = store.get(key);
+  if (!record) {
+    record = { timestamps: [] };
+    store.set(key, record);
+  }
+
+  record.timestamps = record.timestamps.filter((ts) => now - ts < windowMs);
+
+  if (record.timestamps.length >= limit) {
+    const oldestTimestamp = record.timestamps[0];
+    const resetTime = oldestTimestamp + windowMs;
+    const retryAfter = Math.max(1, Math.ceil((resetTime - now) / 1000));
+
+    return {
+      allowed: false,
+      limit,
+      remaining: 0,
+      retryAfter,
+      resetInSeconds: retryAfter,
+      visitorId: ip,
+    };
+  }
+
+  record.timestamps.push(now);
+  const remaining = Math.max(0, limit - record.timestamps.length);
+  const resetInSeconds = Math.ceil(windowMs / 1000);
+
+  return {
+    allowed: true,
+    limit,
+    remaining,
+    retryAfter: 0,
+    resetInSeconds,
+    visitorId: ip,
+  };
+}
+
+/**
  * Helper to reset rate limits during automated testing.
  */
 export function resetRateLimitsForTesting(): void {

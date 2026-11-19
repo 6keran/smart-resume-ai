@@ -30,7 +30,10 @@ export async function POST(req: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ message: 'Invalid JSON request payload.' }, { status: 400 });
+    }
     const {
       jobTitle,
       company,
@@ -103,7 +106,10 @@ export async function PUT(req: Request) {
       return NextResponse.json({ message: 'Unauthorized' }, { status: 401 });
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ message: 'Invalid JSON request payload.' }, { status: 400 });
+    }
     const {
       id,
       jobTitle,

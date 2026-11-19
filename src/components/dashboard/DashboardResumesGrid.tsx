@@ -14,6 +14,8 @@ import {
   AlertTriangle,
   Loader2,
   X,
+  Copy,
+  Edit3,
 } from 'lucide-react';
 
 export interface DashboardResumeItem {
@@ -109,6 +111,99 @@ export default function DashboardResumesGrid({ initialResumes }: DashboardResume
       setErrorMsg(err?.message || 'Network error while removing resume.');
     } finally {
       setIsDeleting(false);
+    }
+  };
+
+  const [resumeToRename, setResumeToRename] = useState<DashboardResumeItem | null>(null);
+  const [renameInput, setRenameInput] = useState<string>('');
+  const [isRenaming, setIsRenaming] = useState<boolean>(false);
+  const [isDuplicatingId, setIsDuplicatingId] = useState<string | null>(null);
+
+  const handleDuplicate = async (r: DashboardResumeItem) => {
+    setIsDuplicatingId(r.id);
+    setErrorMsg(null);
+    try {
+      const getRes = await fetch(`/api/user/resumes?id=${encodeURIComponent(r.id)}`);
+      if (!getRes.ok) throw new Error('Failed to fetch resume data to duplicate.');
+      const getData = await getRes.json();
+      const resumeData = getData.resume?.resumeData || getData.resume?.resume_data;
+      if (!resumeData) throw new Error('Resume content unavailable.');
+
+      const copyName = `${r.filename} (Copy)`;
+      const postRes = await fetch('/api/user/resumes', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          createNew: true,
+          filename: copyName,
+          resumeData,
+        }),
+      });
+
+      if (!postRes.ok) {
+        const err = await postRes.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to duplicate resume.');
+      }
+
+      const postData = await postRes.json();
+      const createdItem: DashboardResumeItem = {
+        id: postData.resumeId || postData.resume?.id,
+        filename: copyName,
+        file_type: r.file_type,
+        uploaded_at: new Date().toISOString(),
+        isActive: false,
+        analyses_count: 0,
+        versionsCount: 1,
+        latestAtsScore: r.latestAtsScore,
+      };
+
+      setResumes((prev) => [createdItem, ...prev]);
+      setToastMsg(`Duplicated "${r.filename}" successfully!`);
+      router.refresh();
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Error duplicating resume.');
+    } finally {
+      setIsDuplicatingId(null);
+    }
+  };
+
+  const handleConfirmRename = async () => {
+    if (!resumeToRename || !renameInput.trim()) return;
+    setIsRenaming(true);
+    setErrorMsg(null);
+    try {
+      const getRes = await fetch(`/api/user/resumes?id=${encodeURIComponent(resumeToRename.id)}`);
+      if (!getRes.ok) throw new Error('Failed to fetch current resume details.');
+      const getData = await getRes.json();
+      const resumeData = getData.resume?.resumeData || getData.resume?.resume_data;
+      if (!resumeData) throw new Error('Resume content unavailable.');
+
+      const newName = renameInput.trim();
+      const putRes = await fetch('/api/user/resumes', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          resumeId: resumeToRename.id,
+          filename: newName,
+          resumeData,
+        }),
+      });
+
+      if (!putRes.ok) {
+        const err = await putRes.json().catch(() => ({}));
+        throw new Error(err.message || 'Failed to rename resume.');
+      }
+
+      setResumes((prev) =>
+        prev.map((item) => (item.id === resumeToRename.id ? { ...item, filename: newName } : item))
+      );
+      setToastMsg(`Renamed resume to "${newName}".`);
+      setResumeToRename(null);
+      router.refresh();
+    } catch (err: any) {
+      setErrorMsg(err?.message || 'Error renaming resume.');
+    } finally {
+      setIsRenaming(false);
     }
   };
 
@@ -261,18 +356,49 @@ export default function DashboardResumesGrid({ initialResumes }: DashboardResume
                     </Link>
                   </div>
 
-                  <button
-                    type="button"
-                    data-testid={`remove-resume-${r.id}`}
-                    onClick={() => {
-                      setErrorMsg(null);
-                      setResumeToDelete(r);
-                    }}
-                    className="mt-2.5 w-full py-2 px-3 rounded-xl border border-transparent hover:border-rose-200 hover:bg-rose-50 text-rose-600 text-[13px] font-medium transition-colors flex items-center justify-center gap-1.5 cursor-pointer"
-                  >
-                    <Trash2 className="w-3.5 h-3.5" />
-                    <span>Remove Resume</span>
-                  </button>
+                  <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-[#E5E8ED] text-xs">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setErrorMsg(null);
+                        setResumeToRename(r);
+                        setRenameInput(r.filename);
+                      }}
+                      className="flex-1 py-1.5 px-2 rounded-lg border border-[#E5E8ED] hover:bg-[#F6F7F9] text-[#20242B] font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                      title="Rename this resume (e.g. Google Resume, Amazon Resume)"
+                    >
+                      <Edit3 className="w-3.5 h-3.5 text-[#626B78]" />
+                      <span>Rename</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      disabled={isDuplicatingId === r.id}
+                      onClick={() => handleDuplicate(r)}
+                      className="flex-1 py-1.5 px-2 rounded-lg border border-[#E5E8ED] hover:bg-[#F6F7F9] text-[#20242B] font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                      title="Duplicate this resume"
+                    >
+                      {isDuplicatingId === r.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <Copy className="w-3.5 h-3.5 text-[#626B78]" />
+                      )}
+                      <span>Duplicate</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      data-testid={`remove-resume-${r.id}`}
+                      onClick={() => {
+                        setErrorMsg(null);
+                        setResumeToDelete(r);
+                      }}
+                      className="p-1.5 rounded-lg text-rose-600 hover:bg-rose-50 transition-colors cursor-pointer"
+                      title="Remove resume"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
                 </div>
               </div>
             );
@@ -338,6 +464,81 @@ export default function DashboardResumesGrid({ initialResumes }: DashboardResume
                     <Trash2 className="w-3.5 h-3.5" />
                     <span>Confirm Removal</span>
                   </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Rename Modal */}
+      {resumeToRename && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="rename-resume-modal-title"
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-fade-in"
+        >
+          <div className="w-full max-w-md rounded-2xl bg-white border border-[#E5E8ED] p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[#E5E8ED] pb-3">
+              <div className="flex items-center gap-2">
+                <Edit3 className="w-4 h-4 text-[#3157C8]" />
+                <h2 id="rename-resume-modal-title" className="text-base font-bold text-[#20242B]">
+                  Rename Resume
+                </h2>
+              </div>
+              <button
+                type="button"
+                onClick={() => setResumeToRename(null)}
+                className="text-[#626B78] hover:text-[#20242B] cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            <div className="space-y-2 text-xs">
+              <label className="block font-semibold text-[#20242B]">
+                Resume Name (e.g. Google Resume, Amazon Resume, Senior SWE)
+              </label>
+              <input
+                type="text"
+                value={renameInput}
+                onChange={(e) => setRenameInput(e.target.value)}
+                maxLength={100}
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-xs text-[#20242B] focus:outline-none focus:border-[#3157C8]"
+                placeholder="Enter resume name..."
+                autoFocus
+              />
+            </div>
+
+            {errorMsg && (
+              <p className="text-xs font-medium text-rose-700 bg-rose-50 border border-rose-200 rounded-xl px-3 py-2">
+                {errorMsg}
+              </p>
+            )}
+
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E5E8ED]">
+              <button
+                type="button"
+                onClick={() => setResumeToRename(null)}
+                disabled={isRenaming}
+                className="btn-secondary-action py-2 px-4 text-xs cursor-pointer disabled:opacity-50"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmRename}
+                disabled={isRenaming || !renameInput.trim()}
+                className="btn-primary-action py-2 px-4 text-xs cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+              >
+                {isRenaming ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Saving...</span>
+                  </>
+                ) : (
+                  <span>Save Name</span>
                 )}
               </button>
             </div>

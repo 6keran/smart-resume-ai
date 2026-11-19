@@ -155,15 +155,16 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
   const [historyIndex, setHistoryIndex] = useState<number>(0);
   const isHistoryActionRef = useRef<boolean>(false);
 
+  const MAX_HISTORY_STACK = 50;
   const recordHistory = useCallback((nextData: ResumeData) => {
     if (isHistoryActionRef.current) return;
     setHistory((prev) => {
       const slice = prev.slice(0, historyIndex + 1);
       const next = [...slice, nextData];
-      if (next.length > 30) return next.slice(next.length - 30);
+      if (next.length > MAX_HISTORY_STACK) return next.slice(next.length - MAX_HISTORY_STACK);
       return next;
     });
-    setHistoryIndex((prev) => Math.min(prev + 1, 29));
+    setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY_STACK - 1));
   }, [historyIndex]);
 
   const undo = useCallback(() => {

@@ -5,7 +5,10 @@ import { getUserFromRequest } from '@/server/auth/userSession';
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ message: 'Invalid or malformed JSON payload' }, { status: 400 });
+    }
     const { assessmentId, sender, type, data } = body;
 
     if (!assessmentId || !sender || !type || !data) {

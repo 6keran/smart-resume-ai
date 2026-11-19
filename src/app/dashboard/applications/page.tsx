@@ -22,6 +22,10 @@ import {
   FileText,
   Bookmark,
   Sparkles,
+  Layout,
+  List,
+  ArrowRight,
+  ChevronRight,
 } from 'lucide-react';
 
 interface JobApplication {
@@ -70,6 +74,56 @@ function ApplicationsContent() {
   const [loading, setLoading] = useState(true);
   const [filterStatus, setFilterStatus] = useState<string>(initialStatus);
   const [searchQuery, setSearchQuery] = useState('');
+  const [viewMode, setViewMode] = useState<'pipeline' | 'list'>('pipeline');
+
+  const PIPELINE_STAGES: Array<{ key: JobApplication['status']; label: string; color: string }> = [
+    { key: 'Saved', label: 'Saved Jobs', color: 'border-slate-300 bg-slate-50 text-slate-800' },
+    { key: 'Applied', label: 'Applied', color: 'border-blue-300 bg-blue-50 text-blue-900' },
+    { key: 'Interview', label: 'Interview', color: 'border-indigo-300 bg-indigo-50 text-indigo-900' },
+    { key: 'Offer', label: 'Offer Received', color: 'border-emerald-300 bg-emerald-50 text-emerald-900' },
+    { key: 'Rejected', label: 'Archived / Rejected', color: 'border-rose-200 bg-rose-50/70 text-rose-800' },
+  ];
+
+  const handleMoveStage = async (id: string, nextStatus: JobApplication['status']) => {
+    try {
+      const targetApp = applications.find((a) => a.id === id);
+      if (!targetApp) return;
+
+      const res = await fetch('/api/user/applications', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id,
+          jobTitle: targetApp.job_title,
+          company: targetApp.company,
+          status: nextStatus,
+        }),
+      });
+
+      if (res.ok) {
+        setApplications((prev) =>
+          prev.map((a) => (a.id === id ? { ...a, status: nextStatus } : a))
+        );
+      }
+    } catch (err) {
+      console.error('Failed to move stage:', err);
+    }
+  };
+
+  const getNextStage = (current: JobApplication['status']): JobApplication['status'] | null => {
+    switch (current) {
+      case 'Saved':
+      case 'Ready to apply':
+      case 'Application pending':
+        return 'Applied';
+      case 'Applied':
+        return 'Interview';
+      case 'Interview':
+        return 'Offer';
+      default:
+        return null;
+    }
+  };
 
   // Modal State
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -272,7 +326,34 @@ function ApplicationsContent() {
             Track, update, and manage every stage of your job hunt ({applications.length} total records).
           </p>
         </div>
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-3 shrink-0 flex-wrap">
+          <div className="inline-flex items-center p-1 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-xs font-semibold">
+            <button
+              type="button"
+              onClick={() => setViewMode('pipeline')}
+              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === 'pipeline'
+                  ? 'bg-white text-[#3157C8] shadow-xs font-bold'
+                  : 'text-[#626B78] hover:text-[#20242B]'
+              }`}
+            >
+              <Layout className="w-3.5 h-3.5" />
+              <span>Pipeline View</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                viewMode === 'list'
+                  ? 'bg-white text-[#3157C8] shadow-xs font-bold'
+                  : 'text-[#626B78] hover:text-[#20242B]'
+              }`}
+            >
+              <List className="w-3.5 h-3.5" />
+              <span>List View</span>
+            </button>
+          </div>
+
           <button
             onClick={openCreateModal}
             className="btn-primary-action inline-flex items-center gap-2 py-2 px-4 text-[14px]"
@@ -353,6 +434,143 @@ function ApplicationsContent() {
             <Plus className="w-4 h-4" />
             <span>Add Your First Application</span>
           </button>
+        </div>
+      ) : viewMode === 'pipeline' ? (
+        <div className="space-y-6">
+          {/* Pipeline Progress Track Bar */}
+          <div className="p-4 rounded-2xl bg-white border border-[#E5E8ED] shadow-sm space-y-3">
+            <div className="flex items-center justify-between text-xs">
+              <span className="font-bold text-[#20242B] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[#3157C8]" />
+                <span>Application Pipeline Progress</span>
+              </span>
+              <span className="text-[#626B78] font-medium">
+                {applications.filter((a) => a.status === 'Offer').length} Offers ·{' '}
+                {applications.filter((a) => a.status === 'Interview').length} Interviews ·{' '}
+                {applications.filter((a) => a.status === 'Applied').length} Active Applications
+              </span>
+            </div>
+
+            <div className="w-full h-3 rounded-full bg-[#F6F7F9] border border-[#E5E8ED] flex overflow-hidden">
+              {PIPELINE_STAGES.map((st) => {
+                const count = applications.filter((a) => a.status === st.key).length;
+                const pct = applications.length ? (count / applications.length) * 100 : 0;
+                if (pct === 0) return null;
+                const barColor =
+                  st.key === 'Offer'
+                    ? 'bg-emerald-500'
+                    : st.key === 'Interview'
+                    ? 'bg-[#3157C8]'
+                    : st.key === 'Applied'
+                    ? 'bg-sky-400'
+                    : st.key === 'Saved'
+                    ? 'bg-slate-300'
+                    : 'bg-rose-400';
+
+                return (
+                  <div
+                    key={st.key}
+                    style={{ width: `${pct}%` }}
+                    className={`${barColor} transition-all duration-300`}
+                    title={`${st.label}: ${count} (${Math.round(pct)}%)`}
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          {/* 5 Kanban Columns */}
+          <div className="grid grid-cols-1 md:grid-cols-5 gap-4 items-start">
+            {PIPELINE_STAGES.map((stage) => {
+              const stageApps = filteredApplications.filter((a) =>
+                stage.key === 'Saved'
+                  ? a.status === 'Saved' || a.status === 'Ready to apply' || a.status === 'Application pending'
+                  : a.status === stage.key
+              );
+
+              return (
+                <div
+                  key={stage.key}
+                  className="rounded-2xl bg-[#F8FAFC] border border-[#E5E8ED] p-3.5 flex flex-col space-y-3 min-h-[420px]"
+                >
+                  {/* Column Header */}
+                  <div className="flex items-center justify-between pb-2.5 border-b border-[#E5E8ED]">
+                    <div className="flex items-center gap-1.5">
+                      <span className="font-bold text-xs text-[#20242B]">{stage.label}</span>
+                    </div>
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white border border-[#E5E8ED] text-[#626B78]">
+                      {stageApps.length}
+                    </span>
+                  </div>
+
+                  {/* Column Cards */}
+                  <div className="space-y-2.5 flex-1 overflow-y-auto max-h-[580px] pr-0.5">
+                    {stageApps.length === 0 ? (
+                      <div className="py-8 text-center text-[11px] text-[#626B78] border border-dashed border-[#E5E8ED] rounded-xl">
+                        No jobs in this stage
+                      </div>
+                    ) : (
+                      stageApps.map((app) => {
+                        const next = getNextStage(app.status);
+                        return (
+                          <div
+                            key={app.id}
+                            className="p-3.5 rounded-xl bg-white border border-[#E5E8ED] shadow-2xs hover:border-[#3157C8]/40 transition-all space-y-2 text-xs"
+                          >
+                            <div>
+                              <h4 className="font-bold text-[#20242B] line-clamp-1">{app.job_title}</h4>
+                              <p className="text-[11px] text-[#626B78] font-medium">{app.company}</p>
+                            </div>
+
+                            {app.location && (
+                              <p className="text-[10px] text-[#626B78] flex items-center gap-1">
+                                <MapPin className="w-3 h-3" />
+                                <span>{app.location}</span>
+                              </p>
+                            )}
+
+                            {/* Stage Action Controls */}
+                            <div className="pt-2 border-t border-[#F1F3F5] flex items-center justify-between gap-1 flex-wrap">
+                              <button
+                                type="button"
+                                onClick={() => openEditModal(app)}
+                                className="text-[10px] text-[#626B78] hover:text-[#20242B] font-semibold cursor-pointer"
+                              >
+                                Edit
+                              </button>
+
+                              {next && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleMoveStage(app.id, next)}
+                                  className="text-[10px] font-bold text-[#3157C8] hover:underline inline-flex items-center gap-0.5 cursor-pointer ml-auto"
+                                  title={`Advance to ${next}`}
+                                >
+                                  <span>{next}</span>
+                                  <ArrowRight className="w-3 h-3" />
+                                </button>
+                              )}
+
+                              {stage.key !== 'Rejected' && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleMoveStage(app.id, 'Rejected')}
+                                  className="text-[10px] text-rose-500 hover:underline cursor-pointer"
+                                  title="Mark as Rejected"
+                                >
+                                  ×
+                                </button>
+                              )}
+                            </div>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         </div>
       ) : (
         <div className="space-y-3">

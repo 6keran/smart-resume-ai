@@ -7,7 +7,13 @@ import { getUserFromRequest } from '@/lib/userSession';
 
 export async function POST(req: Request) {
   try {
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json(
+        { message: 'Invalid JSON request payload.' },
+        { status: 400 }
+      );
+    }
     const { resumeId, jobId, resumeText, jobTitle, company, jobDescription, allowUncertainOverride } = body;
 
     if (!resumeText || typeof resumeText !== 'string' || resumeText.trim().length === 0) {

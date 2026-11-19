@@ -1,8 +1,27 @@
 import { NextResponse } from 'next/server';
 import { getCertificateByCode } from '@/server/db';
+import { checkCertificateRateLimit } from '@/lib/rateLimit';
 
 export async function GET(req: Request) {
   try {
+    const rateLimit = checkCertificateRateLimit(req);
+    if (!rateLimit.allowed) {
+      return NextResponse.json(
+        {
+          valid: false,
+          message: 'Too many certificate verification attempts. Please wait a minute before trying again.',
+        },
+        {
+          status: 429,
+          headers: {
+            'Retry-After': String(rateLimit.retryAfter),
+            'X-RateLimit-Limit': String(rateLimit.limit),
+            'X-RateLimit-Remaining': '0',
+          },
+        }
+      );
+    }
+
     const { searchParams } = new URL(req.url);
     const code = searchParams.get('code')?.trim() || '';
 
