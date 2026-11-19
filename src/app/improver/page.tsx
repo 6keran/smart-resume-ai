@@ -28,6 +28,7 @@ import {
   Plus,
 } from 'lucide-react';
 import { useResume, isImprovementAppliedToResume } from '@/context/ResumeContext';
+import { ResumeComparisonView } from '@/components/resume/ResumeComparisonView';
 
 const SAMPLE_PROMPTS = [
   {
@@ -263,6 +264,20 @@ export default function ResumeImproverPage() {
 
     setAppliedBullets((prev) => new Set([...prev, idx]));
     triggerToast('Applied tailored bullet to active resume!');
+  };
+
+  const handleApplyAllTailored = () => {
+    if (tailoredResult?.tailoredSummary && !appliedSummary) {
+      handleApplyTailoredSummary();
+    }
+    if (tailoredResult?.suggestedBullets) {
+      tailoredResult.suggestedBullets.forEach((bullet, idx) => {
+        if (!appliedBullets.has(idx)) {
+          handleApplyTailoredBullet(idx, bullet.original, bullet.tailored);
+        }
+      });
+    }
+    triggerToast('All tailored improvements applied to active resume!');
   };
 
   const handleAddRecommendedSkill = (skill: string) => {
@@ -595,123 +610,33 @@ export default function ResumeImproverPage() {
         {/* Tailored Results Presentation */}
         {tailoredResult && (
           <div className="space-y-6 pt-4 border-t border-[var(--border-color)]">
-            {/* 1. Tailored Summary Diff */}
-            {tailoredResult.tailoredSummary && (
-              <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-3 text-xs">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Sparkles className="w-4 h-4 text-[var(--accent)]" />
-                    <span className="font-bold text-[var(--text-primary)]">
-                      Targeted Professional Summary Comparison
-                    </span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleApplyTailoredSummary}
-                    disabled={appliedSummary}
-                    className={`btn-sm px-3.5 py-1.5 rounded-lg font-semibold flex items-center gap-1.5 cursor-pointer transition-all ${
-                      appliedSummary
-                        ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                        : 'btn-primary shadow-xs'
-                    }`}
-                  >
-                    {appliedSummary ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                    <span>{appliedSummary ? 'Applied to Resume' : 'Adopt Summary'}</span>
-                  </button>
-                </div>
+            <ResumeComparisonView
+              comparison={{
+                originalSummary: resumeData.summary || 'No professional summary drafted in active resume.',
+                tailoredSummary: tailoredResult.tailoredSummary || '',
+                addedKeywords: tailoredResult.recommendedSkills || [],
+                removedContent: [
+                  'Passive responsibility verbs (e.g. "helped with", "worked on")',
+                  'Unquantified statements lacking impact metrics',
+                  'Generic filler descriptions not aligned with target job',
+                ],
+                bulletComparisons: (tailoredResult.suggestedBullets || []).map((b, idx) => ({
+                  id: `bullet-${idx}`,
+                  section: 'Experience / Projects',
+                  original: b.original,
+                  tailored: b.tailored,
+                  improvementExplanation: b.impactReason,
+                  isApplied: appliedBullets.has(idx),
+                })),
+              }}
+              onApplyBullet={(idx, bullet) => {
+                handleApplyTailoredBullet(idx, bullet.original, bullet.tailored);
+              }}
+              onApplySummary={handleApplyTailoredSummary}
+              onApplyAll={handleApplyAllTailored}
+            />
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="p-3 rounded-lg bg-[var(--bg-primary)] border border-red-500/20 space-y-1">
-                    <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block">
-                      Original Draft Summary
-                    </span>
-                    <p className="text-[var(--text-secondary)] leading-relaxed">
-                      {resumeData.summary || 'No summary drafted in active resume.'}
-                    </p>
-                  </div>
-                  <div className="p-3 rounded-lg bg-[var(--bg-primary)] border border-emerald-500/30 space-y-1">
-                    <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider block">
-                      AI-Tailored High-Impact Summary
-                    </span>
-                    <p className="text-[var(--text-primary)] font-medium leading-relaxed">
-                      {tailoredResult.tailoredSummary}
-                    </p>
-                  </div>
-                </div>
-              </div>
-            )}
-
-            {/* 2. Bullets Side-by-Side Diff */}
-            {tailoredResult.suggestedBullets && tailoredResult.suggestedBullets.length > 0 && (
-              <div className="space-y-4">
-                <div className="flex items-center gap-2">
-                  <Layers className="w-4 h-4 text-[var(--accent)]" />
-                  <span className="font-bold text-xs text-[var(--text-primary)] uppercase tracking-wider">
-                    Project & Experience Bullet Rewrites ({tailoredResult.suggestedBullets.length})
-                  </span>
-                </div>
-
-                <div className="space-y-3">
-                  {tailoredResult.suggestedBullets.map((bullet, bIdx) => {
-                    const isApplied = appliedBullets.has(bIdx);
-                    return (
-                      <div
-                        key={bIdx}
-                        className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-3 text-xs"
-                      >
-                        <div className="flex items-center justify-between">
-                          <span className="text-[11px] font-semibold text-[var(--text-muted)]">
-                            Suggestion #{bIdx + 1}
-                          </span>
-                          <button
-                            type="button"
-                            onClick={() => handleApplyTailoredBullet(bIdx, bullet.original, bullet.tailored)}
-                            disabled={isApplied}
-                            className={`btn-sm px-3 py-1 rounded-lg font-semibold flex items-center gap-1.5 cursor-pointer transition-all ${
-                              isApplied
-                                ? 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/20'
-                                : 'btn-primary shadow-xs'
-                            }`}
-                          >
-                            {isApplied ? <Check className="w-3.5 h-3.5" /> : <Plus className="w-3.5 h-3.5" />}
-                            <span>{isApplied ? 'Adopted in Resume' : 'Adopt Bullet'}</span>
-                          </button>
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                          <div className="p-3 rounded-lg bg-[var(--bg-primary)] border border-red-500/20 space-y-1">
-                            <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block">
-                              Original Phrasing
-                            </span>
-                            <p className="text-[var(--text-secondary)] leading-relaxed">
-                              {bullet.original}
-                            </p>
-                          </div>
-
-                          <div className="p-3 rounded-lg bg-[var(--bg-primary)] border border-emerald-500/30 space-y-1">
-                            <span className="text-[10px] font-bold text-emerald-500 uppercase tracking-wider block">
-                              Tailored High-Impact Phrasing (XYZ Formula)
-                            </span>
-                            <p className="text-[var(--text-primary)] font-medium leading-relaxed">
-                              {bullet.tailored}
-                            </p>
-                          </div>
-                        </div>
-
-                        {bullet.impactReason && (
-                          <div className="p-2.5 rounded-lg bg-[var(--accent)]/5 border border-[var(--accent)]/15 text-[11px] text-[var(--accent)] flex items-start gap-1.5">
-                            <Sparkles className="w-3.5 h-3.5 mt-0.5 shrink-0" />
-                            <span><strong>ATS & Hiring Impact:</strong> {bullet.impactReason}</span>
-                          </div>
-                        )}
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
-            {/* 3. Recommended Skills */}
+            {/* Recommended Target Role Skills (Identified in Job Description) */}
             {tailoredResult.recommendedSkills && tailoredResult.recommendedSkills.length > 0 && (
               <div className="p-4 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] space-y-3 text-xs">
                 <span className="font-bold text-[var(--text-primary)] block">

@@ -1,0 +1,48 @@
+name: CI & Vercel Quality Gate
+
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main, staging]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    name: Lint, Test & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type Check (TypeScript)
+        run: npx tsc --noEmit
+
+      - name: Code Quality (ESLint)
+        run: npm run lint
+
+      - name: AI Assistant Grounding Suite
+        run: npx tsx scripts/test_chat_assistant_grounding.mjs
+
+      - name: Career Platform Security Suite
+        run: npx tsx scripts/test_career_path_security.mjs
+
+      - name: Verify Production Build
+        run: npm run build
+        env:
+          NEXT_TELEMETRY_DISABLED: 1
+          NODE_ENV: production

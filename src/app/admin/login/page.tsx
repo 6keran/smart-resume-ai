@@ -139,6 +139,8 @@ function AdminLoginForm() {
                   if (error) setError(null);
                 }}
                 placeholder="admin@example.com"
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? "admin-login-error" : undefined}
                 className="w-full pl-10 pr-4 py-2.5 rounded-lg bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all"
                 autoComplete="email"
                 autoFocus
@@ -169,6 +171,8 @@ function AdminLoginForm() {
                   if (error) setError(null);
                 }}
                 placeholder="••••••••••••"
+                aria-invalid={Boolean(error)}
+                aria-describedby={error ? "admin-login-error" : undefined}
                 className="w-full pl-10 pr-11 py-2.5 rounded-lg bg-[var(--input-bg)] border border-[var(--border-color)] text-sm text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:ring-1 focus:ring-[var(--accent)] transition-all font-mono text-xs sm:text-sm"
                 autoComplete="current-password"
               />
@@ -211,6 +215,9 @@ function AdminLoginForm() {
           {/* Clean Invalid Credentials Error Message Below Form */}
           {error && (
             <div
+              id="admin-login-error"
+              role="alert"
+              aria-live="assertive"
               className="p-3.5 rounded-xl bg-rose-500/10 border border-rose-500/30 flex items-start gap-2.5 text-xs text-[var(--color-error)] mt-3"
             >
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />

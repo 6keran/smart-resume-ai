@@ -314,8 +314,10 @@ export default function UserProfilePage() {
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl self-start sm:self-auto shadow-xs">
+        <div role="tablist" aria-label="Profile sections" className="flex items-center gap-1.5 p-1 bg-[var(--bg-secondary)] border border-[var(--border-color)] rounded-xl self-start sm:self-auto shadow-xs">
           <button
+            role="tab"
+            aria-selected={activeTab === 'student'}
             type="button"
             onClick={() => setActiveTab('student')}
             className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 ${
@@ -328,6 +330,8 @@ export default function UserProfilePage() {
             <span>Student Career Profile</span>
           </button>
           <button
+            role="tab"
+            aria-selected={activeTab === 'account'}
             type="button"
             onClick={() => setActiveTab('account')}
             className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer flex items-center gap-2 ${

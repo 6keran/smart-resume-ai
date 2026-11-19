@@ -23,8 +23,36 @@ export async function proxy(request: NextRequest) {
     return NextResponse.next();
   }
 
-  // 2. Public Pages (Landing, Legal & Compliance, FAQ, Public ATS Analyzer and Dedicated ATS Score accessible without authentication)
-  const isPublicPage = pathname === '/' || pathname === '/privacy' || pathname === '/terms' || pathname === '/faq' || pathname === '/analyzer' || pathname === '/ats-score';
+  // 1b. Defense-in-depth CSRF: Verify Origin on mutating requests
+  const origin = request.headers.get('origin');
+  if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(request.method) && origin) {
+    try {
+      const originUrl = new URL(origin);
+      const host = request.headers.get('host') || request.nextUrl.host;
+      const isAllowedDev = process.env.NODE_ENV !== 'production' && (originUrl.hostname === 'localhost' || originUrl.hostname === '127.0.0.1');
+      if (originUrl.host !== host && !isAllowedDev) {
+        return NextResponse.json(
+          { error: 'Forbidden. Cross-origin request rejected.' },
+          { status: 403 }
+        );
+      }
+    } catch {
+      return NextResponse.json(
+        { error: 'Forbidden. Invalid request origin.' },
+        { status: 403 }
+      );
+    }
+  }
+
+  // 2. Public Pages (Landing, Legal & Compliance, FAQ, Public ATS Analyzer, Dedicated ATS Score, and Public Certificate Verification)
+  const isPublicPage =
+    pathname === '/' ||
+    pathname === '/privacy' ||
+    pathname === '/terms' ||
+    pathname === '/faq' ||
+    pathname === '/analyzer' ||
+    pathname === '/ats-score' ||
+    pathname.startsWith('/skills/certificate/');
   if (isPublicPage) {
     return NextResponse.next();
   }
@@ -39,6 +67,7 @@ export async function proxy(request: NextRequest) {
     '/api/auth/me',
     '/api/admin/auth/login',
     '/api/admin/auth/logout',
+    '/api/certificates',
   ]);
   const normalizedPath = pathname.endsWith('/') && pathname.length > 1 ? pathname.slice(0, -1) : pathname;
   const isPublicAuthApi = PUBLIC_AUTH_APIS.has(normalizedPath);

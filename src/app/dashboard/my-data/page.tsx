@@ -15,6 +15,7 @@ import {
   RefreshCw,
   ShieldAlert,
   Trash2,
+  Sparkles,
 } from 'lucide-react';
 import { JobSearchAutocomplete } from '@/components/jobs/JobSearchAutocomplete';
 
@@ -113,6 +114,47 @@ export default function MyCareerDataPage() {
     }
     load();
   }, [router]);
+
+  const handleExportProfileData = () => {
+    if (!snapshot) return;
+    const profilePayload = {
+      exportedAt: new Date().toISOString(),
+      account: snapshot.account,
+      targetRole: snapshot.targetRole,
+      preferences: snapshot.preferences,
+      profile: snapshot.profile,
+    };
+    const blob = new Blob([JSON.stringify(profilePayload, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'smart-resume-profile.json';
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleExportResumeData = async () => {
+    try {
+      const res = await fetch('/api/user/resumes?active=true');
+      const data = await res.json().catch(() => ({}));
+      const resume = data.resume || {};
+      const resumePayload = {
+        exportedAt: new Date().toISOString(),
+        resumeId: resume.id,
+        filename: resume.filename,
+        resumeData: resume.resumeData || resume.resume_data,
+      };
+      const blob = new Blob([JSON.stringify(resumePayload, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `${(resume.filename || 'resume').replace(/\s+/g, '_')}_data.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch {
+      alert('Unable to export active resume data at this time.');
+    }
+  };
 
   const handleSaveProfile = async (clearGoal = false) => {
     setIsSaving(true);
@@ -237,22 +279,59 @@ export default function MyCareerDataPage() {
               Inspect, confirm, edit, export, or clear the goal, profile, and skill records powering your personalized path.
             </p>
           </div>
-          <div className="flex flex-wrap items-center gap-2.5 shrink-0">
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <Link
               href="/onboarding"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-xs font-semibold text-[#20242B] hover:border-[#3157C8]"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-xs font-semibold text-[#20242B] hover:border-[#3157C8]"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Re-run Setup</span>
             </Link>
+            <button
+              type="button"
+              onClick={handleExportProfileData}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E5E8ED] bg-[#F6F7F9] hover:bg-white text-xs font-semibold text-[#20242B] hover:border-[#3157C8] cursor-pointer"
+              title="Export academic profile, goals and preferences"
+            >
+              <Download className="w-3.5 h-3.5 text-[#626B78]" />
+              <span>Export Profile</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleExportResumeData}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E5E8ED] bg-[#F6F7F9] hover:bg-white text-xs font-semibold text-[#20242B] hover:border-[#3157C8] cursor-pointer"
+              title="Export active resume JSON draft"
+            >
+              <Download className="w-3.5 h-3.5 text-[#626B78]" />
+              <span>Export Resume</span>
+            </button>
             <a
               href="/api/user/my-data/export"
               download="smart-resume-career-data.json"
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg bg-[#3157C8] hover:bg-[#2546A8] text-white text-xs font-semibold"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#3157C8] hover:bg-[#2546A8] text-white text-xs font-semibold"
+              title="Export full consolidated career snapshot"
             >
               <Download className="w-3.5 h-3.5" />
-              <span>Export JSON</span>
+              <span>Export Career Data</span>
             </a>
+          </div>
+        </div>
+
+        {/* AI Transparency & Control Notice */}
+        <div className="p-4 rounded-xl bg-indigo-50/70 border border-indigo-200/80 text-xs text-indigo-950 flex items-start gap-3 shadow-xs">
+          <div className="w-7 h-7 rounded-lg bg-indigo-600 text-white flex items-center justify-center shrink-0 mt-0.5">
+            <Sparkles className="w-4 h-4" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-bold text-[13px] text-indigo-900">
+              AI Transparency &amp; Data Control Notice
+            </h3>
+            <p className="leading-relaxed text-[12px] text-indigo-800">
+              Suggestions are generated from your profile, resume, skills, projects, career goals, and saved jobs.
+            </p>
+            <p className="text-[11px] text-indigo-700">
+              Your information is exclusively used to provide explainable recommendations without hallucinating false credentials or skills. You maintain complete ownership of your career data.
+            </p>
           </div>
         </div>
 

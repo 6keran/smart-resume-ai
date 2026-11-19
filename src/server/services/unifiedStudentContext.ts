@@ -56,19 +56,30 @@ export interface UnifiedCareerGoalContext {
   skillsSummary: string | null;
 }
 
+export interface UnifiedCareerInterestsContext {
+  targetIndustry: string | null;
+  preferredLocations: string[];
+  targetSalary: string | null;
+  targetWorkType: 'internship' | 'full_time' | 'both' | null;
+  primaryInterests: string[];
+}
+
 export interface UnifiedSkillItem {
   name: string;
-  status: 'verified' | 'claimed' | 'inferred';
+  status: 'verified' | 'confirmed' | 'claimed' | 'inferred';
   score?: number;
   certificateId?: string;
   verifiedDate?: string;
+  confirmedDate?: string;
   claimedDate?: string;
+  source?: string;
   inferredSource?: 'resume_experience' | 'resume_project' | 'skills_section' | 'guided_project';
 }
 
 export interface UnifiedSkillsContext {
   verified: Array<{ name: string; score: number; certificateId?: string; verifiedDate?: string }>;
-  claimed: Array<{ name: string; claimedDate?: string }>;
+  confirmed: Array<{ name: string; confirmedDate?: string; source?: string }>;
+  claimed: Array<{ name: string; claimedDate?: string; source?: string }>;
   inferred: Array<{ name: string; source: 'resume_experience' | 'resume_project' | 'skills_section' | 'guided_project' }>;
   needingAssessment: string[];
   missingCritical: string[];
@@ -115,8 +126,13 @@ export interface UnifiedSavedJobItem {
   id: string;
   jobId?: string | null;
   jobTitle: string;
+  title?: string;
   company: string;
   location?: string | null;
+  source?: string | null;
+  status?: string | null;
+  descriptionSnippet?: string | null;
+  salary?: string | null;
   matchScore?: number | null;
   savedAt: string;
 }
@@ -126,9 +142,17 @@ export interface UnifiedSavedJobsContext {
   jobs: UnifiedSavedJobItem[];
 }
 
+export interface UnifiedChatMessageItem {
+  role: 'user' | 'assistant' | 'model' | 'system';
+  content: string;
+  timestamp?: string;
+}
+
 export interface UnifiedChatHistoryContext {
   lastActiveAt?: string | null;
   activeWorkflow?: string | null;
+  recentMessages?: UnifiedChatMessageItem[];
+  totalTurns?: number;
 }
 
 export interface UnifiedResumeContext {
@@ -212,6 +236,7 @@ export interface UnifiedStudentContext {
   email: string | null;
   academic: UnifiedAcademicContext | null;
   careerGoal: UnifiedCareerGoalContext;
+  careerInterests: UnifiedCareerInterestsContext;
   skills: UnifiedSkillsContext;
   experience: UnifiedExperienceContext;
   resume: UnifiedResumeContext;
@@ -270,7 +295,9 @@ export async function buildUnifiedStudentContext(userId: string): Promise<Unifie
     interviewSessions,
     roadmapRow,
     assessmentRows,
-    jobMatchRows,
+    savedJobRows,
+    savedJobCountRow,
+    fallbackJobMatchRows,
   ] = await Promise.all([
     // Basic user info
     Promise.resolve(
@@ -310,7 +337,19 @@ export async function buildUnifiedStudentContext(userId: string): Promise<Unifie
         'SELECT id, skill, score, total_questions, passed, created_at FROM assessments WHERE user_id = ? ORDER BY created_at DESC LIMIT 10'
       ).all(userId) as any[]
     ).catch(() => []),
-    // Job matches / saved jobs
+    // Tracked & Saved jobs from job_applications
+    Promise.resolve(
+      db.prepare(
+        "SELECT id, job_id, job_title, company, location, source, status, description_snippet, salary, created_at FROM job_applications WHERE user_id = ? AND status IN ('Saved', 'Ready to apply', 'Application pending', 'Applied', 'Interview') ORDER BY created_at DESC LIMIT 10"
+      ).all(userId) as any[]
+    ).catch(() => []),
+    // Real total count of tracked/saved jobs
+    Promise.resolve(
+      db.prepare(
+        "SELECT COUNT(*) as count FROM job_applications WHERE user_id = ? AND status IN ('Saved', 'Ready to apply', 'Application pending', 'Applied', 'Interview')"
+      ).get(userId) as any
+    ).catch(() => ({ count: 0 })),
+    // Matched jobs from job_matches (used for matchScore and fallback)
     Promise.resolve(
       db.prepare(
         'SELECT id, job_id, job_title, company, match_score, created_at FROM job_matches WHERE user_id = ? ORDER BY created_at DESC LIMIT 10'
@@ -337,6 +376,14 @@ export async function buildUnifiedStudentContext(userId: string): Promise<Unifie
     skillsSummary: careerGoal?.skills_summary || null,
   };
 
+  const careerInterestsContext: UnifiedCareerInterestsContext = {
+    targetIndustry: careerGoal?.target_industry || null,
+    preferredLocations: studentProfile?.preferredLocations || (careerGoal?.preferred_location ? [careerGoal.preferred_location] : []),
+    targetSalary: careerGoal?.target_salary || null,
+    targetWorkType: studentProfile?.targetWorkType || null,
+    primaryInterests: studentProfile?.coursework || [],
+  };
+
   // 3. Normalize Academic Context
   let academicContext: UnifiedAcademicContext | null = null;
   if (studentProfile) {
@@ -356,6 +403,7 @@ export async function buildUnifiedStudentContext(userId: string): Promise<Unifie
 
   // 4. Skills Partitioning & Inference
   const verifiedList: UnifiedSkillsContext['verified'] = [];
+  const confirmedList: UnifiedSkillsContext['confirmed'] = [];
   const claimedList: UnifiedSkillsContext['claimed'] = [];
   const inferredList: UnifiedSkillsContext['inferred'] = [];
   const inferredSet = new Set<string>();
@@ -368,10 +416,17 @@ export async function buildUnifiedStudentContext(userId: string): Promise<Unifie
         certificateId: s.certificateId,
         verifiedDate: s.verifiedDate,
       });
+    } else if (s.status === 'confirmed' || (s.status === 'claimed' && s.confirmedAt)) {
+      confirmedList.push({
+        name: s.name,
+        confirmedDate: s.confirmedAt,
+        source: s.source,
+      });
     } else if (s.status === 'claimed') {
       claimedList.push({
         name: s.name,
         claimedDate: s.claimedDate,
+        source: s.source,
       });
     }
   }
@@ -441,7 +496,7 @@ export async function buildUnifiedStudentContext(userId: string): Promise<Unifie
           inferredList.push({ name: term, source: 'resume_experience' });
         }
       }
-    } catch {}
+    } catch { }
   }
 
   // Infer skills from documented academic projects
@@ -474,12 +529,16 @@ export async function buildUnifiedStudentContext(userId: string): Promise<Unifie
 
   const allKnownSkillNames = new Set([
     ...verifiedList.map((v) => v.name.toLowerCase()),
+    ...confirmedList.map((c) => c.name.toLowerCase()),
     ...claimedList.map((c) => c.name.toLowerCase()),
     ...inferredList.map((i) => i.name.toLowerCase()),
   ]);
   const verifiedNames = new Set(verifiedList.map((v) => v.name.toLowerCase()));
 
   const needingAssessmentSet = new Set<string>();
+  for (const c of confirmedList) {
+    if (!verifiedNames.has(c.name.toLowerCase())) needingAssessmentSet.add(c.name);
+  }
   for (const c of claimedList) {
     if (!verifiedNames.has(c.name.toLowerCase())) needingAssessmentSet.add(c.name);
   }
@@ -493,6 +552,7 @@ export async function buildUnifiedStudentContext(userId: string): Promise<Unifie
 
   const skillsContext: UnifiedSkillsContext = {
     verified: verifiedList,
+    confirmed: confirmedList,
     claimed: claimedList,
     inferred: inferredList,
     needingAssessment: Array.from(needingAssessmentSet),
@@ -535,19 +595,51 @@ export async function buildUnifiedStudentContext(userId: string): Promise<Unifie
     recentAssessments: mappedAssessments.slice(0, 5),
   };
 
-  // 4e. Saved / Matched Jobs Synthesis
-  const mappedSavedJobs: UnifiedSavedJobItem[] = (jobMatchRows || []).map((jm) => ({
-    id: String(jm.id),
-    jobId: jm.job_id || null,
-    jobTitle: jm.job_title || 'Software Role',
-    company: jm.company || 'Company',
-    location: null,
-    matchScore: typeof jm.match_score === 'number' ? Math.round(jm.match_score) : null,
-    savedAt: jm.created_at || '',
-  }));
+  // 4e. Tracked & Saved Jobs Synthesis
+  // Build a lookup map of match scores from job_matches
+  const matchScoreMap = new Map<string, number>();
+  (fallbackJobMatchRows || []).forEach((m: any) => {
+    if (m.job_id && typeof m.match_score === 'number') {
+      matchScoreMap.set(String(m.job_id), m.match_score);
+    }
+  });
+
+  let mappedSavedJobs: UnifiedSavedJobItem[] = [];
+
+  if (savedJobRows && savedJobRows.length > 0) {
+    mappedSavedJobs = savedJobRows.map((sj: any) => ({
+      id: String(sj.id),
+      jobId: sj.job_id || null,
+      jobTitle: sj.job_title || 'Target Role',
+      title: sj.job_title || 'Target Role',
+      company: sj.company || 'Company',
+      location: sj.location || null,
+      source: sj.source || 'Manual',
+      status: sj.status || 'Saved',
+      descriptionSnippet: typeof sj.description_snippet === 'string' ? sj.description_snippet.trim() : null,
+      salary: sj.salary || null,
+      matchScore: sj.job_id && matchScoreMap.has(String(sj.job_id)) ? matchScoreMap.get(String(sj.job_id))! : null,
+      savedAt: sj.created_at || '',
+    }));
+  } else if (fallbackJobMatchRows && fallbackJobMatchRows.length > 0) {
+    mappedSavedJobs = fallbackJobMatchRows.map((jm: any) => ({
+      id: String(jm.id),
+      jobId: jm.job_id || null,
+      jobTitle: jm.job_title || 'Target Role',
+      title: jm.job_title || 'Target Role',
+      company: jm.company || 'Company',
+      location: null,
+      source: 'Matched',
+      status: 'Saved',
+      descriptionSnippet: null,
+      salary: null,
+      matchScore: typeof jm.match_score === 'number' ? jm.match_score : null,
+      savedAt: jm.created_at || '',
+    }));
+  }
 
   const savedJobsContext: UnifiedSavedJobsContext = {
-    totalCount: mappedSavedJobs.length,
+    totalCount: Number(savedJobCountRow?.count) > 0 ? Number(savedJobCountRow.count) : mappedSavedJobs.length,
     jobs: mappedSavedJobs,
   };
 
@@ -615,7 +707,7 @@ export async function buildUnifiedStudentContext(userId: string): Promise<Unifie
       try {
         const parsed = JSON.parse(raw);
         if (Array.isArray(parsed)) return parsed;
-      } catch {}
+      } catch { }
       return raw.split(',').map((s: string) => s.trim()).filter(Boolean);
     }
     return [];
@@ -645,8 +737,8 @@ export async function buildUnifiedStudentContext(userId: string): Promise<Unifie
     const milestoneProgress = typeof gp.progressPercent === 'number'
       ? gp.progressPercent
       : totalMilestones > 0
-      ? Math.round((completedMilestones / totalMilestones) * 100)
-      : 0;
+        ? Math.round((completedMilestones / totalMilestones) * 100)
+        : 0;
 
     return {
       id: gp.id,
@@ -815,14 +907,14 @@ export async function buildUnifiedStudentContext(userId: string): Promise<Unifie
     studentProfile,
     latestAtsAnalysis: atsRow
       ? {
-          atsScore: resumeContext.latestAtsScore || 0,
-          keywordScore: resumeContext.keywordScore || 0,
-          formattingScore: resumeContext.formattingScore || 0,
-          sectionScore: resumeContext.sectionScore || 0,
-          detectedKeywords: resumeContext.detectedKeywords,
-          missingKeywords: resumeContext.missingKeywords,
-          createdAt: resumeContext.analyzedAt || undefined,
-        }
+        atsScore: resumeContext.latestAtsScore || 0,
+        keywordScore: resumeContext.keywordScore || 0,
+        formattingScore: resumeContext.formattingScore || 0,
+        sectionScore: resumeContext.sectionScore || 0,
+        detectedKeywords: resumeContext.detectedKeywords,
+        missingKeywords: resumeContext.missingKeywords,
+        createdAt: resumeContext.analyzedAt || undefined,
+      }
       : null,
     recentApplications: mappedApplications.slice(0, 5),
     skillGaps: {
@@ -861,6 +953,7 @@ export async function buildUnifiedStudentContext(userId: string): Promise<Unifie
     email: userEmail,
     academic: academicContext,
     careerGoal: careerGoalContext,
+    careerInterests: careerInterestsContext,
     skills: skillsContext,
     experience: experienceContext,
     resume: resumeContext,
@@ -907,14 +1000,14 @@ export function mapUnifiedToCareerProfileSummary(context: UnifiedStudentContext)
   const readinessPercent =
     roleSpec.criticalSkills.length > 0
       ? Math.min(
-          100,
-          Math.round((criticalHits / roleSpec.criticalSkills.length) * 85 + (context.skills.verified.length > 0 ? 15 : 0))
-        )
+        100,
+        Math.round((criticalHits / roleSpec.criticalSkills.length) * 85 + (context.skills.verified.length > 0 ? 15 : 0))
+      )
       : context.careerGoal.targetRole
-      ? context.skills.verified.length > 0
-        ? 55
-        : 25
-      : 0;
+        ? context.skills.verified.length > 0
+          ? 55
+          : 25
+        : 0;
 
   return {
     userId: context.userId,
@@ -947,14 +1040,14 @@ export function mapUnifiedToCareerProfileSummary(context: UnifiedStudentContext)
     studentProfile: context.studentProfile,
     latestAtsAnalysis: context.resume.hasResume && context.resume.latestAtsScore !== null
       ? {
-          atsScore: context.resume.latestAtsScore,
-          keywordScore: context.resume.keywordScore || 0,
-          formattingScore: context.resume.formattingScore || 0,
-          sectionScore: context.resume.sectionScore || 0,
-          detectedKeywords: context.resume.detectedKeywords,
-          missingKeywords: context.resume.missingKeywords,
-          createdAt: context.resume.analyzedAt || undefined,
-        }
+        atsScore: context.resume.latestAtsScore,
+        keywordScore: context.resume.keywordScore || 0,
+        formattingScore: context.resume.formattingScore || 0,
+        sectionScore: context.resume.sectionScore || 0,
+        detectedKeywords: context.resume.detectedKeywords,
+        missingKeywords: context.resume.missingKeywords,
+        createdAt: context.resume.analyzedAt || undefined,
+      }
       : null,
     recentApplications: context.applications.recentApplications.slice(0, 5),
     skillGaps: {
@@ -995,12 +1088,13 @@ export async function recordStudentReadinessSnapshot(
  */
 export function buildUnifiedSystemGrounding(context: UnifiedStudentContext): string {
   const vSkills = context.skills.verified.map((v) => `${v.name} (${v.score}%)`).join(', ');
+  const confSkills = (context.skills.confirmed || []).map((c) => `${c.name} (confirmed)`).join(', ');
   const cSkills = context.skills.claimed.map((c) => c.name).join(', ');
   const iSkills = context.skills.inferred.map((i) => i.name).join(', ');
 
   let grounding = `AUTHENTIC AUTHORIZED STUDENT CONTEXT:
 - Student Name: ${context.name}
-- Target Career Role: ${context.careerGoal.targetRole}
+- Target Career Role: ${context.careerGoal.targetRole || 'Goal not set'}
 - Experience Level: ${context.careerGoal.experienceLevel}
 - Overall Career Readiness Score: ${context.readiness.overallScore}/100 (${context.readiness.overallLevel})
   • Technical Competency: ${context.readiness.quadrants.technicalCompetency.score}% (${context.readiness.quadrants.technicalCompetency.level})
@@ -1008,6 +1102,7 @@ export function buildUnifiedSystemGrounding(context: UnifiedStudentContext): str
   • Resume ATS Alignment: ${context.readiness.quadrants.resumeAts.score}% (${context.readiness.quadrants.resumeAts.level})
   • Interview Fluency: ${context.readiness.quadrants.interviewFluency.score}% (${context.readiness.quadrants.interviewFluency.level})
 - Verified Skills: ${vSkills || 'None completed yet'}
+- Confirmed Skills: ${confSkills || 'None'}
 - Claimed Skills: ${cSkills || 'None'}
 - Inferred Skills: ${iSkills || 'None'}
 - Missing Critical Role Skills: ${context.skills.missingCritical.join(', ') || 'All critical skills met'}
@@ -1040,7 +1135,14 @@ export function buildUnifiedSystemGrounding(context: UnifiedStudentContext): str
   }
 
   if (context.savedJobs.totalCount > 0) {
-    grounding += `\n- Target Jobs Tracked: ${context.savedJobs.totalCount} saved/matched opportunities`;
+    grounding += `\n- Target Jobs Tracked: (Total: ${context.savedJobs.totalCount}):`;
+    context.savedJobs.jobs.slice(0, 5).forEach((j, idx) => {
+      grounding += `\n  ${idx + 1}. ${j.jobTitle} at ${j.company} [Status: ${j.status || 'Saved'}${j.source ? `, Source: ${j.source}` : ''}]`;
+      if (idx < 3 && j.descriptionSnippet) {
+        const cleanSnippet = j.descriptionSnippet.replace(/</g, '&lt;').replace(/>/g, '&gt;').slice(0, 300);
+        grounding += `\n     <untrusted_job_description>\n     ${cleanSnippet}\n     </untrusted_job_description>`;
+      }
+    });
   }
 
   if (context.projects.totalCount > 0) {

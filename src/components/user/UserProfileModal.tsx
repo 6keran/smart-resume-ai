@@ -7,7 +7,7 @@ import { scaleIn, overlay } from '@/lib/motion';
 import { useUserProfile } from './UserContext';
 
 export function UserProfileModal() {
-  const { user, isModalOpen, saveProfile } = useUserProfile();
+  const { user, isModalOpen, saveProfile, closeModal } = useUserProfile();
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -24,11 +24,20 @@ export function UserProfileModal() {
     if (isModalOpen) {
       const prev = document.body.style.overflow;
       document.body.style.overflow = 'hidden';
+
+      const handleKeyDown = (e: KeyboardEvent) => {
+        if (e.key === 'Escape') {
+          closeModal?.();
+        }
+      };
+      window.addEventListener('keydown', handleKeyDown);
+
       return () => {
         document.body.style.overflow = prev;
+        window.removeEventListener('keydown', handleKeyDown);
       };
     }
-  }, [isModalOpen]);
+  }, [isModalOpen, closeModal]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -68,6 +77,9 @@ export function UserProfileModal() {
 
           {/* Modal Card */}
           <motion.div
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="user-profile-modal-title"
             variants={scaleIn}
             initial="hidden"
             animate="visible"
@@ -84,7 +96,7 @@ export function UserProfileModal() {
               <div className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent)]">
                 Welcome to Smart Resume AI
               </div>
-              <h2 className="text-xl font-bold text-[var(--text-primary)]">
+              <h2 id="user-profile-modal-title" className="text-xl font-bold text-[var(--text-primary)]">
                 Let&apos;s get your profile set up
               </h2>
             </div>
@@ -97,15 +109,18 @@ export function UserProfileModal() {
           {/* Form */}
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
-              <label className="block text-xs font-semibold text-[var(--text-primary)] mb-1.5">
+              <label htmlFor="user-profile-name" className="block text-xs font-semibold text-[var(--text-primary)] mb-1.5">
                 Full Name <span className="text-rose-400">*</span>
               </label>
               <div className="relative">
                 <input
+                  id="user-profile-name"
                   type="text"
                   required
                   autoFocus
                   value={name}
+                  aria-invalid={Boolean(error)}
+                  aria-describedby={error ? "user-profile-error" : undefined}
                   onChange={(e) => {
                     setName(e.target.value);
                     if (error) setError(null);
@@ -118,10 +133,11 @@ export function UserProfileModal() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">
+              <label htmlFor="user-profile-email" className="block text-xs font-semibold text-[var(--text-secondary)] mb-1.5">
                 Email Address <span className="text-[10px] text-[var(--text-secondary)]/60 font-normal">(Optional)</span>
               </label>
               <input
+                id="user-profile-email"
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -133,6 +149,9 @@ export function UserProfileModal() {
             {/* Error Message */}
             {error && (
               <motion.div
+                id="user-profile-error"
+                role="alert"
+                aria-live="assertive"
                 initial={{ opacity: 0, y: -4 }}
                 animate={{ opacity: 1, y: 0 }}
                 className="p-3 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-start gap-2 text-rose-400 text-xs"

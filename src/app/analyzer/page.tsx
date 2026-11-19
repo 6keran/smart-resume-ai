@@ -40,6 +40,7 @@ import { useResume, isImprovementAppliedToResume } from '@/context/ResumeContext
 import { ResumeValidationResult } from '@/types/resume';
 import { ScoreRing } from '@/components/ui/ScoreRing';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { AtsExplainabilityBreakdown } from '@/components/ats/AtsExplainabilityBreakdown';
 
 export type AnalyzerState =
   | 'IDLE'
@@ -1179,6 +1180,9 @@ export default function ResumeAnalyzerPage() {
               </div>
             </div>
           </div>
+
+          {/* ATS EXPLAINABILITY & CATEGORY BREAKDOWN */}
+          <AtsExplainabilityBreakdown analysis={analysisResult} />
 
           {/* Area A & Area B: Matched Skills and Recommended Keywords */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">

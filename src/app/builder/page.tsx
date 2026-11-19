@@ -62,6 +62,7 @@ import { isClientDraftResumeId, ResumeData } from '@/types/resume';
 import { GlassCard } from '@/components/ui/GlassCard';
 import { A4ResumeDocument } from '@/components/builder/A4ResumeDocument';
 import { TemplateCard } from '@/components/builder/TemplateCard';
+import { AtsFriendlyPreview } from '@/components/builder/AtsFriendlyPreview';
 
 function ResumeBuilderContent() {
   const {
@@ -92,6 +93,7 @@ function ResumeBuilderContent() {
     isRehydrating,
     saveState,
     saveError,
+    lastSavedAt,
     saveActiveResume,
     userResumes,
     isLoadingUserResumes,
@@ -146,7 +148,35 @@ function ResumeBuilderContent() {
   const [isDraggingUpload, setIsDraggingUpload] = useState<boolean>(false);
 
   const [currentStep, setCurrentStep] = useState<number>(1);
+  const [previewTab, setPreviewTab] = useState<'design' | 'ats' | 'text'>('design');
+  const [relativeSavedText, setRelativeSavedText] = useState<string>('Saved');
   const [zoom, setZoom] = useState<number>(0.60);
+
+  useEffect(() => {
+    if (!lastSavedAt) {
+      setRelativeSavedText('Saved');
+      return;
+    }
+
+    const updateRelative = () => {
+      const diffMs = Date.now() - new Date(lastSavedAt).getTime();
+      const diffSec = Math.floor(diffMs / 1000);
+      if (diffSec < 5) {
+        setRelativeSavedText('Saved');
+      } else if (diffSec < 60) {
+        setRelativeSavedText(`Saved ${diffSec}s ago`);
+      } else if (diffSec < 3600) {
+        const mins = Math.floor(diffSec / 60);
+        setRelativeSavedText(`Saved ${mins}m ago`);
+      } else {
+        setRelativeSavedText('Saved');
+      }
+    };
+
+    updateRelative();
+    const interval = setInterval(updateRelative, 5000);
+    return () => clearInterval(interval);
+  }, [lastSavedAt]);
   const [defaultFitZoom, setDefaultFitZoom] = useState<number>(0.60);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
   const [globalBanner, setGlobalBanner] = useState<string | null>(null);
@@ -160,11 +190,20 @@ function ResumeBuilderContent() {
     improved: string;
     reasoning: string;
   } | null>(null);
+  const [showSummaryCompare, setShowSummaryCompare] = useState<boolean>(false);
   const [isImprovingObjective, setIsImprovingObjective] = useState<boolean>(false);
   const [objectiveAiSuggestion, setObjectiveAiSuggestion] = useState<{
     improved: string;
     reasoning: string;
   } | null>(null);
+  const [showObjectiveCompare, setShowObjectiveCompare] = useState<boolean>(false);
+  const [bulletAiSuggestion, setBulletAiSuggestion] = useState<{
+    expIndex: number;
+    original: string;
+    improvedList: string[];
+    reasoning?: string;
+  } | null>(null);
+  const [showBulletCompare, setShowBulletCompare] = useState<boolean>(false);
   const [improvingExpIdx, setImprovingExpIdx] = useState<number | null>(null);
   const [improvingProjIdx, setImprovingProjIdx] = useState<number | null>(null);
   const [tailorSuccessToast, setTailorSuccessToast] = useState<string | null>(null);
@@ -182,6 +221,7 @@ function ResumeBuilderContent() {
       degree: string;
       fieldOfStudy: string;
       graduationYear: number;
+      projects?: any[];
     } | null;
     skills: Array<{
       id: string;
@@ -311,6 +351,28 @@ function ResumeBuilderContent() {
           });
           appliedSections += 1;
         }
+      }
+    }
+
+    if (importProfileData.profile?.projects && Array.isArray(importProfileData.profile.projects) && importProfileData.profile.projects.length > 0) {
+      const existingTitles = new Set(resumeData.projects.map((p) => (p.title || '').trim().toLowerCase()));
+      const toImport = importProfileData.profile.projects
+        .filter((p: any) => p.title && (mode === 'fill_empty' ? resumeData.projects.length === 0 : !existingTitles.has(p.title.trim().toLowerCase())))
+        .map((p: any, idx: number) => ({
+          id: `proj_${Date.now()}_${idx}`,
+          title: p.title || '',
+          role: p.role || 'Lead Developer',
+          objective: '',
+          technologies: Array.isArray(p.techStack) ? p.techStack : [],
+          description: p.description || '',
+          outcome: '',
+          bullets: Array.isArray(p.highlights) && p.highlights.length > 0 ? p.highlights : [p.description || ''].filter(Boolean),
+          link: p.repoUrl || p.liveUrl || '',
+        }));
+
+      if (toImport.length > 0) {
+        updateProjects(mode === 'fill_empty' ? toImport : [...resumeData.projects, ...toImport]);
+        appliedSections += 1;
       }
     }
 
@@ -725,14 +787,18 @@ function ResumeBuilderContent() {
       });
       if (res.ok) {
         const data = await res.json();
-        const updated = [...resumeData.experience];
         const improvedList = (data.improvedContent || '')
           .split('\n')
           .map((b: string) => b.trim())
           .filter(Boolean);
-        updated[expIndex].bulletPoints = improvedList.length > 0 ? improvedList : [data.improvedContent];
-        updateExperience(updated);
-        triggerToast('Refined bullet phrasing with professional action verbs while preserving your experience.');
+        setBulletAiSuggestion({
+          expIndex,
+          original: bulletToImprove,
+          improvedList: improvedList.length > 0 ? improvedList : [data.improvedContent],
+          reasoning: data.reasoning || 'Elevated with strong leadership verbs and quantified impact metrics.',
+        });
+        setShowBulletCompare(true);
+        triggerToast('AI suggestion ready! Review and Accept, Reject, or Compare.');
       } else {
         triggerToast('Unable to improve bullet points at this time.');
       }
@@ -1543,7 +1609,7 @@ function ResumeBuilderContent() {
               ) : (
                 <>
                   <Check className="w-3 h-3 text-emerald-500" />
-                  <span className="text-[10px] text-emerald-600 font-medium">Saved</span>
+                  <span className="text-[10px] text-emerald-600 font-medium">{relativeSavedText}</span>
                 </>
               )}
             </div>
@@ -1582,6 +1648,20 @@ function ResumeBuilderContent() {
             >
               <User className="w-3.5 h-3.5 text-[#3157C8]" />
               <span className="hidden sm:inline">Import Profile</span>
+            </button>
+
+            {/* 9. Accessible PDF Export Button */}
+            <button
+              id="toolbar-download-pdf"
+              type="button"
+              onClick={handleDownloadPdf}
+              disabled={isExporting}
+              aria-label="Download PDF resume"
+              className="btn-primary btn-sm inline-flex items-center gap-1.5 text-xs font-semibold cursor-pointer shadow-xs"
+              title="Download or print your PDF resume"
+            >
+              <Download className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">Export PDF</span>
             </button>
           </div>
         </div>
@@ -1647,6 +1727,7 @@ function ResumeBuilderContent() {
                     <button
                       id={`sidebar-step-${st.number}`}
                       type="button"
+                      aria-current={isSelected ? 'step' : undefined}
                       onClick={() => handleStepClick(st.number)}
                       className="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer"
                     >
@@ -1735,6 +1816,26 @@ function ResumeBuilderContent() {
                   Required fields (*) missing
                 </span>
               )}
+            </div>
+
+            {/* Mobile Section Jump Selector (small viewports only) */}
+            <div className="lg:hidden block pt-1 pb-1">
+              <label htmlFor="mobile-step-select" className="block text-xs font-medium text-[var(--text-secondary)] mb-1.5">
+                Jump to Section
+              </label>
+              <select
+                id="mobile-step-select"
+                value={currentStep}
+                onChange={(e) => handleStepClick(Number(e.target.value))}
+                className="w-full bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-primary)] text-sm rounded-xl px-3 py-2.5 outline-none focus:border-[var(--accent)] transition-colors min-h-[44px]"
+                aria-label="Select resume section to jump to"
+              >
+                {steps.map((st) => (
+                  <option key={st.number} value={st.number}>
+                    {st.number}. {st.label} {isSectionComplete(st.number) ? '✓' : ''}
+                  </option>
+                ))}
+              </select>
             </div>
 
             {/* Global Validation Banner */}
@@ -2020,30 +2121,74 @@ function ResumeBuilderContent() {
                         </span>
                         <button
                           type="button"
-                          onClick={() => setSummaryAiSuggestion(null)}
+                          onClick={() => {
+                            setSummaryAiSuggestion(null);
+                            setShowSummaryCompare(false);
+                          }}
                           className="text-[var(--text-secondary)] hover:text-rose-500 cursor-pointer"
                         >
                           <X className="w-3.5 h-3.5" />
                         </button>
                       </div>
-                      <p className="text-[var(--text-primary)] font-medium leading-relaxed">
-                        {summaryAiSuggestion.improved}
-                      </p>
+
+                      {showSummaryCompare && (
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-2.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)]">
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block">Current Summary</span>
+                            <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed">
+                              {resumeData.summary || 'No summary drafted yet.'}
+                            </p>
+                          </div>
+                          <div className="space-y-1">
+                            <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">AI Polished Recommendation</span>
+                            <p className="text-[11px] text-[var(--text-primary)] font-medium leading-relaxed">
+                              {summaryAiSuggestion.improved}
+                            </p>
+                          </div>
+                        </div>
+                      )}
+
+                      {!showSummaryCompare && (
+                        <p className="text-[var(--text-primary)] font-medium leading-relaxed">
+                          {summaryAiSuggestion.improved}
+                        </p>
+                      )}
+
                       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-[var(--accent)]/20">
                         <span className="text-[10px] text-[var(--text-secondary)]">
                           {summaryAiSuggestion.reasoning}
                         </span>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            updateSummary(summaryAiSuggestion.improved);
-                            setSummaryAiSuggestion(null);
-                            triggerToast('Applied polished summary.');
-                          }}
-                          className="px-3 py-1 rounded-md bg-[var(--accent)] text-white font-semibold text-xs hover:bg-[var(--accent-hover)] transition-all cursor-pointer shrink-0"
-                        >
-                          Accept &amp; Replace
-                        </button>
+                        <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                          <button
+                            type="button"
+                            onClick={() => setShowSummaryCompare(!showSummaryCompare)}
+                            className="px-2.5 py-1 rounded-md border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] font-semibold text-xs hover:border-[var(--accent)] transition-all cursor-pointer"
+                          >
+                            {showSummaryCompare ? 'Hide Comparison' : 'Compare'}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSummaryAiSuggestion(null);
+                              setShowSummaryCompare(false);
+                            }}
+                            className="px-2.5 py-1 rounded-md border border-rose-200 bg-rose-50 text-rose-700 font-semibold text-xs hover:bg-rose-100 transition-all cursor-pointer"
+                          >
+                            Reject
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              updateSummary(summaryAiSuggestion.improved);
+                              setSummaryAiSuggestion(null);
+                              setShowSummaryCompare(false);
+                              triggerToast('Applied polished summary.');
+                            }}
+                            className="px-3 py-1 rounded-md bg-[var(--accent)] text-white font-semibold text-xs hover:bg-[var(--accent-hover)] transition-all cursor-pointer shrink-0 shadow-xs"
+                          >
+                            Accept
+                          </button>
+                        </div>
                       </div>
                     </div>
                   )}
@@ -3197,6 +3342,93 @@ function ResumeBuilderContent() {
                           placeholder="Designed 3D mechanical components reducing assembly cycle time by 15%..."
                           className="w-full p-2.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] text-xs focus:outline-none focus:border-[var(--accent)]"
                         />
+
+                        {bulletAiSuggestion && bulletAiSuggestion.expIndex === idx && (
+                          <div className="p-3.5 rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent)]/30 text-xs space-y-2 mt-2 animate-fade-in">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-[var(--accent)] uppercase text-[10px] tracking-wider flex items-center gap-1">
+                                <Wand2 className="w-3 h-3" />
+                                AI Suggested Bullet Rewrites
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setBulletAiSuggestion(null);
+                                  setShowBulletCompare(false);
+                                }}
+                                className="text-[var(--text-secondary)] hover:text-rose-500 cursor-pointer"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            {showBulletCompare ? (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-2.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)]">
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block">Current Bullets</span>
+                                  <ul className="text-[11px] text-[var(--text-secondary)] list-disc list-inside space-y-0.5">
+                                    {bulletAiSuggestion.original.split('\n').filter(Boolean).map((b, i) => (
+                                      <li key={i}>{b}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">AI Polished Recommendation</span>
+                                  <ul className="text-[11px] text-[var(--text-primary)] font-medium list-disc list-inside space-y-0.5">
+                                    {bulletAiSuggestion.improvedList.map((b, i) => (
+                                      <li key={i}>{b}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            ) : (
+                              <ul className="text-[11px] text-[var(--text-primary)] font-medium list-disc list-inside space-y-1">
+                                {bulletAiSuggestion.improvedList.map((b, i) => (
+                                  <li key={i}>{b}</li>
+                                ))}
+                              </ul>
+                            )}
+
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-[var(--accent)]/20">
+                              <span className="text-[10px] text-[var(--text-secondary)]">
+                                {bulletAiSuggestion.reasoning}
+                              </span>
+                              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => setShowBulletCompare(!showBulletCompare)}
+                                  className="px-2.5 py-1 rounded-md border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] font-semibold text-xs hover:border-[var(--accent)] transition-all cursor-pointer"
+                                >
+                                  {showBulletCompare ? 'Hide Comparison' : 'Compare'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setBulletAiSuggestion(null);
+                                    setShowBulletCompare(false);
+                                  }}
+                                  className="px-2.5 py-1 rounded-md border border-rose-200 bg-rose-50 text-rose-700 font-semibold text-xs hover:bg-rose-100 transition-all cursor-pointer"
+                                >
+                                  Reject
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = [...resumeData.experience];
+                                    updated[idx].bulletPoints = bulletAiSuggestion.improvedList;
+                                    updateExperience(updated);
+                                    setBulletAiSuggestion(null);
+                                    setShowBulletCompare(false);
+                                    triggerToast('Applied refined bullet phrasing.');
+                                  }}
+                                  className="px-3 py-1 rounded-md bg-[var(--accent)] text-white font-semibold text-xs hover:bg-[var(--accent-hover)] transition-all cursor-pointer shadow-xs"
+                                >
+                                  Accept
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     </div>
                   ))
@@ -3261,29 +3493,65 @@ function ResumeBuilderContent() {
                         ? 'No projects added yet. Entry-level candidates must list at least one project.'
                         : 'No projects added yet. Click below if you wish to feature technical projects.'}
                     </p>
-                    <button
-                      id="add-project-btn"
-                      type="button"
-                      onClick={() => {
-                        updateProjects([
-                          {
-                            id: `proj_${Date.now()}`,
-                            title: '',
-                            role: 'Lead Developer',
-                            objective: '',
-                            technologies: [],
-                            description: '',
-                            outcome: '',
-                            bullets: [],
-                            link: '',
-                          },
-                        ]);
-                        clearError('projects');
-                      }}
-                      className="px-4 py-2 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold inline-flex items-center gap-1.5 shadow-sm"
-                    >
-                      <Plus className="w-4 h-4" /> Add Project
-                    </button>
+                    <div className="flex flex-wrap items-center justify-center gap-2">
+                      <button
+                        id="add-project-btn"
+                        type="button"
+                        onClick={() => {
+                          updateProjects([
+                            {
+                              id: `proj_${Date.now()}`,
+                              title: '',
+                              role: 'Lead Developer',
+                              objective: '',
+                              technologies: [],
+                              description: '',
+                              outcome: '',
+                              bullets: [],
+                              link: '',
+                            },
+                          ]);
+                          clearError('projects');
+                        }}
+                        className="px-4 py-2 rounded-xl bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold inline-flex items-center gap-1.5 shadow-sm"
+                      >
+                        <Plus className="w-4 h-4" /> Add Project
+                      </button>
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          try {
+                            const res = await fetch('/api/student/profile');
+                            if (res.ok) {
+                              const data = await res.json();
+                              if (data.profile?.projects && data.profile.projects.length > 0) {
+                                const mapped = data.profile.projects.map((p: any, idx: number) => ({
+                                  id: `proj_${Date.now()}_${idx}`,
+                                  title: p.title || '',
+                                  role: p.role || 'Lead Developer',
+                                  objective: '',
+                                  technologies: Array.isArray(p.techStack) ? p.techStack : [],
+                                  description: p.description || '',
+                                  outcome: '',
+                                  bullets: Array.isArray(p.highlights) && p.highlights.length > 0 ? p.highlights : [p.description || ''].filter(Boolean),
+                                  link: p.repoUrl || p.liveUrl || '',
+                                }));
+                                updateProjects(mapped);
+                                clearError('projects');
+                                triggerToast(`Imported ${mapped.length} project(s) from Student Profile!`);
+                                return;
+                              }
+                            }
+                            triggerToast('No documented projects found in your student profile.');
+                          } catch {
+                            triggerToast('Could not load student profile projects.');
+                          }
+                        }}
+                        className="px-4 py-2 rounded-xl bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 hover:bg-[var(--accent)]/20 text-xs font-semibold inline-flex items-center gap-1.5 shadow-sm cursor-pointer"
+                      >
+                        <FolderGit2 className="w-4 h-4" /> Import from Student Profile
+                      </button>
+                    </div>
                   </div>
                 ) : (
                   resumeData.projects.map((proj, idx) => (
@@ -3431,6 +3699,93 @@ function ResumeBuilderContent() {
                           placeholder="Engineered a micro-controller actuated pneumatic braking prototype achieving 30% reduction in response latency..."
                           className="w-full p-2.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] text-xs focus:outline-none focus:border-[var(--accent)]"
                         />
+
+                        {bulletAiSuggestion && bulletAiSuggestion.expIndex === idx && (
+                          <div className="p-3.5 rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent)]/30 text-xs space-y-2 mt-2 animate-fade-in">
+                            <div className="flex items-center justify-between">
+                              <span className="font-bold text-[var(--accent)] uppercase text-[10px] tracking-wider flex items-center gap-1">
+                                <Wand2 className="w-3 h-3" />
+                                AI Suggested Bullet Rewrites
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setBulletAiSuggestion(null);
+                                  setShowBulletCompare(false);
+                                }}
+                                className="text-[var(--text-secondary)] hover:text-rose-500 cursor-pointer"
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
+                            </div>
+
+                            {showBulletCompare ? (
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-2.5 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)]">
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-bold text-red-500 uppercase tracking-wider block">Current Bullets</span>
+                                  <ul className="text-[11px] text-[var(--text-secondary)] list-disc list-inside space-y-0.5">
+                                    {bulletAiSuggestion.original.split('\n').filter(Boolean).map((b, i) => (
+                                      <li key={i}>{b}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                                <div className="space-y-1">
+                                  <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider block">AI Polished Recommendation</span>
+                                  <ul className="text-[11px] text-[var(--text-primary)] font-medium list-disc list-inside space-y-0.5">
+                                    {bulletAiSuggestion.improvedList.map((b, i) => (
+                                      <li key={i}>{b}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              </div>
+                            ) : (
+                              <ul className="text-[11px] text-[var(--text-primary)] font-medium list-disc list-inside space-y-1">
+                                {bulletAiSuggestion.improvedList.map((b, i) => (
+                                  <li key={i}>{b}</li>
+                                ))}
+                              </ul>
+                            )}
+
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 pt-1 border-t border-[var(--accent)]/20">
+                              <span className="text-[10px] text-[var(--text-secondary)]">
+                                {bulletAiSuggestion.reasoning}
+                              </span>
+                              <div className="flex items-center gap-2 self-end sm:self-auto shrink-0">
+                                <button
+                                  type="button"
+                                  onClick={() => setShowBulletCompare(!showBulletCompare)}
+                                  className="px-2.5 py-1 rounded-md border border-[var(--border-color)] bg-[var(--bg-card)] text-[var(--text-primary)] font-semibold text-xs hover:border-[var(--accent)] transition-all cursor-pointer"
+                                >
+                                  {showBulletCompare ? 'Hide Comparison' : 'Compare'}
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setBulletAiSuggestion(null);
+                                    setShowBulletCompare(false);
+                                  }}
+                                  className="px-2.5 py-1 rounded-md border border-rose-200 bg-rose-50 text-rose-700 font-semibold text-xs hover:bg-rose-100 transition-all cursor-pointer"
+                                >
+                                  Reject
+                                </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const updated = [...resumeData.experience];
+                                    updated[idx].bulletPoints = bulletAiSuggestion.improvedList;
+                                    updateExperience(updated);
+                                    setBulletAiSuggestion(null);
+                                    setShowBulletCompare(false);
+                                    triggerToast('Applied refined bullet phrasing.');
+                                  }}
+                                  className="px-3 py-1 rounded-md bg-[var(--accent)] text-white font-semibold text-xs hover:bg-[var(--accent-hover)] transition-all cursor-pointer shadow-xs"
+                                >
+                                  Accept
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        )}
                       </div>
 
                       <div>
@@ -4287,6 +4642,7 @@ function ResumeBuilderContent() {
                   <button
                     id="btn-download-pdf"
                     type="button"
+                    aria-label="Download PDF resume"
                     onClick={handleDownloadPdf}
                     disabled={isExporting}
                     className="btn-primary w-full text-sm font-semibold flex items-center justify-center gap-2 cursor-pointer shadow-sm disabled:opacity-50"
@@ -4352,46 +4708,85 @@ function ResumeBuilderContent() {
         >
           {/* Zoom & Document Viewer Controls */}
           <div className="no-print w-full flex items-center justify-between mb-1 px-1 sm:px-2 gap-2 flex-wrap">
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 text-xs font-medium text-[var(--text-secondary)]">
-              <Eye className="w-3.5 h-3.5 text-[var(--accent)] shrink-0" />
-              <span>Live A4 Preview</span>
+            {/* View Mode Segmented Controls */}
+            <div className="inline-flex items-center p-1 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-xs font-semibold">
+              <button
+                type="button"
+                onClick={() => setPreviewTab('design')}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  previewTab === 'design'
+                    ? 'bg-white text-[var(--accent)] shadow-xs font-bold'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                }`}
+              >
+                <Layout className="w-3.5 h-3.5" />
+                <span>Design View</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPreviewTab('ats')}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  previewTab === 'ats'
+                    ? 'bg-white text-emerald-600 shadow-xs font-bold'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                }`}
+              >
+                <ShieldCheck className="w-3.5 h-3.5" />
+                <span>ATS View</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setPreviewTab('text')}
+                className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                  previewTab === 'text'
+                    ? 'bg-white text-indigo-600 shadow-xs font-bold'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                }`}
+              >
+                <FileText className="w-3.5 h-3.5" />
+                <span>Plain Text</span>
+              </button>
             </div>
 
-            <div className="flex items-center gap-1 p-1 rounded-full border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xs shrink-0">
-              <button
-                type="button"
-                onClick={handleZoomOut}
-                disabled={zoom <= 0.28}
-                className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 cursor-pointer transition-colors"
-                aria-label="Zoom out"
-                title="Zoom Out"
-              >
-                <ZoomOut className="w-3.5 h-3.5" />
-              </button>
-              <span className="px-1.5 font-mono font-medium text-[var(--text-primary)] min-w-[38px] text-center text-xs">
-                {Math.round(zoom * 100)}%
-              </span>
-              <button
-                type="button"
-                onClick={handleZoomIn}
-                disabled={zoom >= 1.25}
-                className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 cursor-pointer transition-colors"
-                aria-label="Zoom in"
-                title="Zoom In"
-              >
-                <ZoomIn className="w-3.5 h-3.5" />
-              </button>
-              <button
-                type="button"
-                onClick={handleResetZoom}
-                className="px-2.5 py-1 rounded-full text-[11px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] flex items-center gap-1 transition-colors cursor-pointer"
-                aria-label="Fit resume preview to screen"
-                title="Fit to Screen"
-              >
-                <RotateCcw className="w-2.5 h-2.5" />
-                Fit
-              </button>
-            </div>
+            {previewTab === 'design' && (
+              <div className="flex items-center gap-1 p-1 rounded-full border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xs shrink-0">
+                <button
+                  type="button"
+                  onClick={handleZoomOut}
+                  disabled={zoom <= 0.28}
+                  className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 cursor-pointer transition-colors"
+                  aria-label="Zoom out"
+                  title="Zoom Out"
+                >
+                  <ZoomOut className="w-3.5 h-3.5" />
+                </button>
+                <span className="px-1.5 font-mono font-medium text-[var(--text-primary)] min-w-[38px] text-center text-xs">
+                  {Math.round(zoom * 100)}%
+                </span>
+                <button
+                  type="button"
+                  onClick={handleZoomIn}
+                  disabled={zoom >= 1.25}
+                  className="w-7 h-7 rounded-full flex items-center justify-center hover:bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] disabled:opacity-30 cursor-pointer transition-colors"
+                  aria-label="Zoom in"
+                  title="Zoom In"
+                >
+                  <ZoomIn className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleResetZoom}
+                  className="px-2.5 py-1 rounded-full text-[11px] font-medium text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)] flex items-center gap-1 transition-colors cursor-pointer"
+                  aria-label="Fit resume preview to screen"
+                  title="Fit to Screen"
+                >
+                  <RotateCcw className="w-2.5 h-2.5" />
+                  Fit
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Scrollable A4 Viewport Container */}
@@ -4403,11 +4798,18 @@ function ResumeBuilderContent() {
             role="region"
             aria-label="A4 Resume Preview Viewport"
           >
-            <A4ResumeDocument
-              data={resumeData}
-              templateId={resumeData.templateId}
-              zoom={zoom}
-            />
+            {previewTab === 'design' ? (
+              <A4ResumeDocument
+                data={resumeData}
+                templateId={resumeData.templateId}
+                zoom={zoom}
+              />
+            ) : (
+              <AtsFriendlyPreview
+                data={resumeData}
+                mode={previewTab}
+              />
+            )}
           </div>
         </section>
       </div>

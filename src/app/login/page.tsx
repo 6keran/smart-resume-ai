@@ -80,6 +80,18 @@ function LoginForm() {
     setMounted(true);
   }, []);
 
+  // Escape key handling for Forgot Password modal
+  useEffect(() => {
+    if (!showForgotModal) return;
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowForgotModal(false);
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [showForgotModal]);
+
   // If already authenticated, redirect immediately to dashboard
   useEffect(() => {
     if (!userLoading && user) {
