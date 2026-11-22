@@ -229,14 +229,20 @@ export function ModalOverlay({
 }: ModalOverlayProps) {
   useEffect(() => {
     if (isOpen) {
-      const prev = document.body.style.overflow;
+      const prevOverflow = document.body.style.overflow;
+      const prevPaddingRight = document.body.style.paddingRight;
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') onClose();
       };
       window.addEventListener('keydown', handleKeyDown);
       return () => {
-        document.body.style.overflow = prev;
+        document.body.style.overflow = prevOverflow;
+        document.body.style.paddingRight = prevPaddingRight;
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
@@ -290,14 +296,20 @@ export function AnimatedDrawer({
 }: AnimatedDrawerProps) {
   useEffect(() => {
     if (isOpen) {
-      const prev = document.body.style.overflow;
+      const prevOverflow = document.body.style.overflow;
+      const prevPaddingRight = document.body.style.paddingRight;
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') onClose();
       };
       window.addEventListener('keydown', handleKeyDown);
       return () => {
-        document.body.style.overflow = prev;
+        document.body.style.overflow = prevOverflow;
+        document.body.style.paddingRight = prevPaddingRight;
         window.removeEventListener('keydown', handleKeyDown);
       };
     }

@@ -37,6 +37,7 @@ import {
   BookOpen,
 } from 'lucide-react';
 import { GlassCard } from '@/components/ui/GlassCard';
+import { motion, AnimatePresence } from 'framer-motion';
 import { PageTransition } from '@/components/ui/MotionPrimitives';
 import { useUserProfile } from '@/components/user/UserContext';
 import { FeedbackButtons } from '@/components/feedback/FeedbackButtons';
@@ -785,25 +786,35 @@ export default function ProjectMentorPage() {
                       <span className="text-[11px] font-mono text-[var(--text-muted)] uppercase shrink-0">
                         Select Project:
                       </span>
-                      {guidedProjects.map((p) => (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => {
-                            setActiveProject(p);
-                            setRepoUrlInput(p.githubUrl || '');
-                            setLiveUrlInput(p.liveUrl || '');
-                            setExpandedMilestoneId(p.currentMilestone || 1);
-                          }}
-                          className={`text-xs px-3 py-1.5 rounded-lg transition-all font-medium cursor-pointer shrink-0 ${
-                            activeProject?.id === p.id
-                              ? 'bg-[var(--accent)] text-white shadow-xs font-semibold'
-                              : 'bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                          }`}
-                        >
-                          {p.title} ({p.progressPercent}%)
-                        </button>
-                      ))}
+                      {guidedProjects.map((p) => {
+                        const isSelected = activeProject?.id === p.id;
+                        return (
+                          <button
+                            key={p.id}
+                            type="button"
+                            onClick={() => {
+                              setActiveProject(p);
+                              setRepoUrlInput(p.githubUrl || '');
+                              setLiveUrlInput(p.liveUrl || '');
+                              setExpandedMilestoneId(p.currentMilestone || 1);
+                            }}
+                            className={`text-xs px-3 py-1.5 rounded-lg transition-colors font-medium cursor-pointer shrink-0 relative z-0 ${
+                              isSelected
+                                ? 'text-white font-semibold shadow-xs'
+                                : 'bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                            }`}
+                          >
+                            {isSelected && (
+                              <motion.div
+                                layoutId="project-coach-selector-pill"
+                                className="absolute inset-0 bg-[var(--accent)] rounded-lg -z-10"
+                                transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                              />
+                            )}
+                            {p.title} ({p.progressPercent}%)
+                          </button>
+                        );
+                      })}
                     </div>
                   )}
 

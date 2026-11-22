@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Compass,
   Sparkles,
@@ -291,23 +292,53 @@ export default function CareerGuidancePage() {
         )}
       </header>
 
-      {isLoading ? (
-        <div className="p-16 text-center bg-white rounded-2xl border border-[#E5E8ED] shadow-sm space-y-3">
-          <Loader2 className="w-8 h-8 text-[var(--accent)] animate-spin mx-auto" />
-          <p className="text-sm text-[var(--text-secondary)]">
-            Analyzing student profile, verified skills, and project evidence...
-          </p>
-        </div>
-      ) : error ? (
-        <div className="p-8 text-center bg-white rounded-2xl border border-[#E5E8ED] shadow-sm space-y-3">
-          <AlertCircle className="w-8 h-8 text-amber-500 mx-auto" />
-          <p className="text-sm text-[var(--text-secondary)]">{error}</p>
-          <Link href="/login" className="btn-primary btn-sm inline-flex items-center gap-1.5 text-xs">
-            <span>Sign In</span>
-          </Link>
-        </div>
-      ) : readiness ? (
-        <>
+      <AnimatePresence mode="wait">
+        {isLoading ? (
+          <motion.div
+            key="guidance-loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="space-y-6"
+          >
+            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-8 space-y-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="h-5 w-48 bg-[#F0F2F5] rounded-md skeleton-shimmer" />
+                <div className="h-5 w-24 bg-[#F0F2F5] rounded-full skeleton-shimmer" />
+              </div>
+              <div className="h-4 w-3/4 bg-[#F0F2F5] rounded-md skeleton-shimmer" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-28 bg-[#F6F7F9] rounded-xl border border-[#E5E8ED] p-4 skeleton-shimmer" />
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        ) : error ? (
+          <motion.div
+            key="guidance-error"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18 }}
+            className="p-8 text-center bg-white rounded-2xl border border-[#E5E8ED] shadow-sm space-y-3"
+          >
+            <AlertCircle className="w-8 h-8 text-amber-500 mx-auto" />
+            <p className="text-sm text-[var(--text-secondary)]">{error}</p>
+            <Link href="/login" className="btn-primary btn-sm inline-flex items-center gap-1.5 text-xs">
+              <span>Sign In</span>
+            </Link>
+          </motion.div>
+        ) : readiness ? (
+          <motion.div
+            key="guidance-ready"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-8"
+          >
           {!goalSet && (
             <section className="rounded-2xl border border-[#E5E8ED] bg-[#F6F7F9] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
@@ -994,8 +1025,9 @@ export default function CareerGuidancePage() {
               </div>
             </section>
           )}
-        </>
-      ) : null}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </PageTransition>
   );
 }

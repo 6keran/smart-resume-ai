@@ -3,6 +3,8 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { SkeletonBoard } from '@/components/ui/Skeleton';
 import {
   Send,
   Plus,
@@ -327,28 +329,42 @@ function ApplicationsContent() {
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0 flex-wrap">
-          <div className="inline-flex items-center p-1 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-xs font-semibold">
+          <div className="inline-flex items-center p-1 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-xs font-semibold relative">
             <button
               type="button"
               onClick={() => setViewMode('pipeline')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 relative z-10 ${
                 viewMode === 'pipeline'
-                  ? 'bg-white text-[#3157C8] shadow-xs font-bold'
+                  ? 'text-[#3157C8] font-bold'
                   : 'text-[#626B78] hover:text-[#20242B]'
               }`}
             >
+              {viewMode === 'pipeline' && (
+                <motion.div
+                  layoutId="apps-view-mode-pill"
+                  className="absolute inset-0 bg-white rounded-lg shadow-xs -z-10"
+                  transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                />
+              )}
               <Layout className="w-3.5 h-3.5" />
               <span>Pipeline View</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode('list')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 relative z-10 ${
                 viewMode === 'list'
-                  ? 'bg-white text-[#3157C8] shadow-xs font-bold'
+                  ? 'text-[#3157C8] font-bold'
                   : 'text-[#626B78] hover:text-[#20242B]'
               }`}
             >
+              {viewMode === 'list' && (
+                <motion.div
+                  layoutId="apps-view-mode-pill"
+                  className="absolute inset-0 bg-white rounded-lg shadow-xs -z-10"
+                  transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                />
+              )}
               <List className="w-3.5 h-3.5" />
               <span>List View</span>
             </button>
@@ -385,21 +401,29 @@ function ApplicationsContent() {
               st === 'All'
                 ? applications.length
                 : applications.filter((a) => a.status === st).length;
+            const isSelected = filterStatus === st;
 
             return (
               <button
                 key={st}
                 onClick={() => setFilterStatus(st)}
-                className={`px-3 py-1.5 rounded-xl text-[14px] font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                  filterStatus === st
-                    ? 'bg-[#3157C8] text-white shadow-xs'
-                    : 'bg-[#F6F7F9] text-[#626B78] hover:text-[#20242B] border border-[#E5E8ED]'
+                className={`px-3 py-1.5 rounded-xl text-[14px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer relative z-0 ${
+                  isSelected
+                    ? 'text-white shadow-xs'
+                    : 'text-[#626B78] hover:text-[#20242B] bg-[#F6F7F9] border border-[#E5E8ED]'
                 }`}
               >
+                {isSelected && (
+                  <motion.div
+                    layoutId="applications-filter-pill"
+                    className="absolute inset-0 bg-[#3157C8] rounded-xl -z-10"
+                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                  />
+                )}
                 <span>{st}</span>
                 <span
                   className={`text-[12px] px-1.5 py-0.2 rounded-full ${
-                    filterStatus === st ? 'bg-white/20 text-white' : 'bg-slate-200 text-[#626B78]'
+                    isSelected ? 'bg-white/20 text-white' : 'bg-slate-200 text-[#626B78]'
                   }`}
                 >
                   {count}
@@ -412,9 +436,8 @@ function ApplicationsContent() {
 
       {/* Applications List */}
       {loading ? (
-        <div className="py-16 text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-[var(--accent)] mb-3" />
-          <p className="text-xs text-[var(--text-secondary)]">Loading your job applications...</p>
+        <div className="space-y-4">
+          <SkeletonBoard columns={5} />
         </div>
       ) : filteredApplications.length === 0 ? (
         <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/50 p-12 text-center">
@@ -510,61 +533,69 @@ function ApplicationsContent() {
                         No jobs in this stage
                       </div>
                     ) : (
-                      stageApps.map((app) => {
-                        const next = getNextStage(app.status);
-                        return (
-                          <div
-                            key={app.id}
-                            className="p-3.5 rounded-xl bg-white border border-[#E5E8ED] shadow-2xs hover:border-[#3157C8]/40 transition-all space-y-2 text-xs"
-                          >
-                            <div>
-                              <h4 className="font-bold text-[#20242B] line-clamp-1">{app.job_title}</h4>
-                              <p className="text-[11px] text-[#626B78] font-medium">{app.company}</p>
-                            </div>
+                      <AnimatePresence mode="popLayout">
+                        {stageApps.map((app) => {
+                          const next = getNextStage(app.status);
+                          return (
+                            <motion.div
+                              layout
+                              layoutId={`app-card-${app.id}`}
+                              key={app.id}
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                              className="p-3.5 rounded-xl bg-white border border-[#E5E8ED] shadow-2xs hover:border-[#3157C8]/40 transition-colors space-y-2 text-xs"
+                            >
+                              <div>
+                                <h4 className="font-bold text-[#20242B] line-clamp-1">{app.job_title}</h4>
+                                <p className="text-[11px] text-[#626B78] font-medium">{app.company}</p>
+                              </div>
 
-                            {app.location && (
-                              <p className="text-[10px] text-[#626B78] flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                <span>{app.location}</span>
-                              </p>
-                            )}
-
-                            {/* Stage Action Controls */}
-                            <div className="pt-2 border-t border-[#F1F3F5] flex items-center justify-between gap-1 flex-wrap">
-                              <button
-                                type="button"
-                                onClick={() => openEditModal(app)}
-                                className="text-[10px] text-[#626B78] hover:text-[#20242B] font-semibold cursor-pointer"
-                              >
-                                Edit
-                              </button>
-
-                              {next && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleMoveStage(app.id, next)}
-                                  className="text-[10px] font-bold text-[#3157C8] hover:underline inline-flex items-center gap-0.5 cursor-pointer ml-auto"
-                                  title={`Advance to ${next}`}
-                                >
-                                  <span>{next}</span>
-                                  <ArrowRight className="w-3 h-3" />
-                                </button>
+                              {app.location && (
+                                <p className="text-[10px] text-[#626B78] flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  <span>{app.location}</span>
+                                </p>
                               )}
 
-                              {stage.key !== 'Rejected' && (
+                              {/* Stage Action Controls */}
+                              <div className="pt-2 border-t border-[#F1F3F5] flex items-center justify-between gap-1 flex-wrap">
                                 <button
                                   type="button"
-                                  onClick={() => handleMoveStage(app.id, 'Rejected')}
-                                  className="text-[10px] text-rose-500 hover:underline cursor-pointer"
-                                  title="Mark as Rejected"
+                                  onClick={() => openEditModal(app)}
+                                  className="text-[10px] text-[#626B78] hover:text-[#20242B] font-semibold cursor-pointer"
                                 >
-                                  ×
+                                  Edit
                                 </button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
+
+                                {next && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMoveStage(app.id, next)}
+                                    className="text-[10px] font-bold text-[#3157C8] hover:underline inline-flex items-center gap-0.5 cursor-pointer ml-auto"
+                                    title={`Advance to ${next}`}
+                                  >
+                                    <span>{next}</span>
+                                    <ArrowRight className="w-3 h-3" />
+                                  </button>
+                                )}
+
+                                {stage.key !== 'Rejected' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMoveStage(app.id, 'Rejected')}
+                                    className="text-[10px] text-rose-500 hover:underline cursor-pointer"
+                                    title="Mark as Rejected"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
                     )}
                   </div>
                 </div>
@@ -574,113 +605,120 @@ function ApplicationsContent() {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredApplications.map((app) => (
-            <div
-              key={app.id}
-              className="bg-white rounded-2xl border border-[#E5E8ED] shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:border-slate-300"
-            >
-              <div className="min-w-0 space-y-2 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-base sm:text-lg font-bold text-[#20242B]">
-                    {app.job_title}
-                  </h3>
+          <AnimatePresence initial={false}>
+            {filteredApplications.map((app) => (
+              <motion.div
+                layout
+                key={app.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                className="bg-white rounded-2xl border border-[#E5E8ED] shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors hover:border-slate-300"
+              >
+                <div className="min-w-0 space-y-2 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base sm:text-lg font-bold text-[#20242B]">
+                      {app.job_title}
+                    </h3>
 
-                  <span
-                    className={`px-3 py-1 rounded-full text-[12px] font-bold border ${getStatusColor(
-                      app.status
-                    )}`}
-                  >
-                    {app.status}
-                  </span>
-
-                  {app.source && (
-                    <span className="text-[12px] font-medium text-[#626B78] px-2 py-0.5 rounded-md bg-[#F6F7F9] border border-[#E5E8ED]">
-                      {app.source}
+                    <span
+                      className={`px-3 py-1 rounded-full text-[12px] font-bold border ${getStatusColor(
+                        app.status
+                      )}`}
+                    >
+                      {app.status}
                     </span>
-                  )}
 
-                  {app.applied_confirmed_at && (
-                    <span className="text-[12px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-semibold border border-emerald-200 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      Confirmed Applied
+                    {app.source && (
+                      <span className="text-[12px] font-medium text-[#626B78] px-2 py-0.5 rounded-md bg-[#F6F7F9] border border-[#E5E8ED]">
+                        {app.source}
+                      </span>
+                    )}
+
+                    {app.applied_confirmed_at && (
+                      <span className="text-[12px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-semibold border border-emerald-200 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        Confirmed Applied
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 text-[14px] text-[#626B78]">
+                    <span className="flex items-center gap-1.5 font-semibold text-[#20242B]">
+                      <Building className="w-4 h-4 text-[#3157C8]" />
+                      {app.company}
                     </span>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4 text-[14px] text-[#626B78]">
-                  <span className="flex items-center gap-1.5 font-semibold text-[#20242B]">
-                    <Building className="w-4 h-4 text-[#3157C8]" />
-                    {app.company}
-                  </span>
-                  {app.location && (
+                    {app.location && (
+                      <span className="flex items-center gap-1.5">
+                        <MapPin className="w-4 h-4" />
+                        {app.location}
+                      </span>
+                    )}
                     <span className="flex items-center gap-1.5">
-                      <MapPin className="w-4 h-4" />
-                      {app.location}
+                      <Calendar className="w-4 h-4" />
+                      Applied: {new Date(app.applied_at).toLocaleDateString()}
                     </span>
+                  </div>
+
+                  {app.notes && (
+                    <p className="text-[14px] text-[#626B78] italic bg-[#F6F7F9] px-3.5 py-2 rounded-xl border border-[#E5E8ED]">
+                      &ldquo;{app.notes}&rdquo;
+                    </p>
                   )}
-                  <span className="flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4" />
-                    Applied: {new Date(app.applied_at).toLocaleDateString()}
-                  </span>
                 </div>
 
-                {app.notes && (
-                  <p className="text-[14px] text-[#626B78] italic bg-[#F6F7F9] px-3.5 py-2 rounded-xl border border-[#E5E8ED]">
-                    &ldquo;{app.notes}&rdquo;
-                  </p>
-                )}
-              </div>
-
-              {/* Status Selector & Actions */}
-              <div className="flex items-center gap-2.5 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-[#E5E8ED]">
-                {/* Inline Status Dropdown */}
-                <select
-                  value={app.status}
-                  onChange={(e) =>
-                    handleQuickStatusChange(app.id, e.target.value as JobApplication['status'])
-                  }
-                  className="text-[14px] font-semibold px-3 py-1.5 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#20242B] focus:outline-none focus:border-[#3157C8] cursor-pointer"
-                >
-                  <option value="Saved">Saved</option>
-                  <option value="Ready to apply">Ready to apply</option>
-                  <option value="Application pending">Application pending</option>
-                  <option value="Applied">Applied</option>
-                  <option value="Interview">Interview</option>
-                  <option value="Offer">Offer</option>
-                  <option value="Rejected">Rejected</option>
-                  <option value="Withdrawn">Withdrawn</option>
-                </select>
-
-                {app.job_url && (
-                  <a
-                    href={app.job_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#626B78] hover:text-[#20242B] hover:border-[#3157C8] transition-all cursor-pointer"
-                    title="View Job Listing"
+                {/* Status Selector & Actions */}
+                <div className="flex items-center gap-2.5 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-[#E5E8ED]">
+                  {/* Inline Status Dropdown */}
+                  <select
+                    value={app.status}
+                    onChange={(e) =>
+                      handleQuickStatusChange(app.id, e.target.value as JobApplication['status'])
+                    }
+                    className="text-[14px] font-semibold px-3 py-1.5 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#20242B] focus:outline-none focus:border-[#3157C8] cursor-pointer"
                   >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                )}
+                    <option value="Saved">Saved</option>
+                    <option value="Ready to apply">Ready to apply</option>
+                    <option value="Application pending">Application pending</option>
+                    <option value="Applied">Applied</option>
+                    <option value="Interview">Interview</option>
+                    <option value="Offer">Offer</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Withdrawn">Withdrawn</option>
+                  </select>
 
-                <button
-                  onClick={() => openEditModal(app)}
-                  className="p-2 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#626B78] hover:text-[#20242B] hover:border-[#3157C8] transition-all cursor-pointer"
-                  title="Edit details"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
+                  {app.job_url && (
+                    <a
+                      href={app.job_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#626B78] hover:text-[#20242B] hover:border-[#3157C8] transition-all cursor-pointer"
+                      title="View Job Listing"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
 
-                <button
-                  onClick={() => handleDelete(app.id)}
-                  className="p-2 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#626B78] hover:text-rose-600 hover:border-rose-300 transition-all cursor-pointer"
-                  title="Delete application"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
+                  <button
+                    onClick={() => openEditModal(app)}
+                    className="p-2 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#626B78] hover:text-[#20242B] hover:border-[#3157C8] transition-all cursor-pointer"
+                    title="Edit details"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(app.id)}
+                    className="p-2 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#626B78] hover:text-rose-600 hover:border-rose-300 transition-all cursor-pointer"
+                    title="Delete application"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       )}
 

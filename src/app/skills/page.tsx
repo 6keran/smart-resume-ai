@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   BadgeCheck,
   Plus,
@@ -239,17 +240,24 @@ export default function SkillVerificationPage() {
       </details>
 
       {/* Dual Tab Mode Switcher */}
-      <div className="flex items-center gap-2 p-1 rounded-lg bg-[#F6F7F9] border border-[#E5E8ED] self-start shadow-xs">
+      <div className="flex items-center gap-2 p-1 rounded-lg bg-[#F6F7F9] border border-[#E5E8ED] self-start shadow-xs relative">
         <button
           type="button"
           onClick={() => setActiveTab('skills')}
-          className={`px-5 py-2 rounded-md text-[14px] font-semibold transition-all cursor-pointer ${
+          className={`relative px-5 py-2 rounded-md text-[14px] font-semibold transition-colors cursor-pointer ${
             activeTab === 'skills'
-              ? 'bg-white text-[#3157C8] shadow-sm'
+              ? 'text-[#3157C8]'
               : 'text-[#626B78] hover:text-[#20242B]'
           }`}
         >
-          My Skills &amp; Assessments
+          {activeTab === 'skills' && (
+            <motion.div
+              layoutId="skills-tab-pill"
+              className="absolute inset-0 bg-white rounded-md shadow-sm"
+              transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+            />
+          )}
+          <span className="relative z-10">My Skills &amp; Assessments</span>
         </button>
         <button
           type="button"
@@ -257,21 +265,36 @@ export default function SkillVerificationPage() {
             setActiveTab('roadmap');
             if (!roadmapData) loadRoadmap();
           }}
-          className={`px-5 py-2 rounded-md text-[14px] font-semibold transition-all cursor-pointer inline-flex items-center gap-2 ${
+          className={`relative px-5 py-2 rounded-md text-[14px] font-semibold transition-colors cursor-pointer inline-flex items-center gap-2 ${
             activeTab === 'roadmap'
-              ? 'bg-white text-[#3157C8] shadow-sm'
+              ? 'text-[#3157C8]'
               : 'text-[#626B78] hover:text-[#20242B]'
           }`}
         >
-          <BookOpen className="w-4 h-4" />
-          <span>Learning Roadmap</span>
+          {activeTab === 'roadmap' && (
+            <motion.div
+              layoutId="skills-tab-pill"
+              className="absolute inset-0 bg-white rounded-md shadow-sm"
+              transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+            />
+          )}
+          <BookOpen className="w-4 h-4 relative z-10" />
+          <span className="relative z-10">Learning Roadmap</span>
         </button>
       </div>
 
-      {/* ─── TAB 1: MY SKILLS & DIRECTORY ─────────────────────────── */}
-      {activeTab === 'skills' && (
-        <div className="space-y-8">
-          {/* MY SKILLS SECTION */}
+      <AnimatePresence mode="wait">
+        {/* ─── TAB 1: MY SKILLS & DIRECTORY ─────────────────────────── */}
+        {activeTab === 'skills' ? (
+          <motion.div
+            key="skills-tab"
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-8"
+          >
+            {/* MY SKILLS SECTION */}
           <div className="space-y-4 text-left">
             <div className="flex items-center justify-between">
               <div>
@@ -299,7 +322,8 @@ export default function SkillVerificationPage() {
                   const isVerified = userSkill.status === 'verified';
 
                   return (
-                    <div
+                    <motion.div
+                      layout
                       key={userSkill.id}
                       className="bg-white rounded-2xl border border-[#E5E8ED] hover:border-[#3157C8] hover:shadow-md transition-all p-5 flex flex-col justify-between space-y-4 shadow-sm"
                     >
@@ -380,7 +404,7 @@ export default function SkillVerificationPage() {
                           </Link>
                         )}
                       </div>
-                    </div>
+                    </motion.div>
                   );
                 })}
               </div>
@@ -442,12 +466,17 @@ export default function SkillVerificationPage() {
               })}
             </div>
           </div>
-        </div>
-      )}
-
-      {/* ─── TAB 2: CAREER LEARNING ROADMAP ──────────────────────── */}
-      {activeTab === 'roadmap' && (
-        <div className="space-y-6 text-left">
+        </motion.div>
+      ) : (
+        /* ─── TAB 2: CAREER LEARNING ROADMAP ──────────────────────── */
+        <motion.div
+          key="roadmap-tab"
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+          className="space-y-6 text-left"
+        >
           {/* Roadmap Controls Header */}
           <div className="p-6 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="space-y-1">
@@ -478,13 +507,20 @@ export default function SkillVerificationPage() {
                     setTargetRoadmapRole(role);
                     loadRoadmap(role);
                   }}
-                  className={`px-3 py-1 rounded-lg text-[10px] font-medium transition-colors border cursor-pointer ${
+                  className={`relative px-3 py-1 rounded-lg text-[10px] font-medium transition-colors border cursor-pointer ${
                     targetRoadmapRole === role
-                      ? 'bg-[var(--accent-subtle)] text-[var(--accent)] border-[var(--accent)]/30 font-bold'
+                      ? 'border-[var(--accent)]/30 font-bold text-[var(--accent)]'
                       : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-[var(--text-muted)]'
                   }`}
                 >
-                  {role}
+                  {targetRoadmapRole === role && (
+                    <motion.div
+                      layoutId="roadmap-role-pill"
+                      className="absolute inset-0 bg-[var(--accent-subtle)] rounded-lg -z-0"
+                      transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                    />
+                  )}
+                  <span className="relative z-10">{role}</span>
                 </button>
               ))}
             </div>
@@ -732,150 +768,187 @@ export default function SkillVerificationPage() {
               )}
             </div>
           )}
-        </div>
+        </motion.div>
       )}
+    </AnimatePresence>
 
       {/* ADD SKILL MODAL */}
-      {isAddModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-md rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-7 shadow-xl space-y-5 text-left relative overflow-hidden">
-            <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
-              <h3 className="text-base font-bold text-[var(--text-primary)]">Add Skill To Profile</h3>
-              <button
-                onClick={() => setIsAddModalOpen(false)}
-                className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors cursor-pointer"
-              >
-                <X className="w-4 h-4" />
-              </button>
-            </div>
-
-            <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-semibold text-[var(--text-primary)] mb-1">
-                  Skill Name
-                </label>
-                <select
-                  value={selectedSkill}
-                  onChange={(e) => {
-                    const val = e.target.value as SupportedSkill;
-                    setSelectedSkill(val);
-                    const match = allSupportedSkills.find((s) => s.name === val);
-                    if (match) setSelectedCategory(match.category);
-                  }}
-                  className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] shadow-xs"
+      <AnimatePresence>
+        {isAddModalOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, y: 8 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-md rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-7 shadow-xl space-y-5 text-left relative overflow-hidden"
+            >
+              <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
+                <h3 className="text-base font-bold text-[var(--text-primary)]">Add Skill To Profile</h3>
+                <button
+                  onClick={() => setIsAddModalOpen(false)}
+                  className="p-1 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--glass-bg)] transition-colors cursor-pointer"
                 >
-                  {allSupportedSkills.map((sk) => (
-                    <option key={sk.name} value={sk.name}>
-                      {sk.name} ({sk.category})
-                    </option>
-                  ))}
-                </select>
+                  <X className="w-4 h-4" />
+                </button>
               </div>
 
-              <div>
-                <label className="block font-semibold text-[var(--text-primary)] mb-1">
-                  Category
-                </label>
-                <select
-                  value={selectedCategory}
-                  onChange={(e) => setSelectedCategory(e.target.value as UserSkill['category'])}
-                  className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] shadow-xs"
-                >
-                  <option value="Programming">Programming</option>
-                  <option value="Frontend">Frontend</option>
-                  <option value="Backend">Backend</option>
-                  <option value="Database">Database</option>
-                  <option value="AI / Data">AI / Data</option>
-                  <option value="Cloud & DevOps">Cloud & DevOps</option>
-                </select>
-              </div>
+              <form onSubmit={handleAddSubmit} className="space-y-4 text-xs">
+                <div>
+                  <label className="block font-semibold text-[var(--text-primary)] mb-1">
+                    Skill Name
+                  </label>
+                  <select
+                    value={selectedSkill}
+                    onChange={(e) => {
+                      const val = e.target.value as SupportedSkill;
+                      setSelectedSkill(val);
+                      const match = allSupportedSkills.find((s) => s.name === val);
+                      if (match) setSelectedCategory(match.category);
+                    }}
+                    className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] shadow-xs"
+                  >
+                    {allSupportedSkills.map((sk) => (
+                      <option key={sk.name} value={sk.name}>
+                        {sk.name} ({sk.category})
+                      </option>
+                    ))}
+                  </select>
+                </div>
 
-              <div className="flex items-center gap-2 pt-1">
-                <input
-                  type="checkbox"
-                  id="claim-check"
-                  checked={claimDirectly}
-                  onChange={(e) => setClaimDirectly(e.target.checked)}
-                  className="rounded text-[var(--accent)]"
-                />
-                <label htmlFor="claim-check" className="text-xs text-[var(--text-primary)] cursor-pointer">
-                  Claim this skill immediately (Marks as Claimed, ready for assessment)
-                </label>
-              </div>
+                <div>
+                  <label className="block font-semibold text-[var(--text-primary)] mb-1">
+                    Category
+                  </label>
+                  <select
+                    value={selectedCategory}
+                    onChange={(e) => setSelectedCategory(e.target.value as UserSkill['category'])}
+                    className="w-full p-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--input-bg)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] shadow-xs"
+                  >
+                    <option value="Programming">Programming</option>
+                    <option value="Frontend">Frontend</option>
+                    <option value="Backend">Backend</option>
+                    <option value="Database">Database</option>
+                    <option value="AI / Data">AI / Data</option>
+                    <option value="Cloud & DevOps">Cloud & DevOps</option>
+                  </select>
+                </div>
 
-              <div className="flex items-center justify-end gap-3 pt-3 border-t border-[var(--glass-border)]">
+                <div className="flex items-center gap-2 pt-1">
+                  <input
+                    type="checkbox"
+                    id="claim-check"
+                    checked={claimDirectly}
+                    onChange={(e) => setClaimDirectly(e.target.checked)}
+                    className="rounded text-[var(--accent)]"
+                  />
+                  <label htmlFor="claim-check" className="text-xs text-[var(--text-primary)] cursor-pointer">
+                    Claim this skill immediately (Marks as Claimed, ready for assessment)
+                  </label>
+                </div>
+
+                <div className="flex items-center justify-end gap-3 pt-3 border-t border-[var(--glass-border)]">
+                  <button
+                    type="button"
+                    onClick={() => setIsAddModalOpen(false)}
+                    className="btn-secondary btn-sm text-xs cursor-pointer"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    className="btn-primary btn-sm text-xs font-semibold shadow-sm cursor-pointer"
+                  >
+                    Add Skill
+                  </button>
+                </div>
+              </form>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* REMOVE SKILL CONFIRMATION MODAL */}
+      <AnimatePresence>
+        {skillToRemove && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.98, y: 8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.98, y: 8 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="w-full max-w-sm rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-7 shadow-xl space-y-4 text-center relative overflow-hidden"
+            >
+              <div className="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-500 mx-auto flex items-center justify-center border border-rose-500/20 shadow-xs">
+                <Trash2 className="w-5 h-5" />
+              </div>
+              <h3 className="text-base font-bold text-[var(--text-primary)]">
+                Remove {skillToRemove.name} from your skills?
+              </h3>
+              <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+                Are you sure you want to remove this skill? Your assessments and earned certificates will remain safely preserved.
+              </p>
+              <div className="flex items-center justify-center gap-3 pt-2">
                 <button
                   type="button"
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="btn-secondary btn-sm text-xs cursor-pointer"
+                  disabled={isDeleting}
+                  onClick={() => setSkillToRemove(null)}
+                  className="btn-secondary btn-sm text-xs cursor-pointer disabled:opacity-50"
                 >
                   Cancel
                 </button>
                 <button
-                  type="submit"
-                  className="btn-primary btn-sm text-xs font-semibold shadow-sm cursor-pointer"
+                  type="button"
+                  disabled={isDeleting}
+                  onClick={handleConfirmRemove}
+                  className="btn-destructive btn-sm text-xs font-semibold flex items-center justify-center gap-2 disabled:opacity-50 min-w-[110px] cursor-pointer"
                 >
-                  Add Skill
+                  {isDeleting ? (
+                    <>
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      <span>Removing...</span>
+                    </>
+                  ) : (
+                    <span>Remove</span>
+                  )}
                 </button>
               </div>
-            </form>
-          </div>
-        </div>
-      )}
-
-      {/* REMOVE SKILL CONFIRMATION MODAL */}
-      {skillToRemove && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in">
-          <div className="w-full max-w-sm rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-7 shadow-xl space-y-4 text-center relative overflow-hidden">
-            <div className="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-500 mx-auto flex items-center justify-center border border-rose-500/20 shadow-xs">
-              <Trash2 className="w-5 h-5" />
-            </div>
-            <h3 className="text-base font-bold text-[var(--text-primary)]">
-              Remove {skillToRemove.name} from your skills?
-            </h3>
-            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-              Are you sure you want to remove this skill? Your assessments and earned certificates will remain safely preserved.
-            </p>
-            <div className="flex items-center justify-center gap-3 pt-2">
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={() => setSkillToRemove(null)}
-                className="btn-secondary btn-sm text-xs cursor-pointer disabled:opacity-50"
-              >
-                Cancel
-              </button>
-              <button
-                type="button"
-                disabled={isDeleting}
-                onClick={handleConfirmRemove}
-                className="btn-destructive btn-sm text-xs font-semibold flex items-center justify-center gap-2 disabled:opacity-50 min-w-[110px] cursor-pointer"
-              >
-                {isDeleting ? (
-                  <>
-                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
-                    <span>Removing...</span>
-                  </>
-                ) : (
-                  <span>Remove</span>
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Floating Toast Notification */}
-      {toast && (
-        <div className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-xs font-medium bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-primary)]">
-          {toast.type === 'success' ? (
-            <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
-          ) : (
-            <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
-          )}
-          <span>{toast.message}</span>
-        </div>
-      )}
+      <AnimatePresence>
+        {toast && (
+          <motion.div
+            initial={{ opacity: 0, y: 12, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 12, scale: 0.96 }}
+            transition={{ duration: 0.2 }}
+            className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-xs font-medium bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-primary)]"
+          >
+            {toast.type === 'success' ? (
+              <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+            ) : (
+              <AlertCircle className="w-4 h-4 text-rose-500 shrink-0" />
+            )}
+            <span>{toast.message}</span>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

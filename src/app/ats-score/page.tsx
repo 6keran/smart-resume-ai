@@ -2,6 +2,7 @@
 
 import React, { useState, useRef } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileSearch,
   UploadCloud,
@@ -233,18 +234,25 @@ export default function AtsScorePage() {
             <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 space-y-6 text-left shadow-sm">
               {/* Tab Selector */}
               <div className="flex items-center justify-between border-b border-[#E5E8ED] pb-4">
-                <div role="tablist" aria-label="Resume input mode" className="flex items-center gap-2 p-1 rounded-lg bg-[#F6F7F9] border border-[#E5E8ED]">
+                <div role="tablist" aria-label="Resume input mode" className="flex items-center gap-2 p-1 rounded-lg bg-[#F6F7F9] border border-[#E5E8ED] relative">
                   <button
                     role="tab"
                     aria-selected={activeTab === 'upload'}
                     type="button"
                     onClick={() => { setActiveTab('upload'); setErrorMessage(null); }}
-                    className={`px-4 py-2 rounded-md text-[14px] font-semibold transition-all cursor-pointer ${
+                    className={`px-4 py-2 rounded-md text-[14px] font-semibold transition-colors cursor-pointer relative z-10 ${
                       activeTab === 'upload'
-                        ? 'bg-white text-[#3157C8] shadow-sm'
+                        ? 'text-[#3157C8]'
                         : 'text-[#626B78] hover:text-[#20242B]'
                     }`}
                   >
+                    {activeTab === 'upload' && (
+                      <motion.div
+                        layoutId="ats-tab-pill"
+                        className="absolute inset-0 bg-white rounded-md shadow-xs -z-10"
+                        transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                      />
+                    )}
                     Upload Resume File
                   </button>
                   <button
@@ -252,102 +260,119 @@ export default function AtsScorePage() {
                     aria-selected={activeTab === 'paste'}
                     type="button"
                     onClick={() => { setActiveTab('paste'); setErrorMessage(null); }}
-                    className={`px-4 py-2 rounded-md text-[14px] font-semibold transition-all cursor-pointer ${
+                    className={`px-4 py-2 rounded-md text-[14px] font-semibold transition-colors cursor-pointer relative z-10 ${
                       activeTab === 'paste'
-                        ? 'bg-white text-[#3157C8] shadow-sm'
+                        ? 'text-[#3157C8]'
                         : 'text-[#626B78] hover:text-[#20242B]'
                     }`}
                   >
+                    {activeTab === 'paste' && (
+                      <motion.div
+                        layoutId="ats-tab-pill"
+                        className="absolute inset-0 bg-white rounded-md shadow-xs -z-10"
+                        transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                      />
+                    )}
                     Paste Text
                   </button>
                 </div>
                 <span className="text-[13px] text-[#626B78] hidden sm:inline">Supported: PDF, DOCX, TXT (Max 10MB)</span>
               </div>
 
-              {/* Upload Drop Zone */}
-              {activeTab === 'upload' ? (
-                <div>
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
+              {/* Upload Drop Zone / Paste Area */}
+              <AnimatePresence mode="wait">
+                <motion.div
+                  key={activeTab}
+                  initial={{ opacity: 0, y: 4 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -4 }}
+                  transition={{ duration: 0.16 }}
+                >
+                  {activeTab === 'upload' ? (
+                    <div>
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
 
-                  {!selectedFile ? (
-                    <div
-                      role="button"
-                      tabIndex={0}
-                      aria-label="Upload resume file"
-                      onKeyDown={(e) => {
-                        if (e.key === 'Enter' || e.key === ' ') {
-                          e.preventDefault();
-                          fileInputRef.current?.click();
-                        }
-                      }}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onDrop={handleDrop}
-                      onClick={() => fileInputRef.current?.click()}
-                      className={`border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3157C8] ${
-                        isDragging
-                          ? 'border-[#3157C8] bg-blue-50/50 scale-[1.01]'
-                          : 'border-[#E5E8ED] bg-[#F6F7F9] hover:border-[#3157C8] hover:bg-white'
-                      }`}
-                    >
-                      <div className="w-14 h-14 rounded-xl bg-blue-50 border border-blue-200 text-[#3157C8] flex items-center justify-center mx-auto mb-3 shadow-xs">
-                        <UploadCloud className="w-7 h-7" />
-                      </div>
-                      <p className="text-[16px] font-semibold text-[#20242B]">
-                        Click to upload or drag and drop your resume
-                      </p>
-                      <p className="text-[14px] text-[#626B78] mt-1">
-                        Accepts standard PDF, DOCX, or plain text resumes
-                      </p>
+                      {!selectedFile ? (
+                        <div
+                          role="button"
+                          tabIndex={0}
+                          aria-label="Upload resume file"
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter' || e.key === ' ') {
+                              e.preventDefault();
+                              fileInputRef.current?.click();
+                            }
+                          }}
+                          onDragOver={handleDragOver}
+                          onDragLeave={handleDragLeave}
+                          onDrop={handleDrop}
+                          onClick={() => fileInputRef.current?.click()}
+                          className={`border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3157C8] ${
+                            isDragging
+                              ? 'border-[#3157C8] bg-blue-50/50 scale-[1.01]'
+                              : 'border-[#E5E8ED] bg-[#F6F7F9] hover:border-[#3157C8] hover:bg-white'
+                          }`}
+                        >
+                          <div className="w-14 h-14 rounded-xl bg-blue-50 border border-blue-200 text-[#3157C8] flex items-center justify-center mx-auto mb-3 shadow-xs">
+                            <UploadCloud className="w-7 h-7" />
+                          </div>
+                          <p className="text-[16px] font-semibold text-[#20242B]">
+                            Click to upload or drag and drop your resume
+                          </p>
+                          <p className="text-[14px] text-[#626B78] mt-1">
+                            Accepts standard PDF, DOCX, or plain text resumes
+                          </p>
+                        </div>
+                      ) : (
+                        <div className="p-4 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] flex items-center justify-between">
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-11 h-11 rounded-lg bg-blue-50 text-[#3157C8] flex items-center justify-center shrink-0 border border-blue-200">
+                              <FileText className="w-5 h-5" />
+                            </div>
+                            <div className="min-w-0">
+                              <p className="text-[15px] font-bold text-[#20242B] truncate">
+                                {selectedFile.name}
+                              </p>
+                              <p className="text-[13px] text-[#626B78]">
+                                {(selectedFile.size / 1024).toFixed(1)} KB • {selectedFile.name.split('.').pop()?.toUpperCase()}
+                              </p>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={clearSelection}
+                            className="p-2 rounded-lg text-[#626B78] hover:text-[#C43D43] hover:bg-red-50 transition-colors cursor-pointer"
+                            aria-label="Remove selected file"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   ) : (
-                    <div className="p-4 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] flex items-center justify-between">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-11 h-11 rounded-lg bg-blue-50 text-[#3157C8] flex items-center justify-center shrink-0 border border-blue-200">
-                          <FileText className="w-5 h-5" />
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-[15px] font-bold text-[#20242B] truncate">
-                            {selectedFile.name}
-                          </p>
-                          <p className="text-[13px] text-[#626B78]">
-                            {(selectedFile.size / 1024).toFixed(1)} KB • {selectedFile.name.split('.').pop()?.toUpperCase()}
-                          </p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={clearSelection}
-                        className="p-2 rounded-lg text-[#626B78] hover:text-[#C43D43] hover:bg-red-50 transition-colors cursor-pointer"
-                        aria-label="Remove selected file"
-                      >
-                        <X className="w-4 h-4" />
-                      </button>
+                    <div>
+                      <label htmlFor="ats-paste-textarea" className="sr-only">
+                        Paste Resume Text
+                      </label>
+                      <textarea
+                        id="ats-paste-textarea"
+                        rows={8}
+                        value={pastedText}
+                        onChange={(e) => setPastedText(e.target.value)}
+                        placeholder="Paste your raw resume text here (experience, summary, skills, and education)..."
+                        aria-label="Paste resume text"
+                        className="w-full p-4 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[14px] font-mono text-[#20242B] placeholder:text-[#626B78] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3157C8]"
+                      />
                     </div>
                   )}
-                </div>
-              ) : (
-                <div>
-                  <label htmlFor="ats-paste-textarea" className="sr-only">
-                    Paste Resume Text
-                  </label>
-                  <textarea
-                    id="ats-paste-textarea"
-                    rows={8}
-                    value={pastedText}
-                    onChange={(e) => setPastedText(e.target.value)}
-                    placeholder="Paste your raw resume text here (experience, summary, skills, and education)..."
-                    aria-label="Paste resume text"
-                    className="w-full p-4 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[14px] font-mono text-[#20242B] placeholder:text-[#626B78] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3157C8]"
-                  />
-                </div>
-              )}
+                </motion.div>
+              </AnimatePresence>
 
               {/* Optional Job Description Alignment */}
               <div className="pt-1">
@@ -472,7 +497,13 @@ export default function AtsScorePage() {
 
         {/* ── ATS Score Results View ── */}
         {analysis && (
-          <div id="ats-score-results" className="space-y-6">
+          <motion.div
+            id="ats-score-results"
+            initial={{ opacity: 0, scale: 0.98, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-6"
+          >
             {/* Top Navigation Bar */}
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-[#E5E8ED] bg-white shadow-xs">
               <div className="flex items-center gap-2">
@@ -769,7 +800,7 @@ export default function AtsScorePage() {
                 )}
               </div>
             </details>
-          </div>
+          </motion.div>
         )}
       </div>
     </div>

@@ -2,6 +2,8 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatedCounter } from '@/components/ui/MotionPrimitives';
 import {
   ShieldCheck,
   Award,
@@ -154,7 +156,7 @@ export default function CareerReadinessHUD({
           </div>
           <div className="flex items-baseline gap-3 pt-0.5">
             <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
-              Overall Preparedness: {overallScore}/100
+              Overall Preparedness: <AnimatedCounter value={overallScore} />/100
             </h2>
             <span
               className={`text-xs font-bold px-2.5 py-0.5 rounded-full border ${
@@ -190,12 +192,19 @@ export default function CareerReadinessHUD({
                 key={q.key}
                 type="button"
                 onClick={() => setActiveQuadrantKey(q.key)}
-                className={`p-4 rounded-xl border text-left transition-all duration-150 cursor-pointer space-y-3 relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
+                className={`p-4 rounded-xl border text-left transition-colors duration-150 cursor-pointer space-y-3 relative group focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] z-0 ${
                   isActive
-                    ? 'bg-[var(--bg-elevated)] border-[var(--accent)] shadow-sm ring-2 ring-[var(--accent)]/15'
+                    ? 'border-[var(--accent)] shadow-sm'
                     : 'bg-[var(--bg-card)] border-[var(--border-color)] hover:border-[var(--accent)]/40 hover:bg-[var(--bg-secondary)]/60'
                 }`}
               >
+                {isActive && (
+                  <motion.div
+                    layoutId="hud-quadrant-indicator"
+                    className="absolute inset-0 rounded-xl bg-[var(--bg-elevated)] ring-2 ring-[var(--accent)]/20 -z-10"
+                    transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                  />
+                )}
                 <div className="flex items-center justify-between">
                   <div
                     className={`w-8 h-8 rounded-lg flex items-center justify-center transition-colors ${
@@ -207,7 +216,7 @@ export default function CareerReadinessHUD({
                     <Icon className="w-4 h-4" />
                   </div>
                   <span className="text-base font-extrabold text-[var(--text-primary)] font-mono">
-                    {q.score}%
+                    <AnimatedCounter value={q.score} suffix="%" />
                   </span>
                 </div>
 
@@ -241,65 +250,74 @@ export default function CareerReadinessHUD({
         </div>
 
         {/* ── Active Quadrant Inspection & Action Drawer ── */}
-        <div className="p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/50 space-y-4">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border-color)] pb-3">
-            <div className="flex items-center gap-2">
-              <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
-              <h3 className="text-sm font-bold text-[var(--text-primary)]">
-                {activeQuadrant.name}
-              </h3>
-              <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--accent)] font-semibold border border-[var(--accent)]/20">
-                Weight: 25%
-              </span>
+        <AnimatePresence mode="wait">
+          <motion.div
+            key={activeQuadrantKey}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/50 space-y-4"
+          >
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border-color)] pb-3">
+              <div className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)]" />
+                <h3 className="text-sm font-bold text-[var(--text-primary)]">
+                  {activeQuadrant.name}
+                </h3>
+                <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--accent)] font-semibold border border-[var(--accent)]/20">
+                  Weight: 25%
+                </span>
+              </div>
+
+              <Link
+                href={activeQuadrant.ctaHref}
+                className="btn-primary text-xs py-1.5 px-3.5 rounded-lg inline-flex items-center gap-1.5 self-start sm:self-auto shadow-xs"
+              >
+                <span>{activeQuadrant.ctaText}</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
             </div>
 
-            <Link
-              href={activeQuadrant.ctaHref}
-              className="btn-primary text-xs py-1.5 px-3.5 rounded-lg inline-flex items-center gap-1.5 self-start sm:self-auto shadow-xs"
-            >
-              <span>{activeQuadrant.ctaText}</span>
-              <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
+            <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
+              {activeQuadrant.description}
+            </p>
 
-          <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-            {activeQuadrant.description}
-          </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+              {/* Strengths */}
+              <div className="p-3.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
+                  <CheckCircle2 className="w-3.5 h-3.5" />
+                  <span>Demonstrated Capability</span>
+                </span>
+                <ul className="space-y-1.5 text-xs text-[var(--text-secondary)]">
+                  {activeQuadrant.strengths.slice(0, 2).map((s, idx) => (
+                    <li key={idx} className="flex items-start gap-1.5">
+                      <span className="text-[var(--accent)] font-bold">•</span>
+                      <span>{s}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
-            {/* Strengths */}
-            <div className="p-3.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-emerald-600 dark:text-emerald-400 flex items-center gap-1.5">
-                <CheckCircle2 className="w-3.5 h-3.5" />
-                <span>Demonstrated Capability</span>
-              </span>
-              <ul className="space-y-1.5 text-xs text-[var(--text-secondary)]">
-                {activeQuadrant.strengths.slice(0, 2).map((s, idx) => (
-                  <li key={idx} className="flex items-start gap-1.5">
-                    <span className="text-[var(--accent)] font-bold">•</span>
-                    <span>{s}</span>
-                  </li>
-                ))}
-              </ul>
+              {/* Next Recommended Milestones */}
+              <div className="p-3.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--accent)] flex items-center gap-1.5">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  <span>Recommended Next Step</span>
+                </span>
+                <ul className="space-y-1.5 text-xs text-[var(--text-secondary)]">
+                  {activeQuadrant.recommendations.slice(0, 2).map((r, idx) => (
+                    <li key={idx} className="flex items-start gap-1.5">
+                      <span className="text-[var(--accent)] font-bold">•</span>
+                      <span>{r}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
-
-            {/* Next Recommended Milestones */}
-            <div className="p-3.5 rounded-lg border border-[var(--border-color)] bg-[var(--bg-card)] space-y-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-[var(--accent)] flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5" />
-                <span>Recommended Next Step</span>
-              </span>
-              <ul className="space-y-1.5 text-xs text-[var(--text-secondary)]">
-                {activeQuadrant.recommendations.slice(0, 2).map((r, idx) => (
-                  <li key={idx} className="flex items-start gap-1.5">
-                    <span className="text-[var(--accent)] font-bold">•</span>
-                    <span>{r}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          </div>
-        </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
     </div>
   );

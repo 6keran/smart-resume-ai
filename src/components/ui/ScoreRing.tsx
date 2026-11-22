@@ -26,10 +26,25 @@ export function ScoreRing({
   const [animatedScore, setAnimatedScore] = useState(0);
 
   useEffect(() => {
-    const timer = setTimeout(() => {
-      setAnimatedScore(score);
-    }, 150);
-    return () => clearTimeout(timer);
+    let animFrame: number;
+    const startVal = 0;
+    const endVal = score;
+    const durationMs = 850;
+    const startTime = performance.now();
+
+    const update = (now: number) => {
+      const elapsed = now - startTime;
+      const progress = Math.min(elapsed / durationMs, 1);
+      // easeOutCubic
+      const eased = 1 - Math.pow(1 - progress, 3);
+      setAnimatedScore(startVal + (endVal - startVal) * eased);
+      if (progress < 1) {
+        animFrame = requestAnimationFrame(update);
+      }
+    };
+
+    animFrame = requestAnimationFrame(update);
+    return () => cancelAnimationFrame(animFrame);
   }, [score]);
 
   const percentage = Math.min(Math.max((animatedScore / maxScore) * 100, 0), 100);

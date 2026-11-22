@@ -19,15 +19,15 @@ export const ease = {
 // ─── Duration tokens (seconds) ──────────────────────────────────────
 export const duration = {
   micro: 0.16,      // 160ms: hover, tap, icon shifts
-  fast: 0.22,       // 220ms: dropdowns, tabs, tooltips
-  normal: 0.32,     // 320ms: cards, panels, popovers
-  panel: 0.28,      // 280ms: small panels, tabs
-  dialog: 0.32,     // 320ms: dialogs, modals
-  drawer: 0.30,     // 300ms: side drawers, slide-overs
-  slow: 0.45,       // 450ms: larger container transitions
-  hero: 0.55,       // 550ms: hero entrances
-  stagger: 0.06,    // 60ms: between list/grid items
-  heroStagger: 0.07,// 70ms: between hero elements
+  fast: 0.20,       // 200ms: dropdowns, tabs, tooltips
+  normal: 0.26,     // 260ms: cards, panels, popovers
+  panel: 0.24,      // 240ms: small panels, tabs
+  dialog: 0.20,     // 200ms: dialogs, modals (per spec: 200ms)
+  drawer: 0.28,     // 280ms: side drawers, slide-overs
+  slow: 0.38,       // 380ms: larger container transitions
+  hero: 0.45,       // 450ms: hero entrances
+  stagger: 0.05,    // 50ms: between list/grid items
+  heroStagger: 0.06,// 60ms: between hero elements
 };
 
 // ─── Shared transition presets ──────────────────────────────────────
@@ -83,18 +83,17 @@ export const fadeRight: Variants = {
   },
 };
 
-/** Scale + fade – modals, dialogs, popovers */
+/** Scale + fade – modals, dialogs, popovers (Opening: fade + scale from 0.98; Closing: fade; Duration: 200ms) */
 export const scaleIn: Variants = {
-  hidden: { opacity: 0, scale: 0.96 },
+  hidden: { opacity: 0, scale: 0.98 },
   visible: {
     opacity: 1,
     scale: 1,
-    transition: { duration: duration.dialog, ease: ease.out },
+    transition: { duration: 0.20, ease: ease.out },
   },
   exit: {
     opacity: 0,
-    scale: 0.98,
-    transition: { duration: duration.fast, ease: ease.out },
+    transition: { duration: 0.15, ease: ease.out },
   },
 };
 
@@ -155,60 +154,62 @@ export const featureCardItem: Variants = {
   },
 };
 
-/** Card hover interaction */
+/** Card hover interaction (subtle lift, no glow, scale <= 1.012) */
 export const cardHover: Variants = {
   rest: { scale: 1, y: 0 },
   hover: {
-    scale: 1.012,
-    y: -2.5,
+    scale: 1.01,
+    y: -2,
     transition: { duration: duration.micro, ease: ease.outQuint },
   },
   tap: {
-    scale: 0.985,
+    scale: 0.99,
     transition: { duration: 0.08 },
   },
 };
 
-/** Button press micro-interaction */
+/** Button press micro-interaction (physical lift and compression) */
 export const buttonPress: Variants = {
-  rest: { scale: 1 },
+  rest: { scale: 1, y: 0 },
   hover: {
-    scale: 1.015,
+    scale: 1.01,
+    y: -1,
     transition: { duration: 0.15, ease: ease.outQuint },
   },
   tap: {
-    scale: 0.975,
+    scale: 0.98,
+    y: 0,
     transition: { duration: 0.08 },
   },
 };
 
-/** Slide-in drawer from left */
+/** Slide-in drawer from left (spring motion, no abrupt appearance) */
 export const drawerLeft: Variants = {
   hidden: { x: '-100%', opacity: 0 },
   visible: {
     x: 0,
     opacity: 1,
-    transition: { duration: duration.drawer, ease: ease.out },
+    transition: { type: 'spring', damping: 28, stiffness: 300, mass: 0.8 },
   },
   exit: {
     x: '-100%',
     opacity: 0,
-    transition: { duration: 0.2, ease: ease.out },
+    transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
   },
 };
 
-/** Slide-in drawer from right (e.g., chat, side inspectors) */
+/** Slide-in drawer from right (spring motion, e.g., chat, side inspectors) */
 export const drawerRight: Variants = {
   hidden: { x: '100%', opacity: 0 },
   visible: {
     x: 0,
     opacity: 1,
-    transition: { duration: duration.drawer, ease: ease.out },
+    transition: { type: 'spring', damping: 28, stiffness: 300, mass: 0.8 },
   },
   exit: {
     x: '100%',
     opacity: 0,
-    transition: { duration: 0.2, ease: ease.out },
+    transition: { duration: 0.2, ease: [0.4, 0, 0.2, 1] },
   },
 };
 
@@ -234,16 +235,11 @@ export const tabPanel: Variants = {
   },
 };
 
-/** Ambient breathing halo behind showcase */
+/** Subtle container (removed decorative breathing halo) */
 export const ambientBreathing: Variants = {
   animate: {
-    opacity: [0.65, 0.88, 0.65],
-    scale: [1, 1.025, 1],
-    transition: {
-      duration: 8,
-      repeat: Infinity,
-      ease: 'easeInOut',
-    },
+    opacity: 1,
+    scale: 1,
   },
 };
 

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle2,
   AlertTriangle,
@@ -26,6 +27,7 @@ export function AtsExplainabilityBreakdown({
   className = '',
 }: AtsExplainabilityBreakdownProps) {
   const [expandedCategory, setExpandedCategory] = useState<string | null>(null);
+  const [showAllKeywords, setShowAllKeywords] = useState<boolean>(false);
 
   const toggleCategory = (cat: string) => {
     setExpandedCategory(prev => (prev === cat ? null : cat));
@@ -104,7 +106,7 @@ export function AtsExplainabilityBreakdown({
               </span>
               {detectedKws.length > 0 ? (
                 <div className="flex flex-wrap gap-1.5">
-                  {detectedKws.slice(0, 10).map((kw, idx) => (
+                  {(showAllKeywords ? detectedKws : detectedKws.slice(0, 10)).map((kw, idx) => (
                     <span
                       key={idx}
                       className="inline-flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-800 border border-emerald-200 text-[12px] font-medium"
@@ -114,9 +116,13 @@ export function AtsExplainabilityBreakdown({
                     </span>
                   ))}
                   {detectedKws.length > 10 && (
-                    <span className="text-[12px] text-[#626B78] self-center pl-1 font-medium">
-                      +{detectedKws.length - 10} more
-                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setShowAllKeywords(!showAllKeywords)}
+                      className="text-[12px] text-[#3157C8] hover:underline self-center pl-1 font-semibold cursor-pointer"
+                    >
+                      {showAllKeywords ? 'Show fewer' : `+${detectedKws.length - 10} more`}
+                    </button>
                   )}
                 </div>
               ) : (

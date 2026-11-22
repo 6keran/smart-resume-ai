@@ -1466,78 +1466,91 @@ export function CareerChatbot() {
             {/* Messages Body */}
             <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:px-6 space-y-4 text-[14px] sm:text-[15px]">
               <div className={`space-y-4 ${isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}`}>
-                {messages.map((m) => (
-                  <motion.div
-                    key={m.id}
-                    initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 4 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={prefersReduced ? { duration: 0 } : { duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
-                    className={`flex gap-3 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
-                  >
-                    {m.role === 'assistant' && (
-                      <div className="w-7 h-7 rounded-full bg-[#3157C8]/10 text-[#3157C8] flex items-center justify-center shrink-0 mt-0.5 border border-[#3157C8]/20">
-                        <Bot className="w-4 h-4" />
-                      </div>
-                    )}
-
-                    <div
-                      className={`max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed ${m.role === 'user'
-                        ? 'bg-[#3157C8] text-white rounded-br-xs'
-                        : 'bg-white text-[#20242B] border border-[#E5E8ED] shadow-xs rounded-bl-xs'
-                        }`}
+                <AnimatePresence initial={false}>
+                  {messages.map((m) => (
+                    <motion.div
+                      layout
+                      key={m.id}
+                      initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 6 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, scale: 0.96 }}
+                      transition={prefersReduced ? { duration: 0 } : { duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      className={`flex gap-3 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
                     >
-                      {m.role === 'assistant' ? (
-                        <FormattedAssistantMessage content={m.content} />
-                      ) : (
-                        <div className="whitespace-pre-wrap">{m.content}</div>
+                      {m.role === 'assistant' && (
+                        <div className="w-7 h-7 rounded-full bg-[#3157C8]/10 text-[#3157C8] flex items-center justify-center shrink-0 mt-0.5 border border-[#3157C8]/20">
+                          <Bot className="w-4 h-4" />
+                        </div>
                       )}
 
-                      <div className="mt-2 flex items-center justify-between gap-3 text-[12px] opacity-75">
-                        <div className="flex items-center gap-2">
-                          <span>{m.timestamp}</span>
-                          {m.provider && <span className="font-mono text-[11px]">{m.provider}</span>}
-                        </div>
-                        {m.role === 'assistant' && (
-                          <div className="flex items-center gap-2">
-                            <FeedbackButtons category="Career Copilot" contextId={m.id} />
-                            <button
-                              type="button"
-                              onClick={() => handleCopyMessage(m.id, m.content)}
-                              className="inline-flex items-center gap-1 hover:text-[#20242B] transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-slate-100"
-                              title={copiedMessageId === m.id ? 'Copied to clipboard' : 'Copy answer'}
-                              aria-label={copiedMessageId === m.id ? 'Answer copied' : 'Copy assistant answer'}
-                            >
-                              {copiedMessageId === m.id ? (
-                                <>
-                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                  <span className="text-emerald-600 font-medium">Copied</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Copy className="w-3.5 h-3.5" />
-                                  <span>Copy</span>
-                                </>
-                              )}
-                            </button>
-                          </div>
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed ${m.role === 'user'
+                          ? 'bg-[#3157C8] text-white rounded-br-xs'
+                          : 'bg-white text-[#20242B] border border-[#E5E8ED] shadow-xs rounded-bl-xs'
+                          }`}
+                      >
+                        {m.role === 'assistant' ? (
+                          <FormattedAssistantMessage content={m.content} />
+                        ) : (
+                          <div className="whitespace-pre-wrap">{m.content}</div>
                         )}
-                      </div>
-                    </div>
 
-                    {m.role === 'user' && (
-                      <div className="w-7 h-7 rounded-full bg-[#3157C8]/10 text-[#3157C8] border border-[#3157C8]/20 flex items-center justify-center shrink-0 mt-0.5 font-bold text-[12px]">
-                        {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                        <div className="mt-2 flex items-center justify-between gap-3 text-[12px] opacity-75">
+                          <div className="flex items-center gap-2">
+                            <span>{m.timestamp}</span>
+                            {m.provider && <span className="font-mono text-[11px]">{m.provider}</span>}
+                          </div>
+                          {m.role === 'assistant' && (
+                            <div className="flex items-center gap-2">
+                              <FeedbackButtons category="Career Copilot" contextId={m.id} />
+                              <button
+                                type="button"
+                                onClick={() => handleCopyMessage(m.id, m.content)}
+                                className="inline-flex items-center gap-1 hover:text-[#20242B] transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-slate-100"
+                                title={copiedMessageId === m.id ? 'Copied to clipboard' : 'Copy answer'}
+                                aria-label={copiedMessageId === m.id ? 'Answer copied' : 'Copy assistant answer'}
+                              >
+                                {copiedMessageId === m.id ? (
+                                  <>
+                                    <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                    <span className="text-emerald-600 font-medium">Copied</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Copy className="w-3.5 h-3.5" />
+                                    <span>Copy</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          )}
+                        </div>
                       </div>
-                    )}
-                  </motion.div>
-                ))}
 
-                {chatLoading && (
-                  <div className="flex items-center gap-2 text-[var(--text-secondary)] text-xs py-2" role="status" aria-live="polite">
-                    <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--accent)]" />
-                    <span>Generating response...</span>
-                  </div>
-                )}
+                      {m.role === 'user' && (
+                        <div className="w-7 h-7 rounded-full bg-[#3157C8]/10 text-[#3157C8] border border-[#3157C8]/20 flex items-center justify-center shrink-0 mt-0.5 font-bold text-[12px]">
+                          {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
+                        </div>
+                      )}
+                    </motion.div>
+                  ))}
+
+                  {chatLoading && (
+                    <motion.div
+                      layout
+                      initial={{ opacity: 0, y: 4 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -4 }}
+                      transition={{ duration: 0.15 }}
+                      className="flex items-center gap-2 text-[var(--text-secondary)] text-xs py-2"
+                      role="status"
+                      aria-live="polite"
+                    >
+                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--accent)]" />
+                      <span>Generating response...</span>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
                 {error && (
                   <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs flex flex-col gap-2" role="alert">

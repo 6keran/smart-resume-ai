@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Briefcase,
   Search,
@@ -1132,17 +1133,24 @@ function JobSearchContent() {
               </button>
             )}
 
-            <div className="flex items-center gap-1 border border-[var(--glass-border)] rounded-full p-1 bg-[var(--glass-bg)]">
+            <div className="flex items-center gap-1 border border-[var(--glass-border)] rounded-full p-1 bg-[var(--glass-bg)] relative">
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
                 aria-label="Grid view"
                 aria-pressed={viewMode === 'grid'}
-                className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${viewMode === 'grid'
-                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors duration-150 cursor-pointer relative z-10 ${viewMode === 'grid'
+                  ? 'text-white'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
               >
+                {viewMode === 'grid' && (
+                  <motion.div
+                    layoutId="jobs-view-mode-pill"
+                    className="absolute inset-0 bg-[var(--accent)] rounded-full shadow-xs -z-10"
+                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                  />
+                )}
                 <LayoutGrid className="w-3.5 h-3.5" />
               </button>
               <button
@@ -1150,11 +1158,18 @@ function JobSearchContent() {
                 onClick={() => setViewMode('list')}
                 aria-label="List view"
                 aria-pressed={viewMode === 'list'}
-                className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${viewMode === 'list'
-                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors duration-150 cursor-pointer relative z-10 ${viewMode === 'list'
+                  ? 'text-white'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
               >
+                {viewMode === 'list' && (
+                  <motion.div
+                    layoutId="jobs-view-mode-pill"
+                    className="absolute inset-0 bg-[var(--accent)] rounded-full shadow-xs -z-10"
+                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                  />
+                )}
                 <List className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -1462,11 +1477,17 @@ function JobSearchContent() {
                 : 'space-y-4'
             }
           >
-            {jobs.map((job) => (
-              <div
-                key={job.id}
-                className="bg-white rounded-2xl border border-[#E5E8ED] hover:border-[#3157C8] hover:shadow-md transition-all p-5 flex flex-col justify-between group text-left space-y-4"
-              >
+            <AnimatePresence initial={false}>
+              {jobs.map((job) => (
+                <motion.div
+                  layout
+                  key={job.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  className="bg-white rounded-2xl border border-[#E5E8ED] hover:border-[#3157C8] hover:shadow-md transition-all p-5 flex flex-col justify-between group text-left space-y-4"
+                >
                 <div className="space-y-2.5">
                   {/* Top: Match Badge & Workplace/Employment */}
                   <div className="flex items-center justify-between gap-2">
@@ -1582,9 +1603,10 @@ function JobSearchContent() {
                     )}
                   </button>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </AnimatePresence>
+        </div>
 
           {/* Pagination */}
           {searchResponse && searchResponse.totalPages > 1 && (
