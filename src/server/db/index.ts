@@ -1865,16 +1865,18 @@ export async function recordResumeAnalysis(data: {
         VALUES (?, ?, ?, ?, ?, ?, ?, ?)
       `);
       for (const rec of data.recommendations) {
-        if (!rec.title) continue;
+        if (!rec) continue;
+        const recTitle = typeof rec === 'string' ? rec : rec.title;
+        if (!recTitle) continue;
         const impId = `imp_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
         await insertImp.run(
           impId,
           effectiveUserId,
           data.resumeId || null,
-          rec.category || 'ATS Optimization',
-          rec.title,
-          rec.originalText || 'Previous unoptimized phrasing or missing bullet points',
-          rec.improvedText || rec.actionText || 'Optimized industry-standard action impact phrasing',
+          typeof rec === 'object' && rec.category ? rec.category : 'ATS Optimization',
+          recTitle,
+          typeof rec === 'object' && rec.originalText ? rec.originalText : 'Previous unoptimized phrasing or missing bullet points',
+          typeof rec === 'object' && (rec.improvedText || rec.actionText) ? (rec.improvedText || rec.actionText) : 'Optimized industry-standard action impact phrasing',
           now
         );
       }
@@ -7104,6 +7106,7 @@ export async function upsertStudentProfile(
   const db = getDb();
   const now = new Date().toISOString();
   const existing = await getStudentProfile(userId);
+  const existingGoal = await getUserCareerGoal(userId).catch(() => null);
 
   const institution = (data.institution !== undefined ? data.institution : (existing?.institution || '')).trim();
   const degree = (data.degree !== undefined ? data.degree : (existing?.degree || '')).trim();
@@ -7117,7 +7120,11 @@ export async function upsertStudentProfile(
   const currentSemester = (data.currentSemester !== undefined ? data.currentSemester : (existing?.currentSemester || null))?.trim() || null;
   const cgpa = data.cgpa !== undefined && data.cgpa !== null ? String(data.cgpa).trim() : (existing?.cgpa || null);
   const studentType = (data.studentType || existing?.studentType || 'college_student') as StudentProfileDTO['studentType'];
-  const targetRole = (data.targetRole !== undefined ? data.targetRole : (existing?.targetRole || '')).trim();
+  const targetRole = (
+    data.targetRole !== undefined
+      ? data.targetRole
+      : (existing?.targetRole || existingGoal?.target_role || '')
+  ).trim();
   const targetWorkType = (data.targetWorkType || existing?.targetWorkType || 'both') as StudentProfileDTO['targetWorkType'];
 
   const preferredLocations = Array.isArray(data.preferredLocations)
@@ -7251,10 +7258,10 @@ export async function upsertStudentProfile(
     if (targetRole) {
       await upsertUserCareerGoal(userId, {
         targetRole,
-        experienceLevel: mergedPreferences.experienceBand || undefined,
+        experienceLevel: mergedPreferences.experienceBand || (studentType === 'college_student' ? 'Fresher / Entry Level' : 'Fresher / Entry Level'),
         preferredLocation: preferredLocations[0] || null,
       });
-    } else {
+    } else if (data.targetRole !== undefined) {
       await db.prepare('DELETE FROM user_career_goals WHERE user_id = ?').run(userId);
     }
   } catch { }
@@ -7583,12 +7590,12 @@ export async function createGuidedProject(
   const difficulty = data.difficulty || 'Intermediate';
   const targetRole = (data.targetRole || '').trim();
   const techStack = Array.isArray(data.techStack) ? data.techStack : [];
-  const problemStatement = data.problemStatement || '';
-  const realWorldUseCase = data.realWorldUseCase || '';
-  const architectureOverview = data.architectureOverview || '';
-  const databaseDesign = data.databaseDesign || '';
-  const estimatedComplexity = data.estimatedComplexity || '2-3 weeks';
-  const resumeValue = data.resumeValue || '';
+  const problemStatement = typeof data.problemStatement === 'string' ? data.problemStatement : data.problemStatement ? JSON.stringify(data.problemStatement) : '';
+  const realWorldUseCase = typeof data.realWorldUseCase === 'string' ? data.realWorldUseCase : data.realWorldUseCase ? JSON.stringify(data.realWorldUseCase) : '';
+  const architectureOverview = typeof data.architectureOverview === 'string' ? data.architectureOverview : Array.isArray(data.architectureOverview as any) ? (data.architectureOverview as any).join('\n') : data.architectureOverview ? JSON.stringify(data.architectureOverview) : '';
+  const databaseDesign = typeof data.databaseDesign === 'string' ? data.databaseDesign : Array.isArray(data.databaseDesign as any) ? (data.databaseDesign as any).join('\n') : data.databaseDesign ? JSON.stringify(data.databaseDesign) : '';
+  const estimatedComplexity = typeof data.estimatedComplexity === 'string' ? data.estimatedComplexity : '2-3 weeks';
+  const resumeValue = typeof data.resumeValue === 'string' ? data.resumeValue : data.resumeValue ? JSON.stringify(data.resumeValue) : '';
   const specification = data.specification || {};
   const milestones = Array.isArray(data.milestones) ? data.milestones : [];
   const currentMilestone = Number(data.currentMilestone) || 1;
@@ -7690,12 +7697,20 @@ export async function updateGuidedProject(
   const difficulty = updates.difficulty !== undefined ? updates.difficulty : existing.difficulty;
   const targetRole = updates.targetRole !== undefined ? updates.targetRole : existing.targetRole;
   const techStack = updates.techStack !== undefined ? updates.techStack : existing.techStack;
-  const problemStatement = updates.problemStatement !== undefined ? updates.problemStatement : existing.problemStatement;
-  const realWorldUseCase = updates.realWorldUseCase !== undefined ? updates.realWorldUseCase : existing.realWorldUseCase;
-  const architectureOverview = updates.architectureOverview !== undefined ? updates.architectureOverview : existing.architectureOverview;
-  const databaseDesign = updates.databaseDesign !== undefined ? updates.databaseDesign : existing.databaseDesign;
-  const estimatedComplexity = updates.estimatedComplexity !== undefined ? updates.estimatedComplexity : existing.estimatedComplexity;
-  const resumeValue = updates.resumeValue !== undefined ? updates.resumeValue : existing.resumeValue;
+  const rawProblem = updates.problemStatement !== undefined ? updates.problemStatement : existing.problemStatement;
+  const problemStatement = typeof rawProblem === 'string' ? rawProblem : rawProblem ? JSON.stringify(rawProblem) : '';
+
+  const rawUseCase = updates.realWorldUseCase !== undefined ? updates.realWorldUseCase : existing.realWorldUseCase;
+  const realWorldUseCase = typeof rawUseCase === 'string' ? rawUseCase : rawUseCase ? JSON.stringify(rawUseCase) : '';
+
+  const rawArch = updates.architectureOverview !== undefined ? updates.architectureOverview : existing.architectureOverview;
+  const architectureOverview = typeof rawArch === 'string' ? rawArch : Array.isArray(rawArch as any) ? (rawArch as any).join('\n') : rawArch ? JSON.stringify(rawArch) : '';
+
+  const rawDb = updates.databaseDesign !== undefined ? updates.databaseDesign : existing.databaseDesign;
+  const databaseDesign = typeof rawDb === 'string' ? rawDb : Array.isArray(rawDb as any) ? (rawDb as any).join('\n') : rawDb ? JSON.stringify(rawDb) : '';
+
+  const estimatedComplexity = typeof updates.estimatedComplexity === 'string' ? updates.estimatedComplexity : existing.estimatedComplexity;
+  const resumeValue = typeof updates.resumeValue === 'string' ? updates.resumeValue : updates.resumeValue ? JSON.stringify(updates.resumeValue) : existing.resumeValue;
   const specification = updates.specification !== undefined ? updates.specification : existing.specification;
   const milestones = updates.milestones !== undefined ? updates.milestones : existing.milestones;
   const currentMilestone = updates.currentMilestone !== undefined ? updates.currentMilestone : existing.currentMilestone;

@@ -6,3 +6,4 @@ export * from './extractResumeText';
 export * from './resumeValidator';
 export * from './jobs/search';
 export * from './parseResumeToData';
+export * from './careerIntelligenceEngine';

@@ -39,6 +39,7 @@ import {
 import { GlassCard } from '@/components/ui/GlassCard';
 import { PageTransition } from '@/components/ui/MotionPrimitives';
 import { useUserProfile } from '@/components/user/UserContext';
+import { FeedbackButtons } from '@/components/feedback/FeedbackButtons';
 import {
   type RecommendedProject,
   type ProjectSpecification,
@@ -496,8 +497,10 @@ export default function ProjectMentorPage() {
               </div>
 
               {/* Navigation Tabs */}
-              <div className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] self-start lg:self-auto shrink-0 shadow-xs">
+              <div role="tablist" aria-label="Project workspace sections" className="flex items-center gap-1.5 p-1 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] self-start lg:self-auto shrink-0 shadow-xs">
                 <button
+                  role="tab"
+                  aria-selected={mainTab === 'recommendations'}
                   type="button"
                   onClick={() => setMainTab('recommendations')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
@@ -510,6 +513,8 @@ export default function ProjectMentorPage() {
                   <span>Recommendations</span>
                 </button>
                 <button
+                  role="tab"
+                  aria-selected={mainTab === 'workspace'}
                   type="button"
                   onClick={() => {
                     setMainTab('workspace');
@@ -532,6 +537,8 @@ export default function ProjectMentorPage() {
                   )}
                 </button>
                 <button
+                  role="tab"
+                  aria-selected={mainTab === 'portfolio'}
                   type="button"
                   onClick={() => setMainTab('portfolio')}
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all cursor-pointer ${
@@ -718,16 +725,16 @@ export default function ProjectMentorPage() {
                         </div>
                       </div>
 
-                      {/* Action Button */}
-                      <div className="pt-4 border-t border-[var(--border-color)] flex items-center justify-between gap-3">
-                        <span className="text-xs text-[var(--text-muted)] italic truncate max-w-[200px] sm:max-w-xs">
-                          {rec.resumeValue}
-                        </span>
+                      {/* Action Button & Feedback */}
+                      <div className="pt-4 border-t border-[var(--border-color)] flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <FeedbackButtons category="Project Coach" contextId={rec.id} />
+                        </div>
                         <button
                           type="button"
                           onClick={() => handleStartProject(rec)}
                           disabled={startingProjectId === rec.id}
-                          className="btn-primary px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold shrink-0 flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                          className="btn-primary px-4 py-2.5 rounded-lg text-xs sm:text-sm font-semibold shrink-0 flex items-center justify-center gap-2 cursor-pointer disabled:opacity-50"
                         >
                           {startingProjectId === rec.id ? (
                             <>
@@ -892,8 +899,10 @@ export default function ProjectMentorPage() {
                       </GlassCard>
 
                       {/* Workspace Sub-Tabs Navigation */}
-                      <div className="flex items-center gap-2 border-b border-[var(--border-color)] overflow-x-auto pb-1 no-scrollbar">
+                      <div role="tablist" aria-label="Workspace tools" className="flex items-center gap-2 border-b border-[var(--border-color)] overflow-x-auto pb-1 no-scrollbar">
                         <button
+                          role="tab"
+                          aria-selected={workspaceTab === 'milestones'}
                           type="button"
                           onClick={() => setWorkspaceTab('milestones')}
                           className={`flex items-center gap-2 px-4 py-2.5 border-b-2 font-semibold text-sm transition-all cursor-pointer ${
@@ -906,6 +915,8 @@ export default function ProjectMentorPage() {
                           <span>8-Step Milestone Tracker</span>
                         </button>
                         <button
+                          role="tab"
+                          aria-selected={workspaceTab === 'specification'}
                           type="button"
                           onClick={() => setWorkspaceTab('specification')}
                           className={`flex items-center gap-2 px-4 py-2.5 border-b-2 font-semibold text-sm transition-all cursor-pointer ${
@@ -918,6 +929,8 @@ export default function ProjectMentorPage() {
                           <span>Full Project Specification</span>
                         </button>
                         <button
+                          role="tab"
+                          aria-selected={workspaceTab === 'mentor'}
                           type="button"
                           onClick={() => setWorkspaceTab('mentor')}
                           className={`flex items-center gap-2 px-4 py-2.5 border-b-2 font-semibold text-sm transition-all cursor-pointer ${
@@ -930,6 +943,8 @@ export default function ProjectMentorPage() {
                           <span>AI Coding Mentor</span>
                         </button>
                         <button
+                          role="tab"
+                          aria-selected={workspaceTab === 'resume'}
                           type="button"
                           onClick={() => setWorkspaceTab('resume')}
                           className={`flex items-center gap-2 px-4 py-2.5 border-b-2 font-semibold text-sm transition-all cursor-pointer ${

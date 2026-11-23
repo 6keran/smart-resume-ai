@@ -4,10 +4,11 @@ import {
   createInterviewSession,
   getUserInterviewSessions,
   getInterviewSession,
+  getGuidedProjectById,
   saveInterviewSessionAnswer,
   completeInterviewSession,
-  getStudentProfile,
 } from '@/server/db';
+import { buildUnifiedStudentContext } from '@/server/services/unifiedStudentContext';
 import {
   generateInterviewQuestions,
   evaluateInterviewAnswer,
@@ -57,11 +58,19 @@ export async function POST(req: Request) {
 
     // ACTION 1: START NEW INTERVIEW SESSION
     if (action === 'start') {
-      const { targetRole, jobTitle, company, jobDescription, resumeSnippet } = body;
-      const student = await getStudentProfile(user.id).catch(() => null);
+      const { targetRole, jobTitle, company, jobDescription, resumeSnippet, projectId } = body;
+      const context = await buildUnifiedStudentContext(user.id).catch(() => null);
+
+      let guidedProject: any = null;
+      if (projectId && typeof projectId === 'string') {
+        guidedProject = await getGuidedProjectById(projectId, user.id).catch(() => null);
+      }
+
       const role =
         (targetRole && typeof targetRole === 'string' && targetRole.trim()) ||
-        student?.targetRole ||
+        guidedProject?.targetRole ||
+        context?.careerGoal.targetRole ||
+        context?.studentProfile?.targetRole ||
         (typeof jobTitle === 'string' && jobTitle.trim()) ||
         '';
       if (!role) {
@@ -72,16 +81,26 @@ export async function POST(req: Request) {
       }
 
       let effectiveSnippet = resumeSnippet;
-      if (!effectiveSnippet) {
-        if (student) {
-          const projectDetails = (student.projects || [])
-            .map((p) => `- Project: ${p.title}. ${p.description}. Tech: ${p.techStack.join(', ')}`)
-            .join('\n');
-          const courseDetails = (student.coursework || []).join(', ');
-          effectiveSnippet = `Education: ${student.degree || 'Degree'} in ${student.fieldOfStudy || 'Study'} at ${student.institution || 'Institution'}${student.graduationYear ? ` (Class of ${student.graduationYear})` : ''}.
-Coursework: ${courseDetails || 'None specified'}
-Projects:\n${projectDetails || 'None specified'}`;
-        }
+      if (!effectiveSnippet && context) {
+        const academic = context.academic;
+        const projectDetails = [
+          ...(guidedProject ? [`- Target Guided Project: ${guidedProject.title} (Tech: ${guidedProject.techStack.join(', ')}). Architecture: ${guidedProject.architectureOverview || guidedProject.problemStatement || ''}`] : []),
+          ...(academic?.documentedProjects || []).map((p) => `- Project: ${p.title}. Tech: ${p.techStack.join(', ')}`),
+          ...(context.projects?.projects || []).map((p) => `- Guided Project: ${p.title} (${p.status}). Tech: ${p.techStack.join(', ')}`),
+        ].slice(0, 4).join('\n');
+
+        const expDetails = (context.experience?.items || [])
+          .slice(0, 2)
+          .map((e) => `- Role: ${e.position} at ${e.company}${e.bullets ? ` (${e.bullets.slice(0, 2).join('; ')})` : ''}`)
+          .join('\n');
+
+        const verifiedSkills = context.skills?.verified?.map((s) => `${s.name} (${s.score}%)`).join(', ');
+
+        effectiveSnippet = `Education: ${academic?.degree || 'Degree'} in ${academic?.fieldOfStudy || 'Field'} at ${academic?.institution || 'Institution'}${academic?.graduationYear ? ` (Class of ${academic.graduationYear})` : ''}.
+Coursework: ${(academic?.coursework || []).join(', ') || 'Standard domain curriculum'}
+${verifiedSkills ? `Verified Competencies: ${verifiedSkills}\n` : ''}${expDetails ? `Experience:\n${expDetails}\n` : ''}Projects:\n${projectDetails || 'None documented'}`;
+      } else if (guidedProject && effectiveSnippet) {
+        effectiveSnippet = `${effectiveSnippet}\n\nTarget Guided Project: ${guidedProject.title} (Tech: ${guidedProject.techStack.join(', ')}). Architecture: ${guidedProject.architectureOverview || guidedProject.problemStatement || ''}`;
       }
 
       const questions = await generateInterviewQuestions(role, jobDescription, effectiveSnippet);

@@ -21,6 +21,7 @@ import {
 } from 'lucide-react';
 import { useResume } from '@/context/ResumeContext';
 import { useUserProfile } from '@/components/user/UserContext';
+import { FeedbackButtons } from '@/components/feedback/FeedbackButtons';
 
 interface Message {
   id: string;
@@ -1190,6 +1191,11 @@ export function CareerChatbot() {
   const getPanelStyle = (): React.CSSProperties => {
     if (isFullScreen) return {};
 
+    // Mobile screens: always use responsive inset styling via Tailwind classes
+    if (typeof window !== 'undefined' && window.innerWidth < 640) {
+      return {};
+    }
+
     if (panelPosition) {
       return {
         left: `${panelPosition.x}px`,
@@ -1197,11 +1203,6 @@ export function CareerChatbot() {
         right: 'auto',
         bottom: 'auto',
       };
-    }
-
-    // Mobile screens: use responsive inset styling via Tailwind classes
-    if (typeof window !== 'undefined' && window.innerWidth < 640) {
-      return {};
     }
 
     // Default position (bottom-right)
@@ -1497,25 +1498,28 @@ export function CareerChatbot() {
                           {m.provider && <span className="font-mono text-[11px]">{m.provider}</span>}
                         </div>
                         {m.role === 'assistant' && (
-                          <button
-                            type="button"
-                            onClick={() => handleCopyMessage(m.id, m.content)}
-                            className="inline-flex items-center gap-1 hover:text-[#20242B] transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-slate-100"
-                            title={copiedMessageId === m.id ? 'Copied to clipboard' : 'Copy answer'}
-                            aria-label={copiedMessageId === m.id ? 'Answer copied' : 'Copy assistant answer'}
-                          >
-                            {copiedMessageId === m.id ? (
-                              <>
-                                <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                <span className="text-emerald-600 font-medium">Copied</span>
-                              </>
-                            ) : (
-                              <>
-                                <Copy className="w-3.5 h-3.5" />
-                                <span>Copy</span>
-                              </>
-                            )}
-                          </button>
+                          <div className="flex items-center gap-2">
+                            <FeedbackButtons category="Career Copilot" contextId={m.id} />
+                            <button
+                              type="button"
+                              onClick={() => handleCopyMessage(m.id, m.content)}
+                              className="inline-flex items-center gap-1 hover:text-[#20242B] transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-slate-100"
+                              title={copiedMessageId === m.id ? 'Copied to clipboard' : 'Copy answer'}
+                              aria-label={copiedMessageId === m.id ? 'Answer copied' : 'Copy assistant answer'}
+                            >
+                              {copiedMessageId === m.id ? (
+                                <>
+                                  <Check className="w-3.5 h-3.5 text-emerald-600" />
+                                  <span className="text-emerald-600 font-medium">Copied</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Copy className="w-3.5 h-3.5" />
+                                  <span>Copy</span>
+                                </>
+                              )}
+                            </button>
+                          </div>
                         )}
                       </div>
                     </div>

@@ -80,7 +80,10 @@ export async function PATCH(
       );
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => null);
+    if (!body || typeof body !== 'object') {
+      return NextResponse.json({ message: 'Invalid JSON request payload.' }, { status: 400 });
+    }
     const { name, email, password, role, is_active } = body;
 
     // Validation

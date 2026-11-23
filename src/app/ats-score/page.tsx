@@ -23,6 +23,7 @@ import {
 } from 'lucide-react';
 import { ResumeAnalysisResult, ResumeValidationResult } from '@/types/resume';
 import { ScoreRing } from '@/components/ui/ScoreRing';
+import { AtsExplainabilityBreakdown } from '@/components/ats/AtsExplainabilityBreakdown';
 
 export default function AtsScorePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -232,8 +233,10 @@ export default function AtsScorePage() {
             <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 space-y-6 text-left shadow-sm">
               {/* Tab Selector */}
               <div className="flex items-center justify-between border-b border-[#E5E8ED] pb-4">
-                <div className="flex items-center gap-2 p-1 rounded-lg bg-[#F6F7F9] border border-[#E5E8ED]">
+                <div role="tablist" aria-label="Resume input mode" className="flex items-center gap-2 p-1 rounded-lg bg-[#F6F7F9] border border-[#E5E8ED]">
                   <button
+                    role="tab"
+                    aria-selected={activeTab === 'upload'}
                     type="button"
                     onClick={() => { setActiveTab('upload'); setErrorMessage(null); }}
                     className={`px-4 py-2 rounded-md text-[14px] font-semibold transition-all cursor-pointer ${
@@ -245,6 +248,8 @@ export default function AtsScorePage() {
                     Upload Resume File
                   </button>
                   <button
+                    role="tab"
+                    aria-selected={activeTab === 'paste'}
                     type="button"
                     onClick={() => { setActiveTab('paste'); setErrorMessage(null); }}
                     className={`px-4 py-2 rounded-md text-[14px] font-semibold transition-all cursor-pointer ${
@@ -272,11 +277,20 @@ export default function AtsScorePage() {
 
                   {!selectedFile ? (
                     <div
+                      role="button"
+                      tabIndex={0}
+                      aria-label="Upload resume file"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                          e.preventDefault();
+                          fileInputRef.current?.click();
+                        }
+                      }}
                       onDragOver={handleDragOver}
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
                       onClick={() => fileInputRef.current?.click()}
-                      className={`border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all ${
+                      className={`border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3157C8] ${
                         isDragging
                           ? 'border-[#3157C8] bg-blue-50/50 scale-[1.01]'
                           : 'border-[#E5E8ED] bg-[#F6F7F9] hover:border-[#3157C8] hover:bg-white'
@@ -320,11 +334,16 @@ export default function AtsScorePage() {
                 </div>
               ) : (
                 <div>
+                  <label htmlFor="ats-paste-textarea" className="sr-only">
+                    Paste Resume Text
+                  </label>
                   <textarea
+                    id="ats-paste-textarea"
                     rows={8}
                     value={pastedText}
                     onChange={(e) => setPastedText(e.target.value)}
                     placeholder="Paste your raw resume text here (experience, summary, skills, and education)..."
+                    aria-label="Paste resume text"
                     className="w-full p-4 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[14px] font-mono text-[#20242B] placeholder:text-[#626B78] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3157C8]"
                   />
                 </div>
@@ -346,10 +365,11 @@ export default function AtsScorePage() {
                   <div className="mt-3 p-4 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] space-y-3 text-[14px]">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label className="block font-semibold text-[#20242B] mb-1">
+                        <label htmlFor="ats-target-job-title" className="block font-semibold text-[#20242B] mb-1">
                           Target Job Title
                         </label>
                         <input
+                          id="ats-target-job-title"
                           type="text"
                           value={jobTitle}
                           onChange={(e) => setJobTitle(e.target.value)}
@@ -358,10 +378,11 @@ export default function AtsScorePage() {
                         />
                       </div>
                       <div>
-                        <label className="block font-semibold text-[#20242B] mb-1">
+                        <label htmlFor="ats-target-company" className="block font-semibold text-[#20242B] mb-1">
                           Target Company
                         </label>
                         <input
+                          id="ats-target-company"
                           type="text"
                           value={company}
                           onChange={(e) => setCompany(e.target.value)}
@@ -371,10 +392,11 @@ export default function AtsScorePage() {
                       </div>
                     </div>
                     <div>
-                      <label className="block font-semibold text-[#20242B] mb-1">
+                      <label htmlFor="ats-job-description" className="block font-semibold text-[#20242B] mb-1">
                         Job Description
                       </label>
                       <textarea
+                        id="ats-job-description"
                         rows={3}
                         value={jobDescription}
                         onChange={(e) => setJobDescription(e.target.value)}
@@ -544,6 +566,9 @@ export default function AtsScorePage() {
                 </div>
               </div>
             </div>
+
+            {/* 1b. ATS EXPLAINABILITY & CATEGORY BREAKDOWN */}
+            <AtsExplainabilityBreakdown analysis={analysis} />
 
             {/* 2. KEY PROBLEMS & FORMATTING DEFECTS */}
             <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 space-y-4 text-left shadow-sm">

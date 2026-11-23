@@ -1,0 +1,529 @@
+{
+  "breakpoints": {
+    "320": {
+      "overflowFree": true,
+      "routes": {
+        "/builder": {
+          "loadDurationMs": 31,
+          "overflowX": 0
+        },
+        "/dashboard/profile": {
+          "loadDurationMs": 101,
+          "overflowX": 0
+        },
+        "/ats-score": {
+          "loadDurationMs": 83,
+          "overflowX": 0
+        },
+        "/jobs": {
+          "loadDurationMs": 82,
+          "overflowX": 0
+        },
+        "/projects": {
+          "loadDurationMs": 98,
+          "overflowX": 0
+        }
+      }
+    },
+    "360": {
+      "overflowFree": true,
+      "routes": {
+        "/builder": {
+          "loadDurationMs": 22,
+          "overflowX": 0
+        },
+        "/dashboard/profile": {
+          "loadDurationMs": 68,
+          "overflowX": 0
+        },
+        "/ats-score": {
+          "loadDurationMs": 29,
+          "overflowX": 0
+        },
+        "/jobs": {
+          "loadDurationMs": 22,
+          "overflowX": 0
+        },
+        "/projects": {
+          "loadDurationMs": 26,
+          "overflowX": 0
+        }
+      }
+    },
+    "375": {
+      "overflowFree": true,
+      "routes": {
+        "/builder": {
+          "loadDurationMs": 21,
+          "overflowX": 0
+        },
+        "/dashboard/profile": {
+          "loadDurationMs": 65,
+          "overflowX": 0
+        },
+        "/ats-score": {
+          "loadDurationMs": 25,
+          "overflowX": 0
+        },
+        "/jobs": {
+          "loadDurationMs": 23,
+          "overflowX": 0
+        },
+        "/projects": {
+          "loadDurationMs": 24,
+          "overflowX": 0
+        }
+      }
+    },
+    "390": {
+      "overflowFree": true,
+      "routes": {
+        "/builder": {
+          "loadDurationMs": 32,
+          "overflowX": 0
+        },
+        "/dashboard/profile": {
+          "loadDurationMs": 85,
+          "overflowX": 0
+        },
+        "/ats-score": {
+          "loadDurationMs": 30,
+          "overflowX": 0
+        },
+        "/jobs": {
+          "loadDurationMs": 19,
+          "overflowX": 0
+        },
+        "/projects": {
+          "loadDurationMs": 26,
+          "overflowX": 0
+        }
+      }
+    },
+    "414": {
+      "overflowFree": true,
+      "routes": {
+        "/builder": {
+          "loadDurationMs": 52,
+          "overflowX": 0
+        },
+        "/dashboard/profile": {
+          "loadDurationMs": 52,
+          "overflowX": 0
+        },
+        "/ats-score": {
+          "loadDurationMs": 23,
+          "overflowX": 0
+        },
+        "/jobs": {
+          "loadDurationMs": 21,
+          "overflowX": 0
+        },
+        "/projects": {
+          "loadDurationMs": 20,
+          "overflowX": 0
+        }
+      }
+    },
+    "768": {
+      "overflowFree": true,
+      "routes": {
+        "/builder": {
+          "loadDurationMs": 27,
+          "overflowX": 0
+        },
+        "/dashboard/profile": {
+          "loadDurationMs": 77,
+          "overflowX": 0
+        },
+        "/ats-score": {
+          "loadDurationMs": 21,
+          "overflowX": 0
+        },
+        "/jobs": {
+          "loadDurationMs": 26,
+          "overflowX": 0
+        },
+        "/projects": {
+          "loadDurationMs": 25,
+          "overflowX": 0
+        }
+      }
+    },
+    "1024": {
+      "overflowFree": true,
+      "routes": {
+        "/builder": {
+          "loadDurationMs": 35,
+          "overflowX": 0
+        },
+        "/dashboard/profile": {
+          "loadDurationMs": 69,
+          "overflowX": 0
+        },
+        "/ats-score": {
+          "loadDurationMs": 22,
+          "overflowX": 0
+        },
+        "/jobs": {
+          "loadDurationMs": 21,
+          "overflowX": 0
+        },
+        "/projects": {
+          "loadDurationMs": 26,
+          "overflowX": 0
+        }
+      }
+    },
+    "1280": {
+      "overflowFree": true,
+      "routes": {
+        "/builder": {
+          "loadDurationMs": 23,
+          "overflowX": 0
+        },
+        "/dashboard/profile": {
+          "loadDurationMs": 70,
+          "overflowX": 0
+        },
+        "/ats-score": {
+          "loadDurationMs": 22,
+          "overflowX": 0
+        },
+        "/jobs": {
+          "loadDurationMs": 23,
+          "overflowX": 0
+        },
+        "/projects": {
+          "loadDurationMs": 22,
+          "overflowX": 0
+        }
+      }
+    }
+  },
+  "journeys": {
+    "Registration": {
+      "status": "PASS",
+      "email": "mobile.student.1794995395156@example.com"
+    },
+    "Login": {
+      "status": "PASS"
+    },
+    "Profile": {
+      "status": "PASS"
+    },
+    "ResumeBuilder": {
+      "status": "PASS"
+    },
+    "ATSAnalysis": {
+      "status": "PASS",
+      "tabBox": [
+        {
+          "text": "Upload Resume File",
+          "w": 164,
+          "h": 37
+        },
+        {
+          "text": "Paste Text",
+          "w": 102,
+          "h": 37
+        }
+      ]
+    },
+    "AIAssistant": {
+      "status": "PASS",
+      "panelMetrics": {
+        "width": 359,
+        "height": 559,
+        "left": 8,
+        "right": 367,
+        "windowWidth": 375,
+        "windowHeight": 667,
+        "fitsInsideViewport": true
+      }
+    },
+    "ProjectCoach": {
+      "status": "PASS"
+    },
+    "InterviewPrep": {
+      "status": "PASS"
+    },
+    "JobDiscovery": {
+      "status": "PASS"
+    },
+    "AdminAccess": {
+      "status": "PASS"
+    }
+  },
+  "resumeBuilder": {
+    "320": {
+      "viewportWidth": 320,
+      "asideVisible": false,
+      "mobileSelectVisible": true,
+      "pdfBtnVisible": true,
+      "scrollWidth": 320,
+      "innerWidth": 320,
+      "overflow": false
+    },
+    "375": {
+      "viewportWidth": 375,
+      "asideVisible": false,
+      "mobileSelectVisible": true,
+      "pdfBtnVisible": true,
+      "scrollWidth": 375,
+      "innerWidth": 375,
+      "overflow": false
+    },
+    "768": {
+      "viewportWidth": 768,
+      "asideVisible": false,
+      "mobileSelectVisible": true,
+      "pdfBtnVisible": true,
+      "scrollWidth": 768,
+      "innerWidth": 768,
+      "overflow": false
+    },
+    "1280": {
+      "viewportWidth": 1280,
+      "asideVisible": true,
+      "mobileSelectVisible": false,
+      "pdfBtnVisible": true,
+      "scrollWidth": 1280,
+      "innerWidth": 1280,
+      "overflow": false
+    }
+  },
+  "touchAccessibility": {
+    "Registration": {
+      "journey": "Registration",
+      "total": 12,
+      "compliant40": 11,
+      "compliant24": 10,
+      "percent40": 92,
+      "percent24": 83,
+      "smallTargets": [
+        {
+          "tag": "A",
+          "text": "Admin Portal →",
+          "w": 82,
+          "h": 14
+        }
+      ]
+    },
+    "Login": {
+      "journey": "Login",
+      "total": 10,
+      "compliant40": 9,
+      "compliant24": 7,
+      "percent40": 90,
+      "percent24": 70,
+      "smallTargets": [
+        {
+          "tag": "BUTTON",
+          "text": "Forgot password?",
+          "w": 101,
+          "h": 16
+        },
+        {
+          "tag": "A",
+          "text": "Admin Portal →",
+          "w": 82,
+          "h": 14
+        }
+      ]
+    },
+    "Profile": {
+      "journey": "Profile",
+      "total": 44,
+      "compliant40": 21,
+      "compliant24": 25,
+      "percent40": 48,
+      "percent24": 57,
+      "smallTargets": []
+    },
+    "ResumeBuilder": {
+      "journey": "ResumeBuilder",
+      "total": 69,
+      "compliant40": 21,
+      "compliant24": 27,
+      "percent40": 30,
+      "percent24": 39,
+      "smallTargets": []
+    },
+    "ATSAnalysis": {
+      "journey": "ATSAnalysis",
+      "total": 21,
+      "compliant40": 6,
+      "compliant24": 7,
+      "percent40": 29,
+      "percent24": 33,
+      "smallTargets": [
+        {
+          "tag": "A",
+          "text": "JJordan LeeDashboard",
+          "w": 60,
+          "h": 23
+        }
+      ]
+    },
+    "AIAssistant": {
+      "journey": "AIAssistant",
+      "total": 85,
+      "compliant40": 32,
+      "compliant24": 36,
+      "percent40": 38,
+      "percent24": 42,
+      "smallTargets": [
+        {
+          "tag": "BUTTON",
+          "text": "Copy",
+          "w": 58,
+          "h": 23
+        },
+        {
+          "tag": "BUTTON",
+          "text": "All",
+          "w": 28,
+          "h": 19
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Resume",
+          "w": 56,
+          "h": 21
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Projects",
+          "w": 57,
+          "h": 21
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Interview",
+          "w": 61,
+          "h": 21
+        }
+      ]
+    },
+    "ProjectCoach": {
+      "journey": "ProjectCoach",
+      "total": 22,
+      "compliant40": 7,
+      "compliant24": 10,
+      "percent40": 32,
+      "percent24": 45,
+      "smallTargets": []
+    },
+    "InterviewPrep": {
+      "journey": "InterviewPrep",
+      "total": 28,
+      "compliant40": 13,
+      "compliant24": 16,
+      "percent40": 46,
+      "percent24": 57,
+      "smallTargets": []
+    },
+    "JobDiscovery": {
+      "journey": "JobDiscovery",
+      "total": 37,
+      "compliant40": 19,
+      "compliant24": 20,
+      "percent40": 51,
+      "percent24": 54,
+      "smallTargets": [
+        {
+          "tag": "BUTTON",
+          "text": "Data Analyst",
+          "w": 81,
+          "h": 21
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Mechanical Engineer",
+          "w": 120,
+          "h": 21
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Remote Software Engineer",
+          "w": 148,
+          "h": 21
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Financial Analyst",
+          "w": 101,
+          "h": 21
+        },
+        {
+          "tag": "BUTTON",
+          "text": "Use my location",
+          "w": 34,
+          "h": 22
+        }
+      ]
+    },
+    "AdminAccess": {
+      "journey": "AdminAccess",
+      "total": 9,
+      "compliant40": 5,
+      "compliant24": 6,
+      "percent40": 56,
+      "percent24": 67,
+      "smallTargets": [
+        {
+          "tag": "A",
+          "text": "Back to User Portal",
+          "w": 129,
+          "h": 16
+        }
+      ]
+    }
+  },
+  "performance": {
+    "Registration": {
+      "loadMs": 107
+    },
+    "Login": {
+      "loadMs": 295
+    },
+    "Profile": {
+      "loadMs": 98
+    },
+    "ResumeBuilder": {
+      "loadMs": 18
+    },
+    "ATSAnalysis": {
+      "loadMs": 18
+    },
+    "ProjectCoach": {
+      "loadMs": 26
+    },
+    "InterviewPrep": {
+      "loadMs": 38
+    },
+    "JobDiscovery": {
+      "loadMs": 23
+    },
+    "AdminAccess": {
+      "loadMs": 53
+    }
+  },
+  "screenshots": [
+    "C:\\Users\\kiran\\.gemini\\antigravity\\brain\\d82cd440-644e-4a03-a378-f2a4f7dff02c\\screenshots\\register_375px.png",
+    "C:\\Users\\kiran\\.gemini\\antigravity\\brain\\d82cd440-644e-4a03-a378-f2a4f7dff02c\\screenshots\\login_375px.png",
+    "C:\\Users\\kiran\\.gemini\\antigravity\\brain\\d82cd440-644e-4a03-a378-f2a4f7dff02c\\screenshots\\profile_375px.png",
+    "C:\\Users\\kiran\\.gemini\\antigravity\\brain\\d82cd440-644e-4a03-a378-f2a4f7dff02c\\screenshots\\builder_375px.png",
+    "C:\\Users\\kiran\\.gemini\\antigravity\\brain\\d82cd440-644e-4a03-a378-f2a4f7dff02c\\screenshots\\ats_score_375px.png",
+    "C:\\Users\\kiran\\.gemini\\antigravity\\brain\\d82cd440-644e-4a03-a378-f2a4f7dff02c\\screenshots\\chat_assistant_375px.png",
+    "C:\\Users\\kiran\\.gemini\\antigravity\\brain\\d82cd440-644e-4a03-a378-f2a4f7dff02c\\screenshots\\projects_375px.png",
+    "C:\\Users\\kiran\\.gemini\\antigravity\\brain\\d82cd440-644e-4a03-a378-f2a4f7dff02c\\screenshots\\interview_375px.png",
+    "C:\\Users\\kiran\\.gemini\\antigravity\\brain\\d82cd440-644e-4a03-a378-f2a4f7dff02c\\screenshots\\jobs_375px.png",
+    "C:\\Users\\kiran\\.gemini\\antigravity\\brain\\d82cd440-644e-4a03-a378-f2a4f7dff02c\\screenshots\\admin_login_375px.png",
+    "C:\\Users\\kiran\\.gemini\\antigravity\\brain\\d82cd440-644e-4a03-a378-f2a4f7dff02c\\screenshots\\builder_320px.png",
+    "C:\\Users\\kiran\\.gemini\\antigravity\\brain\\d82cd440-644e-4a03-a378-f2a4f7dff02c\\screenshots\\builder_375px.png",
+    "C:\\Users\\kiran\\.gemini\\antigravity\\brain\\d82cd440-644e-4a03-a378-f2a4f7dff02c\\screenshots\\builder_768px.png",
+    "C:\\Users\\kiran\\.gemini\\antigravity\\brain\\d82cd440-644e-4a03-a378-f2a4f7dff02c\\screenshots\\builder_1280px.png"
+  ]
+}

@@ -860,6 +860,8 @@ function JobSearchContent() {
 
           <div className="flex items-center gap-2">
             <input
+              id="job-nlp-search-input"
+              aria-label="Search jobs with AI query"
               type="text"
               value={nlpPrompt}
               onChange={(e) => setNlpPrompt(e.target.value)}
@@ -1045,6 +1047,7 @@ function JobSearchContent() {
 
             {/* Experience Filter */}
             <select
+              aria-label="Filter by experience level"
               value={experienceLevel}
               onChange={(e) => setExperienceLevel(e.target.value)}
               className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs font-medium focus:outline-none focus:border-[var(--accent)] transition-all duration-150 cursor-pointer"
@@ -1059,6 +1062,7 @@ function JobSearchContent() {
 
             {/* Job Type Filter */}
             <select
+              aria-label="Filter by job type"
               value={jobType}
               onChange={(e) => setJobType(e.target.value)}
               className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs font-medium focus:outline-none focus:border-[var(--accent)] transition-all duration-150 cursor-pointer"
@@ -1073,6 +1077,7 @@ function JobSearchContent() {
 
             {/* Work Mode Filter */}
             <select
+              aria-label="Filter by work mode"
               value={workMode}
               onChange={(e) => setWorkMode(e.target.value)}
               className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs font-medium focus:outline-none focus:border-[var(--accent)] transition-all duration-150 cursor-pointer"
@@ -1085,6 +1090,7 @@ function JobSearchContent() {
 
             {/* Date Posted */}
             <select
+              aria-label="Filter by date posted"
               value={postedDays}
               onChange={(e) => setPostedDays(Number(e.target.value))}
               className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs font-medium focus:outline-none focus:border-[var(--accent)] transition-all duration-150 cursor-pointer"
@@ -1099,6 +1105,7 @@ function JobSearchContent() {
 
             {/* Sort Order */}
             <select
+              aria-label="Sort jobs by"
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
               className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/80 text-[var(--text-primary)] text-xs font-medium focus:outline-none focus:border-[var(--accent)] transition-all duration-150 cursor-pointer"

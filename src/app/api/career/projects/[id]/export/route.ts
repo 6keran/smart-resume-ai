@@ -3,9 +3,9 @@ import { getUserFromRequest } from '@/lib/userSession';
 import {
   getGuidedProjectById,
   updateGuidedProject,
-  getStudentProfile,
   importGuidedProjectToProfileAndResume,
 } from '@/server/db';
+import { buildUnifiedStudentContext } from '@/server/services/unifiedStudentContext';
 import { generateProjectResumeBullets } from '@/server/services/projectMentor';
 
 export async function POST(
@@ -24,10 +24,10 @@ export async function POST(
       return NextResponse.json({ message: 'Project not found.' }, { status: 404 });
     }
 
-    const studentProfile = await getStudentProfile(user.id).catch(() => null);
+    const context = await buildUnifiedStudentContext(user.id).catch(() => null);
 
     // 1. Generate verified Google XYZ resume bullets
-    const bulletsResult = generateProjectResumeBullets(project, studentProfile);
+    const bulletsResult = generateProjectResumeBullets(project, context?.studentProfile);
 
     // 2. Persist bullets on guided project
     await updateGuidedProject(id, user.id, {

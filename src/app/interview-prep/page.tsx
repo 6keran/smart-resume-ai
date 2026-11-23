@@ -347,10 +347,11 @@ export default function InterviewPrepPage() {
                   <form onSubmit={handleStartSession} className="space-y-5">
                     {/* Role Input & Quick Pills */}
                     <div className="space-y-2">
-                      <label className="label-form block">
+                      <label htmlFor="interview-target-role" className="label-form block">
                         Target Role
                       </label>
                       <input
+                        id="interview-target-role"
                         type="text"
                         value={targetRole}
                         onChange={(e) => setTargetRole(e.target.value)}
@@ -380,10 +381,11 @@ export default function InterviewPrepPage() {
 
                     {/* Company (Optional) */}
                     <div className="space-y-1.5">
-                      <label className="label-form block">
+                      <label htmlFor="interview-target-company" className="label-form block">
                         Target Company (Optional)
                       </label>
                       <input
+                        id="interview-target-company"
                         type="text"
                         value={company}
                         onChange={(e) => setCompany(e.target.value)}
@@ -394,10 +396,11 @@ export default function InterviewPrepPage() {
 
                     {/* Job Description (Optional) */}
                     <div className="space-y-1.5">
-                      <label className="label-form block">
+                      <label htmlFor="interview-job-desc" className="label-form block">
                         Target Job Description Snippet (Optional)
                       </label>
                       <textarea
+                        id="interview-job-desc"
                         value={jobDescription}
                         onChange={(e) => setJobDescription(e.target.value)}
                         placeholder="Paste key requirements or responsibility bullets from the job post..."
@@ -551,10 +554,11 @@ export default function InterviewPrepPage() {
                     {/* Answer Area (if not evaluated yet) */}
                     {!currentEvaluation ? (
                       <div className="space-y-3 pt-2">
-                        <label className="block text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
+                        <label htmlFor="interview-user-answer" className="block text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
                           Your Answer
                         </label>
                         <textarea
+                          id="interview-user-answer"
                           value={userAnswer}
                           onChange={(e) => setUserAnswer(e.target.value)}
                           placeholder="Type your response. Clearly address the core technical concepts, state real project actions taken, and mention measurable outcomes..."
@@ -589,7 +593,7 @@ export default function InterviewPrepPage() {
                       </div>
                     ) : (
                       /* Instant Evaluation Card */
-                      <div className="space-y-5 pt-4 border-t border-[var(--border-color)]">
+                      <div role="status" aria-live="polite" className="space-y-5 pt-4 border-t border-[var(--border-color)]">
                         {/* Score & Tier Header */}
                         <div className="p-4 rounded-2xl bg-[var(--bg-secondary)]/70 border border-[var(--border-color)] flex items-center justify-between gap-4">
                           <div>
