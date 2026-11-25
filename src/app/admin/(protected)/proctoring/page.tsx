@@ -343,7 +343,7 @@ export default function AdminProctoringPage() {
 
       {/* Metrics Row */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]">
+        <div className="reference-panel p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-medium text-[var(--text-secondary)]">Total Telemetry Events</span>
             <Activity className="w-4 h-4 text-indigo-400" />
@@ -354,7 +354,7 @@ export default function AdminProctoringPage() {
           <p className="text-[10px] text-[var(--text-secondary)] mt-0.5">Recorded in SQLite database</p>
         </div>
 
-        <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]">
+        <div className="reference-panel p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-medium text-[var(--text-secondary)]">Violations Flagged</span>
             <ShieldAlert className="w-4 h-4 text-rose-400" />
@@ -365,7 +365,7 @@ export default function AdminProctoringPage() {
           <p className="text-[10px] text-[var(--text-secondary)] mt-0.5">Fullscreen escapes & tab switches</p>
         </div>
 
-        <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]">
+        <div className="reference-panel p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-medium text-[var(--text-secondary)]">Warnings Issued</span>
             <AlertTriangle className="w-4 h-4 text-amber-400" />
@@ -376,7 +376,7 @@ export default function AdminProctoringPage() {
           <p className="text-[10px] text-[var(--text-secondary)] mt-0.5">Soft threshold reminders</p>
         </div>
 
-        <div className="p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]">
+        <div className="reference-panel p-4 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)]">
           <div className="flex items-center justify-between mb-1">
             <span className="text-xs font-medium text-[var(--text-secondary)]">Monitored Candidates</span>
             <Users className="w-4 h-4 text-emerald-400" />
@@ -544,34 +544,34 @@ export default function AdminProctoringPage() {
                   )}
 
                   {/* Top Live Overlay HUD */}
-                  <div className="absolute top-3 left-3 flex items-center gap-2 bg-white/95 px-2.5 py-1.5 rounded-lg border border-[#E5E8ED] text-[10px] text-[#20242B] font-mono shadow-sm">
+                  <div className="absolute top-3 left-3 flex items-center gap-2 bg-white/95 px-2.5 py-1.5 rounded-lg border border-[var(--border-color)] text-[10px] text-[var(--text-primary)] font-mono shadow-sm">
                     <span className="w-2.5 h-2.5 rounded-full bg-[#16845B] animate-pulse" />
                     <span className="font-bold tracking-wide">LIVE PROCTOR STREAM</span>
-                    <span className="text-[#626B78]">({liveResolution} • {liveFps} FPS)</span>
+                    <span className="text-[var(--text-secondary)]">({liveResolution} • {liveFps} FPS)</span>
                   </div>
 
-                  <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-white/95 px-2.5 py-1.5 rounded-lg border border-[#E5E8ED] text-[10px] font-mono text-[#16845B] shadow-sm">
+                  <div className="absolute top-3 right-3 flex items-center gap-1.5 bg-white/95 px-2.5 py-1.5 rounded-lg border border-[var(--border-color)] text-[10px] font-mono text-[#16845B] shadow-sm">
                     <ShieldCheck className="w-3.5 h-3.5 text-[#16845B]" />
                     <span>{webRtcConnected ? 'WebRTC P2P' : 'Frame Relay'}</span>
                   </div>
 
                   {/* Bottom Telemetry HUD Bar */}
-                  <div className="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 bg-white/95 px-3.5 py-2 rounded-lg border border-[#E5E8ED] text-[10px] font-mono text-[#20242B] shadow-sm">
+                  <div className="absolute bottom-3 left-3 right-3 flex flex-wrap items-center justify-between gap-2 bg-white/95 px-3.5 py-2 rounded-lg border border-[var(--border-color)] text-[10px] font-mono text-[var(--text-primary)] shadow-sm">
                     <div className="flex items-center gap-2">
-                      <span className="text-[#626B78]">Heartbeat:</span>
+                      <span className="text-[var(--text-secondary)]">Heartbeat:</span>
                       <span className="text-[#16845B] font-bold">
                         {heartbeatAge !== null ? `${heartbeatAge}s ago` : 'Active'}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[#626B78]">Health:</span>
+                      <span className="text-[var(--text-secondary)]">Health:</span>
                       <span className={streamHealth === 'good' ? 'text-[#16845B] font-bold uppercase' : 'text-[#A96812] font-bold uppercase'}>
                         {streamHealth}
                       </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-[#626B78]">Consent:</span>
-                      <span className="text-[#3157C8] font-bold">Verified</span>
+                      <span className="text-[var(--text-secondary)]">Consent:</span>
+                      <span className="text-[var(--accent)] font-bold">Verified</span>
                     </div>
                     <div className="flex items-center gap-2">
                       <span className="text-slate-400">Violations:</span>

@@ -83,7 +83,7 @@ test('Contextual AI Assistant integration launches with pre-filled coaching prom
   // Chat panel opens with AI Assistant persona (never 'Alex')
   const chatDialog = page.getByRole('dialog', { name: /smart resume ai assistant/i });
   await expect(chatDialog).toBeVisible();
-  await expect(chatDialog.getByRole('heading', { name: 'AI Assistant', exact: true })).toBeVisible();
+  await expect(chatDialog.getByRole('heading', { name: 'Career Copilot', exact: true })).toBeVisible();
 
   // Verify input textarea contains pre-filled coaching inquiry
   const chatInput = chatDialog.getByPlaceholder(/ask about your resume/i);

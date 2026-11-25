@@ -100,7 +100,7 @@ function AdminLoginForm() {
       </div>
 
       {/* Main Login Card */}
-      <div className="p-6 sm:p-8 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm text-left relative overflow-hidden">
+      <div className="reference-panel p-6 sm:p-8 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-sm text-left relative overflow-hidden">
 
         <div className="mb-6 flex items-center justify-between">
           <div>
@@ -270,7 +270,7 @@ export default function AdminLoginPage() {
       </div>
 
       {/* Subtle Background Pattern */}
-      <div className="absolute inset-0 bg-[radial-gradient(#20242B08_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
+      <div className="absolute inset-0 bg-[radial-gradient(var(--text-primary)08_1px,transparent_1px)] [background-size:24px_24px] pointer-events-none" />
 
       <Suspense
         fallback={

@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useCallback, useRef, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams, useRouter } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Briefcase,
   Search,
@@ -721,7 +722,7 @@ function JobSearchContent() {
             aria-labelledby="application-confirm-title"
             aria-describedby="application-confirm-description"
             tabIndex={-1}
-            className="w-full max-w-md rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-xl p-6 space-y-5 animate-fade-in relative overflow-hidden focus:outline-none"
+            className="reference-panel w-full max-w-md rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-xl p-6 space-y-5 animate-fade-in relative overflow-hidden focus:outline-none"
           >
             <div className="absolute top-0 inset-x-0 h-px bg-gradient-to-r from-transparent via-[var(--accent)]/40 to-transparent pointer-events-none" />
             <div className="flex items-start justify-between">
@@ -781,7 +782,7 @@ function JobSearchContent() {
         </div>
       )}
       {/* Top Section Header */}
-      <div className="bg-white rounded-2xl border border-[#E5E8ED] p-5 sm:p-6 shadow-sm">
+      <div className="reference-workspace-heading">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
           <div className="space-y-1.5 max-w-2xl">
             <h1 className="text-2xl sm:text-3xl font-bold text-[var(--text-primary)] tracking-tight">
@@ -841,7 +842,7 @@ function JobSearchContent() {
       </div>
 
       {/* Search Controls Dock */}
-      <GlassCard className="p-5 sm:p-6 space-y-4 shadow-sm border border-[var(--border-color)] bg-[var(--bg-card)] rounded-xl !overflow-visible">
+      <GlassCard className="reference-panel p-5 sm:p-6 space-y-4 shadow-sm border border-[var(--border-color)] bg-[var(--bg-card)] rounded-xl !overflow-visible">
         {/* Natural Language Search Assistant */}
         <div className="p-3.5 rounded-xl bg-[var(--bg-secondary)]/60 border border-[var(--border-color)] space-y-2 text-left">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
@@ -872,7 +873,7 @@ function JobSearchContent() {
                 }
               }}
               placeholder='Try "remote entry level react developer in new york" or "senior python backend hybrid"...'
-              className="flex-1 px-4 py-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-hidden focus:border-[var(--accent)] transition-colors"
+              className="reference-panel flex-1 px-4 py-2 rounded-lg bg-[var(--bg-card)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-hidden focus:border-[var(--accent)] transition-colors"
             />
             <button
               type="button"
@@ -1132,17 +1133,24 @@ function JobSearchContent() {
               </button>
             )}
 
-            <div className="flex items-center gap-1 border border-[var(--glass-border)] rounded-full p-1 bg-[var(--glass-bg)]">
+            <div className="flex items-center gap-1 border border-[var(--glass-border)] rounded-full p-1 bg-[var(--glass-bg)] relative">
               <button
                 type="button"
                 onClick={() => setViewMode('grid')}
                 aria-label="Grid view"
                 aria-pressed={viewMode === 'grid'}
-                className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${viewMode === 'grid'
-                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors duration-150 cursor-pointer relative z-10 ${viewMode === 'grid'
+                  ? 'text-white'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
               >
+                {viewMode === 'grid' && (
+                  <motion.div
+                    layoutId="jobs-view-mode-pill"
+                    className="absolute inset-0 bg-[var(--accent)] rounded-full shadow-xs -z-10"
+                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                  />
+                )}
                 <LayoutGrid className="w-3.5 h-3.5" />
               </button>
               <button
@@ -1150,11 +1158,18 @@ function JobSearchContent() {
                 onClick={() => setViewMode('list')}
                 aria-label="List view"
                 aria-pressed={viewMode === 'list'}
-                className={`w-7 h-7 rounded-full flex items-center justify-center transition-all duration-150 cursor-pointer ${viewMode === 'list'
-                  ? 'bg-[var(--accent)] text-white shadow-xs'
+                className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors duration-150 cursor-pointer relative z-10 ${viewMode === 'list'
+                  ? 'text-white'
                   : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                   }`}
               >
+                {viewMode === 'list' && (
+                  <motion.div
+                    layoutId="jobs-view-mode-pill"
+                    className="absolute inset-0 bg-[var(--accent)] rounded-full shadow-xs -z-10"
+                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                  />
+                )}
                 <List className="w-3.5 h-3.5" />
               </button>
             </div>
@@ -1308,7 +1323,7 @@ function JobSearchContent() {
 
       {/* STATE 1: Initial Discovery State */}
       {!hasSearched && !isLoading && (
-        <div className="p-8 sm:p-12 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-center space-y-5 shadow-xs relative overflow-hidden">
+        <div className="reference-panel p-8 sm:p-12 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] text-center space-y-5 shadow-xs relative overflow-hidden">
           <div className="relative w-14 h-14 mx-auto">
             <div className="relative w-14 h-14 rounded-xl bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--border-color)] flex items-center justify-center shadow-xs">
               <Compass className="w-7 h-7" />
@@ -1338,7 +1353,7 @@ function JobSearchContent() {
             {[1, 2, 3, 4, 5, 6].map((i) => (
               <div
                 key={i}
-                className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3 animate-pulse"
+                className="reference-panel p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3 animate-pulse"
               >
                 <div className="flex items-center justify-between">
                   <div className="w-24 h-4 bg-[var(--bg-secondary)] rounded" />
@@ -1462,11 +1477,17 @@ function JobSearchContent() {
                 : 'space-y-4'
             }
           >
-            {jobs.map((job) => (
-              <div
-                key={job.id}
-                className="bg-white rounded-2xl border border-[#E5E8ED] hover:border-[#3157C8] hover:shadow-md transition-all p-5 flex flex-col justify-between group text-left space-y-4"
-              >
+            <AnimatePresence initial={false}>
+              {jobs.map((job) => (
+                <motion.div
+                  layout
+                  key={job.id}
+                  initial={{ opacity: 0, y: 6 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.98 }}
+                  transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                  className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] hover:border-[var(--accent)] hover:shadow-md transition-all p-5 flex flex-col justify-between group text-left space-y-4"
+                >
                 <div className="space-y-2.5">
                   {/* Top: Match Badge & Workplace/Employment */}
                   <div className="flex items-center justify-between gap-2">
@@ -1475,7 +1496,7 @@ function JobSearchContent() {
                         className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[13px] font-bold ${job.matchScore >= 80
                           ? 'bg-emerald-50 text-emerald-800 border border-emerald-200'
                           : job.matchScore >= 65
-                            ? 'bg-blue-50 text-[#3157C8] border border-blue-200'
+                            ? 'bg-blue-50 text-[var(--accent)] border border-blue-200'
                             : 'bg-amber-50 text-amber-900 border border-amber-200'
                           }`}
                       >
@@ -1483,13 +1504,13 @@ function JobSearchContent() {
                         {job.matchScore}% Match
                       </span>
                     ) : (
-                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[12px] font-semibold bg-[#F6F7F9] text-[#626B78] border border-[#E5E8ED]">
-                        <ShieldCheck className="w-3.5 h-3.5 text-[#3157C8]" />
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded text-[12px] font-semibold bg-[var(--bg-primary)] text-[var(--text-secondary)] border border-[var(--border-color)]">
+                        <ShieldCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
                         {job.source}
                       </span>
                     )}
 
-                    <span className="text-[13px] text-[#626B78] font-medium">
+                    <span className="text-[13px] text-[var(--text-secondary)] font-medium">
                       {job.workplaceType || job.employmentType}
                     </span>
                   </div>
@@ -1504,20 +1525,20 @@ function JobSearchContent() {
                           : null;
                         setSelectedJob(job);
                       }}
-                      className="text-left text-[18px] font-bold text-[#20242B] group-hover:text-[#3157C8] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#3157C8] rounded-sm line-clamp-1 cursor-pointer"
+                      className="text-left text-[18px] font-bold text-[var(--text-primary)] group-hover:text-[var(--accent)] transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] rounded-sm line-clamp-1 cursor-pointer"
                     >
                       {job.title}
                     </button>
-                    <p className="text-[15px] text-[#626B78] font-semibold flex items-center gap-1.5 mt-1">
-                      <Building className="w-4 h-4 text-[#3157C8]" />
+                    <p className="text-[15px] text-[var(--text-secondary)] font-semibold flex items-center gap-1.5 mt-1">
+                      <Building className="w-4 h-4 text-[var(--accent)]" />
                       <span>{job.company}</span>
                     </p>
                   </div>
 
                   {/* Clean Metadata: Location, Salary, Experience */}
-                  <div className="flex flex-wrap items-center gap-2 pt-1 text-[14px] text-[#626B78]">
+                  <div className="flex flex-wrap items-center gap-2 pt-1 text-[14px] text-[var(--text-secondary)]">
                     <span className="flex items-center gap-1">
-                      <MapPin className="w-3.5 h-3.5 text-[#626B78]" />
+                      <MapPin className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
                       <span>{job.location}</span>
                     </span>
 
@@ -1529,7 +1550,7 @@ function JobSearchContent() {
                     )}
 
                     {job.employmentType && (
-                      <span className="text-[13px] text-[#626B78] bg-[#F6F7F9] px-2 py-0.5 rounded border border-[#E5E8ED]">
+                      <span className="text-[13px] text-[var(--text-secondary)] bg-[var(--bg-primary)] px-2 py-0.5 rounded border border-[var(--border-color)]">
                         {job.employmentType}
                       </span>
                     )}
@@ -1537,7 +1558,7 @@ function JobSearchContent() {
                 </div>
 
                 {/* Card Actions: View Details, Save, & Apply */}
-                <div className="pt-3 border-t border-[#E5E8ED] flex items-center justify-between gap-2">
+                <div className="pt-3 border-t border-[var(--border-color)] flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <button
                       type="button"
@@ -1547,7 +1568,7 @@ function JobSearchContent() {
                           : null;
                         setSelectedJob(job);
                       }}
-                      className="px-3 py-1.5 rounded-lg border border-[#E5E8ED] bg-white hover:bg-[#F6F7F9] text-[#20242B] text-[13px] font-semibold cursor-pointer"
+                      className="px-3 py-1.5 rounded-lg border border-[var(--border-color)] bg-white hover:bg-[var(--bg-primary)] text-[var(--text-primary)] text-[13px] font-semibold cursor-pointer"
                     >
                       View Details
                     </button>
@@ -1559,7 +1580,7 @@ function JobSearchContent() {
                       title={savedJobIds.has(job.id) ? "Remove from Saved Jobs" : "Save to Application Tracker"}
                       className={`p-2 rounded-lg text-[13px] transition-colors cursor-pointer ${savedJobIds.has(job.id)
                         ? 'bg-emerald-50 text-[#16845B] border border-emerald-200'
-                        : 'hover:bg-[#F6F7F9] text-[#626B78]'
+                        : 'hover:bg-[var(--bg-primary)] text-[var(--text-secondary)]'
                         }`}
                     >
                       <Bookmark className={`w-4 h-4 ${savedJobIds.has(job.id) ? 'fill-current' : ''}`} />
@@ -1570,7 +1591,7 @@ function JobSearchContent() {
                     type="button"
                     onClick={() => handleApplyClick(job)}
                     disabled={applyingJobId === job.id}
-                    className="px-4 py-1.5 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+                    className="px-4 py-1.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
                   >
                     {applyingJobId === job.id ? (
                       <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -1582,9 +1603,10 @@ function JobSearchContent() {
                     )}
                   </button>
                 </div>
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </AnimatePresence>
+        </div>
 
           {/* Pagination */}
           {searchResponse && searchResponse.totalPages > 1 && (

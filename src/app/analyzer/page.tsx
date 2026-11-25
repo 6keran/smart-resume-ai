@@ -496,27 +496,27 @@ export default function ResumeAnalyzerPage() {
   );
 
   return (
-    <div className="min-h-screen py-8 pb-28 sm:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 text-[#20242B] animate-fade-in">
+    <div className="min-h-screen py-8 pb-28 sm:pb-32 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 text-[var(--text-primary)] animate-fade-in">
       {/* Toast Notification */}
       {applyToast && (
-        <div role="status" aria-live="polite" className="fixed bottom-6 right-6 z-50 bg-white border border-[#E5E8ED] px-4 py-3 rounded-xl flex items-center gap-3 shadow-lg text-[14px] font-semibold text-[#20242B]">
+        <div role="status" aria-live="polite" className="reference-panel fixed bottom-6 right-6 z-50 bg-white border border-[var(--border-color)] px-4 py-3 rounded-xl flex items-center gap-3 shadow-lg text-[14px] font-semibold text-[var(--text-primary)]">
           <CheckCircle2 className="w-4 h-4 text-[#16845B] shrink-0" />
           <span>{applyToast}</span>
         </div>
       )}
 
       {/* Page Header */}
-      <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 text-left shadow-sm space-y-3">
+      <div className="reference-workspace-heading text-left space-y-3">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
           <div className="space-y-2 max-w-2xl text-left">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-semibold bg-blue-50 text-[#3157C8] border border-blue-200">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md text-xs font-semibold bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20">
               <Sparkles className="w-3.5 h-3.5" />
               <span>ATS Compatibility Check</span>
             </div>
-            <h1 className="text-[28px] sm:text-[30px] font-bold text-[#20242B] tracking-tight">
+            <h1 className="text-[28px] sm:text-[30px] font-bold text-[var(--text-primary)] tracking-tight">
               Resume Analyzer &amp; ATS Optimizer
             </h1>
-            <p className="text-[15px] text-[#626B78] leading-relaxed">
+            <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed">
               Diagnose keyword alignment, verify structural parseability, and inspect actionable phrasing optimizations for enterprise applicant tracking systems.
             </p>
           </div>
@@ -527,7 +527,7 @@ export default function ResumeAnalyzerPage() {
               type="button"
               disabled={isBusy}
               onClick={handleAnalyzeBuilderResume}
-              className="px-4 py-2 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[14px] font-semibold flex items-center gap-2 cursor-pointer shadow-sm disabled:opacity-50"
+              className="px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[14px] font-semibold flex items-center gap-2 cursor-pointer shadow-sm disabled:opacity-50"
             >
               <FileEdit className="w-4 h-4" />
               <span>Analyze Active Resume</span>
@@ -536,7 +536,7 @@ export default function ResumeAnalyzerPage() {
               type="button"
               disabled={isBusy}
               onClick={() => setShowPasteModal(true)}
-              className="px-4 py-2 rounded-lg border border-[#E5E8ED] bg-white hover:bg-[#F6F7F9] text-[#20242B] text-[14px] font-semibold cursor-pointer disabled:opacity-50"
+              className="reference-panel px-4 py-2 rounded-lg border border-[var(--border-color)] bg-white hover:bg-[var(--bg-primary)] text-[var(--text-primary)] text-[14px] font-semibold cursor-pointer disabled:opacity-50"
             >
               Paste Text
             </button>
@@ -551,31 +551,31 @@ export default function ResumeAnalyzerPage() {
           <div className="lg:col-span-7 space-y-6">
             {/* Multi-stage Animated Loading View */}
             {isBusy ? (
-              <div className="bg-white rounded-2xl border border-[#E5E8ED] p-10 text-center space-y-6 shadow-sm relative overflow-hidden">
+              <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-10 text-center space-y-6 shadow-sm relative overflow-hidden">
                 <div className="relative w-20 h-20 mx-auto">
-                  <div className="w-20 h-20 rounded-full border-4 border-[#E5E8ED] border-t-[#3157C8] animate-spin" />
+                  <div className="w-20 h-20 rounded-full border-4 border-[var(--border-color)] border-t-[var(--accent)] animate-spin" />
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <Cpu className="w-8 h-8 text-[#3157C8] animate-pulse" />
+                    <Cpu className="w-8 h-8 text-[var(--accent)] animate-pulse" />
                   </div>
                 </div>
 
                 <div className="space-y-2 max-w-md mx-auto">
-                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-blue-50 text-[#3157C8] uppercase tracking-wider border border-blue-200">
+                  <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-bold bg-[var(--accent-subtle)] text-[var(--accent)] uppercase tracking-wider border border-[var(--accent)]/20">
                     {state === 'UPLOADING' && 'Step 1: Reading document'}
                     {state === 'EXTRACTING' && 'Step 2: Extracting text'}
                     {state === 'ANALYZING' && 'Step 3: Analyzing ATS match'}
                   </div>
-                  <h3 className="text-[20px] font-bold text-[#20242B]">
+                  <h3 className="text-[20px] font-bold text-[var(--text-primary)]">
                     {stageDescription || 'Evaluating resume architecture...'}
                   </h3>
-                  <p className="text-[14px] text-[#626B78] leading-relaxed">
+                  <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
                     Cross-referencing formatting, bullet strength, and keyword density against enterprise ATS standards.
                   </p>
                 </div>
 
-                <div className="max-w-sm mx-auto w-full bg-[#F6F7F9] h-2.5 rounded-full overflow-hidden p-0.5 border border-[#E5E8ED]">
+                <div className="max-w-sm mx-auto w-full bg-[var(--bg-primary)] h-2.5 rounded-full overflow-hidden p-0.5 border border-[var(--border-color)]">
                   <div
-                    className="bg-[#3157C8] h-full rounded-full transition-all duration-300 ease-out"
+                    className="bg-[var(--accent)] h-full rounded-full transition-all duration-300 ease-out"
                     style={{
                       width:
                         state === 'UPLOADING'
@@ -596,8 +596,8 @@ export default function ResumeAnalyzerPage() {
                 onDrop={handleDrop}
                 className={`relative p-8 sm:p-12 rounded-2xl border-2 border-dashed transition-all duration-300 text-center ${
                   dragActive
-                    ? 'border-[#3157C8] bg-blue-50/50 scale-[1.01]'
-                    : 'border-[#E5E8ED] bg-[#F6F7F9] hover:border-[#3157C8] hover:bg-white'
+                    ? 'border-[var(--accent)] bg-blue-50/50 scale-[1.01]'
+                    : 'border-[var(--border-color)] bg-[var(--bg-primary)] hover:border-[var(--accent)] hover:bg-white'
                 }`}
               >
                 <input
@@ -612,31 +612,31 @@ export default function ResumeAnalyzerPage() {
                 {/* Idle / Error State within Dropzone */}
                 {(!selectedFile || state === 'IDLE' || state === 'ERROR') && (
                   <div className="space-y-5">
-                    <div className="w-14 h-14 rounded-xl bg-blue-50 text-[#3157C8] border border-blue-200 flex items-center justify-center mx-auto shadow-xs">
+                    <div className="w-14 h-14 rounded-xl bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20 flex items-center justify-center mx-auto shadow-xs">
                       <UploadCloud className="w-7 h-7" />
                     </div>
 
                     <div className="space-y-1">
-                      <h3 className="text-[20px] font-bold text-[#20242B]">
+                      <h3 className="text-[20px] font-bold text-[var(--text-primary)]">
                         Drop your resume here to begin
                       </h3>
-                      <p className="text-[14px] text-[#626B78] max-w-md mx-auto leading-relaxed">
+                      <p className="text-[14px] text-[var(--text-secondary)] max-w-md mx-auto leading-relaxed">
                         Instant deep-scan for ATS compatibility, keyword density, and bullet rewrite opportunities.
                       </p>
                     </div>
 
                     {/* Supported Formats Pills */}
                     <div className="flex flex-wrap items-center justify-center gap-2 text-[13px] font-medium">
-                      <span className="px-3 py-1 rounded-full bg-white border border-[#E5E8ED] text-[#626B78]">
+                      <span className="px-3 py-1 rounded-full bg-white border border-[var(--border-color)] text-[var(--text-secondary)]">
                         PDF (ATS Safe)
                       </span>
-                      <span className="px-3 py-1 rounded-full bg-white border border-[#E5E8ED] text-[#626B78]">
+                      <span className="px-3 py-1 rounded-full bg-white border border-[var(--border-color)] text-[var(--text-secondary)]">
                         DOCX
                       </span>
-                      <span className="px-3 py-1 rounded-full bg-white border border-[#E5E8ED] text-[#626B78]">
+                      <span className="px-3 py-1 rounded-full bg-white border border-[var(--border-color)] text-[var(--text-secondary)]">
                         TXT
                       </span>
-                      <span className="px-3 py-1 rounded-full bg-white border border-[#E5E8ED] text-[#626B78]">
+                      <span className="px-3 py-1 rounded-full bg-white border border-[var(--border-color)] text-[var(--text-secondary)]">
                         Max 10MB
                       </span>
                     </div>
@@ -645,7 +645,7 @@ export default function ResumeAnalyzerPage() {
                     <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
                       <label
                         htmlFor="resume-file-input"
-                        className="px-5 py-2.5 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[14px] font-semibold cursor-pointer inline-flex items-center gap-2 shadow-sm"
+                        className="px-5 py-2.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[14px] font-semibold cursor-pointer inline-flex items-center gap-2 shadow-sm"
                       >
                         <FileText className="w-4 h-4" />
                         <span>Select File from Device</span>
@@ -653,9 +653,9 @@ export default function ResumeAnalyzerPage() {
                       <button
                         type="button"
                         onClick={handleAnalyzeBuilderResume}
-                        className="px-4 py-2.5 rounded-lg border border-[#E5E8ED] bg-white hover:bg-[#F6F7F9] text-[#20242B] text-[14px] font-semibold cursor-pointer inline-flex items-center gap-2"
+                        className="reference-panel px-4 py-2.5 rounded-lg border border-[var(--border-color)] bg-white hover:bg-[var(--bg-primary)] text-[var(--text-primary)] text-[14px] font-semibold cursor-pointer inline-flex items-center gap-2"
                       >
-                        <FileEdit className="w-4 h-4 text-[#3157C8]" />
+                        <FileEdit className="w-4 h-4 text-[var(--accent)]" />
                         <span>Use Active Resume</span>
                       </button>
                     </div>
@@ -669,15 +669,15 @@ export default function ResumeAnalyzerPage() {
                       <FileCheck className="w-7 h-7" />
                     </div>
 
-                    <div className="max-w-md mx-auto p-4 rounded-xl bg-white border border-[#E5E8ED] space-y-1">
+                    <div className="reference-panel max-w-md mx-auto p-4 rounded-xl bg-white border border-[var(--border-color)] space-y-1">
                       <div className="flex items-center justify-between gap-3">
                         <div className="flex items-center gap-3 min-w-0">
-                          <FileText className="w-5 h-5 text-[#3157C8] shrink-0" />
+                          <FileText className="w-5 h-5 text-[var(--accent)] shrink-0" />
                           <div className="text-left min-w-0">
-                            <p className="text-[15px] font-bold text-[#20242B] truncate">
+                            <p className="text-[15px] font-bold text-[var(--text-primary)] truncate">
                               {selectedFile.name}
                             </p>
-                            <p className="text-[13px] text-[#626B78]">
+                            <p className="text-[13px] text-[var(--text-secondary)]">
                               {formatFileSize(selectedFile.size)} · Validated &amp; ready for parsing
                             </p>
                           </div>
@@ -686,7 +686,7 @@ export default function ResumeAnalyzerPage() {
                           type="button"
                           onClick={handleRemoveFile}
                           title="Remove file"
-                          className="p-1.5 rounded-lg text-[#626B78] hover:text-[#C43D43] transition-colors cursor-pointer"
+                          className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[#C43D43] transition-colors cursor-pointer"
                         >
                           <X className="w-4 h-4" />
                         </button>
@@ -697,14 +697,14 @@ export default function ResumeAnalyzerPage() {
                       <button
                         type="button"
                         onClick={() => handleStartAnalysis()}
-                        className="px-6 py-2.5 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[15px] font-bold inline-flex items-center gap-2 shadow-sm cursor-pointer"
+                        className="px-6 py-2.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[15px] font-bold inline-flex items-center gap-2 shadow-sm cursor-pointer"
                       >
                         <Sparkles className="w-4 h-4" />
                         <span>Run Full ATS Analysis</span>
                       </button>
                       <label
                         htmlFor="resume-file-input"
-                        className="px-4 py-2.5 rounded-lg border border-[#E5E8ED] bg-white hover:bg-[#F6F7F9] text-[#20242B] text-[14px] font-semibold cursor-pointer inline-flex items-center gap-2"
+                        className="reference-panel px-4 py-2.5 rounded-lg border border-[var(--border-color)] bg-white hover:bg-[var(--bg-primary)] text-[var(--text-primary)] text-[14px] font-semibold cursor-pointer inline-flex items-center gap-2"
                       >
                         Replace File
                       </label>
@@ -725,10 +725,10 @@ export default function ResumeAnalyzerPage() {
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-red-100 text-[#C43D43] border border-red-200">
                       Document Validation Failed
                     </div>
-                    <h4 className="text-[17px] font-bold text-[#20242B]">
+                    <h4 className="text-[17px] font-bold text-[var(--text-primary)]">
                       This document does not appear to be a resume or CV.
                     </h4>
-                    <p className="text-[14px] text-[#626B78] leading-relaxed">
+                    <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
                       {validationResult?.detectedType
                         ? `Identified content: ${validationResult.detectedType}. `
                         : ''}
@@ -760,10 +760,10 @@ export default function ResumeAnalyzerPage() {
                     <div className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-md text-xs font-semibold bg-amber-100 text-[#A96812] border border-amber-200">
                       Uncertain Document Structure
                     </div>
-                    <h4 className="text-[17px] font-bold text-[#20242B]">
+                    <h4 className="text-[17px] font-bold text-[var(--text-primary)]">
                       We couldn&apos;t clearly verify this document as a resume.
                     </h4>
-                    <p className="text-[14px] text-[#626B78] leading-relaxed">
+                    <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
                       The uploaded document has limited standard resume sections (such as work experience, education, or skills) or is very brief. ATS systems often struggle to parse incomplete formats.
                     </p>
                   </div>
@@ -772,7 +772,7 @@ export default function ResumeAnalyzerPage() {
                   <button
                     type="button"
                     onClick={handleResetToUpload}
-                    className="px-4 py-2 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 cursor-pointer shadow-sm"
+                    className="px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 cursor-pointer shadow-sm"
                   >
                     <RefreshCw className="w-3.5 h-3.5" />
                     Upload a Clearer Resume
@@ -780,7 +780,7 @@ export default function ResumeAnalyzerPage() {
                   <button
                     type="button"
                     onClick={handleProceedWithUncertain}
-                    className="px-4 py-2 rounded-lg border border-[#E5E8ED] bg-white text-[#20242B] text-[13px] font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                    className="reference-panel px-4 py-2 rounded-lg border border-[var(--border-color)] bg-white text-[var(--text-primary)] text-[13px] font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                   >
                     <Sparkles className="w-3.5 h-3.5" />
                     Proceed with Best-Effort Analysis
@@ -796,7 +796,7 @@ export default function ResumeAnalyzerPage() {
                   <AlertCircle className="w-5 h-5 text-[#C43D43] shrink-0 mt-0.5" />
                   <div className="space-y-1">
                     <h4 className="text-[15px] font-bold text-[#C43D43]">Analysis Error</h4>
-                    <p className="text-[14px] text-[#20242B] leading-relaxed">
+                    <p className="text-[14px] text-[var(--text-primary)] leading-relaxed">
                       {errorMessage}
                     </p>
                   </div>
@@ -816,7 +816,7 @@ export default function ResumeAnalyzerPage() {
                       type="button"
                       disabled={isBusy}
                       onClick={() => setState('SUCCESS')}
-                      className="px-3.5 py-1.5 rounded-md border border-[#E5E8ED] bg-white text-[13px] text-[#20242B] font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                      className="px-3.5 py-1.5 rounded-md border border-[var(--border-color)] bg-white text-[13px] text-[var(--text-primary)] font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                     >
                       Back to Previous Results
                     </button>
@@ -824,7 +824,7 @@ export default function ResumeAnalyzerPage() {
                   <button
                     type="button"
                     onClick={handleResetToUpload}
-                    className="px-3.5 py-1.5 rounded-md border border-[#E5E8ED] bg-white text-[13px] text-[#20242B] font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-md border border-[var(--border-color)] bg-white text-[13px] text-[var(--text-primary)] font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                   >
                     Upload Another File
                   </button>
@@ -836,17 +836,17 @@ export default function ResumeAnalyzerPage() {
           {/* RIGHT COLUMN: Target Job Configuration & ATS Benchmarks Checklist (5 cols) */}
           <div className="lg:col-span-5 space-y-6">
             {/* Target Job Configuration Drawer Card */}
-            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 text-left shadow-sm">
+            <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-4 text-left shadow-sm">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-lg bg-blue-50 text-[#3157C8] border border-blue-200 flex items-center justify-center">
+                  <div className="w-8 h-8 rounded-lg bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20 flex items-center justify-center">
                     <Target className="w-4 h-4" />
                   </div>
                   <div>
-                    <h3 className="text-[17px] font-bold text-[#20242B]">
+                    <h3 className="text-[17px] font-bold text-[var(--text-primary)]">
                       Target Role Tailoring
                     </h3>
-                    <p className="text-[13px] text-[#626B78]">
+                    <p className="text-[13px] text-[var(--text-secondary)]">
                       Optional: Match keywords to specific job
                     </p>
                   </div>
@@ -855,8 +855,8 @@ export default function ResumeAnalyzerPage() {
                 <span
                   className={`px-2.5 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider ${
                     isJobSpecificMode
-                      ? 'bg-blue-50 text-[#3157C8] border border-blue-200'
-                      : 'bg-[#F6F7F9] text-[#626B78] border border-[#E5E8ED]'
+                      ? 'bg-blue-50 text-[var(--accent)] border border-blue-200'
+                      : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border border-[var(--border-color)]'
                   }`}
                 >
                   {isJobSpecificMode ? 'Job Mode' : 'General Mode'}
@@ -864,13 +864,13 @@ export default function ResumeAnalyzerPage() {
               </div>
 
               {/* Job Inputs */}
-              <div className="space-y-3 pt-2 border-t border-[#E5E8ED]">
+              <div className="space-y-3 pt-2 border-t border-[var(--border-color)]">
                 <div>
-                  <label className="block text-[14px] font-semibold text-[#20242B] mb-1.5">
+                  <label className="block text-[14px] font-semibold text-[var(--text-primary)] mb-1.5">
                     Target Job Title
                   </label>
                   <div className="relative">
-                    <Briefcase className="w-4 h-4 absolute left-3 top-3 text-[#626B78]" />
+                    <Briefcase className="w-4 h-4 absolute left-3 top-3 text-[var(--text-secondary)]" />
                     <input
                       type="text"
                       placeholder="e.g. Senior Frontend Engineer"
@@ -879,17 +879,17 @@ export default function ResumeAnalyzerPage() {
                         setJobTitleInput(e.target.value);
                         updateTargetJob({ title: e.target.value });
                       }}
-                      className="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-[#E5E8ED] text-[14px] text-[#20242B] placeholder:text-[#626B78] focus:outline-none focus:border-[#3157C8]"
+                      className="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-[var(--border-color)] text-[14px] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
                     />
                   </div>
                 </div>
 
                 <div>
-                  <label className="block text-[14px] font-semibold text-[#20242B] mb-1.5">
+                  <label className="block text-[14px] font-semibold text-[var(--text-primary)] mb-1.5">
                     Company Name
                   </label>
                   <div className="relative">
-                    <Building className="w-4 h-4 absolute left-3 top-3 text-[#626B78]" />
+                    <Building className="w-4 h-4 absolute left-3 top-3 text-[var(--text-secondary)]" />
                     <input
                       type="text"
                       placeholder="e.g. Stripe, Airbnb, Google"
@@ -898,18 +898,18 @@ export default function ResumeAnalyzerPage() {
                         setCompanyInput(e.target.value);
                         updateTargetJob({ company: e.target.value });
                       }}
-                      className="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-[#E5E8ED] text-[14px] text-[#20242B] placeholder:text-[#626B78] focus:outline-none focus:border-[#3157C8]"
+                      className="w-full pl-9 pr-3 py-2 rounded-lg bg-white border border-[var(--border-color)] text-[14px] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
                     />
                   </div>
                 </div>
 
                 <div>
                   <div className="flex items-center justify-between mb-1.5">
-                    <label className="text-[14px] font-semibold text-[#20242B]">
+                    <label className="text-[14px] font-semibold text-[var(--text-primary)]">
                       Job Description &amp; Requirements
                     </label>
                     {jobDescInput.trim() && (
-                      <span className="text-[12px] text-[#3157C8] font-semibold">
+                      <span className="text-[12px] text-[var(--accent)] font-semibold">
                         {jobDescInput.split(/\s+/).filter(Boolean).length} words
                       </span>
                     )}
@@ -922,7 +922,7 @@ export default function ResumeAnalyzerPage() {
                       updateTargetJob({ description: e.target.value });
                     }}
                     placeholder="Paste the job description to calculate keyword match % and uncover missing skills..."
-                    className="w-full p-3 rounded-lg bg-white border border-[#E5E8ED] text-[14px] text-[#20242B] placeholder:text-[#626B78] focus:outline-none focus:border-[#3157C8] resize-y leading-relaxed"
+                    className="w-full p-3 rounded-lg bg-white border border-[var(--border-color)] text-[14px] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)] resize-y leading-relaxed"
                   />
                 </div>
 
@@ -950,64 +950,64 @@ export default function ResumeAnalyzerPage() {
             </div>
 
             {/* Expandable ATS Criteria & Checklist Preview */}
-            <details className="group bg-white rounded-2xl border border-[#E5E8ED] p-5 shadow-sm text-left">
-              <summary className="font-bold text-[16px] text-[#20242B] cursor-pointer list-none flex items-center justify-between">
+            <details className="reference-panel group bg-white rounded-2xl border border-[var(--border-color)] p-5 shadow-sm text-left">
+              <summary className="font-bold text-[16px] text-[var(--text-primary)] cursor-pointer list-none flex items-center justify-between">
                 <span className="flex items-center gap-2">
-                  <BarChart3 className="w-4 h-4 text-[#3157C8]" />
+                  <BarChart3 className="w-4 h-4 text-[var(--accent)]" />
                   What ATS Scanners Look For (4 Pillars)
                 </span>
-                <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180 text-[#626B78]" />
+                <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180 text-[var(--text-secondary)]" />
               </summary>
 
-              <div className="space-y-3 mt-4 pt-3 border-t border-[#E5E8ED]">
-                <div className="p-3 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-1">
+              <div className="space-y-3 mt-4 pt-3 border-t border-[var(--border-color)]">
+                <div className="p-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-[14px] font-bold text-[#20242B] flex items-center gap-1.5">
+                    <span className="text-[14px] font-bold text-[var(--text-primary)] flex items-center gap-1.5">
                       <Zap className="w-3.5 h-3.5 text-amber-500" />
                       Keyword &amp; Hard Skill Density
                     </span>
-                    <span className="text-[12px] font-bold text-[#3157C8]">35% Weight</span>
+                    <span className="text-[12px] font-bold text-[var(--accent)]">35% Weight</span>
                   </div>
-                  <p className="text-[13px] text-[#626B78] leading-relaxed">
+                  <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
                     Identifies core programming languages, frameworks, cloud platforms, and domain terms matching the target job.
                   </p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-1">
+                <div className="p-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-[14px] font-bold text-[#20242B] flex items-center gap-1.5">
+                    <span className="text-[14px] font-bold text-[var(--text-primary)] flex items-center gap-1.5">
                       <TrendingUp className="w-3.5 h-3.5 text-[#16845B]" />
                       Quantified Bullet Impact (XYZ)
                     </span>
-                    <span className="text-[12px] font-bold text-[#3157C8]">25% Weight</span>
+                    <span className="text-[12px] font-bold text-[var(--accent)]">25% Weight</span>
                   </div>
-                  <p className="text-[13px] text-[#626B78] leading-relaxed">
+                  <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
                     Evaluates metrics, percentages, revenue, latency reductions, and strong active past-tense verbs.
                   </p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-1">
+                <div className="p-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-[14px] font-bold text-[#20242B] flex items-center gap-1.5">
-                      <Layers className="w-3.5 h-3.5 text-[#3157C8]" />
+                    <span className="text-[14px] font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                      <Layers className="w-3.5 h-3.5 text-[var(--accent)]" />
                       Section Architecture &amp; Parsing
                     </span>
-                    <span className="text-[12px] font-bold text-[#3157C8]">20% Weight</span>
+                    <span className="text-[12px] font-bold text-[var(--accent)]">20% Weight</span>
                   </div>
-                  <p className="text-[13px] text-[#626B78] leading-relaxed">
+                  <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
                     Verifies standard header hierarchy, clean contact metadata, and machine-readable date ranges.
                   </p>
                 </div>
 
-                <div className="p-3 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-1">
+                <div className="p-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-1">
                   <div className="flex items-center justify-between">
-                    <span className="text-[14px] font-bold text-[#20242B] flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-[#3157C8]" />
+                    <span className="text-[14px] font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-[var(--accent)]" />
                       Brevity &amp; Recruiter Glance Rate
                     </span>
-                    <span className="text-[12px] font-bold text-[#3157C8]">20% Weight</span>
+                    <span className="text-[12px] font-bold text-[var(--accent)]">20% Weight</span>
                   </div>
-                  <p className="text-[13px] text-[#626B78] leading-relaxed">
+                  <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
                     Ensures concise 1–2 page length, optimal bullet length, and elimination of generic filler phrases.
                   </p>
                 </div>
@@ -1021,10 +1021,10 @@ export default function ResumeAnalyzerPage() {
       {state === 'SUCCESS' && analysisResult && !isBusy && (
         <div className="space-y-6 animate-fade-in">
           {/* Main Hero Intelligence Dashboard Card */}
-          <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 shadow-sm text-left">
+          <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 sm:p-8 shadow-sm text-left">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center text-left">
               {/* Radial Overall Score Ring (4 cols) */}
-              <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 rounded-2xl bg-[#F6F7F9] border border-[#E5E8ED] text-center space-y-3">
+              <div className="lg:col-span-4 flex flex-col items-center justify-center p-6 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-center space-y-3">
                 <ScoreRing
                   score={analysisResult.overallAtsScore}
                   maxScore={100}
@@ -1044,7 +1044,7 @@ export default function ResumeAnalyzerPage() {
                         : 'Needs ATS Tuning'}
                     </span>
                   </div>
-                  <p className="text-[13px] text-[#626B78] mt-1.5">
+                  <p className="text-[13px] text-[var(--text-secondary)] mt-1.5">
                     Scored across 4 enterprise ATS algorithms
                   </p>
                 </div>
@@ -1052,18 +1052,18 @@ export default function ResumeAnalyzerPage() {
 
               {/* Score Breakdown Bars & Document Metadata (8 cols) */}
               <div className="lg:col-span-8 space-y-5">
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[#E5E8ED]">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-[var(--border-color)]">
                   <div>
-                    <h2 className="text-[22px] font-bold text-[#20242B]">
+                    <h2 className="text-[22px] font-bold text-[var(--text-primary)]">
                       {selectedFile
                         ? selectedFile.name
                         : `${resumeData.personalInfo.fullName || 'Candidate'}'s Resume`}
                     </h2>
-                    <div className="flex flex-wrap items-center gap-2 mt-1 text-[13px] text-[#626B78]">
+                    <div className="flex flex-wrap items-center gap-2 mt-1 text-[13px] text-[var(--text-secondary)]">
                       <span>{analysisResult.wordCount} words analyzed</span>
                       <span>·</span>
                       {analysisResult.isJobSpecific ? (
-                        <span className="text-[#3157C8] font-semibold">
+                        <span className="text-[var(--accent)] font-semibold">
                           Tailored for {analysisResult.jobTitle || 'Role'}
                           {analysisResult.company ? ` at ${analysisResult.company}` : ''}
                         </span>
@@ -1073,8 +1073,8 @@ export default function ResumeAnalyzerPage() {
                       {analysisResult.engineDisplayName && (
                         <>
                           <span>·</span>
-                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[#F6F7F9] text-[#626B78] border border-[#E5E8ED]">
-                            <Sparkles className="w-3 h-3 text-[#3157C8]" />
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-semibold bg-[var(--bg-primary)] text-[var(--text-secondary)] border border-[var(--border-color)]">
+                            <Sparkles className="w-3 h-3 text-[var(--accent)]" />
                             {analysisResult.engineDisplayName}
                           </span>
                         </>
@@ -1086,7 +1086,7 @@ export default function ResumeAnalyzerPage() {
                   <div className="flex flex-wrap items-center gap-2.5">
                     <Link
                       href="/builder?from=analyzer"
-                      className="px-4 py-2 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[14px] font-semibold inline-flex items-center gap-1.5 shadow-sm"
+                      className="px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[14px] font-semibold inline-flex items-center gap-1.5 shadow-sm"
                     >
                       <FileEdit className="w-4 h-4" />
                       <span>Edit in Builder</span>
@@ -1095,7 +1095,7 @@ export default function ResumeAnalyzerPage() {
                       type="button"
                       onClick={handleReanalyze}
                       title="Re-run analysis to evaluate updated wording"
-                      className="px-3.5 py-2 rounded-lg border border-[#E5E8ED] bg-white hover:bg-[#F6F7F9] text-[#20242B] text-[14px] font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                      className="px-3.5 py-2 rounded-lg border border-[var(--border-color)] bg-white hover:bg-[var(--bg-primary)] text-[var(--text-primary)] text-[14px] font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                     >
                       <RefreshCw className="w-3.5 h-3.5" />
                       <span>Re-Score</span>
@@ -1103,7 +1103,7 @@ export default function ResumeAnalyzerPage() {
                     <button
                       type="button"
                       onClick={handleResetToUpload}
-                      className="px-3.5 py-2 rounded-lg border border-[#E5E8ED] bg-white hover:bg-[#F6F7F9] text-[#20242B] text-[14px] font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                      className="px-3.5 py-2 rounded-lg border border-[var(--border-color)] bg-white hover:bg-[var(--bg-primary)] text-[var(--text-primary)] text-[14px] font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                     >
                       <UploadCloud className="w-3.5 h-3.5" />
                       <span>Upload Another</span>
@@ -1114,30 +1114,30 @@ export default function ResumeAnalyzerPage() {
                 {/* 4 Dimension Progress Grid */}
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   {/* Keyword Match */}
-                  <div className="p-3.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-2">
+                  <div className="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-2">
                     <div className="flex items-center justify-between text-[13px] font-semibold">
-                      <span className="text-[#626B78]">Keyword Alignment</span>
-                      <span className="text-[#20242B] font-bold">
+                      <span className="text-[var(--text-secondary)]">Keyword Alignment</span>
+                      <span className="text-[var(--text-primary)] font-bold">
                         {analysisResult.keywordMatchScore}%
                       </span>
                     </div>
-                    <div className="w-full bg-[#E5E8ED] h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-[var(--border-color)] h-2 rounded-full overflow-hidden">
                       <div
-                        className="bg-[#3157C8] h-full rounded-full transition-all duration-500"
+                        className="bg-[var(--accent)] h-full rounded-full transition-all duration-500"
                         style={{ width: `${analysisResult.keywordMatchScore}%` }}
                       />
                     </div>
                   </div>
 
                   {/* Formatting */}
-                  <div className="p-3.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-2">
+                  <div className="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-2">
                     <div className="flex items-center justify-between text-[13px] font-semibold">
-                      <span className="text-[#626B78]">Formatting &amp; Parseability</span>
-                      <span className="text-[#20242B] font-bold">
+                      <span className="text-[var(--text-secondary)]">Formatting &amp; Parseability</span>
+                      <span className="text-[var(--text-primary)] font-bold">
                         {analysisResult.formattingScore}%
                       </span>
                     </div>
-                    <div className="w-full bg-[#E5E8ED] h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-[var(--border-color)] h-2 rounded-full overflow-hidden">
                       <div
                         className="bg-[#4F46E5] h-full rounded-full transition-all duration-500"
                         style={{ width: `${analysisResult.formattingScore}%` }}
@@ -1146,14 +1146,14 @@ export default function ResumeAnalyzerPage() {
                   </div>
 
                   {/* Content Score */}
-                  <div className="p-3.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-2">
+                  <div className="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-2">
                     <div className="flex items-center justify-between text-[13px] font-semibold">
-                      <span className="text-[#626B78]">Content &amp; Bullet Impact</span>
-                      <span className="text-[#20242B] font-bold">
+                      <span className="text-[var(--text-secondary)]">Content &amp; Bullet Impact</span>
+                      <span className="text-[var(--text-primary)] font-bold">
                         {analysisResult.contentScore}%
                       </span>
                     </div>
-                    <div className="w-full bg-[#E5E8ED] h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-[var(--border-color)] h-2 rounded-full overflow-hidden">
                       <div
                         className="bg-[#16845B] h-full rounded-full transition-all duration-500"
                         style={{ width: `${analysisResult.contentScore}%` }}
@@ -1162,16 +1162,16 @@ export default function ResumeAnalyzerPage() {
                   </div>
 
                   {/* Section Score */}
-                  <div className="p-3.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-2">
+                  <div className="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-2">
                     <div className="flex items-center justify-between text-[13px] font-semibold">
-                      <span className="text-[#626B78]">Section Completeness</span>
-                      <span className="text-[#20242B] font-bold">
+                      <span className="text-[var(--text-secondary)]">Section Completeness</span>
+                      <span className="text-[var(--text-primary)] font-bold">
                         {analysisResult.sectionScore}%
                       </span>
                     </div>
-                    <div className="w-full bg-[#E5E8ED] h-2 rounded-full overflow-hidden">
+                    <div className="w-full bg-[var(--border-color)] h-2 rounded-full overflow-hidden">
                       <div
-                        className="bg-[#3157C8] h-full rounded-full transition-all duration-500"
+                        className="bg-[var(--accent)] h-full rounded-full transition-all duration-500"
                         style={{ width: `${analysisResult.sectionScore}%` }}
                       />
                     </div>
@@ -1187,11 +1187,11 @@ export default function ResumeAnalyzerPage() {
           {/* Area A & Area B: Matched Skills and Recommended Keywords */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
             {/* Area A: Matched Skills */}
-            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-3 shadow-sm text-left">
-              <div className="flex items-center justify-between pb-2 border-b border-[#E5E8ED]">
+            <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-3 shadow-sm text-left">
+              <div className="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
                 <div className="flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-[#16845B]" />
-                  <h3 className="text-[17px] font-bold text-[#20242B]">
+                  <h3 className="text-[17px] font-bold text-[var(--text-primary)]">
                     Matched Skills &amp; Competencies
                   </h3>
                 </div>
@@ -1199,7 +1199,7 @@ export default function ResumeAnalyzerPage() {
                   {analysisResult.matchedSkills?.length ?? analysisResult.detectedKeywords.length} Detected
                 </span>
               </div>
-              <p className="text-[14px] text-[#626B78] leading-relaxed">
+              <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
                 {analysisResult.isJobSpecific
                   ? 'Skills and competencies identified in your resume that directly align with the target job requirements:'
                   : 'Technical and domain skills detected in your resume:'}
@@ -1222,7 +1222,7 @@ export default function ResumeAnalyzerPage() {
                     </span>
                   ))
                 ) : (
-                  <p className="text-[14px] text-[#626B78] italic">
+                  <p className="text-[14px] text-[var(--text-secondary)] italic">
                     No standard technical skills were detected in the uploaded text.
                   </p>
                 )}
@@ -1230,22 +1230,22 @@ export default function ResumeAnalyzerPage() {
             </div>
 
             {/* Area B: Recommended Keywords */}
-            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-3 shadow-sm text-left">
-              <div className="flex items-center justify-between pb-2 border-b border-[#E5E8ED]">
+            <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-3 shadow-sm text-left">
+              <div className="flex items-center justify-between pb-2 border-b border-[var(--border-color)]">
                 <div className="flex items-center gap-2">
-                  <Sparkles className="w-4 h-4 text-[#3157C8]" />
-                  <h3 className="text-[17px] font-bold text-[#20242B]">
+                  <Sparkles className="w-4 h-4 text-[var(--accent)]" />
+                  <h3 className="text-[17px] font-bold text-[var(--text-primary)]">
                     Recommended Keywords &amp; Missing Skills
                   </h3>
                 </div>
-                <span className="text-[13px] text-[#3157C8] font-semibold bg-blue-50 px-2.5 py-0.5 rounded-full border border-blue-200">
+                <span className="text-[13px] text-[var(--accent)] font-semibold bg-[var(--accent-subtle)] px-2.5 py-0.5 rounded-full border border-[var(--accent)]/20">
                   {(analysisResult.missingSkills && analysisResult.missingSkills.length > 0
                     ? analysisResult.missingSkills
                     : analysisResult.missingKeywords
                   ).length} Suggested
                 </span>
               </div>
-              <p className="text-[14px] text-[#626B78] leading-relaxed">
+              <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
                 {analysisResult.isJobSpecific
                   ? 'Key skills from the job posting not detected in your resume. Click "+" to append skills you have authentic experience with:'
                   : 'Common industry keywords for your field. Click "+" to add to your active resume:'}
@@ -1266,8 +1266,8 @@ export default function ResumeAnalyzerPage() {
                       disabled={alreadyInResume}
                       className={`px-3 py-1.5 rounded-lg text-[14px] font-medium border transition-all flex items-center gap-1.5 cursor-pointer ${
                         alreadyInResume
-                          ? 'bg-[#F6F7F9] text-[#626B78] border-[#E5E8ED] cursor-default'
-                          : 'bg-white hover:bg-blue-50 text-[#20242B] border-[#E5E8ED] hover:border-[#3157C8] shadow-xs'
+                          ? 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border-[var(--border-color)] cursor-default'
+                          : 'bg-white hover:bg-blue-50 text-[var(--text-primary)] border-[var(--border-color)] hover:border-[var(--accent)] shadow-xs'
                       }`}
                     >
                       {alreadyInResume ? (
@@ -1277,7 +1277,7 @@ export default function ResumeAnalyzerPage() {
                         </>
                       ) : (
                         <>
-                          <span className="font-bold text-[#3157C8]">+</span>
+                          <span className="font-bold text-[var(--accent)]">+</span>
                           <span>{skill}</span>
                         </>
                       )}
@@ -1290,15 +1290,15 @@ export default function ResumeAnalyzerPage() {
 
           {/* Interactive In-Place Improvement Engine */}
           <div className="space-y-4 text-left">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E8ED] pb-4">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border-color)] pb-4">
               <div>
                 <div className="flex items-center gap-2">
-                  <Wand2 className="w-5 h-5 text-[#3157C8]" />
-                  <h2 className="text-[20px] font-bold text-[#20242B]">
+                  <Wand2 className="w-5 h-5 text-[var(--accent)]" />
+                  <h2 className="text-[20px] font-bold text-[var(--text-primary)]">
                     Phrasing &amp; Bullet Rewrite Engine ({improvements.length || (analysisResult.topSuggestions?.length || 0)})
                   </h2>
                 </div>
-                <p className="text-[14px] text-[#626B78] mt-0.5">
+                <p className="text-[14px] text-[var(--text-secondary)] mt-0.5">
                   Review side-by-side phrasing optimizations, edit content inline, and apply directly to your active resume with 1 click.
                 </p>
               </div>
@@ -1307,14 +1307,14 @@ export default function ResumeAnalyzerPage() {
                 <button
                   type="button"
                   onClick={handleApplyAll}
-                  className="px-4 py-2 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 shadow-sm cursor-pointer"
+                  className="px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[13px] font-semibold inline-flex items-center gap-1.5 shadow-sm cursor-pointer"
                 >
                   <Check className="w-3.5 h-3.5" />
                   <span>Apply All Approved</span>
                 </button>
                 <Link
                   href="/builder?from=analyzer"
-                  className="px-4 py-2 rounded-lg border border-[#E5E8ED] bg-white hover:bg-[#F6F7F9] text-[#20242B] text-[13px] font-semibold inline-flex items-center gap-1.5 cursor-pointer"
+                  className="reference-panel px-4 py-2 rounded-lg border border-[var(--border-color)] bg-white hover:bg-[var(--bg-primary)] text-[var(--text-primary)] text-[13px] font-semibold inline-flex items-center gap-1.5 cursor-pointer"
                 >
                   <FileEdit className="w-3.5 h-3.5" />
                   <span>Go to Builder</span>
@@ -1360,26 +1360,26 @@ export default function ResumeAnalyzerPage() {
                     key={item.id}
                     className={`rounded-2xl p-6 border transition-all space-y-4 bg-white shadow-sm ${
                       isRejected
-                        ? 'border-[#E5E8ED] opacity-60'
+                        ? 'border-[var(--border-color)] opacity-60'
                         : isAppliedToResume
                         ? 'border-emerald-300'
-                        : 'border-[#E5E8ED] hover:border-[#3157C8]'
+                        : 'border-[var(--border-color)] hover:border-[var(--accent)]'
                     }`}
                   >
                     {/* Header: Section, Field, Subtle Applied Status */}
-                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-[#E5E8ED]">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-3 border-b border-[var(--border-color)]">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="w-5 h-5 rounded bg-[#F6F7F9] border border-[#E5E8ED] text-[#626B78] text-[12px] font-bold flex items-center justify-center">
+                        <span className="w-5 h-5 rounded bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-secondary)] text-[12px] font-bold flex items-center justify-center">
                           {idx + 1}
                         </span>
-                        <span className="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-[#F6F7F9] text-[#626B78] border border-[#E5E8ED]">
+                        <span className="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-[var(--bg-primary)] text-[var(--text-secondary)] border border-[var(--border-color)]">
                           {item.section}
                         </span>
-                        <span className="text-[14px] font-semibold text-[#20242B]">
+                        <span className="text-[14px] font-semibold text-[var(--text-primary)]">
                           {item.field}
                         </span>
                         {item.isJobTailored && (
-                          <span className="text-[11px] font-medium text-[#3157C8] bg-blue-50 px-2 py-0.5 rounded border border-blue-200">
+                          <span className="text-[11px] font-medium text-[var(--accent)] bg-[var(--accent-subtle)] px-2 py-0.5 rounded border border-[var(--accent)]/20">
                             Role Alignment
                           </span>
                         )}
@@ -1393,8 +1393,8 @@ export default function ResumeAnalyzerPage() {
                           </span>
                         )}
                         {isRejected && (
-                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[12px] font-medium text-[#626B78] bg-[#F6F7F9] border border-[#E5E8ED]">
-                            <X className="w-3.5 h-3.5 text-[#626B78]" />
+                          <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded text-[12px] font-medium text-[var(--text-secondary)] bg-[var(--bg-primary)] border border-[var(--border-color)]">
+                            <X className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
                             Dismissed
                           </span>
                         )}
@@ -1404,39 +1404,39 @@ export default function ResumeAnalyzerPage() {
                     {/* Visual Comparison: Current Phrasing vs Proposed AI Alternative */}
                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                       {/* Left: Current Phrasing */}
-                      <div className="p-4 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-3 flex flex-col justify-between">
+                      <div className="p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-3 flex flex-col justify-between">
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between pb-1 border-b border-[#E5E8ED]">
-                            <span className="text-[12px] font-semibold text-[#626B78] uppercase tracking-wider flex items-center gap-1.5">
-                              <FileText className="w-3.5 h-3.5 text-[#626B78]" />
+                          <div className="flex items-center justify-between pb-1 border-b border-[var(--border-color)]">
+                            <span className="text-[12px] font-semibold text-[var(--text-secondary)] uppercase tracking-wider flex items-center gap-1.5">
+                              <FileText className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
                               Current Phrasing
                             </span>
-                            <span className="text-[11px] text-[#626B78] font-mono">
+                            <span className="text-[11px] text-[var(--text-secondary)] font-mono">
                               Extracted
                             </span>
                           </div>
 
-                          <div className="text-[14px] text-[#20242B] font-mono leading-relaxed bg-white p-3 rounded-lg border border-[#E5E8ED] whitespace-pre-wrap min-h-[68px]">
+                          <div className="text-[14px] text-[var(--text-primary)] font-mono leading-relaxed bg-white p-3 rounded-lg border border-[var(--border-color)] whitespace-pre-wrap min-h-[68px]">
                             {item.originalContent || 'No existing text recorded for this section.'}
                           </div>
                         </div>
 
                         {/* Factual explanation */}
-                        <div className="text-[13px] text-[#626B78] leading-relaxed pt-2 border-t border-[#E5E8ED] flex items-start gap-1.5">
-                          <Info className="w-3.5 h-3.5 text-[#3157C8] shrink-0 mt-0.5" />
+                        <div className="text-[13px] text-[var(--text-secondary)] leading-relaxed pt-2 border-t border-[var(--border-color)] flex items-start gap-1.5">
+                          <Info className="w-3.5 h-3.5 text-[var(--accent)] shrink-0 mt-0.5" />
                           <div>
-                            <span className="font-semibold text-[#20242B]">Observation: </span>
+                            <span className="font-semibold text-[var(--text-primary)]">Observation: </span>
                             <span>{item.reasoning}</span>
                           </div>
                         </div>
                       </div>
 
                       {/* Right: Proposed AI Alternative */}
-                      <div className="p-4 rounded-xl bg-blue-50/40 border border-blue-200 space-y-3 flex flex-col justify-between">
+                      <div className="p-4 rounded-xl bg-[var(--accent-subtle)]/40 border border-[var(--accent)]/20 space-y-3 flex flex-col justify-between">
                         <div className="space-y-2">
-                          <div className="flex items-center justify-between pb-1 border-b border-blue-200">
-                            <span className="text-[12px] font-semibold text-[#3157C8] uppercase tracking-wider flex items-center gap-1.5">
-                              <Sparkles className="w-3.5 h-3.5 text-[#3157C8]" />
+                          <div className="flex items-center justify-between pb-1 border-b border-[var(--accent)]/20">
+                            <span className="text-[12px] font-semibold text-[var(--accent)] uppercase tracking-wider flex items-center gap-1.5">
+                              <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
                               Proposed AI Alternative
                             </span>
                             {!isEditing && (
@@ -1446,7 +1446,7 @@ export default function ResumeAnalyzerPage() {
                                   setEditingSuggestionId(item.id);
                                   setEditTextValue(item.improvedContent);
                                 }}
-                                className="text-[12px] font-semibold text-[#3157C8] hover:underline inline-flex items-center gap-1 cursor-pointer"
+                                className="text-[12px] font-semibold text-[var(--accent)] hover:underline inline-flex items-center gap-1 cursor-pointer"
                               >
                                 <Edit2 className="w-3 h-3" />
                                 Edit
@@ -1460,36 +1460,36 @@ export default function ResumeAnalyzerPage() {
                                 rows={3}
                                 value={editTextValue}
                                 onChange={(e) => setEditTextValue(e.target.value)}
-                                className="w-full p-2.5 rounded-lg bg-white border border-[#3157C8] text-[14px] text-[#20242B] focus:outline-none"
+                                className="w-full p-2.5 rounded-lg bg-white border border-[var(--accent)] text-[14px] text-[var(--text-primary)] focus:outline-none"
                                 placeholder="Edit suggested wording..."
                               />
                               <div className="flex items-center justify-end gap-2 pt-1">
                                 <button
                                   type="button"
                                   onClick={() => setEditingSuggestionId(null)}
-                                  className="px-2.5 py-1 rounded-md text-[13px] text-[#626B78] hover:text-[#20242B] hover:bg-slate-100 border border-[#E5E8ED] cursor-pointer"
+                                  className="px-2.5 py-1 rounded-md text-[13px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-slate-100 border border-[var(--border-color)] cursor-pointer"
                                 >
                                   Cancel
                                 </button>
                                 <button
                                   type="button"
                                   onClick={() => handleSaveEdit(item.id, false)}
-                                  className="px-3 py-1 rounded-md bg-[#3157C8] hover:bg-[#2447AB] text-white text-[13px] font-semibold transition-all cursor-pointer shadow-sm"
+                                  className="px-3 py-1 rounded-md bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[13px] font-semibold transition-all cursor-pointer shadow-sm"
                                 >
                                   Save Changes
                                 </button>
                               </div>
                             </div>
                           ) : (
-                            <div className="text-[14px] text-[#20242B] leading-relaxed bg-white p-3 rounded-lg border border-blue-200 whitespace-pre-wrap font-medium min-h-[68px]">
+                            <div className="text-[14px] text-[var(--text-primary)] leading-relaxed bg-white p-3 rounded-lg border border-[var(--accent)]/20 whitespace-pre-wrap font-medium min-h-[68px]">
                               {item.improvedContent}
                             </div>
                           )}
                         </div>
 
                         {/* Evidence-based note */}
-                        <div className="text-[13px] text-[#626B78] leading-relaxed pt-2 border-t border-blue-200 flex items-start gap-1.5">
-                          <span className="font-semibold text-[#20242B]">Guideline: </span>
+                        <div className="text-[13px] text-[var(--text-secondary)] leading-relaxed pt-2 border-t border-[var(--accent)]/20 flex items-start gap-1.5">
+                          <span className="font-semibold text-[var(--text-primary)]">Guideline: </span>
                           <span>Phrased with strong action verbs and relevant domain skills without fabricating experience.</span>
                         </div>
                       </div>
@@ -1515,7 +1515,7 @@ export default function ResumeAnalyzerPage() {
                           }
                         }}
                         disabled={regeneratingId === item.id}
-                        className="px-3 py-1.5 rounded-lg border border-[#E5E8ED] bg-white hover:bg-[#F6F7F9] text-[#20242B] text-[13px] font-semibold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
+                        className="px-3 py-1.5 rounded-lg border border-[var(--border-color)] bg-white hover:bg-[var(--bg-primary)] text-[var(--text-primary)] text-[13px] font-semibold inline-flex items-center gap-1.5 cursor-pointer disabled:opacity-50"
                       >
                         <RotateCcw
                           className={`w-3.5 h-3.5 ${regeneratingId === item.id ? 'animate-spin' : ''}`}
@@ -1538,8 +1538,8 @@ export default function ResumeAnalyzerPage() {
                         }}
                         className={`px-3 py-1.5 rounded-lg text-[13px] font-medium cursor-pointer ${
                           isRejected
-                            ? 'border border-[#E5E8ED] bg-[#F6F7F9] text-[#626B78]'
-                            : 'hover:text-[#C43D43] text-[#626B78]'
+                            ? 'border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]'
+                            : 'hover:text-[#C43D43] text-[var(--text-secondary)]'
                         }`}
                       >
                         <X className="w-3.5 h-3.5 inline mr-1" />
@@ -1551,8 +1551,8 @@ export default function ResumeAnalyzerPage() {
                         onClick={() => handleApplySuggestion(item.id, item.field)}
                         className={`px-4 py-1.5 rounded-lg text-[13px] font-semibold cursor-pointer shadow-sm inline-flex items-center gap-1.5 ${
                           isAppliedToResume
-                            ? 'border border-[#E5E8ED] bg-[#F6F7F9] text-[#626B78]'
-                            : 'bg-[#3157C8] hover:bg-[#2447AB] text-white'
+                            ? 'border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]'
+                            : 'bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white'
                         }`}
                       >
                         <Check className="w-3.5 h-3.5" />
@@ -1569,8 +1569,8 @@ export default function ResumeAnalyzerPage() {
           {analysisResult.strengths && analysisResult.strengths.length > 0 && (
             <div className="space-y-4 text-left">
               <div className="flex items-center gap-2">
-                <Award className="w-5 h-5 text-[#3157C8]" />
-                <h2 className="text-[20px] font-bold text-[#20242B]">
+                <Award className="w-5 h-5 text-[var(--accent)]" />
+                <h2 className="text-[20px] font-bold text-[var(--text-primary)]">
                   Resume Strengths &amp; Key Advantages
                 </h2>
               </div>
@@ -1578,13 +1578,13 @@ export default function ResumeAnalyzerPage() {
                 {analysisResult.strengths.map((st) => (
                   <div
                     key={st.id}
-                    className="p-5 rounded-xl border border-[#E5E8ED] bg-white space-y-2 text-left shadow-sm"
+                    className="reference-panel p-5 rounded-xl border border-[var(--border-color)] bg-white space-y-2 text-left shadow-sm"
                   >
-                    <span className="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-[#F6F7F9] text-[#626B78] border border-[#E5E8ED]">
+                    <span className="px-2 py-0.5 rounded text-[11px] font-bold uppercase tracking-wider bg-[var(--bg-primary)] text-[var(--text-secondary)] border border-[var(--border-color)]">
                       {st.section}
                     </span>
-                    <h4 className="text-[15px] font-semibold text-[#20242B]">{st.title}</h4>
-                    <p className="text-[13px] text-[#626B78] leading-relaxed">
+                    <h4 className="text-[15px] font-semibold text-[var(--text-primary)]">{st.title}</h4>
+                    <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
                       {st.description}
                     </p>
                   </div>
@@ -1597,9 +1597,9 @@ export default function ResumeAnalyzerPage() {
 
       {/* Paste Text Modal */}
       {showPasteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#20242B]/40 p-4 animate-fade-in">
-          <div className="relative w-full max-w-xl rounded-2xl bg-white border border-[#E5E8ED] p-6 sm:p-8 shadow-2xl space-y-4 text-left">
-            <h3 className="text-[18px] font-bold text-[#20242B]">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-[var(--text-primary)]/40 p-4 animate-fade-in">
+          <div className="reference-panel relative w-full max-w-xl rounded-2xl bg-white border border-[var(--border-color)] p-6 sm:p-8 shadow-2xl space-y-4 text-left">
+            <h3 className="text-[18px] font-bold text-[var(--text-primary)]">
               Paste Resume Content Directly
             </h3>
             <textarea
@@ -1607,13 +1607,13 @@ export default function ResumeAnalyzerPage() {
               value={customText}
               onChange={(e) => setCustomText(e.target.value)}
               placeholder="Paste raw text or markdown from your resume..."
-              className="w-full p-4 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#20242B] placeholder:text-[#626B78] text-[14px] font-mono focus:bg-white focus:outline-none focus:border-[#3157C8]"
+              className="reference-panel w-full p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] text-[14px] font-mono focus:bg-white focus:outline-none focus:border-[var(--accent)]"
             />
             <div className="flex items-center justify-end gap-3">
               <button
                 type="button"
                 onClick={() => setShowPasteModal(false)}
-                className="px-4 py-2 rounded-lg border border-[#E5E8ED] bg-white text-[#20242B] text-[13px] font-semibold cursor-pointer"
+                className="reference-panel px-4 py-2 rounded-lg border border-[var(--border-color)] bg-white text-[var(--text-primary)] text-[13px] font-semibold cursor-pointer"
               >
                 Cancel
               </button>
@@ -1625,7 +1625,7 @@ export default function ResumeAnalyzerPage() {
                     handleTextAnalysis(customText, 'Pasted Resume');
                   }
                 }}
-                className="px-4 py-2 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[13px] font-semibold shadow-sm cursor-pointer"
+                className="px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[13px] font-semibold shadow-sm cursor-pointer"
               >
                 Run AI Analysis
               </button>

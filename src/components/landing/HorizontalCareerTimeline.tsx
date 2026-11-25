@@ -1,18 +1,16 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Link from 'next/link';
 import {
   ArrowRight,
-  Briefcase,
   BookmarkCheck,
-  Send,
-  Sparkles,
-  CheckCircle2,
-  ChevronRight,
-  Target,
   Bot,
+  Briefcase,
+  CheckCircle2,
+  Send,
 } from 'lucide-react';
+import { AnimatedTabPanel } from '@/components/ui/MotionPrimitives';
 
 interface StageItem {
   id: string;
@@ -45,7 +43,7 @@ const STAGES: StageItem[] = [
     step: '02',
     title: 'Pipeline Organization',
     subtitle: 'Save & prioritize target companies',
-    description: 'Bookmark high-probability positions to revisit, compare requirements, and prepare your application package.',
+    description: 'Bookmark positions to revisit, compare requirements, and prepare your application package.',
     href: '/dashboard/jobs',
     ctaText: 'View Saved Jobs',
     icon: BookmarkCheck,
@@ -80,123 +78,73 @@ const STAGES: StageItem[] = [
 
 export default function HorizontalCareerTimeline() {
   const [activeStage, setActiveStage] = useState(0);
-  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
-
-  useEffect(() => {
-    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
-    setPrefersReducedMotion(mq.matches);
-    const handler = (e: MediaQueryListEvent) => setPrefersReducedMotion(e.matches);
-    mq.addEventListener('change', handler);
-    return () => mq.removeEventListener('change', handler);
-  }, []);
+  const stage = STAGES[activeStage];
+  const Icon = stage.icon;
 
   return (
-    <div className="w-full space-y-6">
-      {/* ── Top HUD Progress & Stage Navigator ── */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xs">
-        <div className="flex items-center gap-3">
-          <span className="w-2 h-2 rounded-full bg-[var(--accent)]" />
-          <span className="text-xs font-mono font-bold text-[var(--text-primary)]">
-            WORKFLOW PROGRESSION
-          </span>
-          <span className="text-xs font-mono text-[var(--accent)] font-semibold">
-            [{STAGES[activeStage].badge}]
-          </span>
-        </div>
-
-        {/* Stage Pill Buttons */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {STAGES.map((s, idx) => (
-            <button
-              key={s.id}
-              type="button"
-              onClick={() => setActiveStage(idx)}
-              className={`px-3 py-1 rounded-lg text-xs font-mono font-semibold transition-all cursor-pointer whitespace-nowrap ${
-                activeStage === idx
-                  ? 'bg-[var(--accent)] text-white shadow-xs'
-                  : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)]'
-              }`}
-            >
-              Step {s.step}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* ── Stage Cards Canvas (Horizontal Track with Connecting Flow) ── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        {STAGES.map((stage, idx) => {
-          const Icon = stage.icon;
-          const isActive = activeStage === idx;
-
+    <div className="grid gap-5 lg:grid-cols-[19rem_minmax(0,1fr)]">
+      <div className="flex gap-2 overflow-x-auto rounded-panel bg-bg-subtle-2 p-3 shadow-card lg:flex-col lg:overflow-visible lg:p-4">
+        {STAGES.map((item, index) => {
+          const active = index === activeStage;
           return (
-            <div
-              key={stage.id}
-              onClick={() => setActiveStage(idx)}
-              className={`p-6 rounded-2xl border transition-all duration-200 cursor-pointer flex flex-col justify-between space-y-5 ${
-                isActive
-                  ? 'bg-[var(--bg-card)] border-[var(--accent)] shadow-md ring-2 ring-[var(--accent)]/15'
-                  : 'bg-[var(--bg-card)] border-[var(--border-color)] shadow-xs hover:border-[var(--accent)]/40 hover:shadow-sm'
+            <button
+              key={item.id}
+              type="button"
+              onClick={() => setActiveStage(index)}
+              className={`min-w-56 rounded-card px-4 py-4 text-left transition-colors lg:min-w-0 ${
+                active
+                  ? 'bg-accent text-on-accent'
+                  : 'bg-transparent text-text hover:bg-bg'
               }`}
+              aria-pressed={active}
             >
-              <div className="space-y-4">
-                {/* Card Top: Step Number & Icon */}
-                <div className="flex items-center justify-between">
-                  <div
-                    className={`w-10 h-10 rounded-xl flex items-center justify-center transition-colors ${
-                      isActive
-                        ? 'bg-[var(--accent)] text-white shadow-xs'
-                        : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] border border-[var(--border-color)]'
-                    }`}
-                  >
-                    <Icon className="w-5 h-5" />
-                  </div>
-                  <span className="text-xs font-mono font-bold text-[var(--text-muted)]">
-                    {`// 0${idx + 1}`}
-                  </span>
-                </div>
-
-                {/* Title & Subtitle */}
-                <div>
-                  <h3 className="text-base font-bold text-[var(--text-primary)]">
-                    {stage.title}
-                  </h3>
-                  <p className="text-xs font-medium text-[var(--accent)] mt-0.5">
-                    {stage.subtitle}
-                  </p>
-                </div>
-
-                {/* Description */}
-                <p className="text-xs text-[var(--text-secondary)] leading-relaxed">
-                  {stage.description}
-                </p>
-
-                {/* Micro Highlights */}
-                <ul className="space-y-1.5 pt-2 border-t border-[var(--border-color)] text-[11px] text-[var(--text-secondary)]">
-                  {stage.highlights.map((h) => (
-                    <li key={h} className="flex items-center gap-1.5">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                      <span>{h}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Action Link */}
-              <div className="pt-3 border-t border-[var(--border-color)]">
-                <Link
-                  href={stage.href}
-                  onClick={(e) => e.stopPropagation()}
-                  className="w-full btn-secondary text-xs py-2 px-3 rounded-lg inline-flex items-center justify-between group hover:border-[var(--accent)]"
-                >
-                  <span className="font-semibold">{stage.ctaText}</span>
-                  <ArrowRight className="w-3.5 h-3.5 text-[var(--accent)] group-hover:translate-x-0.5 transition-transform" />
-                </Link>
-              </div>
-            </div>
+              <span className={`font-mono text-caption font-semibold ${active ? 'text-on-accent/70' : 'text-accent'}`}>
+                {item.step}
+              </span>
+              <span className="mt-2 block text-body font-semibold">{item.title}</span>
+              <span className={`mt-1 block text-small ${active ? 'text-on-accent/75' : 'text-text-secondary'}`}>
+                {item.subtitle}
+              </span>
+            </button>
           );
         })}
       </div>
+
+      <AnimatedTabPanel tabKey={stage.id}>
+        <article className="flex min-h-[26rem] flex-col justify-between rounded-panel bg-bg-subtle-2 p-7 shadow-marketing sm:p-9">
+          <div>
+            <div className="flex items-start justify-between gap-5">
+              <span className="grid h-14 w-14 place-items-center rounded-card bg-accent text-on-accent">
+                <Icon className="h-6 w-6" />
+              </span>
+              <span className="font-mono text-caption font-semibold text-accent">{stage.badge}</span>
+            </div>
+
+            <h3 className="mt-9 text-h1 font-semibold tracking-heading text-text">
+              {stage.title}
+            </h3>
+            <p className="mt-2 text-body font-medium text-accent">{stage.subtitle}</p>
+            <p className="mt-5 max-w-2xl text-body-lg leading-7 text-text-secondary">{stage.description}</p>
+
+            <ul className="mt-7 grid gap-3 sm:grid-cols-3">
+              {stage.highlights.map((highlight) => (
+                <li key={highlight} className="flex items-start gap-2 rounded-card bg-bg p-4 text-small text-text-secondary">
+                  <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-success" />
+                  <span>{highlight}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <Link
+            href={stage.href}
+            className="mt-8 inline-flex min-h-12 w-fit items-center gap-2 rounded-full bg-accent px-5 text-body font-semibold text-on-accent transition-colors hover:bg-accent-hover"
+          >
+            {stage.ctaText}
+            <ArrowRight className="h-4 w-4" />
+          </Link>
+        </article>
+      </AnimatedTabPanel>
     </div>
   );
 }

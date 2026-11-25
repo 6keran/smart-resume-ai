@@ -297,7 +297,7 @@ export default function UserProfilePage() {
   return (
     <div className="space-y-6 animate-fade-in max-w-5xl text-left pb-16">
       {/* Header Banner */}
-      <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
+      <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm">
         <div>
           <div className="flex items-center gap-2 mb-1.5">
             <span className="px-2.5 py-0.5 rounded-full text-xs font-semibold bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20 flex items-center gap-1">
@@ -367,7 +367,7 @@ export default function UserProfilePage() {
             {/* Left 2 Cols: Form Fields */}
             <div className="lg:col-span-2 space-y-6">
               {/* Section 1: Academic Standing */}
-              <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm">
+              <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-4 shadow-sm">
                 <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color)]">
                   <GraduationCap className="w-4 h-4 text-[var(--accent)]" />
                   <h2 className="text-base font-bold text-[var(--text-primary)]">
@@ -479,7 +479,7 @@ export default function UserProfilePage() {
               </div>
 
               {/* Section 2: Career Targets */}
-              <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm">
+              <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-4 shadow-sm">
                 <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color)]">
                   <Briefcase className="w-4 h-4 text-[var(--accent)]" />
                   <h2 className="text-base font-bold text-[var(--text-primary)]">
@@ -532,7 +532,7 @@ export default function UserProfilePage() {
               </div>
 
               {/* Section 3: Academic & Capstone Projects */}
-              <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm">
+              <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-4 shadow-sm">
                 <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
                   <div className="flex items-center gap-2">
                     <FolderGit2 className="w-4 h-4 text-[var(--accent)]" />
@@ -658,7 +658,7 @@ export default function UserProfilePage() {
               </div>
 
               {/* Section 4: Coursework & Academic Honors */}
-              <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm">
+              <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-4 shadow-sm">
                 <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color)]">
                   <BookOpen className="w-4 h-4 text-[var(--accent)]" />
                   <h2 className="text-base font-bold text-[var(--text-primary)]">
@@ -719,7 +719,7 @@ export default function UserProfilePage() {
 
             {/* Right Column: AI Ecosystem Quick Links & Summary */}
             <div className="space-y-6">
-              <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm text-sm">
+              <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-4 shadow-sm text-sm">
                 <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-color)]">
                   <Target className="w-4 h-4 text-[var(--accent)]" />
                   <h3 className="font-bold text-[var(--text-primary)]">Career Intelligence</h3>
@@ -770,7 +770,7 @@ export default function UserProfilePage() {
         /* TAB 2: ACCOUNT & SECURITY SETTINGS */
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column: Account Overview Card */}
-          <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-6 h-fit shadow-sm">
+          <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-6 h-fit shadow-sm">
             <div className="text-center space-y-3">
               <div className="w-16 h-16 rounded-2xl bg-[var(--accent)] text-white font-bold text-xl flex items-center justify-center mx-auto shadow-sm">
                 {name ? name.charAt(0).toUpperCase() : 'U'}
@@ -818,7 +818,7 @@ export default function UserProfilePage() {
           {/* Right 2 Columns: Forms */}
           <div className="lg:col-span-2 space-y-6">
             {/* Personal Info Form */}
-            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm">
+            <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-4 shadow-sm">
               <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color)]">
                 <User className="w-4 h-4 text-[var(--accent)]" />
                 <h2 className="text-base font-bold text-[var(--text-primary)]">Personal Details</h2>
@@ -888,7 +888,7 @@ export default function UserProfilePage() {
             </div>
 
             {/* Change Password Form */}
-            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm">
+            <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-4 shadow-sm">
               <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color)]">
                 <Lock className="w-4 h-4 text-[var(--accent)]" />
                 <h2 className="text-sm font-bold text-[var(--text-primary)]">Security & Password</h2>

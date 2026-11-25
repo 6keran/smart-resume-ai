@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Compass,
   Sparkles,
@@ -234,7 +235,7 @@ export default function CareerGuidancePage() {
   return (
     <PageTransition className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8 sm:py-12 space-y-8 text-left pb-20">
       {/* ─── 1. STUDIO HEADER ────────────────────────────────────────── */}
-      <header className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
+      <header className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-6 shadow-sm">
         <div className="flex items-start gap-4">
           <div className="w-14 h-14 rounded-2xl bg-[var(--accent)] text-white flex items-center justify-center shrink-0 shadow-sm">
             <Compass className="w-7 h-7" />
@@ -246,10 +247,10 @@ export default function CareerGuidancePage() {
                 <span>AI Career Intelligence Studio</span>
               </span>
             </div>
-            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#20242B]">
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[var(--text-primary)]">
               {goalSet && targetRole ? `${targetRole} Readiness Studio` : 'Career Guidance & Roadmap Studio'}
             </h1>
-            <p className="text-sm text-[#626B78] leading-relaxed max-w-2xl">
+            <p className="text-sm text-[var(--text-secondary)] leading-relaxed max-w-2xl">
               {goalSet && targetRole
                 ? 'Transparent readiness breakdown and a curated career roadmap aligned to your chosen target role.'
                 : 'Set your target career role to unlock a tailored roadmap, role-specific skill comparison, and goal-aligned readiness insights.'}
@@ -291,47 +292,77 @@ export default function CareerGuidancePage() {
         )}
       </header>
 
-      {isLoading ? (
-        <div className="p-16 text-center bg-white rounded-2xl border border-[#E5E8ED] shadow-sm space-y-3">
-          <Loader2 className="w-8 h-8 text-[var(--accent)] animate-spin mx-auto" />
-          <p className="text-sm text-[var(--text-secondary)]">
-            Analyzing student profile, verified skills, and project evidence...
-          </p>
-        </div>
-      ) : error ? (
-        <div className="p-8 text-center bg-white rounded-2xl border border-[#E5E8ED] shadow-sm space-y-3">
-          <AlertCircle className="w-8 h-8 text-amber-500 mx-auto" />
-          <p className="text-sm text-[var(--text-secondary)]">{error}</p>
-          <Link href="/login" className="btn-primary btn-sm inline-flex items-center gap-1.5 text-xs">
-            <span>Sign In</span>
-          </Link>
-        </div>
-      ) : readiness ? (
-        <>
+      <AnimatePresence mode="wait">
+        {isLoading ? (
+          <motion.div
+            key="guidance-loading"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="space-y-6"
+          >
+            <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-8 space-y-4 shadow-sm">
+              <div className="flex items-center justify-between">
+                <div className="h-5 w-48 bg-[var(--bg-secondary)] rounded-md skeleton-shimmer" />
+                <div className="h-5 w-24 bg-[var(--bg-secondary)] rounded-full skeleton-shimmer" />
+              </div>
+              <div className="h-4 w-3/4 bg-[var(--bg-secondary)] rounded-md skeleton-shimmer" />
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 pt-4">
+                {[1, 2, 3, 4].map((i) => (
+                  <div key={i} className="h-28 bg-[var(--bg-primary)] rounded-xl border border-[var(--border-color)] p-4 skeleton-shimmer" />
+                ))}
+              </div>
+            </div>
+          </motion.div>
+        ) : error ? (
+          <motion.div
+            key="guidance-error"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.18 }}
+            className="reference-panel p-8 text-center bg-white rounded-2xl border border-[var(--border-color)] shadow-sm space-y-3"
+          >
+            <AlertCircle className="w-8 h-8 text-amber-500 mx-auto" />
+            <p className="text-sm text-[var(--text-secondary)]">{error}</p>
+            <Link href="/login" className="btn-primary btn-sm inline-flex items-center gap-1.5 text-xs">
+              <span>Sign In</span>
+            </Link>
+          </motion.div>
+        ) : readiness ? (
+          <motion.div
+            key="guidance-ready"
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            className="space-y-8"
+          >
           {!goalSet && (
-            <section className="rounded-2xl border border-[#E5E8ED] bg-[#F6F7F9] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <section className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-primary)] p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
               <div className="space-y-1">
-                <span className="text-[11px] font-bold uppercase tracking-wider text-[#3157C8]">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent)]">
                   Goal Not Set
                 </span>
-                <h2 className="text-base font-bold text-[#20242B]">
+                <h2 className="text-base font-bold text-[var(--text-primary)]">
                   Choose your target role to generate your career roadmap
                 </h2>
-                <p className="text-xs text-[#626B78] max-w-xl leading-relaxed">
+                <p className="text-xs text-[var(--text-secondary)] max-w-xl leading-relaxed">
                   We never assume your career field automatically. Set a target role across engineering, data, business, marketing, finance, HR, or design to compare your verified skills and track milestones.
                 </p>
               </div>
               <div className="flex flex-wrap items-center gap-2 shrink-0">
                 <Link
                   href="/onboarding"
-                  className="px-4 py-2 rounded-xl bg-[#3157C8] text-white text-xs font-semibold hover:opacity-95 transition-opacity inline-flex items-center gap-1.5"
+                  className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-95 transition-opacity inline-flex items-center gap-1.5"
                 >
                   <span>Set Career Goal</span>
                   <ArrowRight className="w-3.5 h-3.5" />
                 </Link>
                 <Link
                   href="/dashboard/my-data"
-                  className="px-4 py-2 rounded-xl bg-white border border-[#E5E8ED] text-[#20242B] text-xs font-semibold hover:border-[#3157C8]/40 transition-colors"
+                  className="reference-panel px-4 py-2 rounded-xl bg-white border border-[var(--border-color)] text-[var(--text-primary)] text-xs font-semibold hover:border-[var(--accent)]/40 transition-colors"
                 >
                   My Career Data
                 </Link>
@@ -340,7 +371,7 @@ export default function CareerGuidancePage() {
           )}
 
           {/* ─── 2. OVERALL READINESS SCORE GAUGE ─────────────────────── */}
-          <section className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 space-y-6 shadow-sm">
+          <section className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 sm:p-8 space-y-6 shadow-sm">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border-color)]">
               <div>
                 <span className="text-[10px] font-mono uppercase tracking-wider font-bold text-[var(--text-muted)]">
@@ -365,7 +396,7 @@ export default function CareerGuidancePage() {
             <div className="space-y-2">
               <div className="w-full h-3 rounded-full bg-[var(--bg-secondary)] overflow-hidden flex">
                 <div
-                  className="h-full bg-blue-500 transition-all duration-500"
+                  className="h-full bg-[var(--accent-subtle)]0 transition-all duration-500"
                   style={{ width: `${readiness.quadrants.technicalCompetency.score * 0.25}%` }}
                   title="Technical Competency (25%)"
                 />
@@ -387,7 +418,7 @@ export default function CareerGuidancePage() {
               </div>
               <div className="flex flex-wrap items-center justify-between gap-2 text-[11px] text-[var(--text-muted)]">
                 <span className="flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-blue-500" />
+                  <span className="w-2 h-2 rounded-full bg-[var(--accent-subtle)]0" />
                   <span>Technical ({readiness.quadrants.technicalCompetency.score})</span>
                 </span>
                 <span className="flex items-center gap-1.5">
@@ -412,27 +443,27 @@ export default function CareerGuidancePage() {
 
           {/* ─── 2B. GOAL-BASED CURATED ROADMAP ───────────────────────── */}
           {goalSet && curatedProfile && (
-            <section className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 space-y-6 shadow-sm">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[#E5E8ED]">
+            <section className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 sm:p-8 space-y-6 shadow-sm">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border-color)]">
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
-                    <span className="px-2.5 py-0.5 rounded-md bg-[#F6F7F9] border border-[#E5E8ED] text-[#3157C8] text-[11px] font-bold">
+                    <span className="px-2.5 py-0.5 rounded-md bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--accent)] text-[11px] font-bold">
                       Suggested for {curatedProfile.title}
                     </span>
-                    <span className="text-[11px] font-medium text-[#626B78]">
+                    <span className="text-[11px] font-medium text-[var(--text-secondary)]">
                       Domain: {curatedProfile.domain}
                     </span>
                   </div>
-                  <h2 className="text-lg font-bold text-[#20242B]">
+                  <h2 className="text-lg font-bold text-[var(--text-primary)]">
                     Goal-Aligned Career Roadmap
                   </h2>
-                  <p className="text-xs text-[#626B78] max-w-2xl leading-relaxed">
+                  <p className="text-xs text-[var(--text-secondary)] max-w-2xl leading-relaxed">
                     {curatedProfile.summary} Role suggestions are curated benchmarks matched against your confirmed and verified skills.
                   </p>
                 </div>
                 <Link
                   href="/dashboard/my-data"
-                  className="px-3.5 py-2 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-xs font-semibold text-[#20242B] hover:border-[#3157C8]/40 transition-colors shrink-0 self-start sm:self-auto"
+                  className="px-3.5 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--accent)]/40 transition-colors shrink-0 self-start sm:self-auto"
                 >
                   Change Goal or Skills
                 </Link>
@@ -440,15 +471,15 @@ export default function CareerGuidancePage() {
 
               {/* Core Skills & Recommended Tools Checklist */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <div className="p-5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-3">
+                <div className="p-5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <ShieldCheck className="w-4 h-4 text-[#3157C8]" />
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-[#20242B]">
+                      <ShieldCheck className="w-4 h-4 text-[var(--accent)]" />
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
                         Core Role Skills
                       </h3>
                     </div>
-                    <span className="text-[11px] text-[#626B78]">
+                    <span className="text-[11px] text-[var(--text-secondary)]">
                       Suggested for {curatedProfile.title}
                     </span>
                   </div>
@@ -460,24 +491,24 @@ export default function CareerGuidancePage() {
                       return (
                         <div
                           key={skill}
-                          className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-white border border-[#E5E8ED]"
+                          className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-white border border-[var(--border-color)]"
                         >
                           <button
                             type="button"
                             onClick={() => handleToggleRoadmapItem('skill', skill)}
                             disabled={updatingProgressKey === key}
-                            className="flex items-center gap-2.5 text-left text-xs text-[#20242B] font-medium cursor-pointer flex-1 min-w-0"
+                            className="flex items-center gap-2.5 text-left text-xs text-[var(--text-primary)] font-medium cursor-pointer flex-1 min-w-0"
                           >
                             <span
                               className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
                                 checked
-                                  ? 'bg-[#3157C8] border-[#3157C8] text-white'
-                                  : 'bg-white border-[#CBD2DD]'
+                                  ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
+                                  : 'bg-white border-[var(--border-hover)]'
                               }`}
                             >
                               {checked && <Check className="w-3 h-3" />}
                             </span>
-                            <span className={checked ? 'line-through text-[#626B78]' : 'truncate'}>
+                            <span className={checked ? 'line-through text-[var(--text-secondary)]' : 'truncate'}>
                               {skill}
                             </span>
                           </button>
@@ -486,10 +517,10 @@ export default function CareerGuidancePage() {
                               userStatus === 'verified'
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 : userStatus === 'confirmed'
-                                  ? 'bg-[#F6F7F9] text-[#3157C8] border-[#3157C8]/25'
+                                  ? 'bg-[var(--bg-primary)] text-[var(--accent)] border-[var(--accent)]/25'
                                   : userStatus === 'claimed'
                                     ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                    : 'bg-[#F6F7F9] text-[#626B78] border-[#E5E8ED]'
+                                    : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border-[var(--border-color)]'
                             }`}
                           >
                             {userStatus === 'verified'
@@ -507,15 +538,15 @@ export default function CareerGuidancePage() {
                 </div>
 
                 {/* Recommended Tools */}
-                <div className="p-5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-3">
+                <div className="p-5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-3">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Wrench className="w-4 h-4 text-[#3157C8]" />
-                      <h3 className="text-xs font-bold uppercase tracking-wider text-[#20242B]">
+                      <Wrench className="w-4 h-4 text-[var(--accent)]" />
+                      <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
                         Standard Tools &amp; Stack
                       </h3>
                     </div>
-                    <span className="text-[11px] text-[#626B78]">
+                    <span className="text-[11px] text-[var(--text-secondary)]">
                       Suggested for {curatedProfile.title}
                     </span>
                   </div>
@@ -527,24 +558,24 @@ export default function CareerGuidancePage() {
                       return (
                         <div
                           key={tool}
-                          className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-white border border-[#E5E8ED]"
+                          className="flex items-center justify-between gap-2 p-2.5 rounded-lg bg-white border border-[var(--border-color)]"
                         >
                           <button
                             type="button"
                             onClick={() => handleToggleRoadmapItem('skill', tool)}
                             disabled={updatingProgressKey === key}
-                            className="flex items-center gap-2.5 text-left text-xs text-[#20242B] font-medium cursor-pointer flex-1 min-w-0"
+                            className="flex items-center gap-2.5 text-left text-xs text-[var(--text-primary)] font-medium cursor-pointer flex-1 min-w-0"
                           >
                             <span
                               className={`w-4 h-4 rounded border flex items-center justify-center shrink-0 transition-colors ${
                                 checked
-                                  ? 'bg-[#3157C8] border-[#3157C8] text-white'
-                                  : 'bg-white border-[#CBD2DD]'
+                                  ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
+                                  : 'bg-white border-[var(--border-hover)]'
                               }`}
                             >
                               {checked && <Check className="w-3 h-3" />}
                             </span>
-                            <span className={checked ? 'line-through text-[#626B78]' : 'truncate'}>
+                            <span className={checked ? 'line-through text-[var(--text-secondary)]' : 'truncate'}>
                               {tool}
                             </span>
                           </button>
@@ -553,10 +584,10 @@ export default function CareerGuidancePage() {
                               userStatus === 'verified'
                                 ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                 : userStatus === 'confirmed'
-                                  ? 'bg-[#F6F7F9] text-[#3157C8] border-[#3157C8]/25'
+                                  ? 'bg-[var(--bg-primary)] text-[var(--accent)] border-[var(--accent)]/25'
                                   : userStatus === 'claimed'
                                     ? 'bg-amber-50 text-amber-700 border-amber-200'
-                                    : 'bg-[#F6F7F9] text-[#626B78] border-[#E5E8ED]'
+                                    : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border-[var(--border-color)]'
                             }`}
                           >
                             {userStatus === 'verified'
@@ -578,14 +609,14 @@ export default function CareerGuidancePage() {
               <div className="space-y-3">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <FolderGit2 className="w-4 h-4 text-[#3157C8]" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#20242B]">
+                    <FolderGit2 className="w-4 h-4 text-[var(--accent)]" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
                       Suggested Portfolio Projects
                     </h3>
                   </div>
                   <Link
                     href="/projects"
-                    className="text-xs font-semibold text-[#3157C8] hover:underline inline-flex items-center gap-1"
+                    className="text-xs font-semibold text-[var(--accent)] hover:underline inline-flex items-center gap-1"
                   >
                     <span>Open Project Mentor</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -598,7 +629,7 @@ export default function CareerGuidancePage() {
                     return (
                       <div
                         key={proj.id}
-                        className="p-4 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-2.5 flex flex-col justify-between"
+                        className="p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-2.5 flex flex-col justify-between"
                       >
                         <div className="space-y-1.5">
                           <div className="flex items-start justify-between gap-2">
@@ -610,21 +641,21 @@ export default function CareerGuidancePage() {
                               <span
                                 className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
                                   checked
-                                    ? 'bg-[#3157C8] border-[#3157C8] text-white'
-                                    : 'bg-white border-[#CBD2DD]'
+                                    ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
+                                    : 'bg-white border-[var(--border-hover)]'
                                 }`}
                               >
                                 {checked && <Check className="w-3 h-3" />}
                               </span>
-                              <span className="text-xs font-bold text-[#20242B] leading-snug">
+                              <span className="text-xs font-bold text-[var(--text-primary)] leading-snug">
                                 {proj.title}
                               </span>
                             </button>
-                            <span className="px-2 py-0.5 rounded bg-white border border-[#E5E8ED] text-[10px] font-semibold text-[#626B78] shrink-0">
+                            <span className="px-2 py-0.5 rounded bg-white border border-[var(--border-color)] text-[10px] font-semibold text-[var(--text-secondary)] shrink-0">
                               {proj.difficulty}
                             </span>
                           </div>
-                          <p className="text-[11px] text-[#626B78] leading-relaxed pl-6">
+                          <p className="text-[11px] text-[var(--text-secondary)] leading-relaxed pl-6">
                             {proj.summary}
                           </p>
                         </div>
@@ -632,7 +663,7 @@ export default function CareerGuidancePage() {
                           {proj.skillsPracticed.map((sk) => (
                             <span
                               key={sk}
-                              className="px-2 py-0.5 rounded bg-white border border-[#E5E8ED] text-[10px] text-[#20242B]"
+                              className="px-2 py-0.5 rounded bg-white border border-[var(--border-color)] text-[10px] text-[var(--text-primary)]"
                             >
                               {sk}
                             </span>
@@ -646,10 +677,10 @@ export default function CareerGuidancePage() {
 
               {/* Recognized Certifications & Verified Learning Resources */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
-                <div className="p-5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-3">
+                <div className="p-5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-3">
                   <div className="flex items-center gap-2">
-                    <Award className="w-4 h-4 text-[#3157C8]" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#20242B]">
+                    <Award className="w-4 h-4 text-[var(--accent)]" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
                       Recognized Industry Certifications
                     </h3>
                   </div>
@@ -660,7 +691,7 @@ export default function CareerGuidancePage() {
                       return (
                         <div
                           key={cert.name}
-                          className="p-3 rounded-lg bg-white border border-[#E5E8ED] space-y-1"
+                          className="p-3 rounded-lg bg-white border border-[var(--border-color)] space-y-1"
                         >
                           <div className="flex items-start justify-between gap-2">
                             <button
@@ -671,17 +702,17 @@ export default function CareerGuidancePage() {
                               <span
                                 className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
                                   checked
-                                    ? 'bg-[#3157C8] border-[#3157C8] text-white'
-                                    : 'bg-white border-[#CBD2DD]'
+                                    ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
+                                    : 'bg-white border-[var(--border-hover)]'
                                 }`}
                               >
                                 {checked && <Check className="w-3 h-3" />}
                               </span>
                               <div>
-                                <span className="text-xs font-bold text-[#20242B] block">
+                                <span className="text-xs font-bold text-[var(--text-primary)] block">
                                   {cert.name}
                                 </span>
-                                <span className="text-[11px] text-[#626B78] block">
+                                <span className="text-[11px] text-[var(--text-secondary)] block">
                                   Provider: {cert.provider}
                                 </span>
                               </div>
@@ -691,7 +722,7 @@ export default function CareerGuidancePage() {
                                 href={cert.url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-[11px] font-semibold text-[#3157C8] hover:underline inline-flex items-center gap-1 shrink-0"
+                                className="text-[11px] font-semibold text-[var(--accent)] hover:underline inline-flex items-center gap-1 shrink-0"
                               >
                                 <span>Official</span>
                                 <ExternalLink className="w-3 h-3" />
@@ -699,7 +730,7 @@ export default function CareerGuidancePage() {
                             )}
                           </div>
                           {cert.notes && (
-                            <p className="text-[11px] text-[#626B78] pl-6">{cert.notes}</p>
+                            <p className="text-[11px] text-[var(--text-secondary)] pl-6">{cert.notes}</p>
                           )}
                         </div>
                       );
@@ -707,10 +738,10 @@ export default function CareerGuidancePage() {
                   </div>
                 </div>
 
-                <div className="p-5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-3">
+                <div className="p-5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-3">
                   <div className="flex items-center gap-2">
-                    <BookOpen className="w-4 h-4 text-[#3157C8]" />
-                    <h3 className="text-xs font-bold uppercase tracking-wider text-[#20242B]">
+                    <BookOpen className="w-4 h-4 text-[var(--accent)]" />
+                    <h3 className="text-xs font-bold uppercase tracking-wider text-[var(--text-primary)]">
                       Verified Learning References
                     </h3>
                   </div>
@@ -722,7 +753,7 @@ export default function CareerGuidancePage() {
                       return (
                         <div
                           key={res.title}
-                          className="p-3 rounded-lg bg-white border border-[#E5E8ED] flex items-start justify-between gap-3"
+                          className="p-3 rounded-lg bg-white border border-[var(--border-color)] flex items-start justify-between gap-3"
                         >
                           <button
                             type="button"
@@ -732,17 +763,17 @@ export default function CareerGuidancePage() {
                             <span
                               className={`mt-0.5 w-4 h-4 rounded border flex items-center justify-center shrink-0 ${
                                 checked
-                                  ? 'bg-[#3157C8] border-[#3157C8] text-white'
-                                  : 'bg-white border-[#CBD2DD]'
+                                  ? 'bg-[var(--accent)] border-[var(--accent)] text-white'
+                                  : 'bg-white border-[var(--border-hover)]'
                               }`}
                             >
                               {checked && <Check className="w-3 h-3" />}
                             </span>
                             <div className="min-w-0">
-                              <span className="text-xs font-bold text-[#20242B] block truncate">
+                              <span className="text-xs font-bold text-[var(--text-primary)] block truncate">
                                 {res.title}
                               </span>
-                              <span className="text-[11px] text-[#626B78] block">
+                              <span className="text-[11px] text-[var(--text-secondary)] block">
                                 {res.provider} • Verified {res.lastVerified}
                               </span>
                             </div>
@@ -752,7 +783,7 @@ export default function CareerGuidancePage() {
                               href={res.url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="px-2.5 py-1 rounded-md bg-[#F6F7F9] border border-[#E5E8ED] text-[11px] font-semibold text-[#3157C8] hover:border-[#3157C8]/40 inline-flex items-center gap-1 shrink-0"
+                              className="px-2.5 py-1 rounded-md bg-[var(--bg-primary)] border border-[var(--border-color)] text-[11px] font-semibold text-[var(--accent)] hover:border-[var(--accent)]/40 inline-flex items-center gap-1 shrink-0"
                             >
                               <span>Open</span>
                               <ExternalLink className="w-3 h-3" />
@@ -768,22 +799,22 @@ export default function CareerGuidancePage() {
           )}
 
           {goalSet && !curatedProfile && targetRole && (
-            <section className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-3 shadow-sm">
+            <section className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-3 shadow-sm">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                 <div>
-                  <span className="text-[11px] font-bold uppercase tracking-wider text-[#3157C8]">
+                  <span className="text-[11px] font-bold uppercase tracking-wider text-[var(--accent)]">
                     Custom Career Goal
                   </span>
-                  <h2 className="text-base font-bold text-[#20242B]">
+                  <h2 className="text-base font-bold text-[var(--text-primary)]">
                     Target Role: {targetRole}
                   </h2>
-                  <p className="text-xs text-[#626B78] mt-1">
+                  <p className="text-xs text-[var(--text-secondary)] mt-1">
                     No pre-built checklist is cataloged for this custom title yet. Your skills, resume ATS checks, and project mentor continue tracking your evidence honestly without substituting another field&apos;s roadmap.
                   </p>
                 </div>
                 <Link
                   href="/dashboard/my-data"
-                  className="px-3.5 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-xs font-semibold text-[#20242B] shrink-0"
+                  className="px-3.5 py-2 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs font-semibold text-[var(--text-primary)] shrink-0"
                 >
                   Update Goal
                 </Link>
@@ -950,7 +981,7 @@ export default function CareerGuidancePage() {
 
           {/* ─── 4. HIGH-IMPACT PRIORITY ACTIONS ──────────────────────── */}
           {readiness.priorityActions.length > 0 && (
-            <section className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-7 space-y-4 shadow-sm">
+            <section className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 sm:p-7 space-y-4 shadow-sm">
               <div className="flex items-center gap-2 pb-3 border-b border-[var(--border-color)]">
                 <Target className="w-4 h-4 text-[var(--accent)]" />
                 <h2 className="text-sm font-bold text-[var(--text-primary)]">
@@ -994,8 +1025,9 @@ export default function CareerGuidancePage() {
               </div>
             </section>
           )}
-        </>
-      ) : null}
+          </motion.div>
+        ) : null}
+      </AnimatePresence>
     </PageTransition>
   );
 }

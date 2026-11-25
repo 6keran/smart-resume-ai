@@ -3,6 +3,8 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
+import { SkeletonBoard } from '@/components/ui/Skeleton';
 import {
   Send,
   Plus,
@@ -317,7 +319,7 @@ function ApplicationsContent() {
   return (
     <div className="space-y-6 animate-fade-in text-left">
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-[#E5E8ED] shadow-sm p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] shadow-sm p-6 sm:p-7 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <h1 className="heading-page">
             Job Applications
@@ -327,28 +329,42 @@ function ApplicationsContent() {
           </p>
         </div>
         <div className="flex items-center gap-3 shrink-0 flex-wrap">
-          <div className="inline-flex items-center p-1 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-xs font-semibold">
+          <div className="inline-flex items-center p-1 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-xs font-semibold relative">
             <button
               type="button"
               onClick={() => setViewMode('pipeline')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 relative z-10 ${
                 viewMode === 'pipeline'
-                  ? 'bg-white text-[#3157C8] shadow-xs font-bold'
-                  : 'text-[#626B78] hover:text-[#20242B]'
+                  ? 'text-[var(--accent)] font-bold'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
+              {viewMode === 'pipeline' && (
+                <motion.div
+                  layoutId="apps-view-mode-pill"
+                  className="absolute inset-0 bg-white rounded-lg shadow-xs -z-10"
+                  transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                />
+              )}
               <Layout className="w-3.5 h-3.5" />
               <span>Pipeline View</span>
             </button>
             <button
               type="button"
               onClick={() => setViewMode('list')}
-              className={`px-3 py-1.5 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 relative z-10 ${
                 viewMode === 'list'
-                  ? 'bg-white text-[#3157C8] shadow-xs font-bold'
-                  : 'text-[#626B78] hover:text-[#20242B]'
+                  ? 'text-[var(--accent)] font-bold'
+                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
               }`}
             >
+              {viewMode === 'list' && (
+                <motion.div
+                  layoutId="apps-view-mode-pill"
+                  className="absolute inset-0 bg-white rounded-lg shadow-xs -z-10"
+                  transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                />
+              )}
               <List className="w-3.5 h-3.5" />
               <span>List View</span>
             </button>
@@ -365,16 +381,16 @@ function ApplicationsContent() {
       </div>
 
       {/* Filter & Search Bar */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[#E5E8ED] shadow-sm">
+      <div className="reference-panel flex flex-col md:flex-row items-center justify-between gap-4 bg-white p-4 rounded-2xl border border-[var(--border-color)] shadow-sm">
         {/* Search */}
         <div className="relative w-full md:w-80">
-          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[#626B78]" />
+          <Search className="w-4 h-4 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-secondary)]" />
           <input
             type="text"
             placeholder="Search by job title, company, or city..."
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full pl-10 pr-3 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-[14px] text-[#20242B] placeholder-[#626B78]/60 focus:outline-none focus:border-[#3157C8] focus:bg-white"
+            className="w-full pl-10 pr-3 py-2 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-[14px] text-[var(--text-primary)] placeholder-[var(--text-secondary)]/60 focus:outline-none focus:border-[var(--accent)] focus:bg-white"
           />
         </div>
 
@@ -385,21 +401,29 @@ function ApplicationsContent() {
               st === 'All'
                 ? applications.length
                 : applications.filter((a) => a.status === st).length;
+            const isSelected = filterStatus === st;
 
             return (
               <button
                 key={st}
                 onClick={() => setFilterStatus(st)}
-                className={`px-3 py-1.5 rounded-xl text-[14px] font-semibold transition-all flex items-center gap-1.5 cursor-pointer ${
-                  filterStatus === st
-                    ? 'bg-[#3157C8] text-white shadow-xs'
-                    : 'bg-[#F6F7F9] text-[#626B78] hover:text-[#20242B] border border-[#E5E8ED]'
+                className={`px-3 py-1.5 rounded-xl text-[14px] font-semibold transition-colors flex items-center gap-1.5 cursor-pointer relative z-0 ${
+                  isSelected
+                    ? 'text-white shadow-xs'
+                    : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] bg-[var(--bg-primary)] border border-[var(--border-color)]'
                 }`}
               >
+                {isSelected && (
+                  <motion.div
+                    layoutId="applications-filter-pill"
+                    className="absolute inset-0 bg-[var(--accent)] rounded-xl -z-10"
+                    transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                  />
+                )}
                 <span>{st}</span>
                 <span
                   className={`text-[12px] px-1.5 py-0.2 rounded-full ${
-                    filterStatus === st ? 'bg-white/20 text-white' : 'bg-slate-200 text-[#626B78]'
+                    isSelected ? 'bg-white/20 text-white' : 'bg-slate-200 text-[var(--text-secondary)]'
                   }`}
                 >
                   {count}
@@ -412,9 +436,8 @@ function ApplicationsContent() {
 
       {/* Applications List */}
       {loading ? (
-        <div className="py-16 text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto text-[var(--accent)] mb-3" />
-          <p className="text-xs text-[var(--text-secondary)]">Loading your job applications...</p>
+        <div className="space-y-4">
+          <SkeletonBoard columns={5} />
         </div>
       ) : filteredApplications.length === 0 ? (
         <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/50 p-12 text-center">
@@ -438,20 +461,20 @@ function ApplicationsContent() {
       ) : viewMode === 'pipeline' ? (
         <div className="space-y-6">
           {/* Pipeline Progress Track Bar */}
-          <div className="p-4 rounded-2xl bg-white border border-[#E5E8ED] shadow-sm space-y-3">
+          <div className="reference-panel p-4 rounded-2xl bg-white border border-[var(--border-color)] shadow-sm space-y-3">
             <div className="flex items-center justify-between text-xs">
-              <span className="font-bold text-[#20242B] flex items-center gap-1.5">
-                <Sparkles className="w-3.5 h-3.5 text-[#3157C8]" />
+              <span className="font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5 text-[var(--accent)]" />
                 <span>Application Pipeline Progress</span>
               </span>
-              <span className="text-[#626B78] font-medium">
+              <span className="text-[var(--text-secondary)] font-medium">
                 {applications.filter((a) => a.status === 'Offer').length} Offers ·{' '}
                 {applications.filter((a) => a.status === 'Interview').length} Interviews ·{' '}
                 {applications.filter((a) => a.status === 'Applied').length} Active Applications
               </span>
             </div>
 
-            <div className="w-full h-3 rounded-full bg-[#F6F7F9] border border-[#E5E8ED] flex overflow-hidden">
+            <div className="w-full h-3 rounded-full bg-[var(--bg-primary)] border border-[var(--border-color)] flex overflow-hidden">
               {PIPELINE_STAGES.map((st) => {
                 const count = applications.filter((a) => a.status === st.key).length;
                 const pct = applications.length ? (count / applications.length) * 100 : 0;
@@ -491,14 +514,14 @@ function ApplicationsContent() {
               return (
                 <div
                   key={stage.key}
-                  className="rounded-2xl bg-[#F8FAFC] border border-[#E5E8ED] p-3.5 flex flex-col space-y-3 min-h-[420px]"
+                  className="rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-color)] p-3.5 flex flex-col space-y-3 min-h-[420px]"
                 >
                   {/* Column Header */}
-                  <div className="flex items-center justify-between pb-2.5 border-b border-[#E5E8ED]">
+                  <div className="flex items-center justify-between pb-2.5 border-b border-[var(--border-color)]">
                     <div className="flex items-center gap-1.5">
-                      <span className="font-bold text-xs text-[#20242B]">{stage.label}</span>
+                      <span className="font-bold text-xs text-[var(--text-primary)]">{stage.label}</span>
                     </div>
-                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white border border-[#E5E8ED] text-[#626B78]">
+                    <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-white border border-[var(--border-color)] text-[var(--text-secondary)]">
                       {stageApps.length}
                     </span>
                   </div>
@@ -506,65 +529,73 @@ function ApplicationsContent() {
                   {/* Column Cards */}
                   <div className="space-y-2.5 flex-1 overflow-y-auto max-h-[580px] pr-0.5">
                     {stageApps.length === 0 ? (
-                      <div className="py-8 text-center text-[11px] text-[#626B78] border border-dashed border-[#E5E8ED] rounded-xl">
+                      <div className="py-8 text-center text-[11px] text-[var(--text-secondary)] border border-dashed border-[var(--border-color)] rounded-xl">
                         No jobs in this stage
                       </div>
                     ) : (
-                      stageApps.map((app) => {
-                        const next = getNextStage(app.status);
-                        return (
-                          <div
-                            key={app.id}
-                            className="p-3.5 rounded-xl bg-white border border-[#E5E8ED] shadow-2xs hover:border-[#3157C8]/40 transition-all space-y-2 text-xs"
-                          >
-                            <div>
-                              <h4 className="font-bold text-[#20242B] line-clamp-1">{app.job_title}</h4>
-                              <p className="text-[11px] text-[#626B78] font-medium">{app.company}</p>
-                            </div>
+                      <AnimatePresence mode="popLayout">
+                        {stageApps.map((app) => {
+                          const next = getNextStage(app.status);
+                          return (
+                            <motion.div
+                              layout
+                              layoutId={`app-card-${app.id}`}
+                              key={app.id}
+                              initial={{ opacity: 0, y: 6 }}
+                              animate={{ opacity: 1, y: 0 }}
+                              exit={{ opacity: 0, scale: 0.95 }}
+                              transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                              className="p-3.5 rounded-xl bg-white border border-[var(--border-color)] shadow-2xs hover:border-[var(--accent)]/40 transition-colors space-y-2 text-xs"
+                            >
+                              <div>
+                                <h4 className="font-bold text-[var(--text-primary)] line-clamp-1">{app.job_title}</h4>
+                                <p className="text-[11px] text-[var(--text-secondary)] font-medium">{app.company}</p>
+                              </div>
 
-                            {app.location && (
-                              <p className="text-[10px] text-[#626B78] flex items-center gap-1">
-                                <MapPin className="w-3 h-3" />
-                                <span>{app.location}</span>
-                              </p>
-                            )}
-
-                            {/* Stage Action Controls */}
-                            <div className="pt-2 border-t border-[#F1F3F5] flex items-center justify-between gap-1 flex-wrap">
-                              <button
-                                type="button"
-                                onClick={() => openEditModal(app)}
-                                className="text-[10px] text-[#626B78] hover:text-[#20242B] font-semibold cursor-pointer"
-                              >
-                                Edit
-                              </button>
-
-                              {next && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleMoveStage(app.id, next)}
-                                  className="text-[10px] font-bold text-[#3157C8] hover:underline inline-flex items-center gap-0.5 cursor-pointer ml-auto"
-                                  title={`Advance to ${next}`}
-                                >
-                                  <span>{next}</span>
-                                  <ArrowRight className="w-3 h-3" />
-                                </button>
+                              {app.location && (
+                                <p className="text-[10px] text-[var(--text-secondary)] flex items-center gap-1">
+                                  <MapPin className="w-3 h-3" />
+                                  <span>{app.location}</span>
+                                </p>
                               )}
 
-                              {stage.key !== 'Rejected' && (
+                              {/* Stage Action Controls */}
+                              <div className="pt-2 border-t border-[var(--bg-secondary)] flex items-center justify-between gap-1 flex-wrap">
                                 <button
                                   type="button"
-                                  onClick={() => handleMoveStage(app.id, 'Rejected')}
-                                  className="text-[10px] text-rose-500 hover:underline cursor-pointer"
-                                  title="Mark as Rejected"
+                                  onClick={() => openEditModal(app)}
+                                  className="text-[10px] text-[var(--text-secondary)] hover:text-[var(--text-primary)] font-semibold cursor-pointer"
                                 >
-                                  ×
+                                  Edit
                                 </button>
-                              )}
-                            </div>
-                          </div>
-                        );
-                      })
+
+                                {next && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMoveStage(app.id, next)}
+                                    className="text-[10px] font-bold text-[var(--accent)] hover:underline inline-flex items-center gap-0.5 cursor-pointer ml-auto"
+                                    title={`Advance to ${next}`}
+                                  >
+                                    <span>{next}</span>
+                                    <ArrowRight className="w-3 h-3" />
+                                  </button>
+                                )}
+
+                                {stage.key !== 'Rejected' && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleMoveStage(app.id, 'Rejected')}
+                                    className="text-[10px] text-rose-500 hover:underline cursor-pointer"
+                                    title="Mark as Rejected"
+                                  >
+                                    ×
+                                  </button>
+                                )}
+                              </div>
+                            </motion.div>
+                          );
+                        })}
+                      </AnimatePresence>
                     )}
                   </div>
                 </div>
@@ -574,127 +605,134 @@ function ApplicationsContent() {
         </div>
       ) : (
         <div className="space-y-3">
-          {filteredApplications.map((app) => (
-            <div
-              key={app.id}
-              className="bg-white rounded-2xl border border-[#E5E8ED] shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-all hover:border-slate-300"
-            >
-              <div className="min-w-0 space-y-2 flex-1">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h3 className="text-base sm:text-lg font-bold text-[#20242B]">
-                    {app.job_title}
-                  </h3>
+          <AnimatePresence initial={false}>
+            {filteredApplications.map((app) => (
+              <motion.div
+                layout
+                key={app.id}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.98 }}
+                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] shadow-sm p-5 sm:p-6 flex flex-col md:flex-row md:items-center justify-between gap-4 transition-colors hover:border-slate-300"
+              >
+                <div className="min-w-0 space-y-2 flex-1">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)]">
+                      {app.job_title}
+                    </h3>
 
-                  <span
-                    className={`px-3 py-1 rounded-full text-[12px] font-bold border ${getStatusColor(
-                      app.status
-                    )}`}
-                  >
-                    {app.status}
-                  </span>
-
-                  {app.source && (
-                    <span className="text-[12px] font-medium text-[#626B78] px-2 py-0.5 rounded-md bg-[#F6F7F9] border border-[#E5E8ED]">
-                      {app.source}
+                    <span
+                      className={`px-3 py-1 rounded-full text-[12px] font-bold border ${getStatusColor(
+                        app.status
+                      )}`}
+                    >
+                      {app.status}
                     </span>
-                  )}
 
-                  {app.applied_confirmed_at && (
-                    <span className="text-[12px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-semibold border border-emerald-200 flex items-center gap-1">
-                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
-                      Confirmed Applied
+                    {app.source && (
+                      <span className="text-[12px] font-medium text-[var(--text-secondary)] px-2 py-0.5 rounded-md bg-[var(--bg-primary)] border border-[var(--border-color)]">
+                        {app.source}
+                      </span>
+                    )}
+
+                    {app.applied_confirmed_at && (
+                      <span className="text-[12px] text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full font-semibold border border-emerald-200 flex items-center gap-1">
+                        <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                        Confirmed Applied
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-4 text-[14px] text-[var(--text-secondary)]">
+                    <span className="flex items-center gap-1.5 font-semibold text-[var(--text-primary)]">
+                      <Building className="w-4 h-4 text-[var(--accent)]" />
+                      {app.company}
                     </span>
-                  )}
-                </div>
-
-                <div className="flex flex-wrap items-center gap-4 text-[14px] text-[#626B78]">
-                  <span className="flex items-center gap-1.5 font-semibold text-[#20242B]">
-                    <Building className="w-4 h-4 text-[#3157C8]" />
-                    {app.company}
-                  </span>
-                  {app.location && (
+                    {app.location && (
+                      <span className="flex items-center gap-1.5">
+                        <MapPin className="w-4 h-4" />
+                        {app.location}
+                      </span>
+                    )}
                     <span className="flex items-center gap-1.5">
-                      <MapPin className="w-4 h-4" />
-                      {app.location}
+                      <Calendar className="w-4 h-4" />
+                      Applied: {new Date(app.applied_at).toLocaleDateString()}
                     </span>
+                  </div>
+
+                  {app.notes && (
+                    <p className="text-[14px] text-[var(--text-secondary)] italic bg-[var(--bg-primary)] px-3.5 py-2 rounded-xl border border-[var(--border-color)]">
+                      &ldquo;{app.notes}&rdquo;
+                    </p>
                   )}
-                  <span className="flex items-center gap-1.5">
-                    <Calendar className="w-4 h-4" />
-                    Applied: {new Date(app.applied_at).toLocaleDateString()}
-                  </span>
                 </div>
 
-                {app.notes && (
-                  <p className="text-[14px] text-[#626B78] italic bg-[#F6F7F9] px-3.5 py-2 rounded-xl border border-[#E5E8ED]">
-                    &ldquo;{app.notes}&rdquo;
-                  </p>
-                )}
-              </div>
-
-              {/* Status Selector & Actions */}
-              <div className="flex items-center gap-2.5 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-[#E5E8ED]">
-                {/* Inline Status Dropdown */}
-                <select
-                  value={app.status}
-                  onChange={(e) =>
-                    handleQuickStatusChange(app.id, e.target.value as JobApplication['status'])
-                  }
-                  className="text-[14px] font-semibold px-3 py-1.5 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#20242B] focus:outline-none focus:border-[#3157C8] cursor-pointer"
-                >
-                  <option value="Saved">Saved</option>
-                  <option value="Ready to apply">Ready to apply</option>
-                  <option value="Application pending">Application pending</option>
-                  <option value="Applied">Applied</option>
-                  <option value="Interview">Interview</option>
-                  <option value="Offer">Offer</option>
-                  <option value="Rejected">Rejected</option>
-                  <option value="Withdrawn">Withdrawn</option>
-                </select>
-
-                {app.job_url && (
-                  <a
-                    href={app.job_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#626B78] hover:text-[#20242B] hover:border-[#3157C8] transition-all cursor-pointer"
-                    title="View Job Listing"
+                {/* Status Selector & Actions */}
+                <div className="flex items-center gap-2.5 shrink-0 pt-3 md:pt-0 border-t md:border-t-0 border-[var(--border-color)]">
+                  {/* Inline Status Dropdown */}
+                  <select
+                    value={app.status}
+                    onChange={(e) =>
+                      handleQuickStatusChange(app.id, e.target.value as JobApplication['status'])
+                    }
+                    className="text-[14px] font-semibold px-3 py-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] cursor-pointer"
                   >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
-                )}
+                    <option value="Saved">Saved</option>
+                    <option value="Ready to apply">Ready to apply</option>
+                    <option value="Application pending">Application pending</option>
+                    <option value="Applied">Applied</option>
+                    <option value="Interview">Interview</option>
+                    <option value="Offer">Offer</option>
+                    <option value="Rejected">Rejected</option>
+                    <option value="Withdrawn">Withdrawn</option>
+                  </select>
 
-                <button
-                  onClick={() => openEditModal(app)}
-                  className="p-2 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#626B78] hover:text-[#20242B] hover:border-[#3157C8] transition-all cursor-pointer"
-                  title="Edit details"
-                >
-                  <Edit2 className="w-4 h-4" />
-                </button>
+                  {app.job_url && (
+                    <a
+                      href={app.job_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-all cursor-pointer"
+                      title="View Job Listing"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  )}
 
-                <button
-                  onClick={() => handleDelete(app.id)}
-                  className="p-2 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#626B78] hover:text-rose-600 hover:border-rose-300 transition-all cursor-pointer"
-                  title="Delete application"
-                >
-                  <Trash2 className="w-4 h-4" />
-                </button>
-              </div>
-            </div>
-          ))}
+                  <button
+                    onClick={() => openEditModal(app)}
+                    className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--accent)] transition-all cursor-pointer"
+                    title="Edit details"
+                  >
+                    <Edit2 className="w-4 h-4" />
+                  </button>
+
+                  <button
+                    onClick={() => handleDelete(app.id)}
+                    className="p-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)] hover:text-rose-600 hover:border-rose-300 transition-all cursor-pointer"
+                    title="Delete application"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </motion.div>
+            ))}
+          </AnimatePresence>
         </div>
       )}
 
       {/* Create / Edit Modal */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-50 bg-[#20242B]/40 flex items-center justify-center p-4">
-          <div className="w-full max-w-lg rounded-2xl bg-white border border-[#E5E8ED] shadow-2xl p-6 sm:p-7 space-y-5 animate-in fade-in zoom-in-95 duration-150">
-            <div className="flex items-center justify-between pb-3 border-b border-[#E5E8ED]">
+        <div className="fixed inset-0 z-50 bg-[var(--text-primary)]/40 flex items-center justify-center p-4">
+          <div className="reference-panel w-full max-w-lg rounded-2xl bg-white border border-[var(--border-color)] shadow-2xl p-6 sm:p-7 space-y-5 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
               <h3 className="heading-card">
                 {editingApp ? 'Edit Job Application' : 'Track New Job Application'}
               </h3>
               <button
                 onClick={() => setIsModalOpen(false)}
-                className="p-1.5 rounded-lg text-[#626B78] hover:text-[#20242B] cursor-pointer"
+                className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -719,7 +757,7 @@ function ApplicationsContent() {
                     value={formTitle}
                     onChange={(e) => setFormTitle(e.target.value)}
                     placeholder="e.g. Senior Frontend Engineer"
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-base text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:bg-white"
                   />
                 </div>
 
@@ -733,7 +771,7 @@ function ApplicationsContent() {
                     value={formCompany}
                     onChange={(e) => setFormCompany(e.target.value)}
                     placeholder="e.g. Stripe"
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-base text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:bg-white"
                   />
                 </div>
               </div>
@@ -748,7 +786,7 @@ function ApplicationsContent() {
                     value={formLocation}
                     onChange={(e) => setFormLocation(e.target.value)}
                     placeholder="e.g. San Francisco / Remote"
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-base text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:bg-white"
                   />
                 </div>
 
@@ -761,7 +799,7 @@ function ApplicationsContent() {
                     value={formSource}
                     onChange={(e) => setFormSource(e.target.value)}
                     placeholder="e.g. LinkedIn / Naukri"
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-base text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:bg-white"
                   />
                 </div>
               </div>
@@ -775,7 +813,7 @@ function ApplicationsContent() {
                   value={formJobUrl}
                   onChange={(e) => setFormJobUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full px-3.5 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white"
+                  className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-base text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:bg-white"
                 />
               </div>
 
@@ -788,7 +826,7 @@ function ApplicationsContent() {
                     type="date"
                     value={formAppliedAt}
                     onChange={(e) => setFormAppliedAt(e.target.value)}
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-base text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:bg-white"
                   />
                 </div>
 
@@ -799,7 +837,7 @@ function ApplicationsContent() {
                   <select
                     value={formStatus}
                     onChange={(e) => setFormStatus(e.target.value as JobApplication['status'])}
-                    className="w-full px-3.5 py-2 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white cursor-pointer"
+                    className="w-full px-3.5 py-2 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-base text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:bg-white cursor-pointer"
                   >
                     <option value="Saved">Saved</option>
                     <option value="Ready to apply">Ready to apply</option>
@@ -822,7 +860,7 @@ function ApplicationsContent() {
                   value={formNotes}
                   onChange={(e) => setFormNotes(e.target.value)}
                   placeholder="Recruiter contact, interview questions asked, follow-up dates..."
-                  className="w-full p-3.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white"
+                  className="w-full p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-base text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:bg-white"
                 />
               </div>
 

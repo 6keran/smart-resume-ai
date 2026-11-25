@@ -1,0 +1,2087 @@
+{
+  "recording": "C:\\Users\\kiran\\OneDrive\\Videos\\Screen Recordings\\Screen Recording 2026-11-25 070852.mp4",
+  "fps": 30.0,
+  "duration": 17.3,
+  "width": 688,
+  "height": 576,
+  "decodedFrames": 519,
+  "sampleStep": 0.0333333333,
+  "frames": [
+    {
+      "time": 0.0,
+      "name": "frame-0.000.png"
+    },
+    {
+      "time": 0.0333,
+      "name": "frame-0.033.png"
+    },
+    {
+      "time": 0.0667,
+      "name": "frame-0.067.png"
+    },
+    {
+      "time": 0.1,
+      "name": "frame-0.100.png"
+    },
+    {
+      "time": 0.1333,
+      "name": "frame-0.133.png"
+    },
+    {
+      "time": 0.1667,
+      "name": "frame-0.167.png"
+    },
+    {
+      "time": 0.2,
+      "name": "frame-0.200.png"
+    },
+    {
+      "time": 0.2333,
+      "name": "frame-0.233.png"
+    },
+    {
+      "time": 0.2667,
+      "name": "frame-0.267.png"
+    },
+    {
+      "time": 0.3,
+      "name": "frame-0.300.png"
+    },
+    {
+      "time": 0.3333,
+      "name": "frame-0.333.png"
+    },
+    {
+      "time": 0.3667,
+      "name": "frame-0.367.png"
+    },
+    {
+      "time": 0.4,
+      "name": "frame-0.400.png"
+    },
+    {
+      "time": 0.4333,
+      "name": "frame-0.433.png"
+    },
+    {
+      "time": 0.4667,
+      "name": "frame-0.467.png"
+    },
+    {
+      "time": 0.5,
+      "name": "frame-0.500.png"
+    },
+    {
+      "time": 0.5333,
+      "name": "frame-0.533.png"
+    },
+    {
+      "time": 0.5667,
+      "name": "frame-0.567.png"
+    },
+    {
+      "time": 0.6,
+      "name": "frame-0.600.png"
+    },
+    {
+      "time": 0.6333,
+      "name": "frame-0.633.png"
+    },
+    {
+      "time": 0.6667,
+      "name": "frame-0.667.png"
+    },
+    {
+      "time": 0.7,
+      "name": "frame-0.700.png"
+    },
+    {
+      "time": 0.7333,
+      "name": "frame-0.733.png"
+    },
+    {
+      "time": 0.7667,
+      "name": "frame-0.767.png"
+    },
+    {
+      "time": 0.8,
+      "name": "frame-0.800.png"
+    },
+    {
+      "time": 0.8333,
+      "name": "frame-0.833.png"
+    },
+    {
+      "time": 0.8667,
+      "name": "frame-0.867.png"
+    },
+    {
+      "time": 0.9,
+      "name": "frame-0.900.png"
+    },
+    {
+      "time": 0.9333,
+      "name": "frame-0.933.png"
+    },
+    {
+      "time": 0.9667,
+      "name": "frame-0.967.png"
+    },
+    {
+      "time": 1.0,
+      "name": "frame-1.000.png"
+    },
+    {
+      "time": 1.0333,
+      "name": "frame-1.033.png"
+    },
+    {
+      "time": 1.0667,
+      "name": "frame-1.067.png"
+    },
+    {
+      "time": 1.1,
+      "name": "frame-1.100.png"
+    },
+    {
+      "time": 1.1333,
+      "name": "frame-1.133.png"
+    },
+    {
+      "time": 1.1667,
+      "name": "frame-1.167.png"
+    },
+    {
+      "time": 1.2,
+      "name": "frame-1.200.png"
+    },
+    {
+      "time": 1.2333,
+      "name": "frame-1.233.png"
+    },
+    {
+      "time": 1.2667,
+      "name": "frame-1.267.png"
+    },
+    {
+      "time": 1.3,
+      "name": "frame-1.300.png"
+    },
+    {
+      "time": 1.3333,
+      "name": "frame-1.333.png"
+    },
+    {
+      "time": 1.3667,
+      "name": "frame-1.367.png"
+    },
+    {
+      "time": 1.4,
+      "name": "frame-1.400.png"
+    },
+    {
+      "time": 1.4333,
+      "name": "frame-1.433.png"
+    },
+    {
+      "time": 1.4667,
+      "name": "frame-1.467.png"
+    },
+    {
+      "time": 1.5,
+      "name": "frame-1.500.png"
+    },
+    {
+      "time": 1.5333,
+      "name": "frame-1.533.png"
+    },
+    {
+      "time": 1.5667,
+      "name": "frame-1.567.png"
+    },
+    {
+      "time": 1.6,
+      "name": "frame-1.600.png"
+    },
+    {
+      "time": 1.6333,
+      "name": "frame-1.633.png"
+    },
+    {
+      "time": 1.6667,
+      "name": "frame-1.667.png"
+    },
+    {
+      "time": 1.7,
+      "name": "frame-1.700.png"
+    },
+    {
+      "time": 1.7333,
+      "name": "frame-1.733.png"
+    },
+    {
+      "time": 1.7667,
+      "name": "frame-1.767.png"
+    },
+    {
+      "time": 1.8,
+      "name": "frame-1.800.png"
+    },
+    {
+      "time": 1.8333,
+      "name": "frame-1.833.png"
+    },
+    {
+      "time": 1.8667,
+      "name": "frame-1.867.png"
+    },
+    {
+      "time": 1.9,
+      "name": "frame-1.900.png"
+    },
+    {
+      "time": 1.9333,
+      "name": "frame-1.933.png"
+    },
+    {
+      "time": 1.9667,
+      "name": "frame-1.967.png"
+    },
+    {
+      "time": 2.0,
+      "name": "frame-2.000.png"
+    },
+    {
+      "time": 2.0333,
+      "name": "frame-2.033.png"
+    },
+    {
+      "time": 2.0667,
+      "name": "frame-2.067.png"
+    },
+    {
+      "time": 2.1,
+      "name": "frame-2.100.png"
+    },
+    {
+      "time": 2.1333,
+      "name": "frame-2.133.png"
+    },
+    {
+      "time": 2.1667,
+      "name": "frame-2.167.png"
+    },
+    {
+      "time": 2.2,
+      "name": "frame-2.200.png"
+    },
+    {
+      "time": 2.2333,
+      "name": "frame-2.233.png"
+    },
+    {
+      "time": 2.2667,
+      "name": "frame-2.267.png"
+    },
+    {
+      "time": 2.3,
+      "name": "frame-2.300.png"
+    },
+    {
+      "time": 2.3333,
+      "name": "frame-2.333.png"
+    },
+    {
+      "time": 2.3667,
+      "name": "frame-2.367.png"
+    },
+    {
+      "time": 2.4,
+      "name": "frame-2.400.png"
+    },
+    {
+      "time": 2.4333,
+      "name": "frame-2.433.png"
+    },
+    {
+      "time": 2.4667,
+      "name": "frame-2.467.png"
+    },
+    {
+      "time": 2.5,
+      "name": "frame-2.500.png"
+    },
+    {
+      "time": 2.5333,
+      "name": "frame-2.533.png"
+    },
+    {
+      "time": 2.5667,
+      "name": "frame-2.567.png"
+    },
+    {
+      "time": 2.6,
+      "name": "frame-2.600.png"
+    },
+    {
+      "time": 2.6333,
+      "name": "frame-2.633.png"
+    },
+    {
+      "time": 2.6667,
+      "name": "frame-2.667.png"
+    },
+    {
+      "time": 2.7,
+      "name": "frame-2.700.png"
+    },
+    {
+      "time": 2.7333,
+      "name": "frame-2.733.png"
+    },
+    {
+      "time": 2.7667,
+      "name": "frame-2.767.png"
+    },
+    {
+      "time": 2.8,
+      "name": "frame-2.800.png"
+    },
+    {
+      "time": 2.8333,
+      "name": "frame-2.833.png"
+    },
+    {
+      "time": 2.8667,
+      "name": "frame-2.867.png"
+    },
+    {
+      "time": 2.9,
+      "name": "frame-2.900.png"
+    },
+    {
+      "time": 2.9333,
+      "name": "frame-2.933.png"
+    },
+    {
+      "time": 2.9667,
+      "name": "frame-2.967.png"
+    },
+    {
+      "time": 3.0,
+      "name": "frame-3.000.png"
+    },
+    {
+      "time": 3.0333,
+      "name": "frame-3.033.png"
+    },
+    {
+      "time": 3.0667,
+      "name": "frame-3.067.png"
+    },
+    {
+      "time": 3.1,
+      "name": "frame-3.100.png"
+    },
+    {
+      "time": 3.1333,
+      "name": "frame-3.133.png"
+    },
+    {
+      "time": 3.1667,
+      "name": "frame-3.167.png"
+    },
+    {
+      "time": 3.2,
+      "name": "frame-3.200.png"
+    },
+    {
+      "time": 3.2333,
+      "name": "frame-3.233.png"
+    },
+    {
+      "time": 3.2667,
+      "name": "frame-3.267.png"
+    },
+    {
+      "time": 3.3,
+      "name": "frame-3.300.png"
+    },
+    {
+      "time": 3.3333,
+      "name": "frame-3.333.png"
+    },
+    {
+      "time": 3.3667,
+      "name": "frame-3.367.png"
+    },
+    {
+      "time": 3.4,
+      "name": "frame-3.400.png"
+    },
+    {
+      "time": 3.4333,
+      "name": "frame-3.433.png"
+    },
+    {
+      "time": 3.4667,
+      "name": "frame-3.467.png"
+    },
+    {
+      "time": 3.5,
+      "name": "frame-3.500.png"
+    },
+    {
+      "time": 3.5333,
+      "name": "frame-3.533.png"
+    },
+    {
+      "time": 3.5667,
+      "name": "frame-3.567.png"
+    },
+    {
+      "time": 3.6,
+      "name": "frame-3.600.png"
+    },
+    {
+      "time": 3.6333,
+      "name": "frame-3.633.png"
+    },
+    {
+      "time": 3.6667,
+      "name": "frame-3.667.png"
+    },
+    {
+      "time": 3.7,
+      "name": "frame-3.700.png"
+    },
+    {
+      "time": 3.7333,
+      "name": "frame-3.733.png"
+    },
+    {
+      "time": 3.7667,
+      "name": "frame-3.767.png"
+    },
+    {
+      "time": 3.8,
+      "name": "frame-3.800.png"
+    },
+    {
+      "time": 3.8333,
+      "name": "frame-3.833.png"
+    },
+    {
+      "time": 3.8667,
+      "name": "frame-3.867.png"
+    },
+    {
+      "time": 3.9,
+      "name": "frame-3.900.png"
+    },
+    {
+      "time": 3.9333,
+      "name": "frame-3.933.png"
+    },
+    {
+      "time": 3.9667,
+      "name": "frame-3.967.png"
+    },
+    {
+      "time": 4.0,
+      "name": "frame-4.000.png"
+    },
+    {
+      "time": 4.0333,
+      "name": "frame-4.033.png"
+    },
+    {
+      "time": 4.0667,
+      "name": "frame-4.067.png"
+    },
+    {
+      "time": 4.1,
+      "name": "frame-4.100.png"
+    },
+    {
+      "time": 4.1333,
+      "name": "frame-4.133.png"
+    },
+    {
+      "time": 4.1667,
+      "name": "frame-4.167.png"
+    },
+    {
+      "time": 4.2,
+      "name": "frame-4.200.png"
+    },
+    {
+      "time": 4.2333,
+      "name": "frame-4.233.png"
+    },
+    {
+      "time": 4.2667,
+      "name": "frame-4.267.png"
+    },
+    {
+      "time": 4.3,
+      "name": "frame-4.300.png"
+    },
+    {
+      "time": 4.3333,
+      "name": "frame-4.333.png"
+    },
+    {
+      "time": 4.3667,
+      "name": "frame-4.367.png"
+    },
+    {
+      "time": 4.4,
+      "name": "frame-4.400.png"
+    },
+    {
+      "time": 4.4333,
+      "name": "frame-4.433.png"
+    },
+    {
+      "time": 4.4667,
+      "name": "frame-4.467.png"
+    },
+    {
+      "time": 4.5,
+      "name": "frame-4.500.png"
+    },
+    {
+      "time": 4.5333,
+      "name": "frame-4.533.png"
+    },
+    {
+      "time": 4.5667,
+      "name": "frame-4.567.png"
+    },
+    {
+      "time": 4.6,
+      "name": "frame-4.600.png"
+    },
+    {
+      "time": 4.6333,
+      "name": "frame-4.633.png"
+    },
+    {
+      "time": 4.6667,
+      "name": "frame-4.667.png"
+    },
+    {
+      "time": 4.7,
+      "name": "frame-4.700.png"
+    },
+    {
+      "time": 4.7333,
+      "name": "frame-4.733.png"
+    },
+    {
+      "time": 4.7667,
+      "name": "frame-4.767.png"
+    },
+    {
+      "time": 4.8,
+      "name": "frame-4.800.png"
+    },
+    {
+      "time": 4.8333,
+      "name": "frame-4.833.png"
+    },
+    {
+      "time": 4.8667,
+      "name": "frame-4.867.png"
+    },
+    {
+      "time": 4.9,
+      "name": "frame-4.900.png"
+    },
+    {
+      "time": 4.9333,
+      "name": "frame-4.933.png"
+    },
+    {
+      "time": 4.9667,
+      "name": "frame-4.967.png"
+    },
+    {
+      "time": 5.0,
+      "name": "frame-5.000.png"
+    },
+    {
+      "time": 5.0333,
+      "name": "frame-5.033.png"
+    },
+    {
+      "time": 5.0667,
+      "name": "frame-5.067.png"
+    },
+    {
+      "time": 5.1,
+      "name": "frame-5.100.png"
+    },
+    {
+      "time": 5.1333,
+      "name": "frame-5.133.png"
+    },
+    {
+      "time": 5.1667,
+      "name": "frame-5.167.png"
+    },
+    {
+      "time": 5.2,
+      "name": "frame-5.200.png"
+    },
+    {
+      "time": 5.2333,
+      "name": "frame-5.233.png"
+    },
+    {
+      "time": 5.2667,
+      "name": "frame-5.267.png"
+    },
+    {
+      "time": 5.3,
+      "name": "frame-5.300.png"
+    },
+    {
+      "time": 5.3333,
+      "name": "frame-5.333.png"
+    },
+    {
+      "time": 5.3667,
+      "name": "frame-5.367.png"
+    },
+    {
+      "time": 5.4,
+      "name": "frame-5.400.png"
+    },
+    {
+      "time": 5.4333,
+      "name": "frame-5.433.png"
+    },
+    {
+      "time": 5.4667,
+      "name": "frame-5.467.png"
+    },
+    {
+      "time": 5.5,
+      "name": "frame-5.500.png"
+    },
+    {
+      "time": 5.5333,
+      "name": "frame-5.533.png"
+    },
+    {
+      "time": 5.5667,
+      "name": "frame-5.567.png"
+    },
+    {
+      "time": 5.6,
+      "name": "frame-5.600.png"
+    },
+    {
+      "time": 5.6333,
+      "name": "frame-5.633.png"
+    },
+    {
+      "time": 5.6667,
+      "name": "frame-5.667.png"
+    },
+    {
+      "time": 5.7,
+      "name": "frame-5.700.png"
+    },
+    {
+      "time": 5.7333,
+      "name": "frame-5.733.png"
+    },
+    {
+      "time": 5.7667,
+      "name": "frame-5.767.png"
+    },
+    {
+      "time": 5.8,
+      "name": "frame-5.800.png"
+    },
+    {
+      "time": 5.8333,
+      "name": "frame-5.833.png"
+    },
+    {
+      "time": 5.8667,
+      "name": "frame-5.867.png"
+    },
+    {
+      "time": 5.9,
+      "name": "frame-5.900.png"
+    },
+    {
+      "time": 5.9333,
+      "name": "frame-5.933.png"
+    },
+    {
+      "time": 5.9667,
+      "name": "frame-5.967.png"
+    },
+    {
+      "time": 6.0,
+      "name": "frame-6.000.png"
+    },
+    {
+      "time": 6.0333,
+      "name": "frame-6.033.png"
+    },
+    {
+      "time": 6.0667,
+      "name": "frame-6.067.png"
+    },
+    {
+      "time": 6.1,
+      "name": "frame-6.100.png"
+    },
+    {
+      "time": 6.1333,
+      "name": "frame-6.133.png"
+    },
+    {
+      "time": 6.1667,
+      "name": "frame-6.167.png"
+    },
+    {
+      "time": 6.2,
+      "name": "frame-6.200.png"
+    },
+    {
+      "time": 6.2333,
+      "name": "frame-6.233.png"
+    },
+    {
+      "time": 6.2667,
+      "name": "frame-6.267.png"
+    },
+    {
+      "time": 6.3,
+      "name": "frame-6.300.png"
+    },
+    {
+      "time": 6.3333,
+      "name": "frame-6.333.png"
+    },
+    {
+      "time": 6.3667,
+      "name": "frame-6.367.png"
+    },
+    {
+      "time": 6.4,
+      "name": "frame-6.400.png"
+    },
+    {
+      "time": 6.4333,
+      "name": "frame-6.433.png"
+    },
+    {
+      "time": 6.4667,
+      "name": "frame-6.467.png"
+    },
+    {
+      "time": 6.5,
+      "name": "frame-6.500.png"
+    },
+    {
+      "time": 6.5333,
+      "name": "frame-6.533.png"
+    },
+    {
+      "time": 6.5667,
+      "name": "frame-6.567.png"
+    },
+    {
+      "time": 6.6,
+      "name": "frame-6.600.png"
+    },
+    {
+      "time": 6.6333,
+      "name": "frame-6.633.png"
+    },
+    {
+      "time": 6.6667,
+      "name": "frame-6.667.png"
+    },
+    {
+      "time": 6.7,
+      "name": "frame-6.700.png"
+    },
+    {
+      "time": 6.7333,
+      "name": "frame-6.733.png"
+    },
+    {
+      "time": 6.7667,
+      "name": "frame-6.767.png"
+    },
+    {
+      "time": 6.8,
+      "name": "frame-6.800.png"
+    },
+    {
+      "time": 6.8333,
+      "name": "frame-6.833.png"
+    },
+    {
+      "time": 6.8667,
+      "name": "frame-6.867.png"
+    },
+    {
+      "time": 6.9,
+      "name": "frame-6.900.png"
+    },
+    {
+      "time": 6.9333,
+      "name": "frame-6.933.png"
+    },
+    {
+      "time": 6.9667,
+      "name": "frame-6.967.png"
+    },
+    {
+      "time": 7.0,
+      "name": "frame-7.000.png"
+    },
+    {
+      "time": 7.0333,
+      "name": "frame-7.033.png"
+    },
+    {
+      "time": 7.0667,
+      "name": "frame-7.067.png"
+    },
+    {
+      "time": 7.1,
+      "name": "frame-7.100.png"
+    },
+    {
+      "time": 7.1333,
+      "name": "frame-7.133.png"
+    },
+    {
+      "time": 7.1667,
+      "name": "frame-7.167.png"
+    },
+    {
+      "time": 7.2,
+      "name": "frame-7.200.png"
+    },
+    {
+      "time": 7.2333,
+      "name": "frame-7.233.png"
+    },
+    {
+      "time": 7.2667,
+      "name": "frame-7.267.png"
+    },
+    {
+      "time": 7.3,
+      "name": "frame-7.300.png"
+    },
+    {
+      "time": 7.3333,
+      "name": "frame-7.333.png"
+    },
+    {
+      "time": 7.3667,
+      "name": "frame-7.367.png"
+    },
+    {
+      "time": 7.4,
+      "name": "frame-7.400.png"
+    },
+    {
+      "time": 7.4333,
+      "name": "frame-7.433.png"
+    },
+    {
+      "time": 7.4667,
+      "name": "frame-7.467.png"
+    },
+    {
+      "time": 7.5,
+      "name": "frame-7.500.png"
+    },
+    {
+      "time": 7.5333,
+      "name": "frame-7.533.png"
+    },
+    {
+      "time": 7.5667,
+      "name": "frame-7.567.png"
+    },
+    {
+      "time": 7.6,
+      "name": "frame-7.600.png"
+    },
+    {
+      "time": 7.6333,
+      "name": "frame-7.633.png"
+    },
+    {
+      "time": 7.6667,
+      "name": "frame-7.667.png"
+    },
+    {
+      "time": 7.7,
+      "name": "frame-7.700.png"
+    },
+    {
+      "time": 7.7333,
+      "name": "frame-7.733.png"
+    },
+    {
+      "time": 7.7667,
+      "name": "frame-7.767.png"
+    },
+    {
+      "time": 7.8,
+      "name": "frame-7.800.png"
+    },
+    {
+      "time": 7.8333,
+      "name": "frame-7.833.png"
+    },
+    {
+      "time": 7.8667,
+      "name": "frame-7.867.png"
+    },
+    {
+      "time": 7.9,
+      "name": "frame-7.900.png"
+    },
+    {
+      "time": 7.9333,
+      "name": "frame-7.933.png"
+    },
+    {
+      "time": 7.9667,
+      "name": "frame-7.967.png"
+    },
+    {
+      "time": 8.0,
+      "name": "frame-8.000.png"
+    },
+    {
+      "time": 8.0333,
+      "name": "frame-8.033.png"
+    },
+    {
+      "time": 8.0667,
+      "name": "frame-8.067.png"
+    },
+    {
+      "time": 8.1,
+      "name": "frame-8.100.png"
+    },
+    {
+      "time": 8.1333,
+      "name": "frame-8.133.png"
+    },
+    {
+      "time": 8.1667,
+      "name": "frame-8.167.png"
+    },
+    {
+      "time": 8.2,
+      "name": "frame-8.200.png"
+    },
+    {
+      "time": 8.2333,
+      "name": "frame-8.233.png"
+    },
+    {
+      "time": 8.2667,
+      "name": "frame-8.267.png"
+    },
+    {
+      "time": 8.3,
+      "name": "frame-8.300.png"
+    },
+    {
+      "time": 8.3333,
+      "name": "frame-8.333.png"
+    },
+    {
+      "time": 8.3667,
+      "name": "frame-8.367.png"
+    },
+    {
+      "time": 8.4,
+      "name": "frame-8.400.png"
+    },
+    {
+      "time": 8.4333,
+      "name": "frame-8.433.png"
+    },
+    {
+      "time": 8.4667,
+      "name": "frame-8.467.png"
+    },
+    {
+      "time": 8.5,
+      "name": "frame-8.500.png"
+    },
+    {
+      "time": 8.5333,
+      "name": "frame-8.533.png"
+    },
+    {
+      "time": 8.5667,
+      "name": "frame-8.567.png"
+    },
+    {
+      "time": 8.6,
+      "name": "frame-8.600.png"
+    },
+    {
+      "time": 8.6333,
+      "name": "frame-8.633.png"
+    },
+    {
+      "time": 8.6667,
+      "name": "frame-8.667.png"
+    },
+    {
+      "time": 8.7,
+      "name": "frame-8.700.png"
+    },
+    {
+      "time": 8.7333,
+      "name": "frame-8.733.png"
+    },
+    {
+      "time": 8.7667,
+      "name": "frame-8.767.png"
+    },
+    {
+      "time": 8.8,
+      "name": "frame-8.800.png"
+    },
+    {
+      "time": 8.8333,
+      "name": "frame-8.833.png"
+    },
+    {
+      "time": 8.8667,
+      "name": "frame-8.867.png"
+    },
+    {
+      "time": 8.9,
+      "name": "frame-8.900.png"
+    },
+    {
+      "time": 8.9333,
+      "name": "frame-8.933.png"
+    },
+    {
+      "time": 8.9667,
+      "name": "frame-8.967.png"
+    },
+    {
+      "time": 9.0,
+      "name": "frame-9.000.png"
+    },
+    {
+      "time": 9.0333,
+      "name": "frame-9.033.png"
+    },
+    {
+      "time": 9.0667,
+      "name": "frame-9.067.png"
+    },
+    {
+      "time": 9.1,
+      "name": "frame-9.100.png"
+    },
+    {
+      "time": 9.1333,
+      "name": "frame-9.133.png"
+    },
+    {
+      "time": 9.1667,
+      "name": "frame-9.167.png"
+    },
+    {
+      "time": 9.2,
+      "name": "frame-9.200.png"
+    },
+    {
+      "time": 9.2333,
+      "name": "frame-9.233.png"
+    },
+    {
+      "time": 9.2667,
+      "name": "frame-9.267.png"
+    },
+    {
+      "time": 9.3,
+      "name": "frame-9.300.png"
+    },
+    {
+      "time": 9.3333,
+      "name": "frame-9.333.png"
+    },
+    {
+      "time": 9.3667,
+      "name": "frame-9.367.png"
+    },
+    {
+      "time": 9.4,
+      "name": "frame-9.400.png"
+    },
+    {
+      "time": 9.4333,
+      "name": "frame-9.433.png"
+    },
+    {
+      "time": 9.4667,
+      "name": "frame-9.467.png"
+    },
+    {
+      "time": 9.5,
+      "name": "frame-9.500.png"
+    },
+    {
+      "time": 9.5333,
+      "name": "frame-9.533.png"
+    },
+    {
+      "time": 9.5667,
+      "name": "frame-9.567.png"
+    },
+    {
+      "time": 9.6,
+      "name": "frame-9.600.png"
+    },
+    {
+      "time": 9.6333,
+      "name": "frame-9.633.png"
+    },
+    {
+      "time": 9.6667,
+      "name": "frame-9.667.png"
+    },
+    {
+      "time": 9.7,
+      "name": "frame-9.700.png"
+    },
+    {
+      "time": 9.7333,
+      "name": "frame-9.733.png"
+    },
+    {
+      "time": 9.7667,
+      "name": "frame-9.767.png"
+    },
+    {
+      "time": 9.8,
+      "name": "frame-9.800.png"
+    },
+    {
+      "time": 9.8333,
+      "name": "frame-9.833.png"
+    },
+    {
+      "time": 9.8667,
+      "name": "frame-9.867.png"
+    },
+    {
+      "time": 9.9,
+      "name": "frame-9.900.png"
+    },
+    {
+      "time": 9.9333,
+      "name": "frame-9.933.png"
+    },
+    {
+      "time": 9.9667,
+      "name": "frame-9.967.png"
+    },
+    {
+      "time": 10.0,
+      "name": "frame-10.000.png"
+    },
+    {
+      "time": 10.0333,
+      "name": "frame-10.033.png"
+    },
+    {
+      "time": 10.0667,
+      "name": "frame-10.067.png"
+    },
+    {
+      "time": 10.1,
+      "name": "frame-10.100.png"
+    },
+    {
+      "time": 10.1333,
+      "name": "frame-10.133.png"
+    },
+    {
+      "time": 10.1667,
+      "name": "frame-10.167.png"
+    },
+    {
+      "time": 10.2,
+      "name": "frame-10.200.png"
+    },
+    {
+      "time": 10.2333,
+      "name": "frame-10.233.png"
+    },
+    {
+      "time": 10.2667,
+      "name": "frame-10.267.png"
+    },
+    {
+      "time": 10.3,
+      "name": "frame-10.300.png"
+    },
+    {
+      "time": 10.3333,
+      "name": "frame-10.333.png"
+    },
+    {
+      "time": 10.3667,
+      "name": "frame-10.367.png"
+    },
+    {
+      "time": 10.4,
+      "name": "frame-10.400.png"
+    },
+    {
+      "time": 10.4333,
+      "name": "frame-10.433.png"
+    },
+    {
+      "time": 10.4667,
+      "name": "frame-10.467.png"
+    },
+    {
+      "time": 10.5,
+      "name": "frame-10.500.png"
+    },
+    {
+      "time": 10.5333,
+      "name": "frame-10.533.png"
+    },
+    {
+      "time": 10.5667,
+      "name": "frame-10.567.png"
+    },
+    {
+      "time": 10.6,
+      "name": "frame-10.600.png"
+    },
+    {
+      "time": 10.6333,
+      "name": "frame-10.633.png"
+    },
+    {
+      "time": 10.6667,
+      "name": "frame-10.667.png"
+    },
+    {
+      "time": 10.7,
+      "name": "frame-10.700.png"
+    },
+    {
+      "time": 10.7333,
+      "name": "frame-10.733.png"
+    },
+    {
+      "time": 10.7667,
+      "name": "frame-10.767.png"
+    },
+    {
+      "time": 10.8,
+      "name": "frame-10.800.png"
+    },
+    {
+      "time": 10.8333,
+      "name": "frame-10.833.png"
+    },
+    {
+      "time": 10.8667,
+      "name": "frame-10.867.png"
+    },
+    {
+      "time": 10.9,
+      "name": "frame-10.900.png"
+    },
+    {
+      "time": 10.9333,
+      "name": "frame-10.933.png"
+    },
+    {
+      "time": 10.9667,
+      "name": "frame-10.967.png"
+    },
+    {
+      "time": 11.0,
+      "name": "frame-11.000.png"
+    },
+    {
+      "time": 11.0333,
+      "name": "frame-11.033.png"
+    },
+    {
+      "time": 11.0667,
+      "name": "frame-11.067.png"
+    },
+    {
+      "time": 11.1,
+      "name": "frame-11.100.png"
+    },
+    {
+      "time": 11.1333,
+      "name": "frame-11.133.png"
+    },
+    {
+      "time": 11.1667,
+      "name": "frame-11.167.png"
+    },
+    {
+      "time": 11.2,
+      "name": "frame-11.200.png"
+    },
+    {
+      "time": 11.2333,
+      "name": "frame-11.233.png"
+    },
+    {
+      "time": 11.2667,
+      "name": "frame-11.267.png"
+    },
+    {
+      "time": 11.3,
+      "name": "frame-11.300.png"
+    },
+    {
+      "time": 11.3333,
+      "name": "frame-11.333.png"
+    },
+    {
+      "time": 11.3667,
+      "name": "frame-11.367.png"
+    },
+    {
+      "time": 11.4,
+      "name": "frame-11.400.png"
+    },
+    {
+      "time": 11.4333,
+      "name": "frame-11.433.png"
+    },
+    {
+      "time": 11.4667,
+      "name": "frame-11.467.png"
+    },
+    {
+      "time": 11.5,
+      "name": "frame-11.500.png"
+    },
+    {
+      "time": 11.5333,
+      "name": "frame-11.533.png"
+    },
+    {
+      "time": 11.5667,
+      "name": "frame-11.567.png"
+    },
+    {
+      "time": 11.6,
+      "name": "frame-11.600.png"
+    },
+    {
+      "time": 11.6333,
+      "name": "frame-11.633.png"
+    },
+    {
+      "time": 11.6667,
+      "name": "frame-11.667.png"
+    },
+    {
+      "time": 11.7,
+      "name": "frame-11.700.png"
+    },
+    {
+      "time": 11.7333,
+      "name": "frame-11.733.png"
+    },
+    {
+      "time": 11.7667,
+      "name": "frame-11.767.png"
+    },
+    {
+      "time": 11.8,
+      "name": "frame-11.800.png"
+    },
+    {
+      "time": 11.8333,
+      "name": "frame-11.833.png"
+    },
+    {
+      "time": 11.8667,
+      "name": "frame-11.867.png"
+    },
+    {
+      "time": 11.9,
+      "name": "frame-11.900.png"
+    },
+    {
+      "time": 11.9333,
+      "name": "frame-11.933.png"
+    },
+    {
+      "time": 11.9667,
+      "name": "frame-11.967.png"
+    },
+    {
+      "time": 12.0,
+      "name": "frame-12.000.png"
+    },
+    {
+      "time": 12.0333,
+      "name": "frame-12.033.png"
+    },
+    {
+      "time": 12.0667,
+      "name": "frame-12.067.png"
+    },
+    {
+      "time": 12.1,
+      "name": "frame-12.100.png"
+    },
+    {
+      "time": 12.1333,
+      "name": "frame-12.133.png"
+    },
+    {
+      "time": 12.1667,
+      "name": "frame-12.167.png"
+    },
+    {
+      "time": 12.2,
+      "name": "frame-12.200.png"
+    },
+    {
+      "time": 12.2333,
+      "name": "frame-12.233.png"
+    },
+    {
+      "time": 12.2667,
+      "name": "frame-12.267.png"
+    },
+    {
+      "time": 12.3,
+      "name": "frame-12.300.png"
+    },
+    {
+      "time": 12.3333,
+      "name": "frame-12.333.png"
+    },
+    {
+      "time": 12.3667,
+      "name": "frame-12.367.png"
+    },
+    {
+      "time": 12.4,
+      "name": "frame-12.400.png"
+    },
+    {
+      "time": 12.4333,
+      "name": "frame-12.433.png"
+    },
+    {
+      "time": 12.4667,
+      "name": "frame-12.467.png"
+    },
+    {
+      "time": 12.5,
+      "name": "frame-12.500.png"
+    },
+    {
+      "time": 12.5333,
+      "name": "frame-12.533.png"
+    },
+    {
+      "time": 12.5667,
+      "name": "frame-12.567.png"
+    },
+    {
+      "time": 12.6,
+      "name": "frame-12.600.png"
+    },
+    {
+      "time": 12.6333,
+      "name": "frame-12.633.png"
+    },
+    {
+      "time": 12.6667,
+      "name": "frame-12.667.png"
+    },
+    {
+      "time": 12.7,
+      "name": "frame-12.700.png"
+    },
+    {
+      "time": 12.7333,
+      "name": "frame-12.733.png"
+    },
+    {
+      "time": 12.7667,
+      "name": "frame-12.767.png"
+    },
+    {
+      "time": 12.8,
+      "name": "frame-12.800.png"
+    },
+    {
+      "time": 12.8333,
+      "name": "frame-12.833.png"
+    },
+    {
+      "time": 12.8667,
+      "name": "frame-12.867.png"
+    },
+    {
+      "time": 12.9,
+      "name": "frame-12.900.png"
+    },
+    {
+      "time": 12.9333,
+      "name": "frame-12.933.png"
+    },
+    {
+      "time": 12.9667,
+      "name": "frame-12.967.png"
+    },
+    {
+      "time": 13.0,
+      "name": "frame-13.000.png"
+    },
+    {
+      "time": 13.0333,
+      "name": "frame-13.033.png"
+    },
+    {
+      "time": 13.0667,
+      "name": "frame-13.067.png"
+    },
+    {
+      "time": 13.1,
+      "name": "frame-13.100.png"
+    },
+    {
+      "time": 13.1333,
+      "name": "frame-13.133.png"
+    },
+    {
+      "time": 13.1667,
+      "name": "frame-13.167.png"
+    },
+    {
+      "time": 13.2,
+      "name": "frame-13.200.png"
+    },
+    {
+      "time": 13.2333,
+      "name": "frame-13.233.png"
+    },
+    {
+      "time": 13.2667,
+      "name": "frame-13.267.png"
+    },
+    {
+      "time": 13.3,
+      "name": "frame-13.300.png"
+    },
+    {
+      "time": 13.3333,
+      "name": "frame-13.333.png"
+    },
+    {
+      "time": 13.3667,
+      "name": "frame-13.367.png"
+    },
+    {
+      "time": 13.4,
+      "name": "frame-13.400.png"
+    },
+    {
+      "time": 13.4333,
+      "name": "frame-13.433.png"
+    },
+    {
+      "time": 13.4667,
+      "name": "frame-13.467.png"
+    },
+    {
+      "time": 13.5,
+      "name": "frame-13.500.png"
+    },
+    {
+      "time": 13.5333,
+      "name": "frame-13.533.png"
+    },
+    {
+      "time": 13.5667,
+      "name": "frame-13.567.png"
+    },
+    {
+      "time": 13.6,
+      "name": "frame-13.600.png"
+    },
+    {
+      "time": 13.6333,
+      "name": "frame-13.633.png"
+    },
+    {
+      "time": 13.6667,
+      "name": "frame-13.667.png"
+    },
+    {
+      "time": 13.7,
+      "name": "frame-13.700.png"
+    },
+    {
+      "time": 13.7333,
+      "name": "frame-13.733.png"
+    },
+    {
+      "time": 13.7667,
+      "name": "frame-13.767.png"
+    },
+    {
+      "time": 13.8,
+      "name": "frame-13.800.png"
+    },
+    {
+      "time": 13.8333,
+      "name": "frame-13.833.png"
+    },
+    {
+      "time": 13.8667,
+      "name": "frame-13.867.png"
+    },
+    {
+      "time": 13.9,
+      "name": "frame-13.900.png"
+    },
+    {
+      "time": 13.9333,
+      "name": "frame-13.933.png"
+    },
+    {
+      "time": 13.9667,
+      "name": "frame-13.967.png"
+    },
+    {
+      "time": 14.0,
+      "name": "frame-14.000.png"
+    },
+    {
+      "time": 14.0333,
+      "name": "frame-14.033.png"
+    },
+    {
+      "time": 14.0667,
+      "name": "frame-14.067.png"
+    },
+    {
+      "time": 14.1,
+      "name": "frame-14.100.png"
+    },
+    {
+      "time": 14.1333,
+      "name": "frame-14.133.png"
+    },
+    {
+      "time": 14.1667,
+      "name": "frame-14.167.png"
+    },
+    {
+      "time": 14.2,
+      "name": "frame-14.200.png"
+    },
+    {
+      "time": 14.2333,
+      "name": "frame-14.233.png"
+    },
+    {
+      "time": 14.2667,
+      "name": "frame-14.267.png"
+    },
+    {
+      "time": 14.3,
+      "name": "frame-14.300.png"
+    },
+    {
+      "time": 14.3333,
+      "name": "frame-14.333.png"
+    },
+    {
+      "time": 14.3667,
+      "name": "frame-14.367.png"
+    },
+    {
+      "time": 14.4,
+      "name": "frame-14.400.png"
+    },
+    {
+      "time": 14.4333,
+      "name": "frame-14.433.png"
+    },
+    {
+      "time": 14.4667,
+      "name": "frame-14.467.png"
+    },
+    {
+      "time": 14.5,
+      "name": "frame-14.500.png"
+    },
+    {
+      "time": 14.5333,
+      "name": "frame-14.533.png"
+    },
+    {
+      "time": 14.5667,
+      "name": "frame-14.567.png"
+    },
+    {
+      "time": 14.6,
+      "name": "frame-14.600.png"
+    },
+    {
+      "time": 14.6333,
+      "name": "frame-14.633.png"
+    },
+    {
+      "time": 14.6667,
+      "name": "frame-14.667.png"
+    },
+    {
+      "time": 14.7,
+      "name": "frame-14.700.png"
+    },
+    {
+      "time": 14.7333,
+      "name": "frame-14.733.png"
+    },
+    {
+      "time": 14.7667,
+      "name": "frame-14.767.png"
+    },
+    {
+      "time": 14.8,
+      "name": "frame-14.800.png"
+    },
+    {
+      "time": 14.8333,
+      "name": "frame-14.833.png"
+    },
+    {
+      "time": 14.8667,
+      "name": "frame-14.867.png"
+    },
+    {
+      "time": 14.9,
+      "name": "frame-14.900.png"
+    },
+    {
+      "time": 14.9333,
+      "name": "frame-14.933.png"
+    },
+    {
+      "time": 14.9667,
+      "name": "frame-14.967.png"
+    },
+    {
+      "time": 15.0,
+      "name": "frame-15.000.png"
+    },
+    {
+      "time": 15.0333,
+      "name": "frame-15.033.png"
+    },
+    {
+      "time": 15.0667,
+      "name": "frame-15.067.png"
+    },
+    {
+      "time": 15.1,
+      "name": "frame-15.100.png"
+    },
+    {
+      "time": 15.1333,
+      "name": "frame-15.133.png"
+    },
+    {
+      "time": 15.1667,
+      "name": "frame-15.167.png"
+    },
+    {
+      "time": 15.2,
+      "name": "frame-15.200.png"
+    },
+    {
+      "time": 15.2333,
+      "name": "frame-15.233.png"
+    },
+    {
+      "time": 15.2667,
+      "name": "frame-15.267.png"
+    },
+    {
+      "time": 15.3,
+      "name": "frame-15.300.png"
+    },
+    {
+      "time": 15.3333,
+      "name": "frame-15.333.png"
+    },
+    {
+      "time": 15.3667,
+      "name": "frame-15.367.png"
+    },
+    {
+      "time": 15.4,
+      "name": "frame-15.400.png"
+    },
+    {
+      "time": 15.4333,
+      "name": "frame-15.433.png"
+    },
+    {
+      "time": 15.4667,
+      "name": "frame-15.467.png"
+    },
+    {
+      "time": 15.5,
+      "name": "frame-15.500.png"
+    },
+    {
+      "time": 15.5333,
+      "name": "frame-15.533.png"
+    },
+    {
+      "time": 15.5667,
+      "name": "frame-15.567.png"
+    },
+    {
+      "time": 15.6,
+      "name": "frame-15.600.png"
+    },
+    {
+      "time": 15.6333,
+      "name": "frame-15.633.png"
+    },
+    {
+      "time": 15.6667,
+      "name": "frame-15.667.png"
+    },
+    {
+      "time": 15.7,
+      "name": "frame-15.700.png"
+    },
+    {
+      "time": 15.7333,
+      "name": "frame-15.733.png"
+    },
+    {
+      "time": 15.7667,
+      "name": "frame-15.767.png"
+    },
+    {
+      "time": 15.8,
+      "name": "frame-15.800.png"
+    },
+    {
+      "time": 15.8333,
+      "name": "frame-15.833.png"
+    },
+    {
+      "time": 15.8667,
+      "name": "frame-15.867.png"
+    },
+    {
+      "time": 15.9,
+      "name": "frame-15.900.png"
+    },
+    {
+      "time": 15.9333,
+      "name": "frame-15.933.png"
+    },
+    {
+      "time": 15.9667,
+      "name": "frame-15.967.png"
+    },
+    {
+      "time": 16.0,
+      "name": "frame-16.000.png"
+    },
+    {
+      "time": 16.0333,
+      "name": "frame-16.033.png"
+    },
+    {
+      "time": 16.0667,
+      "name": "frame-16.067.png"
+    },
+    {
+      "time": 16.1,
+      "name": "frame-16.100.png"
+    },
+    {
+      "time": 16.1333,
+      "name": "frame-16.133.png"
+    },
+    {
+      "time": 16.1667,
+      "name": "frame-16.167.png"
+    },
+    {
+      "time": 16.2,
+      "name": "frame-16.200.png"
+    },
+    {
+      "time": 16.2333,
+      "name": "frame-16.233.png"
+    },
+    {
+      "time": 16.2667,
+      "name": "frame-16.267.png"
+    },
+    {
+      "time": 16.3,
+      "name": "frame-16.300.png"
+    },
+    {
+      "time": 16.3333,
+      "name": "frame-16.333.png"
+    },
+    {
+      "time": 16.3667,
+      "name": "frame-16.367.png"
+    },
+    {
+      "time": 16.4,
+      "name": "frame-16.400.png"
+    },
+    {
+      "time": 16.4333,
+      "name": "frame-16.433.png"
+    },
+    {
+      "time": 16.4667,
+      "name": "frame-16.467.png"
+    },
+    {
+      "time": 16.5,
+      "name": "frame-16.500.png"
+    },
+    {
+      "time": 16.5333,
+      "name": "frame-16.533.png"
+    },
+    {
+      "time": 16.5667,
+      "name": "frame-16.567.png"
+    },
+    {
+      "time": 16.6,
+      "name": "frame-16.600.png"
+    },
+    {
+      "time": 16.6333,
+      "name": "frame-16.633.png"
+    },
+    {
+      "time": 16.6667,
+      "name": "frame-16.667.png"
+    },
+    {
+      "time": 16.7,
+      "name": "frame-16.700.png"
+    },
+    {
+      "time": 16.7333,
+      "name": "frame-16.733.png"
+    },
+    {
+      "time": 16.7667,
+      "name": "frame-16.767.png"
+    },
+    {
+      "time": 16.8,
+      "name": "frame-16.800.png"
+    },
+    {
+      "time": 16.8333,
+      "name": "frame-16.833.png"
+    },
+    {
+      "time": 16.8667,
+      "name": "frame-16.867.png"
+    },
+    {
+      "time": 16.9,
+      "name": "frame-16.900.png"
+    },
+    {
+      "time": 16.9333,
+      "name": "frame-16.933.png"
+    },
+    {
+      "time": 16.9667,
+      "name": "frame-16.967.png"
+    },
+    {
+      "time": 17.0,
+      "name": "frame-17.000.png"
+    },
+    {
+      "time": 17.0333,
+      "name": "frame-17.033.png"
+    },
+    {
+      "time": 17.0667,
+      "name": "frame-17.067.png"
+    },
+    {
+      "time": 17.1,
+      "name": "frame-17.100.png"
+    },
+    {
+      "time": 17.1333,
+      "name": "frame-17.133.png"
+    },
+    {
+      "time": 17.1667,
+      "name": "frame-17.167.png"
+    },
+    {
+      "time": 17.2,
+      "name": "frame-17.200.png"
+    },
+    {
+      "time": 17.2333,
+      "name": "frame-17.233.png"
+    },
+    {
+      "time": 17.2667,
+      "name": "frame-17.267.png"
+    }
+  ]
+}

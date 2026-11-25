@@ -1,8 +1,11 @@
 import { defineConfig, devices } from '@playwright/test';
 import path from 'node:path';
+import { randomBytes } from 'node:crypto';
 
 const testDatabasePath = process.env.PLAYWRIGHT_TEST_DB_PATH;
 const testStorageStatePath = process.env.E2E_STORAGE_STATE_PATH;
+const useProduction = process.env.PLAYWRIGHT_USE_PRODUCTION === '1';
+const isolatedSessionSecret = randomBytes(32).toString('hex');
 if (!testDatabasePath || !testStorageStatePath || process.env.PLAYWRIGHT_TEST !== '1') {
   throw new Error('Run Playwright through the npm test scripts so the per-run SQLite database and credentials are isolated.');
 }
@@ -31,12 +34,14 @@ export default defineConfig({
     { name: 'desktop-1440x900', use: { ...devices['Desktop Chrome'], viewport: { width: 1440, height: 900 } } },
   ],
   webServer: {
-    command: 'npx next dev -H 127.0.0.1 -p 3100',
+    command: `node node_modules/next/dist/bin/next ${useProduction ? 'start' : 'dev --webpack'} -H 127.0.0.1 -p 3100`,
     url: 'http://127.0.0.1:3100',
     timeout: 120_000,
     reuseExistingServer: false,
     env: {
       PLAYWRIGHT_TEST: '1',
+      SESSION_SECRET: isolatedSessionSecret,
+      ADMIN_SESSION_SECRET: isolatedSessionSecret,
       PLAYWRIGHT_TEST_DB_PATH: testDatabasePath,
       DB_PROVIDER: 'sqlite',
       DATABASE_URL: '',

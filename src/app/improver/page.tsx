@@ -474,8 +474,8 @@ export default function ResumeImproverPage() {
           <div className="flex flex-wrap items-center gap-3 self-start md:self-auto shrink-0">
             {/* Cloud Sync State */}
             {saveState === 'saving' && (
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-blue-500/10 border border-blue-500/20 text-xs text-blue-400 font-medium">
-                <span className="w-2 h-2 rounded-full bg-blue-500 animate-pulse" />
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-[var(--accent-subtle)]0/10 border border-blue-500/20 text-xs text-blue-400 font-medium">
+                <span className="w-2 h-2 rounded-full bg-[var(--accent-subtle)]0 animate-pulse" />
                 Saving to cloud...
               </span>
             )}
@@ -522,7 +522,7 @@ export default function ResumeImproverPage() {
       </div>
 
       {/* ─── JOB-SPECIFIC TAILORING & DIFF STUDIO ────────────────────────── */}
-      <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 space-y-6 shadow-sm">
+      <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 sm:p-8 space-y-6 shadow-sm">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--border-color)]">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-xl bg-[var(--accent)] text-white flex items-center justify-center shrink-0 shadow-xs">
@@ -674,7 +674,7 @@ export default function ResumeImproverPage() {
 
       {/* ─── LIVE PHRASING STUDIO WORKBENCH ──────────────────────────────── */}
       <div
-        className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 space-y-6 shadow-sm"
+        className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 sm:p-8 space-y-6 shadow-sm"
       >
         {/* Workbench Header */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-[var(--glass-border)]">
@@ -971,7 +971,7 @@ export default function ResumeImproverPage() {
             return (
               <div
                 key={item.id}
-                className={`bg-white rounded-2xl border border-[#E5E8ED] p-5 sm:p-6 space-y-4 shadow-sm transition-all ${
+                className={`bg-white rounded-2xl border border-[var(--border-color)] p-5 sm:p-6 space-y-4 shadow-sm transition-all ${
                   isRejected
                     ? 'opacity-60'
                     : isAppliedToResume

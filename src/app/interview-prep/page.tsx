@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   Award,
   Clock,
@@ -329,55 +330,71 @@ export default function InterviewPrepPage() {
             </div>
           )}
 
-          {/* ─── 1. SETUP VIEW ────────────────────────────────────────────────── */}
-          {viewStep === 'setup' && (
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-              {/* Left Column: Form Setup (7 cols) */}
-              <div className="lg:col-span-7">
-                <GlassCard className="p-6 sm:p-8 rounded-xl border border-[var(--border-color)] space-y-6 text-left">
-                  <div className="border-b border-[#E5E8ED] pb-4">
-                    <h2 className="heading-section">
-                      Configure Practice Session
-                    </h2>
-                    <p className="text-body-secondary mt-1">
-                      Select your target role and optional job requirements to generate 5 tailored interview questions.
-                    </p>
-                  </div>
-
-                  <form onSubmit={handleStartSession} className="space-y-5">
-                    {/* Role Input & Quick Pills */}
-                    <div className="space-y-2">
-                      <label htmlFor="interview-target-role" className="label-form block">
-                        Target Role
-                      </label>
-                      <input
-                        id="interview-target-role"
-                        type="text"
-                        value={targetRole}
-                        onChange={(e) => setTargetRole(e.target.value)}
-                        placeholder="e.g. Senior Full Stack Developer"
-                        className="w-full px-4 py-2.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white transition-colors"
-                        required
-                      />
-
-                      {/* Role Suggestions */}
-                      <div className="flex flex-wrap gap-2 pt-1">
-                        {rolePills.map((role) => (
-                          <button
-                            key={role}
-                            type="button"
-                            onClick={() => setTargetRole(role)}
-                            className={`px-3 py-1 rounded-full text-[13px] font-medium transition-colors border cursor-pointer ${
-                              targetRole === role
-                                ? 'bg-[#3157C8]/10 text-[#3157C8] border-[#3157C8]/30 font-semibold'
-                                : 'bg-[#F6F7F9] text-[#626B78] border-[#E5E8ED] hover:border-slate-300'
-                            }`}
-                          >
-                            {role}
-                          </button>
-                        ))}
-                      </div>
+          {/* ─── STEP CONTAINER WITH FLUID TRANSITIONS ───────────────────────── */}
+          <AnimatePresence mode="wait">
+            {/* ─── 1. SETUP VIEW ────────────────────────────────────────────────── */}
+            {viewStep === 'setup' && (
+              <motion.div
+                key="interview-step-setup"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start"
+              >
+                {/* Left Column: Form Setup (7 cols) */}
+                <div className="lg:col-span-7">
+                  <GlassCard className="p-6 sm:p-8 rounded-xl border border-[var(--border-color)] space-y-6 text-left">
+                    <div className="border-b border-[var(--border-color)] pb-4">
+                      <h2 className="heading-section">
+                        Configure Practice Session
+                      </h2>
+                      <p className="text-body-secondary mt-1">
+                        Select your target role and optional job requirements to generate 5 tailored interview questions.
+                      </p>
                     </div>
+
+                    <form onSubmit={handleStartSession} className="space-y-5">
+                      {/* Role Input & Quick Pills */}
+                      <div className="space-y-2">
+                        <label htmlFor="interview-target-role" className="label-form block">
+                          Target Role
+                        </label>
+                        <input
+                          id="interview-target-role"
+                          type="text"
+                          value={targetRole}
+                          onChange={(e) => setTargetRole(e.target.value)}
+                          placeholder="e.g. Senior Full Stack Developer"
+                          className="reference-panel w-full px-4 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-base text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:bg-white transition-colors"
+                          required
+                        />
+
+                        {/* Role Suggestions */}
+                        <div className="flex flex-wrap gap-2 pt-1">
+                          {rolePills.map((role) => (
+                            <button
+                              key={role}
+                              type="button"
+                              onClick={() => setTargetRole(role)}
+                              className={`relative px-3 py-1 rounded-full text-[13px] font-medium transition-colors border cursor-pointer ${
+                                targetRole === role
+                                  ? 'border-[var(--accent)]/30 font-semibold text-[var(--accent)]'
+                                  : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-slate-300'
+                              }`}
+                            >
+                              {targetRole === role && (
+                                <motion.div
+                                  layoutId="interview-role-pill"
+                                  className="absolute inset-0 bg-[var(--accent)]/10 rounded-full"
+                                  transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                                />
+                              )}
+                              <span className="relative z-10">{role}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
 
                     {/* Company (Optional) */}
                     <div className="space-y-1.5">
@@ -390,7 +407,7 @@ export default function InterviewPrepPage() {
                         value={company}
                         onChange={(e) => setCompany(e.target.value)}
                         placeholder="e.g. Google, Stripe, or Target Startup"
-                        className="w-full px-4 py-2.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white transition-colors"
+                        className="reference-panel w-full px-4 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-base text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:bg-white transition-colors"
                       />
                     </div>
 
@@ -405,7 +422,7 @@ export default function InterviewPrepPage() {
                         onChange={(e) => setJobDescription(e.target.value)}
                         placeholder="Paste key requirements or responsibility bullets from the job post..."
                         rows={3}
-                        className="w-full px-4 py-2.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white transition-colors resize-none"
+                        className="reference-panel w-full px-4 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-base text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:bg-white transition-colors resize-none"
                       />
                     </div>
 
@@ -433,7 +450,7 @@ export default function InterviewPrepPage() {
               {/* Right Column: History & Tips (5 cols) */}
               <div className="lg:col-span-5 space-y-6 text-left">
                 {/* Method Tips */}
-                <div className="p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3">
+                <div className="reference-panel p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3">
                   <div className="flex items-center gap-2">
                     <Target className="w-4 h-4 text-[var(--accent)]" />
                     <span className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
@@ -503,12 +520,19 @@ export default function InterviewPrepPage() {
                   )}
                 </div>
               </div>
-            </div>
+            </motion.div>
           )}
 
           {/* ─── 2. LIVE INTERVIEW SESSION VIEW ───────────────────────────────── */}
           {viewStep === 'session' && currentSession && (
-            <div className="space-y-6 text-left max-w-3xl mx-auto">
+            <motion.div
+              key="interview-step-session"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="reference-interview-stage space-y-6 text-left max-w-3xl mx-auto"
+            >
               {/* Top Bar with Stepper & Live Clock */}
               <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
                 <div className="flex items-center gap-3">
@@ -552,8 +576,16 @@ export default function InterviewPrepPage() {
                     )}
 
                     {/* Answer Area (if not evaluated yet) */}
-                    {!currentEvaluation ? (
-                      <div className="space-y-3 pt-2">
+                    <AnimatePresence mode="wait">
+                      {!currentEvaluation ? (
+                        <motion.div
+                          key={`answer-${currentQuestionIndex}`}
+                          initial={{ opacity: 0, y: 6 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -6 }}
+                          transition={{ duration: 0.16 }}
+                          className="space-y-3 pt-2"
+                        >
                         <label htmlFor="interview-user-answer" className="block text-xs font-semibold text-[var(--text-primary)] uppercase tracking-wider">
                           Your Answer
                         </label>
@@ -563,7 +595,7 @@ export default function InterviewPrepPage() {
                           onChange={(e) => setUserAnswer(e.target.value)}
                           placeholder="Type your response. Clearly address the core technical concepts, state real project actions taken, and mention measurable outcomes..."
                           rows={6}
-                          className="w-full px-4 py-3 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-hidden focus:border-[var(--accent)] transition-colors shadow-xs resize-y leading-relaxed"
+                          className="reference-panel w-full px-4 py-3 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-hidden focus:border-[var(--accent)] transition-colors shadow-xs resize-y leading-relaxed"
                         />
 
                         <div className="flex items-center justify-between pt-2">
@@ -590,10 +622,19 @@ export default function InterviewPrepPage() {
                             )}
                           </button>
                         </div>
-                      </div>
+                      </motion.div>
                     ) : (
                       /* Instant Evaluation Card */
-                      <div role="status" aria-live="polite" className="space-y-5 pt-4 border-t border-[var(--border-color)]">
+                      <motion.div
+                        key={`eval-${currentQuestionIndex}`}
+                        initial={{ opacity: 0, y: 6 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -6 }}
+                        transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+                        role="status"
+                        aria-live="polite"
+                        className="space-y-5 pt-4 border-t border-[var(--border-color)]"
+                      >
                         {/* Score & Tier Header */}
                         <div className="p-4 rounded-2xl bg-[var(--bg-secondary)]/70 border border-[var(--border-color)] flex items-center justify-between gap-4">
                           <div>
@@ -652,7 +693,7 @@ export default function InterviewPrepPage() {
                         )}
 
                         {/* Model Strong Answer Accordion/Box */}
-                        <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] space-y-1.5">
+                        <div className="reference-panel p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] space-y-1.5">
                           <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider block">
                             Staff-Level Model Answer
                           </span>
@@ -687,17 +728,25 @@ export default function InterviewPrepPage() {
                             )}
                           </button>
                         </div>
-                      </div>
+                      </motion.div>
                     )}
+                  </AnimatePresence>
                   </GlassCard>
                 );
               })()}
-            </div>
+            </motion.div>
           )}
 
           {/* ─── 3. SUMMARY VIEW ──────────────────────────────────────────────── */}
           {viewStep === 'summary' && currentSession && (
-            <div className="space-y-6 text-left max-w-3xl mx-auto">
+            <motion.div
+              key="interview-step-summary"
+              initial={{ opacity: 0, y: 6 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -6 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              className="space-y-6 text-left max-w-3xl mx-auto"
+            >
               <GlassCard className="p-6 sm:p-8 rounded-xl border border-[var(--border-color)] space-y-6">
                 <div className="text-center space-y-2 border-b border-[var(--border-color)] pb-6">
                   <div className="w-14 h-14 rounded-full bg-emerald-500/10 border border-emerald-500/30 flex items-center justify-center mx-auto text-emerald-400">
@@ -741,7 +790,7 @@ export default function InterviewPrepPage() {
 
                 {/* Feedback Note */}
                 {currentSession.overall_feedback && (
-                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-color)]">
+                  <p className="reference-panel text-xs text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-color)]">
                     {currentSession.overall_feedback}
                   </p>
                 )}
@@ -802,9 +851,10 @@ export default function InterviewPrepPage() {
                   </Link>
                 </div>
               </GlassCard>
-            </div>
+            </motion.div>
           )}
-        </PageTransition>
+        </AnimatePresence>
+      </PageTransition>
       </main>
     </div>
   );

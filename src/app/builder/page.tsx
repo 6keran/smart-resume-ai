@@ -3,6 +3,7 @@
 import React, { useState, useRef, useEffect, useCallback, Suspense } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { motion, AnimatePresence } from 'framer-motion';
 import {
   FileEdit,
   Check,
@@ -1405,7 +1406,7 @@ function ResumeBuilderContent() {
   return (
     <div className="resume-builder-page-container min-h-screen py-6 sm:py-8 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 w-full max-w-full overflow-hidden">
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-[#E5E8ED] p-5 sm:p-6 shadow-sm no-print">
+      <div className="reference-workspace-heading no-print">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] tracking-tight">
@@ -1595,23 +1596,46 @@ function ResumeBuilderContent() {
             </div>
 
             {/* 5. Save Status Pill */}
-            <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)]">
-              {saveState === 'saving' ? (
-                <>
-                  <Loader2 className="w-3 h-3 text-[var(--accent)] animate-spin" />
-                  <span className="text-[10px] text-[var(--text-secondary)]">Saving...</span>
-                </>
-              ) : hasUnsavedChanges ? (
-                <>
-                  <span className="w-2 h-2 rounded-full bg-amber-400" />
-                  <span className="text-[10px] text-amber-500 font-medium">Unsaved</span>
-                </>
-              ) : (
-                <>
-                  <Check className="w-3 h-3 text-emerald-500" />
-                  <span className="text-[10px] text-emerald-600 font-medium">{relativeSavedText}</span>
-                </>
-              )}
+            <div className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] overflow-hidden">
+              <AnimatePresence mode="wait">
+                {saveState === 'saving' ? (
+                  <motion.div
+                    key="saving"
+                    initial={{ opacity: 0, scale: 0.92 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.92 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex items-center gap-1.5"
+                  >
+                    <Loader2 className="w-3 h-3 text-[var(--accent)] animate-spin" />
+                    <span className="text-[10px] text-[var(--text-secondary)]">Saving...</span>
+                  </motion.div>
+                ) : hasUnsavedChanges ? (
+                  <motion.div
+                    key="unsaved"
+                    initial={{ opacity: 0, scale: 0.92 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.92 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex items-center gap-1.5"
+                  >
+                    <span className="w-2 h-2 rounded-full bg-amber-400" />
+                    <span className="text-[10px] text-amber-500 font-medium">Unsaved</span>
+                  </motion.div>
+                ) : (
+                  <motion.div
+                    key="saved"
+                    initial={{ opacity: 0, scale: 0.92 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.92 }}
+                    transition={{ duration: 0.15 }}
+                    className="flex items-center gap-1.5"
+                  >
+                    <Check className="w-3 h-3 text-emerald-500" />
+                    <span className="text-[10px] text-emerald-600 font-medium">{relativeSavedText}</span>
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
 
             {/* 6. Target Job Tailoring Pill */}
@@ -1646,7 +1670,7 @@ function ResumeBuilderContent() {
               className="btn-secondary btn-sm inline-flex items-center gap-1 text-xs cursor-pointer"
               title="Opt-in import from My Career Data without overwriting edits"
             >
-              <User className="w-3.5 h-3.5 text-[#3157C8]" />
+              <User className="w-3.5 h-3.5 text-[var(--accent)]" />
               <span className="hidden sm:inline">Import Profile</span>
             </button>
 
@@ -1667,21 +1691,31 @@ function ResumeBuilderContent() {
         </div>
 
         {/* Global Toast Banner */}
-        {tailorSuccessToast && (
-          <div className="mt-3 p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs font-medium flex items-center justify-between animate-fade-in">
-            <span className="flex items-center gap-1.5">
-              <Check className="w-3.5 h-3.5 text-emerald-500" />
-              {tailorSuccessToast}
-            </span>
-            <button
-              type="button"
-              onClick={() => setTailorSuccessToast(null)}
-              className="text-emerald-500 hover:text-emerald-700 cursor-pointer"
+        <AnimatePresence>
+          {tailorSuccessToast && (
+            <motion.div
+              initial={{ opacity: 0, y: -8, height: 0 }}
+              animate={{ opacity: 1, y: 0, height: 'auto' }}
+              exit={{ opacity: 0, y: -8, height: 0 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="mt-3 overflow-hidden"
             >
-              <X className="w-3.5 h-3.5" />
-            </button>
-          </div>
-        )}
+              <div className="p-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-600 text-xs font-medium flex items-center justify-between">
+                <span className="flex items-center gap-1.5">
+                  <Check className="w-3.5 h-3.5 text-emerald-500" />
+                  {tailorSuccessToast}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setTailorSuccessToast(null)}
+                  className="text-emerald-500 hover:text-emerald-700 cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* Main 3-Panel Layout */}
@@ -1716,20 +1750,27 @@ function ResumeBuilderContent() {
                 return (
                   <div
                     key={st.number}
-                    className={`w-full flex items-center justify-between p-2 rounded-xl text-xs transition-all ${
+                    className={`relative w-full flex items-center justify-between p-2 rounded-xl text-xs transition-colors ${
                       isSelected
-                        ? 'bg-[var(--accent)]/15 text-[var(--accent)] font-semibold border border-[var(--accent)]/30'
+                        ? 'text-[var(--accent)] font-semibold'
                         : isHidden
                         ? 'text-[var(--text-muted)] opacity-60 hover:opacity-100 hover:bg-[var(--bg-secondary)]'
                         : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-secondary)]'
                     }`}
                   >
+                    {isSelected && (
+                      <motion.div
+                        layoutId="builder-step-active-bg"
+                        className="absolute inset-0 bg-[var(--accent)]/15 rounded-xl border border-[var(--accent)]/30"
+                        transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                      />
+                    )}
                     <button
                       id={`sidebar-step-${st.number}`}
                       type="button"
                       aria-current={isSelected ? 'step' : undefined}
                       onClick={() => handleStepClick(st.number)}
-                      className="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer"
+                      className="relative z-10 flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer"
                     >
                       <div
                         className={`w-5 h-5 rounded-md flex items-center justify-center shrink-0 ${
@@ -1757,7 +1798,7 @@ function ResumeBuilderContent() {
                           e.stopPropagation();
                           toggleSectionVisibility(st.sectionKey);
                         }}
-                        className={`p-1 rounded hover:bg-[var(--bg-card)] transition-colors cursor-pointer shrink-0 ml-1 ${
+                        className={`relative z-10 p-1 rounded hover:bg-[var(--bg-card)] transition-colors cursor-pointer shrink-0 ml-1 ${
                           isHidden ? 'text-amber-500' : 'text-[var(--text-muted)] hover:text-[var(--text-primary)]'
                         }`}
                         title={isHidden ? 'Hidden on printed resume (Click to show)' : 'Visible (Click to hide)'}
@@ -1849,8 +1890,16 @@ function ResumeBuilderContent() {
               </div>
             )}
 
-            {/* STEP 1: Personal Information */}
-            {currentStep === 1 && (
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={`builder-step-${currentStep}`}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.16, ease: [0.16, 1, 0.3, 1] }}
+              >
+                {/* STEP 1: Personal Information */}
+                {currentStep === 1 && (
               <div className="space-y-4 text-xs">
                 <div>
                   <label htmlFor="input-fullName" className="block font-semibold text-[var(--text-primary)] mb-1">
@@ -4455,66 +4504,70 @@ function ResumeBuilderContent() {
                 </div>
 
                 <div className="space-y-2">
-                  {activeSectionOrder.map((sectionId, idx) => {
-                    const info = DEFAULT_SECTIONS.find((s) => s.id === sectionId) || { id: sectionId, label: sectionId };
-                    const isHidden = (resumeData.hiddenSections || []).includes(sectionId);
+                  <AnimatePresence initial={false}>
+                    {activeSectionOrder.map((sectionId, idx) => {
+                      const info = DEFAULT_SECTIONS.find((s) => s.id === sectionId) || { id: sectionId, label: sectionId };
+                      const isHidden = (resumeData.hiddenSections || []).includes(sectionId);
 
-                    return (
-                      <div
-                        key={sectionId}
-                        className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-all ${
-                          isHidden
-                            ? 'bg-[var(--bg-secondary)]/40 border-[var(--border-color)] opacity-60'
-                            : 'bg-[var(--bg-secondary)] border-[var(--border-color)]'
-                        }`}
-                      >
-                        <div className="flex items-center gap-2.5">
-                          <span className="w-6 h-6 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center font-bold text-[11px] text-[var(--text-secondary)]">
-                            {idx + 1}
-                          </span>
-                          <span className={`font-semibold ${isHidden ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text-primary)]'}`}>
-                            {info.label}
-                          </span>
-                        </div>
+                      return (
+                        <motion.div
+                          layout
+                          key={sectionId}
+                          transition={{ type: 'spring', stiffness: 350, damping: 28 }}
+                          className={`p-3 rounded-xl border flex items-center justify-between gap-3 transition-colors ${
+                            isHidden
+                              ? 'bg-[var(--bg-secondary)]/40 border-[var(--border-color)] opacity-60'
+                              : 'bg-[var(--bg-secondary)] border-[var(--border-color)]'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5">
+                            <span className="w-6 h-6 rounded-full bg-[var(--bg-card)] border border-[var(--border-color)] flex items-center justify-center font-bold text-[11px] text-[var(--text-secondary)]">
+                              {idx + 1}
+                            </span>
+                            <span className={`font-semibold ${isHidden ? 'line-through text-[var(--text-muted)]' : 'text-[var(--text-primary)]'}`}>
+                              {info.label}
+                            </span>
+                          </div>
 
-                        <div className="flex items-center gap-1.5">
-                          <button
-                            type="button"
-                            onClick={() => toggleSectionVisibility(sectionId)}
-                            className={`p-1.5 rounded-lg border text-xs cursor-pointer ${
-                              isHidden
-                                ? 'border-amber-400 text-amber-500 bg-amber-500/10'
-                                : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                            }`}
-                            title={isHidden ? 'Hidden (Click to show)' : 'Visible (Click to hide)'}
-                          >
-                            {isHidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
-                          </button>
+                          <div className="flex items-center gap-1.5">
+                            <button
+                              type="button"
+                              onClick={() => toggleSectionVisibility(sectionId)}
+                              className={`p-1.5 rounded-lg border text-xs cursor-pointer ${
+                                isHidden
+                                  ? 'border-amber-400 text-amber-500 bg-amber-500/10'
+                                  : 'border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
+                              }`}
+                              title={isHidden ? 'Hidden (Click to show)' : 'Visible (Click to hide)'}
+                            >
+                              {isHidden ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                            </button>
 
-                          <button
-                            type="button"
-                            onClick={() => moveSection(idx, 'up')}
-                            disabled={idx === 0}
-                            className="p-1.5 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] disabled:opacity-20 cursor-pointer transition-colors"
-                            title="Move section up"
-                            aria-label={`Move ${info.label} up`}
-                          >
-                            <ArrowUp className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => moveSection(idx, 'down')}
-                            disabled={idx === activeSectionOrder.length - 1}
-                            className="p-1.5 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] disabled:opacity-20 cursor-pointer transition-colors"
-                            title="Move section down"
-                            aria-label={`Move ${info.label} down`}
-                          >
-                            <ArrowDown className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    );
-                  })}
+                            <button
+                              type="button"
+                              onClick={() => moveSection(idx, 'up')}
+                              disabled={idx === 0}
+                              className="p-1.5 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] disabled:opacity-20 cursor-pointer transition-colors"
+                              title="Move section up"
+                              aria-label={`Move ${info.label} up`}
+                            >
+                              <ArrowUp className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => moveSection(idx, 'down')}
+                              disabled={idx === activeSectionOrder.length - 1}
+                              className="p-1.5 rounded-lg border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] disabled:opacity-20 cursor-pointer transition-colors"
+                              title="Move section down"
+                              aria-label={`Move ${info.label} down`}
+                            >
+                              <ArrowDown className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </AnimatePresence>
                 </div>
 
                 <div className="pt-2">
@@ -4674,6 +4727,8 @@ function ResumeBuilderContent() {
                 </div>
               </div>
             )}
+              </motion.div>
+            </AnimatePresence>
 
             {/* Navigation Buttons (Steps 1 to 15) */}
             {currentStep < 16 && (
@@ -4709,16 +4764,23 @@ function ResumeBuilderContent() {
           {/* Zoom & Document Viewer Controls */}
           <div className="no-print w-full flex items-center justify-between mb-1 px-1 sm:px-2 gap-2 flex-wrap">
             {/* View Mode Segmented Controls */}
-            <div className="inline-flex items-center p-1 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-xs font-semibold">
+            <div className="inline-flex items-center p-1 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-xs font-semibold relative">
               <button
                 type="button"
                 onClick={() => setPreviewTab('design')}
-                className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 relative z-10 ${
                   previewTab === 'design'
-                    ? 'bg-white text-[var(--accent)] shadow-xs font-bold'
+                    ? 'text-[var(--accent)] font-bold'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
+                {previewTab === 'design' && (
+                  <motion.div
+                    layoutId="builder-preview-tab-pill"
+                    className="absolute inset-0 bg-white rounded-lg shadow-xs -z-10"
+                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                  />
+                )}
                 <Layout className="w-3.5 h-3.5" />
                 <span>Design View</span>
               </button>
@@ -4726,12 +4788,19 @@ function ResumeBuilderContent() {
               <button
                 type="button"
                 onClick={() => setPreviewTab('ats')}
-                className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 relative z-10 ${
                   previewTab === 'ats'
-                    ? 'bg-white text-emerald-600 shadow-xs font-bold'
+                    ? 'text-emerald-600 font-bold'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
+                {previewTab === 'ats' && (
+                  <motion.div
+                    layoutId="builder-preview-tab-pill"
+                    className="absolute inset-0 bg-white rounded-lg shadow-xs -z-10"
+                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                  />
+                )}
                 <ShieldCheck className="w-3.5 h-3.5" />
                 <span>ATS View</span>
               </button>
@@ -4739,12 +4808,19 @@ function ResumeBuilderContent() {
               <button
                 type="button"
                 onClick={() => setPreviewTab('text')}
-                className={`px-3 py-1 rounded-lg transition-all cursor-pointer flex items-center gap-1.5 ${
+                className={`px-3 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1.5 relative z-10 ${
                   previewTab === 'text'
-                    ? 'bg-white text-indigo-600 shadow-xs font-bold'
+                    ? 'text-indigo-600 font-bold'
                     : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                 }`}
               >
+                {previewTab === 'text' && (
+                  <motion.div
+                    layoutId="builder-preview-tab-pill"
+                    className="absolute inset-0 bg-white rounded-lg shadow-xs -z-10"
+                    transition={{ type: 'spring', stiffness: 400, damping: 32 }}
+                  />
+                )}
                 <FileText className="w-3.5 h-3.5" />
                 <span>Plain Text</span>
               </button>
@@ -4798,18 +4874,29 @@ function ResumeBuilderContent() {
             role="region"
             aria-label="A4 Resume Preview Viewport"
           >
-            {previewTab === 'design' ? (
-              <A4ResumeDocument
-                data={resumeData}
-                templateId={resumeData.templateId}
-                zoom={zoom}
-              />
-            ) : (
-              <AtsFriendlyPreview
-                data={resumeData}
-                mode={previewTab}
-              />
-            )}
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={previewTab}
+                initial={{ opacity: 0, y: 4 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -4 }}
+                transition={{ duration: 0.16 }}
+                className="w-full flex justify-center"
+              >
+                {previewTab === 'design' ? (
+                  <A4ResumeDocument
+                    data={resumeData}
+                    templateId={resumeData.templateId}
+                    zoom={zoom}
+                  />
+                ) : (
+                  <AtsFriendlyPreview
+                    data={resumeData}
+                    mode={previewTab}
+                  />
+                )}
+              </motion.div>
+            </AnimatePresence>
           </div>
         </section>
       </div>
@@ -4817,7 +4904,7 @@ function ResumeBuilderContent() {
       {/* Target Job Specification Modal */}
       {showTargetJobModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="w-full max-w-xl rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
+          <div className="reference-panel w-full max-w-xl rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
               <div className="flex items-center gap-2">
                 <Target className="w-4 h-4 text-[var(--accent)]" />
@@ -4873,7 +4960,7 @@ function ResumeBuilderContent() {
       {/* Save Snapshot Modal */}
       {showSaveSnapshotModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="relative w-full max-w-md rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
+          <div className="reference-panel relative w-full max-w-md rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
               <div className="flex items-center gap-2">
                 <History className="w-4 h-4 text-[var(--accent)]" />
@@ -4944,7 +5031,7 @@ function ResumeBuilderContent() {
       {/* Version History Modal */}
       {showVersionsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="relative w-full max-w-xl rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+          <div className="reference-panel relative w-full max-w-xl rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[var(--accent)]" />
@@ -5053,7 +5140,7 @@ function ResumeBuilderContent() {
       {/* Remove Resume Confirmation Modal */}
       {showRemoveConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="relative w-full max-w-md rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
+          <div className="reference-panel relative w-full max-w-md rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
                 <AlertTriangle className="w-5 h-5" />
@@ -5112,7 +5199,7 @@ function ResumeBuilderContent() {
       {/* Upload Another Resume Modal */}
       {showUploadResumeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="relative w-full max-w-lg rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
+          <div className="reference-panel relative w-full max-w-lg rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
               <div className="flex items-center gap-2">
                 <UploadCloud className="w-4 h-4 text-[var(--accent)]" />
@@ -5228,20 +5315,20 @@ function ResumeBuilderContent() {
           className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
           data-no-print="true"
         >
-          <div className="w-full max-w-lg rounded-2xl bg-white border border-[#E5E8ED] shadow-2xl p-6 space-y-4 text-left max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between gap-2 pb-3 border-b border-[#E5E8ED]">
+          <div className="reference-panel w-full max-w-lg rounded-2xl bg-white border border-[var(--border-color)] shadow-2xl p-6 space-y-4 text-left max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between gap-2 pb-3 border-b border-[var(--border-color)]">
               <div>
-                <h3 className="text-base font-bold text-[#20242B]">
+                <h3 className="text-base font-bold text-[var(--text-primary)]">
                   Import from My Career Data
                 </h3>
-                <p className="text-xs text-[#626B78]">
+                <p className="text-xs text-[var(--text-secondary)]">
                   Preview confirmed profile details before merging. Nothing overwrites existing fields silently.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowImportProfileModal(false)}
-                className="p-1.5 rounded-lg text-[#626B78] hover:text-[#20242B] cursor-pointer"
+                className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
                 aria-label="Close modal"
               >
                 <X className="w-4 h-4" />
@@ -5250,8 +5337,8 @@ function ResumeBuilderContent() {
 
             {isLoadingImportProfile ? (
               <div className="py-10 text-center space-y-2">
-                <Loader2 className="w-6 h-6 animate-spin text-[#3157C8] mx-auto" />
-                <p className="text-xs text-[#626B78]">Loading saved profile &amp; confirmed skills...</p>
+                <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)] mx-auto" />
+                <p className="text-xs text-[var(--text-secondary)]">Loading saved profile &amp; confirmed skills...</p>
               </div>
             ) : importProfileError ? (
               <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700">
@@ -5260,21 +5347,21 @@ function ResumeBuilderContent() {
             ) : importProfileData ? (
               <div className="space-y-4 text-xs">
                 {/* Personal & Target Role */}
-                <label className="flex items-start gap-2.5 p-3 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] cursor-pointer">
+                <label className="flex items-start gap-2.5 p-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={includePersonalImport}
                     onChange={(e) => setIncludePersonalImport(e.target.checked)}
-                    className="mt-0.5 accent-[#3157C8]"
+                    className="mt-0.5 accent-[var(--accent)]"
                   />
                   <div className="space-y-0.5">
-                    <span className="font-bold text-[#20242B] block">
+                    <span className="font-bold text-[var(--text-primary)] block">
                       Contact &amp; Target Headline (empty fields only)
                     </span>
-                    <span className="text-[#626B78] block">
+                    <span className="text-[var(--text-secondary)] block">
                       Name: {importProfileData.account?.name || 'Not set'} • Email: {importProfileData.account?.email || 'Not set'}
                     </span>
-                    <span className="text-[#626B78] block">
+                    <span className="text-[var(--text-secondary)] block">
                       Headline: {importProfileData.goalSet && importProfileData.targetRole ? importProfileData.targetRole : 'Goal not set'}
                     </span>
                   </div>
@@ -5282,16 +5369,16 @@ function ResumeBuilderContent() {
 
                 {/* Education */}
                 {importProfileData.profile && (importProfileData.profile.institution || importProfileData.profile.degree) && (
-                  <label className="flex items-start gap-2.5 p-3 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] cursor-pointer">
+                  <label className="flex items-start gap-2.5 p-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={includeEducationImport}
                       onChange={(e) => setIncludeEducationImport(e.target.checked)}
-                      className="mt-0.5 accent-[#3157C8]"
+                      className="mt-0.5 accent-[var(--accent)]"
                     />
                     <div className="space-y-0.5">
-                      <span className="font-bold text-[#20242B] block">Education Record</span>
-                      <span className="text-[#626B78] block">
+                      <span className="font-bold text-[var(--text-primary)] block">Education Record</span>
+                      <span className="text-[var(--text-secondary)] block">
                         {[
                           importProfileData.profile.degree,
                           importProfileData.profile.fieldOfStudy,
@@ -5308,15 +5395,15 @@ function ResumeBuilderContent() {
                 {/* Skills Selection */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#20242B]">
+                    <span className="font-bold text-[var(--text-primary)]">
                       Skills ({selectedImportSkills.length} selected)
                     </span>
-                    <span className="text-[11px] text-[#626B78]">
+                    <span className="text-[11px] text-[var(--text-secondary)]">
                       Verified &amp; confirmed pre-selected; claimed require opt-in
                     </span>
                   </div>
                   {importProfileData.skills.length === 0 ? (
-                    <p className="text-[#626B78] p-3 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED]">
+                    <p className="text-[var(--text-secondary)] p-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)]">
                       No saved skills in your career profile yet.
                     </p>
                   ) : (
@@ -5330,7 +5417,7 @@ function ResumeBuilderContent() {
                         return (
                           <label
                             key={skill.id}
-                            className="flex items-center justify-between gap-2 p-2 rounded-lg border border-[#E5E8ED] bg-white cursor-pointer"
+                            className="flex items-center justify-between gap-2 p-2 rounded-lg border border-[var(--border-color)] bg-white cursor-pointer"
                           >
                             <span className="flex items-center gap-2">
                               <input
@@ -5343,16 +5430,16 @@ function ResumeBuilderContent() {
                                       : prev.filter((item) => item !== skill.name)
                                   );
                                 }}
-                                className="accent-[#3157C8]"
+                                className="accent-[var(--accent)]"
                               />
-                              <span className="font-medium text-[#20242B]">{skill.name}</span>
+                              <span className="font-medium text-[var(--text-primary)]">{skill.name}</span>
                             </span>
                             <span
                               className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
                                 skill.status === 'verified'
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                   : isConfirmed
-                                    ? 'bg-[#F6F7F9] text-[#3157C8] border-[#3157C8]/25'
+                                    ? 'bg-[var(--bg-primary)] text-[var(--accent)] border-[var(--accent)]/25'
                                     : 'bg-amber-50 text-amber-700 border-amber-200'
                               }`}
                             >
@@ -5369,25 +5456,25 @@ function ResumeBuilderContent() {
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-[#E5E8ED]">
+                <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-[var(--border-color)]">
                   <button
                     type="button"
                     onClick={() => setShowImportProfileModal(false)}
-                    className="px-3.5 py-2 rounded-xl border border-[#E5E8ED] bg-white text-[#20242B] text-xs font-semibold cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl border border-[var(--border-color)] bg-white text-[var(--text-primary)] text-xs font-semibold cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={() => handleApplyProfileImport('fill_empty')}
-                    className="px-3.5 py-2 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#20242B] text-xs font-semibold hover:border-[#3157C8]/40 cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-xs font-semibold hover:border-[var(--accent)]/40 cursor-pointer"
                   >
                     Fill Empty Fields Only
                   </button>
                   <button
                     type="button"
                     onClick={() => handleApplyProfileImport('merge')}
-                    className="px-4 py-2 rounded-xl bg-[#3157C8] text-white text-xs font-semibold hover:opacity-95 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-95 cursor-pointer"
                   >
                     Merge Into Resume
                   </button>

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useState, useSyncExternalStore, type ReactNode, type CSSProperties } from 'react';
+import React, { useRef, useEffect, useState, useMemo, useSyncExternalStore, type ReactNode, type CSSProperties } from 'react';
 import {
   motion,
   AnimatePresence,
@@ -39,7 +39,8 @@ function getReducedMotionSnapshot() {
 }
 
 function getServerReducedMotionSnapshot() {
-  return false;
+  // Render readable, motion-free HTML until the browser preference is known.
+  return true;
 }
 
 function usePrefersReducedMotion() {
@@ -78,8 +79,9 @@ export function ScrollReveal({
   once = true,
   amount = 0.08,
 }: ScrollRevealProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once, margin, amount });
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
+  const viewportRef = useMemo(() => ({ current: element }), [element]);
+  const isInView = useInView(viewportRef, { once, margin, amount });
   const prefersReduced = usePrefersReducedMotion();
 
   const dirVariants: Record<string, Variants> = {
@@ -92,9 +94,11 @@ export function ScrollReveal({
     ? getReducedMotionVariants(dirVariants[direction])
     : dirVariants[direction];
 
+  if (prefersReduced) return <div ref={setElement} className={className} style={style}>{children}</div>;
+
   return (
     <motion.div
-      ref={ref}
+      ref={setElement}
       initial="hidden"
       animate={isInView ? 'visible' : 'hidden'}
       variants={variants}
@@ -128,17 +132,20 @@ export function StaggerGroup({
   once = true,
   margin = '0px',
 }: StaggerGroupProps) {
-  const ref = useRef<HTMLDivElement>(null);
-  const isInView = useInView(ref, { once, margin, amount: 0.08 });
+  const [element, setElement] = useState<HTMLDivElement | null>(null);
+  const viewportRef = useMemo(() => ({ current: element }), [element]);
+  const isInView = useInView(viewportRef, { once, margin, amount: 0.08 });
   const prefersReduced = usePrefersReducedMotion();
 
   const variants = prefersReduced
     ? getReducedMotionVariants(hero ? heroStagger : staggerContainer)
     : (hero ? heroStagger : staggerContainer);
 
+  if (prefersReduced) return <div ref={setElement} className={className} style={style}>{children}</div>;
+
   return (
     <motion.div
-      ref={ref}
+      ref={setElement}
       initial="hidden"
       animate={isInView ? 'visible' : 'hidden'}
       variants={variants}
@@ -163,6 +170,8 @@ export function StaggerChild({ children, className, style }: StaggerChildProps) 
   const variants = prefersReduced
     ? getReducedMotionVariants(staggerItem)
     : staggerItem;
+
+  if (prefersReduced) return <div className={className} style={style}>{children}</div>;
 
   return (
     <motion.div variants={variants} className={className} style={style}>
@@ -229,14 +238,20 @@ export function ModalOverlay({
 }: ModalOverlayProps) {
   useEffect(() => {
     if (isOpen) {
-      const prev = document.body.style.overflow;
+      const prevOverflow = document.body.style.overflow;
+      const prevPaddingRight = document.body.style.paddingRight;
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') onClose();
       };
       window.addEventListener('keydown', handleKeyDown);
       return () => {
-        document.body.style.overflow = prev;
+        document.body.style.overflow = prevOverflow;
+        document.body.style.paddingRight = prevPaddingRight;
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
@@ -290,14 +305,20 @@ export function AnimatedDrawer({
 }: AnimatedDrawerProps) {
   useEffect(() => {
     if (isOpen) {
-      const prev = document.body.style.overflow;
+      const prevOverflow = document.body.style.overflow;
+      const prevPaddingRight = document.body.style.paddingRight;
+      const scrollbarWidth = window.innerWidth - document.documentElement.clientWidth;
       document.body.style.overflow = 'hidden';
+      if (scrollbarWidth > 0) {
+        document.body.style.paddingRight = `${scrollbarWidth}px`;
+      }
       const handleKeyDown = (e: KeyboardEvent) => {
         if (e.key === 'Escape') onClose();
       };
       window.addEventListener('keydown', handleKeyDown);
       return () => {
-        document.body.style.overflow = prev;
+        document.body.style.overflow = prevOverflow;
+        document.body.style.paddingRight = prevPaddingRight;
         window.removeEventListener('keydown', handleKeyDown);
       };
     }
@@ -354,6 +375,8 @@ export function AnimatedTabPanel({
     ? getReducedMotionVariants(tabPanel)
     : tabPanel;
 
+  if (prefersReduced) return <div className={className}>{children}</div>;
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -399,6 +422,7 @@ export function AnimatedCounter({
 
     const startTime = performance.now();
     const startValue = 0;
+    let frame = 0;
     const step = (currentTime: number) => {
       const elapsed = currentTime - startTime;
       const progress = Math.min(elapsed / durationMs, 1);
@@ -407,10 +431,11 @@ export function AnimatedCounter({
       const current = Math.round(startValue + eased * (value - startValue));
       setDisplayValue(current);
       if (progress < 1) {
-        requestAnimationFrame(step);
+        frame = requestAnimationFrame(step);
       }
     };
-    requestAnimationFrame(step);
+    frame = requestAnimationFrame(step);
+    return () => cancelAnimationFrame(frame);
   }, [isInView, value, durationMs, prefersReduced]);
 
   return (
@@ -429,6 +454,8 @@ interface PageTransitionProps {
 
 export function PageTransition({ children, className }: PageTransitionProps) {
   const prefersReduced = usePrefersReducedMotion();
+
+  if (prefersReduced) return <div className={className}>{children}</div>;
 
   return (
     <motion.div
@@ -465,7 +492,7 @@ export function TextReveal({
   const parts = splitBy === 'word' ? text.split(' ') : text.split('');
 
   if (prefersReduced) {
-    return <span className={className}>{text}</span>;
+    return <span ref={ref} className={className}>{text}</span>;
   }
 
   return (

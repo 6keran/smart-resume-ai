@@ -176,7 +176,7 @@ function RegisterForm() {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="hidden lg:flex lg:col-span-7 flex-col justify-between space-y-8"
+        className="reference-auth-story hidden lg:flex lg:col-span-7 flex-col justify-between space-y-8"
       >
         {/* Brand Header */}
         <div className="space-y-4">
@@ -203,7 +203,7 @@ function RegisterForm() {
               <span>CAREER WORKSPACE PLATFORM</span>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[var(--text-primary)] leading-[1.15]">
-              Structured Career Workspace & Verification Platform.
+              Your next opportunity. <em>Starts with your story.</em>
             </h1>
             <p className="text-sm sm:text-base text-[var(--text-secondary)] mt-3 leading-relaxed max-w-xl">
               Save your resumes, analysis results, and application history in one account.
@@ -256,7 +256,7 @@ function RegisterForm() {
         transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         className="lg:col-span-5 w-full max-w-md mx-auto"
       >
-        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-7 sm:p-9 shadow-xl relative overflow-hidden transition-all duration-300">
+        <div className="reference-auth-form reference-panel rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-7 sm:p-9 shadow-xl relative overflow-hidden transition-all duration-300">
           {/* Mobile brand header */}
           <div className="lg:hidden flex items-center justify-center gap-2.5 mb-6 pb-4 border-b border-[var(--border-color)]">
             <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-white shadow-sm">

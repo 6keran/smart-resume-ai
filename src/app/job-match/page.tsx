@@ -93,26 +93,26 @@ export default function JobMatchPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F7F9] py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 text-[#20242B]">
+    <div className="min-h-screen bg-[var(--bg-primary)] py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 text-[var(--text-primary)]">
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 text-left space-y-2 shadow-sm">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-blue-50 border border-blue-200 text-xs font-semibold text-[#3157C8]">
+      <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 sm:p-8 text-left space-y-2 shadow-sm">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[var(--accent-subtle)] border border-[var(--accent)]/20 text-xs font-semibold text-[var(--accent)]">
           <Target className="w-3.5 h-3.5" />
           <span>Role Alignment Scanner</span>
         </div>
-        <h1 className="text-[28px] sm:text-[30px] font-bold text-[#20242B] tracking-tight">
+        <h1 className="text-[28px] sm:text-[30px] font-bold text-[var(--text-primary)] tracking-tight">
           Job Match Analysis
         </h1>
-        <p className="text-[15px] text-[#626B78] leading-relaxed max-w-2xl">
+        <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed max-w-2xl">
           Compare your active resume against job descriptions to identify matching qualifications and keyword gaps.
         </p>
       </div>
 
       {/* Advisory Disclaimer */}
-      <div className="p-4 rounded-xl border border-blue-200 bg-blue-50 text-[13px] text-[#626B78] flex items-start gap-3 shadow-xs">
-        <Info className="w-4 h-4 text-[#3157C8] shrink-0 mt-0.5" />
+      <div className="p-4 rounded-xl border border-[var(--accent)]/20 bg-[var(--accent-subtle)] text-[13px] text-[var(--text-secondary)] flex items-start gap-3 shadow-xs">
+        <Info className="w-4 h-4 text-[var(--accent)] shrink-0 mt-0.5" />
         <div className="leading-relaxed">
-          <strong className="text-[#20242B]">Internal Advisory Estimate:</strong> This match score is an algorithmic assessment comparing keywords, skills, and qualifications between your resume and the job listing. It is provided strictly to guide your preparation and does not represent an official employer hiring decision.
+          <strong className="text-[var(--text-primary)]">Internal Advisory Estimate:</strong> This match score is an algorithmic assessment comparing keywords, skills, and qualifications between your resume and the job listing. It is provided strictly to guide your preparation and does not represent an official employer hiring decision.
         </div>
       </div>
 
@@ -138,11 +138,11 @@ export default function JobMatchPage() {
       )}
 
       {/* Input Form Card */}
-      <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 text-left space-y-4 shadow-sm">
+      <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 sm:p-8 text-left space-y-4 shadow-sm">
         <form onSubmit={handleRunMatch} className="space-y-4 text-[14px]">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             <div>
-              <label className="block font-semibold text-[#20242B] mb-1.5">
+              <label className="block font-semibold text-[var(--text-primary)] mb-1.5">
                 Job Title <span className="text-[#C43D43]">*</span>
               </label>
               <JobSearchAutocomplete
@@ -152,47 +152,47 @@ export default function JobMatchPage() {
                 onChange={setJobTitle}
                 onSelect={setJobTitle}
                 placeholder="e.g. Data Analyst, Mechanical Engineer"
-                leadingIcon={<Briefcase className="w-4 h-4 text-[#626B78]" />}
+                leadingIcon={<Briefcase className="w-4 h-4 text-[var(--text-secondary)]" />}
                 inputClassName="w-full min-h-[42px] pl-9 pr-3 py-2 rounded-lg border border-[#E5E8ED] bg-white text-[#20242B] text-[14px] focus:outline-none focus:border-[#3157C8]"
               />
             </div>
 
             <div>
-              <label className="block font-semibold text-[#20242B] mb-1.5">
+              <label className="block font-semibold text-[var(--text-primary)] mb-1.5">
                 Company Name <span className="text-[#C43D43]">*</span>
               </label>
               <div className="relative">
-                <Building className="w-4 h-4 absolute left-3 top-3 text-[#626B78]" />
+                <Building className="w-4 h-4 absolute left-3 top-3 text-[var(--text-secondary)]" />
                 <input
                   type="text"
                   required
                   value={company}
                   onChange={(e) => setCompany(e.target.value)}
                   placeholder="e.g. Acme Tech"
-                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-[#E5E8ED] bg-white text-[#20242B] focus:outline-none focus:border-[#3157C8]"
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-[var(--border-color)] bg-white text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                 />
               </div>
             </div>
 
             <div>
-              <label className="block font-semibold text-[#20242B] mb-1.5">
+              <label className="block font-semibold text-[var(--text-primary)] mb-1.5">
                 Job Posting URL (Optional)
               </label>
               <div className="relative">
-                <Link2 className="w-4 h-4 absolute left-3 top-3 text-[#626B78]" />
+                <Link2 className="w-4 h-4 absolute left-3 top-3 text-[var(--text-secondary)]" />
                 <input
                   type="url"
                   value={jobUrl}
                   onChange={(e) => setJobUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-[#E5E8ED] bg-white text-[#20242B] focus:outline-none focus:border-[#3157C8]"
+                  className="w-full pl-9 pr-3 py-2 rounded-lg border border-[var(--border-color)] bg-white text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                 />
               </div>
             </div>
           </div>
 
           <div>
-            <label className="block font-semibold text-[#20242B] mb-1.5">
+            <label className="block font-semibold text-[var(--text-primary)] mb-1.5">
               Job Description / Requirements <span className="text-[#C43D43]">*</span>
             </label>
             <textarea
@@ -201,18 +201,18 @@ export default function JobMatchPage() {
               value={jobDescription}
               onChange={(e) => setJobDescription(e.target.value)}
               placeholder="Paste the full job description or key requirements here..."
-              className="w-full p-3 rounded-lg border border-[#E5E8ED] bg-white text-[#20242B] focus:outline-none focus:border-[#3157C8] font-mono text-[13px] leading-relaxed"
+              className="w-full p-3 rounded-lg border border-[var(--border-color)] bg-white text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] font-mono text-[13px] leading-relaxed"
             />
           </div>
 
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pt-2">
-            <span className="text-[14px] text-[#626B78]">
-              Matching with active profile: <strong className="text-[#20242B]">{resumeData.personalInfo.fullName || 'Candidate'}</strong>
+            <span className="text-[14px] text-[var(--text-secondary)]">
+              Matching with active profile: <strong className="text-[var(--text-primary)]">{resumeData.personalInfo.fullName || 'Candidate'}</strong>
             </span>
             <button
               type="submit"
               disabled={isLoading}
-              className="px-6 py-2.5 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[15px] font-semibold shadow-sm transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
+              className="px-6 py-2.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[15px] font-semibold shadow-sm transition-all disabled:opacity-50 cursor-pointer flex items-center justify-center gap-2"
             >
               <Sparkles className="w-4 h-4" />
               <span>{isLoading ? 'Analyzing Match...' : 'Compare Against My Resume'}</span>
@@ -234,21 +234,21 @@ export default function JobMatchPage() {
         <div className="space-y-6 text-left animate-fade-in">
           {/* Top Score Summary Cards */}
           <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
-            <div className="md:col-span-2 flex flex-col sm:flex-row items-center justify-between p-6 gap-6 bg-white rounded-2xl border border-[#E5E8ED] shadow-sm">
+            <div className="reference-panel md:col-span-2 flex flex-col sm:flex-row items-center justify-between p-6 gap-6 bg-white rounded-2xl border border-[var(--border-color)] shadow-sm">
               <div className="space-y-2 text-left">
-                <span className="text-[12px] font-bold text-[#3157C8] uppercase tracking-wider">
+                <span className="text-[12px] font-bold text-[var(--accent)] uppercase tracking-wider">
                   Overall Candidate Fit
                 </span>
-                <h3 className="text-[24px] font-bold text-[#20242B]">
+                <h3 className="text-[24px] font-bold text-[var(--text-primary)]">
                   {matchResult.overallMatchScore >= 80 ? 'High Fit Match' : 'Moderate Fit'}
                 </h3>
-                <p className="text-[14px] text-[#626B78] leading-relaxed max-w-xs">
+                <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed max-w-xs">
                   {matchResult.jobTitle} at {matchResult.company}.
                 </p>
                 <div className="pt-2">
                   <Link
                     href="/improver"
-                    className="px-4 py-2 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[14px] font-semibold inline-flex items-center gap-1.5 shadow-sm"
+                    className="px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[14px] font-semibold inline-flex items-center gap-1.5 shadow-sm"
                   >
                     <span>Optimize For This Role</span>
                     <ArrowRight className="w-3.5 h-3.5" />
@@ -264,32 +264,32 @@ export default function JobMatchPage() {
               />
             </div>
 
-            <div className="flex flex-col items-center justify-center p-5 text-center bg-white rounded-2xl border border-[#E5E8ED] shadow-sm">
+            <div className="reference-panel flex flex-col items-center justify-center p-5 text-center bg-white rounded-2xl border border-[var(--border-color)] shadow-sm">
               <ScoreRing score={matchResult.skillsMatchScore} size={90} strokeWidth={7} showPercentage />
-              <span className="mt-3 text-[15px] font-bold text-[#20242B]">Skills Match</span>
-              <span className="text-[13px] text-[#626B78]">Required Tech</span>
+              <span className="mt-3 text-[15px] font-bold text-[var(--text-primary)]">Skills Match</span>
+              <span className="text-[13px] text-[var(--text-secondary)]">Required Tech</span>
             </div>
 
-            <div className="flex flex-col items-center justify-center p-5 text-center bg-white rounded-2xl border border-[#E5E8ED] shadow-sm">
+            <div className="reference-panel flex flex-col items-center justify-center p-5 text-center bg-white rounded-2xl border border-[var(--border-color)] shadow-sm">
               <ScoreRing score={matchResult.experienceMatchScore} size={90} strokeWidth={7} showPercentage />
-              <span className="mt-3 text-[15px] font-bold text-[#20242B]">Experience Match</span>
-              <span className="text-[13px] text-[#626B78]">Seniority &amp; Scope</span>
+              <span className="mt-3 text-[15px] font-bold text-[var(--text-primary)]">Experience Match</span>
+              <span className="text-[13px] text-[var(--text-secondary)]">Seniority &amp; Scope</span>
             </div>
 
-            <div className="flex flex-col items-center justify-center p-5 text-center bg-white rounded-2xl border border-[#E5E8ED] shadow-sm">
+            <div className="reference-panel flex flex-col items-center justify-center p-5 text-center bg-white rounded-2xl border border-[var(--border-color)] shadow-sm">
               <ScoreRing score={matchResult.keywordMatchScore} size={90} strokeWidth={7} showPercentage />
-              <span className="mt-3 text-[15px] font-bold text-[#20242B]">Keyword Density</span>
-              <span className="text-[13px] text-[#626B78]">ATS Alignment</span>
+              <span className="mt-3 text-[15px] font-bold text-[var(--text-primary)]">Keyword Density</span>
+              <span className="text-[13px] text-[var(--text-secondary)]">ATS Alignment</span>
             </div>
           </div>
 
           {/* Detailed Skill Classification (Matched, Partial, Missing) */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             {/* Matched */}
-            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-3 shadow-sm">
-              <div className="flex items-center gap-2 pb-2 border-b border-[#E5E8ED]">
+            <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-3 shadow-sm">
+              <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-color)]">
                 <CheckCircle2 className="w-5 h-5 text-[#16845B]" />
-                <h4 className="text-[16px] font-bold text-[#20242B]">
+                <h4 className="text-[16px] font-bold text-[var(--text-primary)]">
                   Matched Skills ({matchResult.matchedSkills.length})
                 </h4>
               </div>
@@ -300,7 +300,7 @@ export default function JobMatchPage() {
                       <span className="font-bold text-[14px] text-emerald-950 block">{sk.skill}</span>
                       {sk.importance && (
                         <span className={`text-[11px] uppercase px-2 py-0.5 rounded font-semibold ${
-                          sk.importance === 'required' ? 'bg-emerald-200 text-emerald-900' : 'bg-blue-100 text-[#3157C8]'
+                          sk.importance === 'required' ? 'bg-emerald-200 text-emerald-900' : 'bg-blue-100 text-[var(--accent)]'
                         }`}>
                           {sk.importance}
                         </span>
@@ -313,16 +313,16 @@ export default function JobMatchPage() {
             </div>
 
             {/* Partial */}
-            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-3 shadow-sm">
-              <div className="flex items-center gap-2 pb-2 border-b border-[#E5E8ED]">
+            <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-3 shadow-sm">
+              <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-color)]">
                 <HelpCircle className="w-5 h-5 text-[#A96812]" />
-                <h4 className="text-[16px] font-bold text-[#20242B]">
+                <h4 className="text-[16px] font-bold text-[var(--text-primary)]">
                   Partial Alignment ({matchResult.partialSkills.length})
                 </h4>
               </div>
               <div className="space-y-2 pt-1">
                 {matchResult.partialSkills.length === 0 ? (
-                  <p className="text-[14px] text-[#626B78] italic py-2">
+                  <p className="text-[14px] text-[var(--text-secondary)] italic py-2">
                     No ambiguous or partial competencies detected.
                   </p>
                 ) : (
@@ -344,10 +344,10 @@ export default function JobMatchPage() {
             </div>
 
             {/* Missing */}
-            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-3 shadow-sm">
-              <div className="flex items-center gap-2 pb-2 border-b border-[#E5E8ED]">
+            <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-3 shadow-sm">
+              <div className="flex items-center gap-2 pb-2 border-b border-[var(--border-color)]">
                 <AlertCircle className="w-5 h-5 text-[#C43D43]" />
-                <h4 className="text-[16px] font-bold text-[#20242B]">
+                <h4 className="text-[16px] font-bold text-[var(--text-primary)]">
                   Missing Skills ({matchResult.missingSkills.length})
                 </h4>
               </div>
@@ -373,12 +373,12 @@ export default function JobMatchPage() {
 
           {/* Key Strengths & Gaps */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-3 shadow-sm text-left">
-              <h4 className="text-[18px] font-bold text-[#20242B] flex items-center gap-2">
+            <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-3 shadow-sm text-left">
+              <h4 className="text-[18px] font-bold text-[var(--text-primary)] flex items-center gap-2">
                 <TrendingUp className="w-5 h-5 text-[#16845B]" />
                 Key Profile Strengths
               </h4>
-              <ul className="space-y-2 text-[14px] text-[#626B78] pt-1">
+              <ul className="space-y-2 text-[14px] text-[var(--text-secondary)] pt-1">
                 {matchResult.keyStrengths.map((str, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="text-[#16845B] font-bold">✓</span>
@@ -388,12 +388,12 @@ export default function JobMatchPage() {
               </ul>
             </div>
 
-            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-3 shadow-sm text-left">
-              <h4 className="text-[18px] font-bold text-[#20242B] flex items-center gap-2">
+            <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-3 shadow-sm text-left">
+              <h4 className="text-[18px] font-bold text-[var(--text-primary)] flex items-center gap-2">
                 <AlertCircle className="w-5 h-5 text-[#A96812]" />
                 Actionable Gap Recommendations
               </h4>
-              <ul className="space-y-2 text-[14px] text-[#626B78] pt-1">
+              <ul className="space-y-2 text-[14px] text-[var(--text-secondary)] pt-1">
                 {matchResult.gapsToAddress.map((gap, idx) => (
                   <li key={idx} className="flex items-start gap-2">
                     <span className="text-[#A96812] font-bold">•</span>

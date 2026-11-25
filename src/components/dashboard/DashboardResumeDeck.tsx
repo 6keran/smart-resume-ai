@@ -2,6 +2,8 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import { motion, AnimatePresence } from 'framer-motion';
+import { AnimatedCounter } from '@/components/ui/MotionPrimitives';
 import {
   FileText,
   FileEdit,
@@ -48,7 +50,7 @@ export default function DashboardResumeDeck({
 
   if (!activeResume) {
     return (
-      <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-xs space-y-4">
+      <div className="reference-panel rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
           <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
             <FileText className="w-4 h-4 text-[var(--accent)]" />
@@ -91,7 +93,7 @@ export default function DashboardResumeDeck({
   const strokeDashoffset = circumference - (Math.max(0, Math.min(100, score)) / 100) * circumference;
 
   return (
-    <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-xs space-y-4">
+    <div className="reference-panel rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-xs space-y-4">
       {/* ── Header ── */}
       <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
         <div className="flex items-center gap-2">
@@ -115,74 +117,83 @@ export default function DashboardResumeDeck({
       </div>
 
       {/* ── Active Resume Feature Card ── */}
-      <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        {/* Left: Metadata */}
-        <div className="space-y-1.5 min-w-0">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="font-bold text-sm sm:text-base text-[var(--text-primary)] truncate">
-              {activeResume.filename}
-            </span>
-            <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60 uppercase shrink-0">
-              Active
-            </span>
-          </div>
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeResume.id}
+          initial={{ opacity: 0, y: 4 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -4 }}
+          transition={{ duration: 0.16 }}
+          className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)]/50 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+        >
+          {/* Left: Metadata */}
+          <div className="space-y-1.5 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="font-bold text-sm sm:text-base text-[var(--text-primary)] truncate">
+                {activeResume.filename}
+              </span>
+              <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:border-emerald-800/60 uppercase shrink-0">
+                Active
+              </span>
+            </div>
 
-          <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] font-mono">
-            <Clock className="w-3 h-3" />
-            <span>Updated {formatDate(activeResume.uploadedAt)}</span>
-            {activeResume.fileType && (
-              <>
-                <span>•</span>
-                <span className="uppercase">{activeResume.fileType}</span>
-              </>
+            <div className="flex items-center gap-2 text-xs text-[var(--text-muted)] font-mono">
+              <Clock className="w-3 h-3" />
+              <span>Updated {formatDate(activeResume.uploadedAt)}</span>
+              {activeResume.fileType && (
+                <>
+                  <span>•</span>
+                  <span className="uppercase">{activeResume.fileType}</span>
+                </>
+              )}
+            </div>
+
+            {activeResume.improvement !== null && activeResume.improvement !== 0 && (
+              <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 pt-0.5">
+                <TrendingUp className="w-3 h-3" />
+                <span>
+                  {activeResume.improvement > 0 ? `+${activeResume.improvement}` : activeResume.improvement} pts since last revision
+                </span>
+              </div>
             )}
           </div>
 
-          {activeResume.improvement !== null && activeResume.improvement !== 0 && (
-            <div className="flex items-center gap-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400 pt-0.5">
-              <TrendingUp className="w-3 h-3" />
-              <span>
-                {activeResume.improvement > 0 ? `+${activeResume.improvement}` : activeResume.improvement} pts since last revision
-              </span>
-            </div>
-          )}
-        </div>
-
-        {/* Right: Circular Score Gauge */}
-        <div className="flex items-center gap-3 shrink-0 self-start sm:self-auto">
-          <div className="relative w-16 h-16 flex items-center justify-center">
-            <svg className="w-full h-full -rotate-90" viewBox="0 0 60 60">
-              <circle
-                cx="30"
-                cy="30"
-                r="26"
-                className="stroke-[var(--border-color)]"
-                strokeWidth="5"
-                fill="none"
-              />
-              <circle
-                cx="30"
-                cy="30"
-                r="26"
-                className="stroke-[var(--accent)] transition-all duration-500 ease-out"
-                strokeWidth="5"
-                strokeDasharray={circumference}
-                strokeDashoffset={strokeDashoffset}
-                strokeLinecap="round"
-                fill="none"
-              />
-            </svg>
-            <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
-              <span className="text-xs font-mono font-extrabold text-[var(--text-primary)] leading-none">
-                {score ? `${score}%` : 'N/A'}
-              </span>
-              <span className="text-[9px] font-mono text-[var(--text-muted)] uppercase mt-0.5">
-                ATS
-              </span>
+          {/* Right: Circular Score Gauge */}
+          <div className="flex items-center gap-3 shrink-0 self-start sm:self-auto">
+            <div className="relative w-16 h-16 flex items-center justify-center">
+              <svg className="w-full h-full -rotate-90" viewBox="0 0 60 60">
+                <circle
+                  cx="30"
+                  cy="30"
+                  r="26"
+                  className="stroke-[var(--border-color)]"
+                  strokeWidth="5"
+                  fill="none"
+                />
+                <circle
+                  cx="30"
+                  cy="30"
+                  r="26"
+                  className="stroke-[var(--accent)] transition-all duration-500 ease-out"
+                  strokeWidth="5"
+                  strokeDasharray={circumference}
+                  strokeDashoffset={strokeDashoffset}
+                  strokeLinecap="round"
+                  fill="none"
+                />
+              </svg>
+              <div className="absolute inset-0 flex flex-col items-center justify-center text-center">
+                <span className="text-xs font-mono font-extrabold text-[var(--text-primary)] leading-none">
+                  {score ? <AnimatedCounter value={score} suffix="%" /> : 'N/A'}
+                </span>
+                <span className="text-[9px] font-mono text-[var(--text-muted)] uppercase mt-0.5">
+                  ATS
+                </span>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
+        </motion.div>
+      </AnimatePresence>
 
       {/* ── Multi-Resume Selector Strip (if > 1) ── */}
       {resumeProgress.length > 1 && (
@@ -191,25 +202,35 @@ export default function DashboardResumeDeck({
             Saved Documents ({resumeProgress.length})
           </span>
           <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            {resumeProgress.map((r, idx) => (
-              <button
-                key={r.id}
-                type="button"
-                onClick={() => setSelectedIndex(idx)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-all cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5 ${
-                  selectedIndex === idx
-                    ? 'bg-[var(--accent)] text-white shadow-xs font-bold'
-                    : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)]'
-                }`}
-              >
-                <span className="truncate max-w-[120px]">{r.filename}</span>
-                {r.latestScore !== null && (
-                  <span className={`text-[10px] font-bold ${selectedIndex === idx ? 'text-white/80' : 'text-[var(--accent)]'}`}>
-                    {r.latestScore}%
-                  </span>
-                )}
-              </button>
-            ))}
+            {resumeProgress.map((r, idx) => {
+              const isSelected = selectedIndex === idx;
+              return (
+                <button
+                  key={r.id}
+                  type="button"
+                  onClick={() => setSelectedIndex(idx)}
+                  className={`px-3 py-1.5 rounded-lg text-xs font-mono transition-colors cursor-pointer whitespace-nowrap shrink-0 flex items-center gap-1.5 relative z-0 ${
+                    isSelected
+                      ? 'text-white font-bold shadow-xs'
+                      : 'bg-[var(--bg-secondary)] text-[var(--text-secondary)] hover:text-[var(--text-primary)] border border-[var(--border-color)]'
+                  }`}
+                >
+                  {isSelected && (
+                    <motion.div
+                      layoutId="deck-resume-pill"
+                      className="absolute inset-0 bg-[var(--accent)] rounded-lg -z-10"
+                      transition={{ type: 'spring', stiffness: 420, damping: 32 }}
+                    />
+                  )}
+                  <span className="truncate max-w-[120px]">{r.filename}</span>
+                  {r.latestScore !== null && (
+                    <span className={`text-[10px] font-bold ${isSelected ? 'text-white/80' : 'text-[var(--accent)]'}`}>
+                      {r.latestScore}%
+                    </span>
+                  )}
+                </button>
+              );
+            })}
           </div>
         </div>
       )}

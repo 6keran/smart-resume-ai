@@ -140,7 +140,7 @@ export function DashboardContent({ user, data, actionPlan, unifiedContext }: Das
       <div className="max-w-6xl mx-auto space-y-6">
 
         {/* ─── 1. TOP HEADER & WELCOME MESSAGE ──────────────────────────── */}
-        <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] shadow-xs p-6 sm:p-8 transition-colors">
+        <div className="reference-dashboard-intro bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] shadow-xs p-6 sm:p-8 transition-colors">
           <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-5">
             <div className="space-y-1.5">
               <div className="flex items-center gap-2 flex-wrap">
@@ -193,25 +193,25 @@ export function DashboardContent({ user, data, actionPlan, unifiedContext }: Das
 
         {/* Personalized Onboarding Callout when goal is not set yet */}
         {targetRole === 'Goal not set' && (
-          <div className="rounded-xl border border-[#E5E8ED] bg-[#FFFFFF] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div className="rounded-xl border border-[var(--border-color)] bg-[#FFFFFF] p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <div className="space-y-1">
-              <div className="text-xs font-semibold uppercase tracking-wide text-[#3157C8]">
+              <div className="text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
                 Target Role: Goal Not Set
               </div>
-              <p className="text-sm text-[#20242B] font-medium">
+              <p className="text-sm text-[var(--text-primary)] font-medium">
                 Set your target role or upload a resume to review and confirm your personalized career roadmap.
               </p>
             </div>
             <div className="flex items-center gap-2.5 shrink-0">
               <Link
                 href="/onboarding"
-                className="px-4 py-2 rounded-lg bg-[#3157C8] hover:bg-[#2546A8] text-white text-xs font-semibold transition-colors"
+                className="px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold transition-colors"
               >
                 Start Guided Setup
               </Link>
               <Link
                 href="/dashboard/my-data"
-                className="px-4 py-2 rounded-lg border border-[#E5E8ED] bg-[#F6F7F9] text-[#20242B] text-xs font-semibold hover:border-[#3157C8] transition-colors"
+                className="px-4 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-xs font-semibold hover:border-[var(--accent)] transition-colors"
               >
                 My Career Data
               </Link>
@@ -242,7 +242,7 @@ export function DashboardContent({ user, data, actionPlan, unifiedContext }: Das
             />
 
             {/* Important Skill Gaps Card */}
-            <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] shadow-xs p-6 space-y-4 transition-colors">
+            <div className="reference-panel bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] shadow-xs p-6 space-y-4 transition-colors">
               <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
                 <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
                   <AlertCircle className="w-4 h-4 text-amber-600 dark:text-amber-400" />
@@ -292,14 +292,14 @@ export function DashboardContent({ user, data, actionPlan, unifiedContext }: Das
           <div className="space-y-6">
 
             {/* Recommended Next Action Card */}
-            <div className="bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] shadow-xs p-6 space-y-4 transition-colors">
+            <div className="reference-panel bg-[var(--bg-card)] rounded-2xl border border-[var(--border-color)] shadow-xs p-6 space-y-4 transition-colors">
               <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
                 <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
                   <Target className="w-4 h-4 text-[var(--accent)]" />
                   <span>Recommended Next Action</span>
                 </h3>
                 {primaryAction?.priority && (
-                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-blue-50 text-[var(--accent)] border border-blue-200 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/60 uppercase">
+                  <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20 dark:bg-blue-950/40 dark:text-blue-300 dark:border-blue-800/60 uppercase">
                     {primaryAction.priority} Priority
                   </span>
                 )}

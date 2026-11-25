@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
+import { motion } from 'framer-motion';
 import {
   Home,
   FileText,
@@ -61,7 +62,7 @@ export function Sidebar() {
     <aside
       data-no-print="true"
       className={cn(
-        'hidden md:flex flex-col glass-sidebar transition-[width] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] relative z-30 shrink-0 h-screen sticky top-0 no-print select-none',
+        'app-sidebar hidden md:flex flex-col glass-sidebar border border-[var(--border-color)] transition-[width] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] relative z-30 shrink-0 h-[calc(100vh-1.5rem)] sticky top-3 my-3 ml-3 rounded-[26px] overflow-hidden no-print select-none',
         collapsed ? 'w-[72px]' : 'w-64'
       )}
     >
@@ -116,14 +117,21 @@ export function Sidebar() {
                   href={item.href}
                   title={collapsed ? item.label : undefined}
                   className={cn(
-                    'w-full h-10 flex items-center rounded-lg text-[15px] font-medium transition-all duration-200 group relative select-none',
+                    'w-full h-10 flex items-center rounded-lg text-[15px] font-medium transition-colors duration-150 group relative select-none z-0',
                     collapsed ? 'justify-center px-0' : 'justify-start gap-3 px-3.5',
                     isActive
-                      ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border-color)] shadow-xs font-semibold'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] active:scale-[0.99]',
+                      ? 'text-[var(--text-primary)] font-semibold'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]/60',
                     'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-primary)]'
                   )}
                 >
+                  {isActive && (
+                    <motion.div
+                      layoutId="sidebar-active-indicator"
+                      className="absolute inset-0 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-color)] shadow-xs -z-10"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
                   <div className="w-5 h-5 flex items-center justify-center shrink-0">
                     <Icon
                       className={cn(
@@ -172,14 +180,21 @@ export function Sidebar() {
                   href={item.href}
                   title={collapsed ? item.label : undefined}
                   className={cn(
-                    'w-full h-10 flex items-center rounded-lg text-[15px] font-medium transition-all duration-200 group relative select-none',
+                    'w-full h-10 flex items-center rounded-lg text-[15px] font-medium transition-colors duration-150 group relative select-none z-0',
                     collapsed ? 'justify-center px-0' : 'justify-start gap-3 px-3.5',
                     isActive
-                      ? 'bg-[var(--bg-elevated)] text-[var(--text-primary)] border border-[var(--border-color)] shadow-xs font-semibold'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)] active:scale-[0.99]',
+                      ? 'text-[var(--text-primary)] font-semibold'
+                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--bg-card)]/60',
                     'focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] focus-visible:ring-offset-1 focus-visible:ring-offset-[var(--bg-primary)]'
                   )}
                 >
+                  {isActive && (
+                    <motion.div
+                      layoutId="sidebar-active-indicator"
+                      className="absolute inset-0 rounded-lg bg-[var(--bg-elevated)] border border-[var(--border-color)] shadow-xs -z-10"
+                      transition={{ type: 'spring', stiffness: 380, damping: 30 }}
+                    />
+                  )}
                   <div className="w-5 h-5 flex items-center justify-center shrink-0">
                     <Icon
                       className={cn(
