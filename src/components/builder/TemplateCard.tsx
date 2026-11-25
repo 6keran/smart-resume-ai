@@ -55,7 +55,7 @@ export function TemplateCard({
               {template.name}
             </h3>
             {template.intendedUse && (
-              <p className="text-[10px] text-[#3157C8] font-medium truncate mt-0.5" title={template.intendedUse}>
+              <p className="text-[10px] text-[var(--accent)] font-medium truncate mt-0.5" title={template.intendedUse}>
                 Best for: {template.intendedUse}
               </p>
             )}
@@ -97,7 +97,7 @@ export function TemplateCard({
           id={`template-preview-${template.id}`}
           ref={containerRef}
           onClick={() => onSelect(template.id)}
-          className="relative w-full aspect-[210/297] rounded-xl overflow-hidden border border-[#E5E8ED] bg-white shadow-xs cursor-pointer select-none group-hover:shadow-sm transition-shadow"
+          className="relative w-full aspect-[210/297] rounded-xl overflow-hidden border border-[var(--border-color)] bg-white shadow-xs cursor-pointer select-none group-hover:shadow-sm transition-shadow"
           title={`Click to select ${template.name}`}
         >
           {/* Scaled Live Renderer */}

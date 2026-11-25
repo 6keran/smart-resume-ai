@@ -6255,7 +6255,7 @@ export async function deleteUserAndData(
       }
     }
 
-    // 4. Cascade delete & anonymize related data across all 23 database tables
+    // 4. Cascade delete & anonymize all user-linked data
     // Resumes and versioning
     await tx.prepare('DELETE FROM resume_improvements WHERE user_id = ?').run(targetUserId);
     await tx.prepare('DELETE FROM resume_versions WHERE user_id = ?').run(targetUserId);
@@ -6279,6 +6279,15 @@ export async function deleteUserAndData(
 
     // Course progress
     await tx.prepare('DELETE FROM course_progress WHERE user_id = ?').run(targetUserId);
+
+    // Career profile, planning, projects, and readiness history
+    await tx.prepare('DELETE FROM career_readiness_history WHERE user_id = ?').run(targetUserId);
+    await tx.prepare('DELETE FROM guided_projects WHERE user_id = ?').run(targetUserId);
+    await tx.prepare('DELETE FROM student_profiles WHERE user_id = ?').run(targetUserId);
+    await tx.prepare('DELETE FROM user_career_goals WHERE user_id = ?').run(targetUserId);
+    await tx.prepare('DELETE FROM user_interview_sessions WHERE user_id = ?').run(targetUserId);
+    await tx.prepare('DELETE FROM user_learning_roadmaps WHERE user_id = ?').run(targetUserId);
+    await tx.prepare('DELETE FROM user_roadmap_progress WHERE user_id = ?').run(targetUserId);
 
     // Job searches & matches
     const userSearches = (await tx.prepare('SELECT id FROM job_searches WHERE user_id = ?').all(targetUserId)) as Array<{ id: string }>;
@@ -6312,11 +6321,9 @@ export async function deleteUserAndData(
       eventType: 'ADMIN_USER_DELETED',
       actorType: 'ADMIN',
       actorId: adminActor.id,
-      description: `Administrator ${adminActor.email} deleted user "${user.name}" (${user.email || 'no-email'}) [ID: ${user.id}] and purged associated candidate records.`,
+      description: `Administrator ${adminActor.email} deleted user account [ID: ${user.id}] and purged associated candidate records.`,
       metadata: {
         deletedUserId: user.id,
-        deletedUserName: user.name,
-        deletedUserEmail: user.email,
         adminId: adminActor.id,
         adminEmail: adminActor.email,
         timestamp: new Date().toISOString(),

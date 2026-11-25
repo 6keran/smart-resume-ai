@@ -345,7 +345,7 @@ export default function InterviewPrepPage() {
                 {/* Left Column: Form Setup (7 cols) */}
                 <div className="lg:col-span-7">
                   <GlassCard className="p-6 sm:p-8 rounded-xl border border-[var(--border-color)] space-y-6 text-left">
-                    <div className="border-b border-[#E5E8ED] pb-4">
+                    <div className="border-b border-[var(--border-color)] pb-4">
                       <h2 className="heading-section">
                         Configure Practice Session
                       </h2>
@@ -366,7 +366,7 @@ export default function InterviewPrepPage() {
                           value={targetRole}
                           onChange={(e) => setTargetRole(e.target.value)}
                           placeholder="e.g. Senior Full Stack Developer"
-                          className="w-full px-4 py-2.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white transition-colors"
+                          className="reference-panel w-full px-4 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-base text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:bg-white transition-colors"
                           required
                         />
 
@@ -379,14 +379,14 @@ export default function InterviewPrepPage() {
                               onClick={() => setTargetRole(role)}
                               className={`relative px-3 py-1 rounded-full text-[13px] font-medium transition-colors border cursor-pointer ${
                                 targetRole === role
-                                  ? 'border-[#3157C8]/30 font-semibold text-[#3157C8]'
-                                  : 'bg-[#F6F7F9] text-[#626B78] border-[#E5E8ED] hover:border-slate-300'
+                                  ? 'border-[var(--accent)]/30 font-semibold text-[var(--accent)]'
+                                  : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border-[var(--border-color)] hover:border-slate-300'
                               }`}
                             >
                               {targetRole === role && (
                                 <motion.div
                                   layoutId="interview-role-pill"
-                                  className="absolute inset-0 bg-[#3157C8]/10 rounded-full"
+                                  className="absolute inset-0 bg-[var(--accent)]/10 rounded-full"
                                   transition={{ type: 'spring', stiffness: 400, damping: 32 }}
                                 />
                               )}
@@ -407,7 +407,7 @@ export default function InterviewPrepPage() {
                         value={company}
                         onChange={(e) => setCompany(e.target.value)}
                         placeholder="e.g. Google, Stripe, or Target Startup"
-                        className="w-full px-4 py-2.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white transition-colors"
+                        className="reference-panel w-full px-4 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-base text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:bg-white transition-colors"
                       />
                     </div>
 
@@ -422,7 +422,7 @@ export default function InterviewPrepPage() {
                         onChange={(e) => setJobDescription(e.target.value)}
                         placeholder="Paste key requirements or responsibility bullets from the job post..."
                         rows={3}
-                        className="w-full px-4 py-2.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-base text-[#20242B] focus:outline-none focus:border-[#3157C8] focus:bg-white transition-colors resize-none"
+                        className="reference-panel w-full px-4 py-2.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-base text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)] focus:bg-white transition-colors resize-none"
                       />
                     </div>
 
@@ -450,7 +450,7 @@ export default function InterviewPrepPage() {
               {/* Right Column: History & Tips (5 cols) */}
               <div className="lg:col-span-5 space-y-6 text-left">
                 {/* Method Tips */}
-                <div className="p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3">
+                <div className="reference-panel p-5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3">
                   <div className="flex items-center gap-2">
                     <Target className="w-4 h-4 text-[var(--accent)]" />
                     <span className="text-xs font-bold text-[var(--text-primary)] uppercase tracking-wider">
@@ -531,7 +531,7 @@ export default function InterviewPrepPage() {
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: -6 }}
               transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              className="space-y-6 text-left max-w-3xl mx-auto"
+              className="reference-interview-stage space-y-6 text-left max-w-3xl mx-auto"
             >
               {/* Top Bar with Stepper & Live Clock */}
               <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
@@ -595,7 +595,7 @@ export default function InterviewPrepPage() {
                           onChange={(e) => setUserAnswer(e.target.value)}
                           placeholder="Type your response. Clearly address the core technical concepts, state real project actions taken, and mention measurable outcomes..."
                           rows={6}
-                          className="w-full px-4 py-3 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-hidden focus:border-[var(--accent)] transition-colors shadow-xs resize-y leading-relaxed"
+                          className="reference-panel w-full px-4 py-3 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] text-xs text-[var(--text-primary)] focus:outline-hidden focus:border-[var(--accent)] transition-colors shadow-xs resize-y leading-relaxed"
                         />
 
                         <div className="flex items-center justify-between pt-2">
@@ -693,7 +693,7 @@ export default function InterviewPrepPage() {
                         )}
 
                         {/* Model Strong Answer Accordion/Box */}
-                        <div className="p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] space-y-1.5">
+                        <div className="reference-panel p-4 rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] space-y-1.5">
                           <span className="text-xs font-bold text-[var(--accent)] uppercase tracking-wider block">
                             Staff-Level Model Answer
                           </span>
@@ -790,7 +790,7 @@ export default function InterviewPrepPage() {
 
                 {/* Feedback Note */}
                 {currentSession.overall_feedback && (
-                  <p className="text-xs text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-color)]">
+                  <p className="reference-panel text-xs text-[var(--text-secondary)] leading-relaxed bg-[var(--bg-card)] p-4 rounded-2xl border border-[var(--border-color)]">
                     {currentSession.overall_feedback}
                   </p>
                 )}

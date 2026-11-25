@@ -5,23 +5,28 @@ import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
 import {
-  X,
   Send,
   RotateCcw,
-  Bot,
-  Loader2,
   AlertCircle,
   Maximize2,
   Minimize2,
   Copy,
   Check,
   Compass,
-  GripHorizontal,
   Square,
+  ChevronDown,
+  Command,
+  X,
 } from 'lucide-react';
 import { useResume } from '@/context/ResumeContext';
 import { useUserProfile } from '@/components/user/UserContext';
 import { FeedbackButtons } from '@/components/feedback/FeedbackButtons';
+import { AssistantCompanion } from '@/components/assistant/AssistantCompanion';
+import type { CompanionDrag } from '@/components/assistant/companionMotion';
+import { advanceCompanionDrag, createCompanionDrag, followCompanionPosition } from '@/components/assistant/companionLocomotion';
+import { clampCompanionPosition, safeCompanionPosition } from '@/components/assistant/companionPlacement';
+import { useAssistantPresentation } from './useAssistantPresentation';
+import chatStyles from './CareerChatbot.module.css';
 
 interface Message {
   id: string;
@@ -31,11 +36,14 @@ interface Message {
   timestamp: string;
 }
 
-const STARTER_PROMPTS = [
-  'How can I tailor my resume for a role?',
-  'Help me prepare for an upcoming interview',
-  'Which skills should I build for my target role?',
-  'How should I follow up after an application?',
+type PromptCategory = 'ats' | 'resume' | 'skills' | 'projects' | 'jobs';
+
+const CONTEXT_CHIPS: Array<{ key: PromptCategory; label: string }> = [
+  { key: 'ats', label: 'ATS' },
+  { key: 'resume', label: 'Resume' },
+  { key: 'skills', label: 'Skills' },
+  { key: 'projects', label: 'Projects' },
+  { key: 'jobs', label: 'Jobs' },
 ];
 
 async function copyToClipboard(text: string): Promise<boolean> {
@@ -61,12 +69,12 @@ async function copyToClipboard(text: string): Promise<boolean> {
       document.body.appendChild(textarea);
       textarea.focus();
       textarea.select();
-      document.execCommand('copy');
+      copied = document.execCommand('copy');
       document.body.removeChild(textarea);
     } catch { }
   }
 
-  return true;
+  return copied;
 }
 
 function CodeBlock({ language, code }: { language?: string; code: string }) {
@@ -81,30 +89,30 @@ function CodeBlock({ language, code }: { language?: string; code: string }) {
   };
 
   return (
-    <div className="my-2.5 rounded-xl bg-[var(--bg-secondary)] text-[var(--text-primary)] font-mono text-[11px] sm:text-xs overflow-hidden border border-[var(--border-color)] shadow-sm">
-      <div className="flex items-center justify-between px-3 py-1.5 bg-[var(--bg-primary)] border-b border-[var(--border-color)] text-[10px] sm:text-[11px] text-[var(--text-secondary)] font-sans">
+    <div className="my-3 overflow-hidden rounded-card border border-border-hairline bg-bg-subtle text-caption text-text font-mono">
+      <div className="flex items-center justify-between border-b border-border-hairline bg-bg px-3 py-2 font-sans text-caption text-text-secondary">
         <span className="uppercase tracking-wider font-semibold">{language || 'code'}</span>
         <button
           type="button"
           onClick={handleCopy}
-          className="flex items-center gap-1 hover:text-[var(--text-primary)] transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-[var(--bg-elevated)]"
+          className="flex items-center gap-1 rounded-control px-2 py-1 transition-colors hover:bg-bg-subtle hover:text-text"
           title={copied ? 'Copied to clipboard' : 'Copy code'}
           aria-label={copied ? 'Code copied to clipboard' : 'Copy code snippet'}
         >
           {copied ? (
             <>
-              <Check className="w-3 h-3 text-emerald-400" />
-              <span className="text-emerald-400 font-medium">Copied</span>
+              <Check className="h-3.5 w-3.5 text-success" />
+              <span className="font-medium text-success">Copied</span>
             </>
           ) : (
             <>
-              <Copy className="w-3 h-3" />
+              <Copy className="h-3.5 w-3.5" />
               <span>Copy</span>
             </>
           )}
         </button>
       </div>
-      <pre className="p-3 overflow-x-auto whitespace-pre leading-relaxed">{code}</pre>
+      <pre className="overflow-x-auto whitespace-pre p-3 leading-relaxed">{code}</pre>
     </div>
   );
 }
@@ -126,7 +134,7 @@ function renderInlineFormatting(text: string): React.ReactNode {
               key={idx}
               href={href}
               data-chat-no-drag="true"
-              className="inline-flex items-center font-semibold text-[var(--accent)] underline decoration-[var(--accent)]/40 hover:decoration-[var(--accent)] hover:opacity-85 transition-all mx-0.5"
+              className="mx-0.5 inline-flex items-center font-medium text-accent-hover underline decoration-accent/40 transition-colors hover:decoration-accent"
             >
               {label}
             </Link>
@@ -139,7 +147,7 @@ function renderInlineFormatting(text: string): React.ReactNode {
             target="_blank"
             rel="noopener noreferrer"
             data-chat-no-drag="true"
-            className="inline-flex items-center font-semibold text-[var(--accent)] underline decoration-[var(--accent)]/40 hover:decoration-[var(--accent)] hover:opacity-85 transition-all mx-0.5"
+            className="mx-0.5 inline-flex items-center font-medium text-accent-hover underline decoration-accent/40 transition-colors hover:decoration-accent"
           >
             {label}
           </a>
@@ -150,7 +158,7 @@ function renderInlineFormatting(text: string): React.ReactNode {
       return (
         <code
           key={idx}
-          className="px-1.5 py-0.5 rounded bg-[var(--accent-subtle)] font-mono text-[11px] text-[var(--accent)]"
+          className="rounded-control bg-accent-tint px-1.5 py-0.5 font-mono text-caption text-accent"
         >
           {part.slice(1, -1)}
         </code>
@@ -158,7 +166,7 @@ function renderInlineFormatting(text: string): React.ReactNode {
     }
     if (part.startsWith('**') && part.endsWith('**')) {
       return (
-        <strong key={idx} className="font-semibold text-[var(--text-primary)]">
+        <strong key={idx} className="font-semibold text-text">
           {part.slice(2, -2)}
         </strong>
       );
@@ -203,47 +211,47 @@ function FormattedAssistantMessage({ content }: { content: string }) {
 
     if (line.startsWith('### ')) {
       elements.push(
-        <h4 key={`h3_${i}`} className="font-bold text-sm text-[var(--text-primary)] mt-2 mb-1">
+        <h4 key={`h3_${i}`} className="mb-1 mt-4 text-body font-semibold text-text">
           {line.slice(4)}
         </h4>
       );
     } else if (line.startsWith('## ')) {
       elements.push(
-        <h3 key={`h2_${i}`} className="font-bold text-base text-[var(--text-primary)] mt-2.5 mb-1">
+        <h3 key={`h2_${i}`} className="mb-1 mt-4 text-h3 font-semibold text-text">
           {line.slice(3)}
         </h3>
       );
     } else if (line.startsWith('# ')) {
       elements.push(
-        <h2 key={`h1_${i}`} className="font-bold text-lg text-[var(--text-primary)] mt-3 mb-1">
+        <h2 key={`h1_${i}`} className="mb-1 mt-5 text-h2 font-semibold text-text">
           {line.slice(2)}
         </h2>
       );
     } else if (line.startsWith('> ')) {
       elements.push(
-        <blockquote key={`bq_${i}`} className="pl-3 py-1 my-1.5 border-l-2 border-[var(--accent)] bg-[var(--accent-subtle)]/40 rounded-r-lg text-xs italic text-[var(--text-secondary)]">
+        <blockquote key={`bq_${i}`} className="my-3 rounded-r-control border-l-2 border-accent bg-accent-tint py-2 pl-3 text-small text-text-secondary">
           {renderInlineFormatting(line.slice(2))}
         </blockquote>
       );
     } else if (line.startsWith('- ') || line.startsWith('* ')) {
       elements.push(
-        <li key={`li_${i}`} className="ml-4 list-disc text-xs leading-relaxed my-0.5">
+        <li key={`li_${i}`} className="my-1 ml-5 list-disc text-body leading-relaxed">
           {renderInlineFormatting(line.slice(2))}
         </li>
       );
     } else if (/^\d+\.\s/.test(line)) {
       const match = line.match(/^(\d+\.)\s(.*)/);
       elements.push(
-        <div key={`num_${i}`} className="ml-2 text-xs leading-relaxed my-0.5 flex gap-1.5">
-          <span className="font-bold shrink-0">{match ? match[1] : ''}</span>
+        <div key={`num_${i}`} className="my-1 ml-1 flex gap-2 text-body leading-relaxed">
+          <span className="shrink-0 font-semibold">{match ? match[1] : ''}</span>
           <span>{renderInlineFormatting(match ? match[2] : line)}</span>
         </div>
       );
     } else if (line.trim().length === 0) {
-      elements.push(<div key={`sp_${i}`} className="h-1.5" />);
+      elements.push(<div key={`sp_${i}`} className="h-2" />);
     } else {
       elements.push(
-        <p key={`p_${i}`} className="text-xs leading-relaxed my-1">
+        <p key={`p_${i}`} className="my-1.5 text-body leading-relaxed">
           {renderInlineFormatting(line)}
         </p>
       );
@@ -260,16 +268,37 @@ function FormattedAssistantMessage({ content }: { content: string }) {
     );
   }
 
-  return <div className="space-y-0.5">{elements}</div>;
+  return <div className="space-y-1">{elements}</div>;
+}
+
+function TypingIndicator({ reducedMotion, paused }: { reducedMotion: boolean | null; paused: boolean }) {
+  return (
+    <motion.div
+      initial={reducedMotion ? { opacity: 1 } : { opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0 }}
+      transition={reducedMotion ? { duration: 0 } : { duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+      className={`flex items-center gap-3 py-2 ${chatStyles.typing}`}
+      role="status"
+      aria-live="polite"
+      aria-label="Career Copilot is typing"
+    >
+      <AssistantCompanion state="thinking" size={32} paused={paused} />
+      <span className="sr-only">Assistant is thinking</span>
+      <div className="flex items-center gap-2 text-small text-text-secondary">
+        <span aria-hidden="true">Career Copilot is thinking</span>
+      </div>
+    </motion.div>
+  );
 }
 
 const STORAGE_KEY = 'sra_ai_launcher_pos';
 const PANEL_STORAGE_KEY = 'sra_ai_panel_pos';
 const MARGIN = 16;
-const DEFAULT_LAUNCHER_WIDTH = 135;
-const DEFAULT_LAUNCHER_HEIGHT = 44;
-const PANEL_WIDTH = 460;
-const PANEL_HEIGHT = 620;
+const DEFAULT_LAUNCHER_WIDTH = 80;
+const DEFAULT_LAUNCHER_HEIGHT = 104;
+const PANEL_WIDTH = 420;
+const PANEL_HEIGHT = 700;
 const PANEL_MARGIN = 8;
 const MIN_HEADER_VISIBLE = 56;
 
@@ -339,18 +368,26 @@ export function CareerChatbot() {
   const [panelPosition, setPanelPosition] = useState<PanelPosition | null>(null);
   const [isPanelDragging, setIsPanelDragging] = useState(false);
   const [careerProfile, setCareerProfile] = useState<any | null>(null);
-  const [selectedPromptCategory, setSelectedPromptCategory] = useState<'all' | 'resume' | 'projects' | 'interview' | 'skills' | 'jobs'>('all');
+  const [selectedPromptCategory, setSelectedPromptCategory] = useState<PromptCategory>('ats');
 
   // Draggable positioning state
   const [position, setPosition] = useState<{ x: number; y: number } | null>(null);
+  const [petHovered, setPetHovered] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
   const [isClient, setIsClient] = useState(false);
   const prefersReduced = useReducedMotion();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
+  const messageScrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = inputRef;
   const launcherRef = useRef<HTMLDivElement>(null);
+  const launcherPositionRef = useRef<{ x: number; y: number } | null>(null);
+  const launcherTargetRef = useRef<{ x: number; y: number } | null>(null);
+  const launcherLastFrameRef = useRef(0);
+  const launcherFrameRef = useRef<number | null>(null);
+  const suppressLauncherClickRef = useRef(false);
+  const companionDragRef = useRef<CompanionDrag>(createCompanionDrag());
   const panelRef = useRef<HTMLDivElement>(null);
   const abortControllerRef = useRef<AbortController | null>(null);
   const panelPositionRef = useRef<PanelPosition | null>(null);
@@ -358,6 +395,7 @@ export function CareerChatbot() {
   const panelDragFrameRef = useRef<number | null>(null);
   const panelDragStartRef = useRef<PanelDragStart | null>(null);
   const pointerStartRef = useRef<{
+    pointerId: number;
     startX: number;
     startY: number;
     initialX: number;
@@ -421,14 +459,31 @@ export function CareerChatbot() {
     const apps = careerProfile?.recentApplications;
     const topApp = apps && apps.length > 0 ? apps[0].company : null;
 
-    const allPrompts: Array<{ id: string; category: 'resume' | 'projects' | 'interview' | 'skills' | 'jobs'; text: string }> = [
+    const allPrompts: Array<{ id: string; category: PromptCategory; text: string }> = [
+      // ATS
+      {
+        id: 'ats-1',
+        category: 'ats',
+        text: ats?.atsScore
+          ? `What should I fix first to improve my ${ats.atsScore}% ATS score?`
+          : `How should I prepare my resume for an ATS review for ${displayTarget}?`,
+      },
+      {
+        id: 'ats-2',
+        category: 'ats',
+        text: 'Explain the most important ATS checks in plain language',
+      },
+      {
+        id: 'ats-3',
+        category: 'ats',
+        text: 'Which resume sections should I strengthen before my next scan?',
+      },
+
       // Resume
       {
         id: 'res-1',
         category: 'resume',
-        text: ats?.atsScore
-          ? `How can I improve my ${ats.atsScore}% ATS score for ${displayTarget}?`
-          : `How can I optimize my resume for ${displayTarget}?`,
+        text: `How can I tailor my resume for ${displayTarget}?`,
       },
       {
         id: 'res-2',
@@ -465,23 +520,6 @@ export function CareerChatbot() {
         id: 'proj-4',
         category: 'projects',
         text: 'Guide me on using the Project Mentor to structure portfolio projects',
-      },
-
-      // Interview
-      {
-        id: 'int-1',
-        category: 'interview',
-        text: `Give me 3 practice interview questions for ${displayTarget}`,
-      },
-      {
-        id: 'int-2',
-        category: 'interview',
-        text: 'How do I structure behavioral answers using the STAR method?',
-      },
-      {
-        id: 'int-3',
-        category: 'interview',
-        text: 'Ask me a role-focused question and critique my answer',
       },
 
       // Skills
@@ -526,18 +564,31 @@ export function CareerChatbot() {
       },
     ];
 
-    if (selectedPromptCategory === 'all') {
-      const selected = [
-        allPrompts.find((p) => p.category === 'resume'),
-        allPrompts.find((p) => p.category === 'projects'),
-        allPrompts.find((p) => p.category === 'interview'),
-        allPrompts.find((p) => p.category === 'skills'),
-        allPrompts.find((p) => p.category === 'jobs'),
-      ].filter(Boolean) as typeof allPrompts;
-      return selected;
-    }
-
     return allPrompts.filter((p) => p.category === selectedPromptCategory);
+  };
+
+  const getCommandSuggestions = () => {
+    const target = careerProfile?.targetRole || targetJob?.title || 'my target role';
+    return [
+      {
+        id: 'command-next',
+        command: '/next',
+        label: 'Prioritize my next action',
+        prompt: `Based on my current profile, what is the single highest-priority action I should take next for ${target}?`,
+      },
+      {
+        id: 'command-tailor',
+        command: '/tailor',
+        label: 'Plan a focused resume update',
+        prompt: `Give me a focused plan to tailor my resume for ${target} without inventing any facts.`,
+      },
+      {
+        id: 'command-practice',
+        command: '/practice',
+        label: 'Start interview practice',
+        prompt: `Ask me one interview question for ${target}, then critique my answer.`,
+      },
+    ];
   };
 
   const applyPanelPosition = (nextPosition: PanelPosition) => {
@@ -586,6 +637,66 @@ export function CareerChatbot() {
     pathname === '/terms'
   );
 
+  const welcomeOnly = messages.length === 1 && messages[0].id.startsWith('welcome');
+  const latestAssistantId = [...messages].reverse().find((message) => message.role === 'assistant')?.id;
+  const presentation = useAssistantPresentation({
+    enabled: Boolean(user) && !loading && !isExcludedRoute && isClient,
+    open: isOpen,
+    pending: chatLoading,
+    typing: Boolean(input.trim()),
+    welcome: welcomeOnly,
+    dragging: isDragging || isPanelDragging,
+    replyId: latestAssistantId,
+    copiedId: copiedMessageId,
+    error,
+    placement: position,
+    launcherRef,
+  });
+  const mascotPaused = presentation.blocked || isDragging || isPanelDragging || showClearConfirm || Boolean(pathname?.startsWith('/dev/style-guide'));
+
+  // Keep only the companion's small hit target clear of page controls, including after scrolling.
+  useEffect(() => {
+    if (!isClient || !user || isOpen || isDragging || isExcludedRoute || presentation.blocked) return;
+    let frame = 0;
+    launcherRef.current?.setAttribute('data-placement-ready', 'false');
+    const scan = () => {
+      frame = 0;
+      const launcher = launcherRef.current;
+      if (!launcher || pointerStartRef.current) return;
+      const rect = launcher.getBoundingClientRect();
+      const layout = getComputedStyle(launcher);
+      if (Math.abs(rect.width - parseFloat(layout.width)) > .05 || Math.abs(rect.height - parseFloat(layout.height)) > .05) {
+        frame = requestAnimationFrame(scan);
+        return;
+      }
+      const next = safeCompanionPosition(launcher);
+      if (Math.abs(next.x - rect.left) < 1 && Math.abs(next.y - rect.top) < 1) {
+        launcher.dataset.placementReady = 'true';
+        return;
+      }
+      launcherPositionRef.current = next;
+      setPosition(next);
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* Optional placement storage. */ }
+    };
+    const schedule = () => { launcherRef.current?.setAttribute('data-placement-ready', 'false'); if (!frame) frame = requestAnimationFrame(scan); };
+    const timer = setTimeout(schedule, 240);
+    const observer = new ResizeObserver(schedule);
+    const layoutObserver = new MutationObserver((records) => {
+      if (records.some((record) => !(record.target instanceof Element && record.target.closest('[data-assistant-mode], [data-nimbus-greeting]')))) schedule();
+    });
+    layoutObserver.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['style', 'class', 'hidden'] });
+    const main = document.querySelector('main');
+    if (main) observer.observe(main);
+    window.addEventListener('scroll', schedule, { passive: true, capture: true });
+    window.addEventListener('resize', schedule);
+    document.addEventListener('animationend', schedule, true);
+    document.addEventListener('transitionend', schedule, true);
+    document.fonts.addEventListener('loadingdone', schedule);
+    window.visualViewport?.addEventListener('resize', schedule);
+    window.visualViewport?.addEventListener('scroll', schedule);
+    return () => { clearTimeout(timer); cancelAnimationFrame(frame); observer.disconnect(); layoutObserver.disconnect(); document.removeEventListener('animationend', schedule, true); document.removeEventListener('transitionend', schedule, true); document.fonts.removeEventListener('loadingdone', schedule); window.removeEventListener('scroll', schedule, true); window.removeEventListener('resize', schedule); window.visualViewport?.removeEventListener('resize', schedule); window.visualViewport?.removeEventListener('scroll', schedule); };
+  }, [isClient, user, isOpen, isDragging, isExcludedRoute, pathname, presentation.blocked, position]);
+
   // Close and dismiss chat immediately on logout, session expiry, or navigating to excluded routes
   useEffect(() => {
     if (!user || isExcludedRoute) {
@@ -601,7 +712,7 @@ export function CareerChatbot() {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved) {
         const parsed = JSON.parse(saved);
-        if (typeof parsed?.x === 'number' && typeof parsed?.y === 'number') {
+        if (Number.isFinite(parsed?.x) && Number.isFinite(parsed?.y)) {
           const clampedX = clamp(parsed.x, MARGIN, Math.max(MARGIN, window.innerWidth - DEFAULT_LAUNCHER_WIDTH - MARGIN));
           const clampedY = clamp(parsed.y, MARGIN, Math.max(MARGIN, window.innerHeight - DEFAULT_LAUNCHER_HEIGHT - MARGIN));
           setPosition({ x: clampedX, y: clampedY });
@@ -628,9 +739,7 @@ export function CareerChatbot() {
         if (!prev) return null;
         const w = launcherRef.current?.offsetWidth || DEFAULT_LAUNCHER_WIDTH;
         const h = launcherRef.current?.offsetHeight || DEFAULT_LAUNCHER_HEIGHT;
-        const clampedX = clamp(prev.x, MARGIN, Math.max(MARGIN, window.innerWidth - w - MARGIN));
-        const clampedY = clamp(prev.y, MARGIN, Math.max(MARGIN, window.innerHeight - h - MARGIN));
-        return { x: clampedX, y: clampedY };
+        return clampCompanionPosition(prev.x, prev.y, w, h, launcherRef.current);
       });
 
       const currentPanelPosition = panelPositionRef.current || panelPosition;
@@ -660,6 +769,7 @@ export function CareerChatbot() {
 
   useEffect(() => {
     return () => {
+      if (launcherFrameRef.current !== null) window.cancelAnimationFrame(launcherFrameRef.current);
       if (panelDragFrameRef.current !== null) {
         window.cancelAnimationFrame(panelDragFrameRef.current);
       }
@@ -668,10 +778,11 @@ export function CareerChatbot() {
 
   useEffect(() => {
     if (isOpen) {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+      if (welcomeOnly) messageScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' });
+      else messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
       inputRef.current?.focus();
     }
-  }, [isOpen, messages, chatLoading, isFullScreen]);
+  }, [isOpen, messages, chatLoading, isFullScreen, welcomeOnly]);
 
   // Support programmatic opening of chat with optional contextual prompt
   useEffect(() => {
@@ -729,6 +840,7 @@ export function CareerChatbot() {
   const handleResetPosition = (e?: React.MouseEvent | React.KeyboardEvent) => {
     e?.stopPropagation();
     setPosition(null);
+    launcherPositionRef.current = null;
     setPanelPosition(null);
     panelPositionRef.current = null;
     try {
@@ -741,18 +853,24 @@ export function CareerChatbot() {
 
   const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
     if (e.button !== 0 && e.pointerType === 'mouse') return;
+    if (pointerStartRef.current || !e.isPrimary) return;
+    suppressLauncherClickRef.current = false;
 
     const rect = launcherRef.current?.getBoundingClientRect();
     const initialX = rect ? rect.left : (window.innerWidth - DEFAULT_LAUNCHER_WIDTH - MARGIN);
     const initialY = rect ? rect.top : (window.innerHeight - DEFAULT_LAUNCHER_HEIGHT - MARGIN);
 
     pointerStartRef.current = {
+      pointerId: e.pointerId,
       startX: e.clientX,
       startY: e.clientY,
       initialX,
       initialY,
       moved: false,
     };
+    launcherPositionRef.current = launcherTargetRef.current = { x: initialX, y: initialY };
+    launcherLastFrameRef.current = performance.now();
+    companionDragRef.current = createCompanionDrag(companionDragRef.current.direction, companionDragRef.current.phase);
 
     try {
       e.currentTarget.setPointerCapture(e.pointerId);
@@ -762,7 +880,7 @@ export function CareerChatbot() {
   };
 
   const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!pointerStartRef.current) return;
+    if (!pointerStartRef.current || e.pointerId !== pointerStartRef.current.pointerId) return;
 
     const dx = e.clientX - pointerStartRef.current.startX;
     const dy = e.clientY - pointerStartRef.current.startY;
@@ -772,6 +890,8 @@ export function CareerChatbot() {
       if (dx * dx + dy * dy > 25) {
         pointerStartRef.current.moved = true;
         setIsDragging(true);
+        suppressLauncherClickRef.current = true;
+        setPosition({ x: pointerStartRef.current.initialX, y: pointerStartRef.current.initialY });
       } else {
         return;
       }
@@ -783,14 +903,54 @@ export function CareerChatbot() {
     const rawX = pointerStartRef.current.initialX + dx;
     const rawY = pointerStartRef.current.initialY + dy;
 
-    const clampedX = clamp(rawX, MARGIN, Math.max(MARGIN, window.innerWidth - launcherW - MARGIN));
-    const clampedY = clamp(rawY, MARGIN, Math.max(MARGIN, window.innerHeight - launcherH - MARGIN));
+    const nextPosition = clampCompanionPosition(rawX, rawY, launcherW, launcherH, launcherRef.current);
 
-    setPosition({ x: clampedX, y: clampedY });
+    e.preventDefault();
+    launcherTargetRef.current = nextPosition;
+    if (launcherFrameRef.current === null) {
+      launcherLastFrameRef.current = performance.now();
+      const follow = (now: number) => {
+        const from = launcherPositionRef.current;
+        const target = launcherTargetRef.current;
+        const launcher = launcherRef.current;
+        if (from && target && launcher && pointerStartRef.current?.moved) {
+          const dt = Math.min(.05, Math.max(1 / 240, (now - launcherLastFrameRef.current) / 1000));
+          launcherLastFrameRef.current = now;
+          const followed = followCompanionPosition(from, target, dt, Boolean(prefersReduced));
+          const next = clampCompanionPosition(followed.x, followed.y, launcher.offsetWidth, launcher.offsetHeight, launcher);
+          companionDragRef.current = advanceCompanionDrag(companionDragRef.current, from, next, dt, now);
+          launcherPositionRef.current = next;
+          launcher.style.left = `${next.x}px`;
+          launcher.style.top = `${next.y}px`;
+          launcher.style.right = 'auto';
+          launcher.style.bottom = 'auto';
+          launcherFrameRef.current = companionDragRef.current.speed === 0 && Math.hypot(next.x - target.x, next.y - target.y) < .01
+            ? null : window.requestAnimationFrame(follow);
+        } else {
+          launcherFrameRef.current = null;
+        }
+      };
+      launcherFrameRef.current = window.requestAnimationFrame(follow);
+    }
+  };
+
+  const finishLauncherDrag = () => {
+    if (launcherFrameRef.current !== null) window.cancelAnimationFrame(launcherFrameRef.current);
+    launcherFrameRef.current = null;
+    companionDragRef.current = { ...companionDragRef.current, speed: 0, velocityX: 0, velocityY: 0, lastMovedAt: 0, facingTravel: 0 };
+    const next = launcherPositionRef.current;
+    if (next) {
+      setPosition(next);
+      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* Optional placement storage. */ }
+    }
+    setIsDragging(false);
   };
 
   const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (!pointerStartRef.current) return;
+    if (!pointerStartRef.current || e.pointerId !== pointerStartRef.current.pointerId) return;
+
+    const wasMoved = pointerStartRef.current.moved;
+    pointerStartRef.current = null;
 
     try {
       e.currentTarget.releasePointerCapture(e.pointerId);
@@ -798,18 +958,8 @@ export function CareerChatbot() {
       // Ignore
     }
 
-    const wasMoved = pointerStartRef.current.moved;
-    pointerStartRef.current = null;
-
     if (wasMoved) {
-      if (position) {
-        try {
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(position));
-        } catch {
-          // Ignore
-        }
-      }
-      setTimeout(() => setIsDragging(false), 80);
+      finishLauncherDrag();
     } else {
       setIsDragging(false);
       setIsOpen(true);
@@ -817,13 +967,16 @@ export function CareerChatbot() {
   };
 
   const handlePointerCancel = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!pointerStartRef.current || e.pointerId !== pointerStartRef.current.pointerId) return;
+    const moved = pointerStartRef.current.moved;
+    pointerStartRef.current = null;
     try {
       e.currentTarget.releasePointerCapture(e.pointerId);
     } catch {
       // Ignore
     }
-    pointerStartRef.current = null;
-    setIsDragging(false);
+    if (moved) finishLauncherDrag();
+    else setIsDragging(false);
   };
 
   const handleKeyDownLauncher = (e: React.KeyboardEvent<HTMLButtonElement>) => {
@@ -1257,14 +1410,28 @@ export function CareerChatbot() {
       touchAction: 'none',
     };
 
+  const assistantMode = isFullScreen ? 'expanded' : 'docked';
+  const showWelcomeTools = messages.length <= 2 && !chatLoading;
+  const assistantInstitution = (careerProfile?.studentProfile?.institution || '').trim();
+  const assistantTargetRole = (careerProfile?.targetRole || '').trim();
+  const assistantSubtitle = assistantInstitution && assistantTargetRole
+    ? assistantInstitution + ' · ' + assistantTargetRole
+    : assistantTargetRole
+      ? 'Target: ' + assistantTargetRole
+      : assistantInstitution || (isFullScreen ? 'Career guidance · Expanded' : 'Career guidance and mentorship');
+
   return (
     <>
       <AnimatePresence mode="wait">
         {/* Floating Draggable Launcher Trigger */}
-        {!isOpen && (
+        {!isOpen && !presentation.blocked && (
           <motion.div
             key="chat-launcher"
             data-chat-drag="true"
+            data-assistant-mode="collapsed"
+            data-assistant-state={presentation.state}
+            data-dragging={isDragging}
+            data-placement-ready="false"
             ref={launcherRef}
             style={launcherStyle}
             initial={prefersReduced ? { opacity: 1 } : { opacity: 0, scale: 0.9 }}
@@ -1275,28 +1442,27 @@ export function CareerChatbot() {
             onPointerMove={handlePointerMove}
             onPointerUp={handlePointerUp}
             onPointerCancel={handlePointerCancel}
-            className={`z-40 select-none no-print transition-shadow ${isDragging ? 'cursor-grabbing opacity-90' : 'cursor-grab'
+            onLostPointerCapture={handlePointerCancel}
+            onPointerEnter={(e) => { if (e.pointerType === 'mouse') setPetHovered(true); }}
+            onPointerLeave={() => setPetHovered(false)}
+            className={`${chatStyles.launcher} z-40 select-none no-print ${isDragging ? 'cursor-grabbing' : 'cursor-grab'
               }`}
           >
             <button
               type="button"
               onClick={(e) => {
-                if (isDragging) {
+                if (suppressLauncherClickRef.current || isDragging) {
                   e.preventDefault();
                   return;
                 }
                 setIsOpen(true);
               }}
               onKeyDown={handleKeyDownLauncher}
-              className="flex items-center gap-2 sm:gap-2.5 px-4 py-2.5 rounded-full btn-primary shadow-xl group cursor-pointer select-none"
+              className={chatStyles.launcherButton}
               aria-label="Open AI Assistant (Draggable, use arrow keys to reposition)"
-              title={position ? "AI Assistant (Drag to move, Home key to reset)" : "AI Assistant (Drag to reposition)"}
+              title={position ? 'Career Copilot (Drag to move, Home key to reset)' : 'Career Copilot (Drag to reposition)'}
             >
-              <div className="w-5 h-5 rounded-full bg-white/25 flex items-center justify-center shrink-0 group-hover:rotate-12 transition-transform">
-                <Bot className="w-3.5 h-3.5" />
-              </div>
-              <span className="text-xs font-semibold tracking-wide hidden xs:inline sm:inline">AI Assistant</span>
-              <GripHorizontal className="w-3.5 h-3.5 text-white/70 ml-0.5 opacity-80" aria-hidden="true" />
+              <AssistantCompanion state={presentation.state} size={80} hovered={petHovered} dragging={isDragging} dragRef={companionDragRef} paused={presentation.blocked || isPanelDragging || showClearConfirm} />
             </button>
           </motion.div>
         )}
@@ -1307,6 +1473,8 @@ export function CareerChatbot() {
             role="dialog"
             aria-label="Smart Resume AI Assistant"
             aria-modal={isFullScreen}
+            data-assistant-mode={assistantMode}
+            data-assistant-state={presentation.state}
             ref={panelRef}
             style={getPanelStyle()}
             initial={
@@ -1333,59 +1501,58 @@ export function CareerChatbot() {
             transition={prefersReduced ? { duration: 0 } : { duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className={
               isFullScreen
-                ? 'fixed inset-0 z-50 w-screen h-[100dvh] max-h-[100dvh] bg-[var(--bg-primary)]/98 backdrop-blur-md flex flex-col overflow-hidden no-print'
-                : 'fixed inset-x-2 bottom-2 sm:inset-x-auto z-50 w-auto sm:w-[460px] max-w-[calc(100vw-16px)] sm:max-w-none h-[560px] sm:h-[620px] max-h-[calc(100dvh-16px)] sm:max-h-[85vh] rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] shadow-xl flex flex-col overflow-hidden no-print'
+                ? 'fixed inset-0 z-50 flex h-[100dvh] max-h-[100dvh] w-screen flex-col overflow-hidden bg-bg no-print'
+                : 'fixed inset-x-0 bottom-0 z-50 flex h-[92dvh] max-h-[calc(100dvh-0.5rem)] w-full flex-col overflow-hidden rounded-t-panel border border-border-hairline bg-bg shadow-popover no-print sm:inset-x-auto sm:bottom-6 sm:h-[700px] sm:max-h-[calc(100dvh-3rem)] sm:w-[420px] sm:rounded-panel'
             }
           >
             {/* Header */}
             <div
               data-chat-drag="true"
-              className={`shrink-0 px-4 py-3 sm:px-6 bg-[var(--bg-secondary)] border-b border-[var(--border-color)] relative select-none ${isFullScreen ? '' : isPanelDragging ? 'cursor-grabbing select-none touch-none' : 'cursor-grab touch-none'
-                }`}
+              className={[
+                'relative shrink-0 select-none border-b border-border-hairline bg-bg px-4 py-3 sm:px-5',
+                isFullScreen
+                  ? ''
+                  : isPanelDragging
+                    ? 'cursor-grabbing select-none touch-none'
+                    : 'cursor-grab touch-none',
+              ].join(' ')}
               onPointerDown={handlePanelPointerDown}
               onPointerMove={handlePanelPointerMove}
               onPointerUp={finishPanelDrag}
               onPointerCancel={cancelPanelDrag}
             >
-              <div className={`flex items-center justify-between ${isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}`}>
-                <div className="flex items-center gap-2.5">
-                  <div className="w-8 h-8 rounded-full bg-[var(--accent)]/15 text-[var(--accent)] flex items-center justify-center shrink-0 border border-[var(--accent)]/20 shadow-xs">
-                    <Bot className="w-4 h-4" />
+              <div className={['mx-auto flex w-full items-center justify-between gap-3', isFullScreen ? 'max-w-3xl' : ''].join(' ')}>
+                <div className="flex min-w-0 items-center gap-3">
+                  <div data-nimbus-header className="shrink-0">
+                    <AssistantCompanion state={presentation.state} size={32} paused />
                   </div>
-                  <div>
-                    <div className="flex items-center gap-1.5">
-                      <h3 className="text-xs sm:text-sm font-bold text-[var(--text-primary)] leading-none">
-                        AI Assistant
+                  <div className="min-w-0">
+                    <div className="flex items-center gap-2">
+                      <h3 className="truncate text-h3 font-semibold tracking-heading text-text">
+                        Career Copilot
                       </h3>
-                      {careerProfile?.metrics?.readinessScore !== undefined && (
-                        <span className="px-1.5 py-0.5 rounded-full text-[9px] font-semibold bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20">
+                      {isFullScreen && careerProfile?.metrics?.readinessScore !== undefined && (
+                        <span className="hidden rounded-full bg-accent-tint px-2 py-0.5 text-caption font-medium text-accent sm:inline-flex">
                           {careerProfile.metrics.readinessScore}% Ready
                         </span>
                       )}
                     </div>
-                    <span className="text-[10px] text-[var(--text-secondary)] mt-1 inline-block truncate max-w-[210px] sm:max-w-xs">
-                      {(() => {
-                        const inst = (careerProfile?.studentProfile?.institution || '').trim();
-                        const role = (careerProfile?.targetRole || '').trim();
-                        if (inst && role) return `${inst} · ${role}`;
-                        if (role) return `Target: ${role}`;
-                        if (inst) return inst;
-                        return isFullScreen ? 'Career guidance · Full screen' : 'Career guidance & mentorship';
-                      })()}
+                    <span className="mt-0.5 block max-w-[13rem] truncate text-caption text-text-secondary sm:max-w-xs">
+                      <span>AI Assistant</span> · {assistantSubtitle}
                     </span>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-1.5">
+                <div className="flex shrink-0 items-center gap-1" aria-label="Assistant toolbar">
                   {(position || panelPosition) && (
                     <button
                       type="button"
                       onClick={handleResetPosition}
                       title="Reset position to default bottom-right (Home)"
                       aria-label="Reset position to default bottom-right"
-                      className="btn-icon btn-icon-sm rounded-full cursor-pointer"
+                      className="hidden h-9 w-9 items-center justify-center rounded-control text-text-secondary transition-colors hover:bg-bg-subtle hover:text-text sm:inline-flex"
                     >
-                      <Compass className="w-3.5 h-3.5" />
+                      <Compass className="h-4 w-4" />
                     </button>
                   )}
                   <button
@@ -1393,22 +1560,22 @@ export function CareerChatbot() {
                     onClick={() => setShowClearConfirm(true)}
                     title="Reset conversation"
                     aria-label="Reset conversation"
-                    className="btn-icon btn-icon-sm rounded-full"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-control text-text-secondary transition-colors hover:bg-bg-subtle hover:text-text sm:h-9 sm:w-9"
                   >
-                    <RotateCcw className="w-3.5 h-3.5" />
+                    <RotateCcw className="h-4 w-4" />
                   </button>
                   <button
                     type="button"
                     onClick={toggleFullScreen}
-                    title={isFullScreen ? 'Exit full screen (Esc)' : 'Expand to full screen'}
-                    aria-label={isFullScreen ? 'Exit full screen mode' : 'Expand chat to full screen'}
+                    title={isFullScreen ? 'Return to docked mode' : 'Expand assistant'}
+                    aria-label={isFullScreen ? 'Dock assistant' : 'Expand assistant'}
                     aria-expanded={isFullScreen}
-                    className="btn-icon btn-icon-sm rounded-full"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-control text-text-secondary transition-colors hover:bg-bg-subtle hover:text-text sm:h-9 sm:w-9"
                   >
                     {isFullScreen ? (
-                      <Minimize2 className="w-3.5 h-3.5" />
+                      <Minimize2 className="h-4 w-4" />
                     ) : (
-                      <Maximize2 className="w-3.5 h-3.5" />
+                      <Maximize2 className="h-4 w-4" />
                     )}
                   </button>
                   <button
@@ -1417,32 +1584,38 @@ export function CareerChatbot() {
                       setIsFullScreen(false);
                       setIsOpen(false);
                     }}
-                    title="Close chat"
-                    aria-label="Close chat"
-                    className="btn-icon btn-icon-sm rounded-full"
+                    title="Collapse assistant"
+                    aria-label="Collapse assistant"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-control text-text-secondary transition-colors hover:bg-bg-subtle hover:text-text sm:h-9 sm:w-9"
                   >
-                    <X className="w-4 h-4" />
+                    <ChevronDown className="h-4 w-4" />
                   </button>
                 </div>
               </div>
 
               {/* Clear Conversation Confirmation Modal */}
               {showClearConfirm && (
-                <div data-chat-no-drag="true" role="alertdialog" aria-modal="true" aria-label="Clear conversation confirmation" className="absolute inset-x-4 top-14 z-30 p-4 rounded-2xl bg-[var(--bg-card)]/95 border border-[var(--border-color)] shadow-xl backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150">
+                <div
+                  data-chat-no-drag="true"
+                  role="alertdialog"
+                  aria-modal="true"
+                  aria-label="Clear conversation confirmation"
+                  className="absolute inset-x-3 top-[calc(100%+0.5rem)] z-30 rounded-card border border-border bg-bg p-4 shadow-popover"
+                >
                   <div className="flex items-start gap-3">
-                    <div className="p-2 rounded-full bg-amber-500/10 text-amber-500 border border-amber-500/20 shrink-0">
-                      <AlertCircle className="w-4 h-4" />
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-control bg-warning-tint text-warning">
+                      <AlertCircle className="h-4 w-4" />
                     </div>
-                    <div className="flex-1 text-xs">
-                      <p className="font-semibold text-[var(--text-primary)]">Clear conversation?</p>
-                      <p className="text-[var(--text-secondary)] mt-0.5">
+                    <div className="flex-1 text-body">
+                      <p className="font-semibold text-text">Clear conversation?</p>
+                      <p className="mt-1 text-small text-text-secondary">
                         All messages in this session will be removed. This cannot be undone.
                       </p>
-                      <div className="mt-3 flex items-center gap-2 justify-end">
+                      <div className="mt-4 flex items-center justify-end gap-2">
                         <button
                           type="button"
                           onClick={() => setShowClearConfirm(false)}
-                          className="btn-secondary btn-sm rounded-full text-xs"
+                          className="inline-flex min-h-10 items-center justify-center rounded-control bg-bg-subtle px-3 text-small font-medium text-text transition-colors hover:bg-border-hairline"
                         >
                           Cancel
                         </button>
@@ -1452,7 +1625,7 @@ export function CareerChatbot() {
                             handleReset();
                             setShowClearConfirm(false);
                           }}
-                          className="btn-destructive btn-sm rounded-full text-xs"
+                          className="inline-flex min-h-10 items-center justify-center rounded-control bg-danger px-3 text-small font-medium text-on-accent transition-colors"
                         >
                           Clear conversation
                         </button>
@@ -1463,9 +1636,23 @@ export function CareerChatbot() {
               )}
             </div>
 
+            <span className="sr-only" aria-live="polite" aria-atomic="true">
+              {!chatLoading && presentation.state === 'answering' ? 'Answer ready' : presentation.state === 'success' ? 'Answer copied' : ''}
+            </span>
             {/* Messages Body */}
-            <div className="flex-1 min-h-0 overflow-y-auto p-4 sm:px-6 space-y-4 text-[14px] sm:text-[15px]">
-              <div className={`space-y-4 ${isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}`}>
+            <div
+              ref={messageScrollRef}
+              className="min-h-0 flex-1 overflow-y-auto bg-bg px-4 py-5 sm:px-5"
+              role="log"
+              aria-live="polite"
+              aria-relevant="additions"
+            >
+              <div className={['mx-auto w-full space-y-6', isFullScreen ? 'max-w-3xl' : ''].join(' ')}>
+                {welcomeOnly && (
+                  <div data-nimbus-welcome className="flex justify-center">
+                    <AssistantCompanion state={presentation.state} size={96} paused={mascotPaused || chatLoading} />
+                  </div>
+                )}
                 <AnimatePresence initial={false}>
                   {messages.map((m) => (
                     <motion.div
@@ -1475,19 +1662,21 @@ export function CareerChatbot() {
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, scale: 0.96 }}
                       transition={prefersReduced ? { duration: 0 } : { duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                      className={`flex gap-3 ${m.role === 'user' ? 'justify-end' : 'justify-start'}`}
+                      className={['flex gap-3', m.role === 'user' ? 'justify-end' : 'justify-start'].join(' ')}
                     >
                       {m.role === 'assistant' && (
-                        <div className="w-7 h-7 rounded-full bg-[#3157C8]/10 text-[#3157C8] flex items-center justify-center shrink-0 mt-0.5 border border-[#3157C8]/20">
-                          <Bot className="w-4 h-4" />
+                        <div data-nimbus-message className="mt-0.5 w-8 shrink-0">
+                          <AssistantCompanion state={m.id === latestAssistantId && presentation.state === 'answering' ? 'answering' : 'idle'} size={24} paused />
                         </div>
                       )}
 
                       <div
-                        className={`max-w-[85%] rounded-2xl px-4 py-3 leading-relaxed ${m.role === 'user'
-                          ? 'bg-[#3157C8] text-white rounded-br-xs'
-                          : 'bg-white text-[#20242B] border border-[#E5E8ED] shadow-xs rounded-bl-xs'
-                          }`}
+                        className={[
+                          'min-w-0 leading-relaxed',
+                          m.role === 'user'
+                            ? 'max-w-[86%] rounded-card bg-accent px-4 py-3 text-on-accent'
+                            : 'flex-1 pt-0.5 text-text',
+                        ].join(' ')}
                       >
                         {m.role === 'assistant' ? (
                           <FormattedAssistantMessage content={m.content} />
@@ -1495,10 +1684,15 @@ export function CareerChatbot() {
                           <div className="whitespace-pre-wrap">{m.content}</div>
                         )}
 
-                        <div className="mt-2 flex items-center justify-between gap-3 text-[12px] opacity-75">
+                        <div
+                          className={[
+                            'mt-3 flex items-center justify-between gap-3 text-caption',
+                            m.role === 'user' ? 'text-on-accent/75' : 'text-text-secondary',
+                          ].join(' ')}
+                        >
                           <div className="flex items-center gap-2">
                             <span>{m.timestamp}</span>
-                            {m.provider && <span className="font-mono text-[11px]">{m.provider}</span>}
+                            {m.provider && <span className="font-mono">{m.provider}</span>}
                           </div>
                           {m.role === 'assistant' && (
                             <div className="flex items-center gap-2">
@@ -1506,18 +1700,18 @@ export function CareerChatbot() {
                               <button
                                 type="button"
                                 onClick={() => handleCopyMessage(m.id, m.content)}
-                                className="inline-flex items-center gap-1 hover:text-[#20242B] transition-colors cursor-pointer px-1.5 py-0.5 rounded hover:bg-slate-100"
+                                className="inline-flex min-h-8 items-center gap-1 rounded-control px-2 text-caption font-medium transition-colors hover:bg-bg-subtle hover:text-text"
                                 title={copiedMessageId === m.id ? 'Copied to clipboard' : 'Copy answer'}
                                 aria-label={copiedMessageId === m.id ? 'Answer copied' : 'Copy assistant answer'}
                               >
                                 {copiedMessageId === m.id ? (
                                   <>
-                                    <Check className="w-3.5 h-3.5 text-emerald-600" />
-                                    <span className="text-emerald-600 font-medium">Copied</span>
+                                    <Check className="h-3.5 w-3.5 text-success" />
+                                    <span className="font-medium text-success">Copied</span>
                                   </>
                                 ) : (
                                   <>
-                                    <Copy className="w-3.5 h-3.5" />
+                                    <Copy className="h-3.5 w-3.5" />
                                     <span>Copy</span>
                                   </>
                                 )}
@@ -1526,46 +1720,101 @@ export function CareerChatbot() {
                           )}
                         </div>
                       </div>
-
-                      {m.role === 'user' && (
-                        <div className="w-7 h-7 rounded-full bg-[#3157C8]/10 text-[#3157C8] border border-[#3157C8]/20 flex items-center justify-center shrink-0 mt-0.5 font-bold text-[12px]">
-                          {user?.name ? user.name.charAt(0).toUpperCase() : 'U'}
-                        </div>
-                      )}
                     </motion.div>
                   ))}
 
                   {chatLoading && (
-                    <motion.div
-                      layout
-                      initial={{ opacity: 0, y: 4 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: -4 }}
-                      transition={{ duration: 0.15 }}
-                      className="flex items-center gap-2 text-[var(--text-secondary)] text-xs py-2"
-                      role="status"
-                      aria-live="polite"
-                    >
-                      <Loader2 className="w-3.5 h-3.5 animate-spin text-[var(--accent)]" />
-                      <span>Generating response...</span>
-                    </motion.div>
+                    <TypingIndicator reducedMotion={prefersReduced} paused={mascotPaused} />
                   )}
                 </AnimatePresence>
 
+                {showWelcomeTools && (
+                  <motion.section
+                    initial={prefersReduced ? { opacity: 1 } : { opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={prefersReduced ? { duration: 0 } : { duration: 0.2, delay: 0.04 }}
+                    className="ml-11 space-y-5 rounded-card border border-border-hairline bg-bg-subtle-2 p-4"
+                    aria-label="Career Copilot suggestions"
+                  >
+                    <div>
+                      <p className="text-body font-semibold text-text">Choose a focus</p>
+                      <p className="mt-1 text-small text-text-secondary">
+                        Start with a question or use a quick command for a focused next step.
+                      </p>
+                    </div>
+
+                    <div className="flex flex-wrap gap-2" role="group" aria-label="Career contexts" data-chat-no-drag="true">
+                      {CONTEXT_CHIPS.map((chip) => (
+                        <button
+                          key={chip.key}
+                          type="button"
+                          data-chat-no-drag="true"
+                          onClick={() => setSelectedPromptCategory(chip.key)}
+                          aria-pressed={selectedPromptCategory === chip.key}
+                          className={[
+                            'inline-flex min-h-9 items-center justify-center rounded-full border px-3 text-caption font-medium transition-colors',
+                            selectedPromptCategory === chip.key
+                              ? 'border-accent bg-accent-tint text-accent'
+                              : 'border-border-hairline bg-bg text-text-secondary hover:border-border hover:text-text',
+                          ].join(' ')}
+                        >
+                          {chip.label}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="space-y-2" data-chat-no-drag="true">
+                      <p className="text-caption font-medium uppercase tracking-wider text-text-tertiary">Suggested questions</p>
+                      {getCategoryPrompts().map((prompt) => (
+                        <button
+                          key={prompt.id}
+                          type="button"
+                          data-chat-no-drag="true"
+                          onClick={() => handleSend(prompt.text)}
+                          className="flex min-h-11 w-full items-center rounded-control border border-border-hairline bg-bg px-3 py-2.5 text-left text-small text-text transition-colors hover:border-border hover:bg-bg-subtle"
+                        >
+                          {prompt.text}
+                        </button>
+                      ))}
+                    </div>
+
+                    <div className="border-t border-border-hairline pt-4" data-chat-no-drag="true">
+                      <div className="mb-2 flex items-center gap-2 text-caption font-medium uppercase tracking-wider text-text-tertiary">
+                        <Command className="h-4 w-4" aria-hidden="true" />
+                        <span>Quick commands</span>
+                      </div>
+                      <div className={['grid gap-2', isFullScreen ? 'sm:grid-cols-3' : ''].join(' ')}>
+                        {getCommandSuggestions().map((suggestion) => (
+                          <button
+                            key={suggestion.id}
+                            type="button"
+                            data-chat-no-drag="true"
+                            onClick={() => handleSend(suggestion.prompt)}
+                            className="flex min-h-11 items-center gap-3 rounded-control border border-border-hairline bg-bg px-3 py-2.5 text-left transition-colors hover:border-border hover:bg-bg-subtle"
+                          >
+                            <code className="shrink-0 font-mono text-caption font-medium text-accent">{suggestion.command}</code>
+                            <span className="text-small text-text">{suggestion.label}</span>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  </motion.section>
+                )}
+
                 {error && (
-                  <div className="p-3 rounded-xl bg-red-500/10 border border-red-500/20 text-red-600 dark:text-red-400 text-xs flex flex-col gap-2" role="alert">
+                  <div className="ml-11 flex flex-col gap-3 rounded-card border border-danger bg-danger-tint p-3 text-small text-danger" role="alert">
                     <div className="flex items-start gap-2">
-                      <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+                      <AlertCircle className="mt-0.5 h-4 w-4 shrink-0" />
                       <span className="leading-relaxed">{error}</span>
                     </div>
                     {lastFailedMessage && (
-                      <div className="flex justify-end pt-1">
+                      <div className="flex justify-end">
                         <button
                           type="button"
                           onClick={() => handleSend(lastFailedMessage)}
-                          className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-red-600 hover:bg-red-700 text-white font-medium text-[11px] transition-colors cursor-pointer"
+                          className="inline-flex min-h-10 items-center gap-1.5 rounded-control bg-danger px-3 text-small font-medium text-on-accent transition-colors"
                         >
-                          <RotateCcw className="w-3.5 h-3.5" />
+                          <RotateCcw className="h-3.5 w-3.5" />
                           Retry
                         </button>
                       </div>
@@ -1577,64 +1826,15 @@ export function CareerChatbot() {
               </div>
             </div>
 
-            {/* Starter Prompt Chips with Categories */}
-            {messages.length <= 2 && (
-              <div className="shrink-0 px-4 py-2.5 sm:px-6 border-t border-[var(--glass-border)] bg-[var(--glass-bg)]">
-                <div className={isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}>
-                  <div className="flex items-center justify-between gap-2 mb-2">
-                    <span className="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-wider block shrink-0">
-                      Suggested Topics
-                    </span>
-                    <div className="flex items-center gap-1 overflow-x-auto no-scrollbar py-0.5" data-chat-no-drag="true">
-                      {[
-                        { key: 'all', label: 'All' },
-                        { key: 'resume', label: 'Resume' },
-                        { key: 'projects', label: 'Projects' },
-                        { key: 'interview', label: 'Interview' },
-                        { key: 'skills', label: 'Skills' },
-                        { key: 'jobs', label: 'Jobs' },
-                      ].map((cat) => (
-                        <button
-                          key={cat.key}
-                          type="button"
-                          data-chat-no-drag="true"
-                          onClick={() => setSelectedPromptCategory(cat.key as any)}
-                          className={`text-[10px] px-2 py-0.5 rounded-full transition-all cursor-pointer font-medium ${selectedPromptCategory === cat.key
-                            ? 'bg-[var(--accent)] text-white shadow-xs'
-                            : 'bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
-                            }`}
-                        >
-                          {cat.label}
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto no-scrollbar" data-chat-no-drag="true">
-                    {getCategoryPrompts().map((prompt) => (
-                      <button
-                        key={prompt.id}
-                        type="button"
-                        data-chat-no-drag="true"
-                        onClick={() => handleSend(prompt.text)}
-                        className="text-[11px] px-3 py-1 rounded-full bg-[var(--bg-secondary)] border border-[var(--border-color)] text-[var(--text-secondary)] hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--bg-elevated)] transition-all text-left cursor-pointer shadow-xs leading-snug"
-                      >
-                        {prompt.text}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Input Form */}
-            <div className="shrink-0 p-3 sm:px-6 border-t border-[var(--glass-border)] bg-[var(--glass-bg)] backdrop-blur-md pb-[max(0.75rem,env(safe-area-inset-bottom))]">
-              <div className={isFullScreen ? 'max-w-4xl mx-auto w-full' : ''}>
+            <div className="shrink-0 border-t border-border-hairline bg-bg px-3 pt-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
+              <div className={['mx-auto w-full', isFullScreen ? 'max-w-3xl' : ''].join(' ')}>
                 <form
                   onSubmit={(e) => {
                     e.preventDefault();
                     handleSend();
                   }}
-                  className="flex items-end gap-2"
+                  className="flex items-end gap-2 rounded-card border border-border-input bg-bg p-2 focus-within:border-2 focus-within:border-accent"
                 >
                   <textarea
                     ref={textareaRef}
@@ -1646,29 +1846,29 @@ export function CareerChatbot() {
                     maxLength={2000}
                     disabled={chatLoading}
                     aria-describedby="chat-input-help"
-                    className="flex-1 min-h-[44px] max-h-[120px] resize-none py-2.5 px-4 text-xs sm:text-sm rounded-2xl bg-[var(--input-bg)] border border-[var(--border-color)] text-[var(--text-primary)] placeholder:text-[var(--text-muted)] focus:outline-none focus:border-[var(--accent)] focus:shadow-[0_0_0_3px_rgba(79,131,241,0.22)] disabled:opacity-50 transition-all leading-relaxed shadow-xs"
+                    style={{ outline: 'none' }}
+                    className="min-h-11 max-h-[120px] flex-1 resize-none border-0 bg-transparent px-2 py-2 text-body-lg leading-relaxed text-text outline-none placeholder:text-text-tertiary disabled:opacity-50 sm:text-body"
                   />
                   <span id="chat-input-help" className="sr-only">Press Enter to send. Press Shift and Enter for a new line.</span>
                   {chatLoading ? (
                     <button
                       type="button"
                       onClick={handleStopGeneration}
-                      className="btn-destructive h-11 px-4 rounded-full flex items-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-sm"
+                      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-danger text-on-accent transition-colors"
                       title="Stop generating response"
                       aria-label="Stop generating response"
                     >
-                      <Square className="w-3.5 h-3.5 fill-current" />
-                      <span className="text-xs font-semibold hidden sm:inline">Stop</span>
+                      <Square className="h-3.5 w-3.5 fill-current" />
                     </button>
                   ) : (
                     <button
                       type="submit"
                       disabled={!input.trim()}
-                      className="btn-primary h-11 w-11 p-0 rounded-full flex items-center justify-center transition-all cursor-pointer shrink-0 shadow-sm disabled:opacity-40"
+                      className="inline-flex h-11 w-11 shrink-0 items-center justify-center rounded-control bg-accent text-on-accent transition-colors hover:bg-accent-hover disabled:cursor-not-allowed disabled:opacity-40"
                       aria-label="Send message"
                       title="Send message (Enter)"
                     >
-                      <Send className="w-4 h-4" />
+                      <Send className="h-4 w-4" />
                     </button>
                   )}
                 </form>
@@ -1677,6 +1877,12 @@ export function CareerChatbot() {
           </motion.div>
         )}
       </AnimatePresence>
+      {presentation.bubble && (
+        <aside data-nimbus-greeting className={`${chatStyles.greeting} no-print`} style={presentation.bubblePosition} aria-label="AI Assistant greeting">
+          <p>Ask me about your resume, jobs or interviews.</p>
+          <button type="button" onClick={presentation.dismissBubble} aria-label="Dismiss assistant greeting"><X className="h-4 w-4" aria-hidden="true" /></button>
+        </aside>
+      )}
     </>
   );
 }

@@ -97,7 +97,7 @@ export function Header() {
       <header
         data-no-print="true"
         className={cn(
-          "sticky top-0 z-20 w-full max-w-full glass-nav flex items-center justify-between px-4 sm:px-8 no-print overflow-hidden transition-all",
+          "app-topbar sticky top-3 z-20 w-auto mx-3 sm:mx-4 glass-nav border border-[var(--border-color)] rounded-full flex items-center justify-between px-4 sm:px-6 no-print overflow-hidden transition-all",
           isPublicLanding ? "h-12" : "h-14"
         )}
       >
@@ -215,7 +215,7 @@ export function Header() {
       <AnimatedDrawer
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
-        containerClassName="md:hidden"
+        containerClassName="lg:hidden"
         className="w-72 max-w-[85vw] p-5 flex flex-col justify-between"
       >
         <div>

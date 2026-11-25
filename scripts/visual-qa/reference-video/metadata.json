@@ -1,0 +1,344 @@
+{
+  "recording": "C:/Users/kiran/OneDrive/Videos/Screen Recordings/Screen Recording 2026-11-23 194730.mp4",
+  "duration": 41.3333,
+  "width": 1918,
+  "height": 878,
+  "frames": [
+    {
+      "time": 0,
+      "filename": "frame-000.000.png"
+    },
+    {
+      "time": 0.5,
+      "filename": "frame-000.500.png"
+    },
+    {
+      "time": 1,
+      "filename": "frame-001.000.png"
+    },
+    {
+      "time": 1.5,
+      "filename": "frame-001.500.png"
+    },
+    {
+      "time": 2,
+      "filename": "frame-002.000.png"
+    },
+    {
+      "time": 2.5,
+      "filename": "frame-002.500.png"
+    },
+    {
+      "time": 3,
+      "filename": "frame-003.000.png"
+    },
+    {
+      "time": 3.5,
+      "filename": "frame-003.500.png"
+    },
+    {
+      "time": 4,
+      "filename": "frame-004.000.png"
+    },
+    {
+      "time": 4.5,
+      "filename": "frame-004.500.png"
+    },
+    {
+      "time": 5,
+      "filename": "frame-005.000.png"
+    },
+    {
+      "time": 5.5,
+      "filename": "frame-005.500.png"
+    },
+    {
+      "time": 6,
+      "filename": "frame-006.000.png"
+    },
+    {
+      "time": 6.5,
+      "filename": "frame-006.500.png"
+    },
+    {
+      "time": 7,
+      "filename": "frame-007.000.png"
+    },
+    {
+      "time": 7.5,
+      "filename": "frame-007.500.png"
+    },
+    {
+      "time": 8,
+      "filename": "frame-008.000.png"
+    },
+    {
+      "time": 8.5,
+      "filename": "frame-008.500.png"
+    },
+    {
+      "time": 9,
+      "filename": "frame-009.000.png"
+    },
+    {
+      "time": 9.5,
+      "filename": "frame-009.500.png"
+    },
+    {
+      "time": 10,
+      "filename": "frame-010.000.png"
+    },
+    {
+      "time": 10.5,
+      "filename": "frame-010.500.png"
+    },
+    {
+      "time": 11,
+      "filename": "frame-011.000.png"
+    },
+    {
+      "time": 11.5,
+      "filename": "frame-011.500.png"
+    },
+    {
+      "time": 12,
+      "filename": "frame-012.000.png"
+    },
+    {
+      "time": 12.5,
+      "filename": "frame-012.500.png"
+    },
+    {
+      "time": 13,
+      "filename": "frame-013.000.png"
+    },
+    {
+      "time": 13.5,
+      "filename": "frame-013.500.png"
+    },
+    {
+      "time": 14,
+      "filename": "frame-014.000.png"
+    },
+    {
+      "time": 14.5,
+      "filename": "frame-014.500.png"
+    },
+    {
+      "time": 15,
+      "filename": "frame-015.000.png"
+    },
+    {
+      "time": 15.5,
+      "filename": "frame-015.500.png"
+    },
+    {
+      "time": 16,
+      "filename": "frame-016.000.png"
+    },
+    {
+      "time": 16.5,
+      "filename": "frame-016.500.png"
+    },
+    {
+      "time": 17,
+      "filename": "frame-017.000.png"
+    },
+    {
+      "time": 17.5,
+      "filename": "frame-017.500.png"
+    },
+    {
+      "time": 18,
+      "filename": "frame-018.000.png"
+    },
+    {
+      "time": 18.5,
+      "filename": "frame-018.500.png"
+    },
+    {
+      "time": 19,
+      "filename": "frame-019.000.png"
+    },
+    {
+      "time": 19.5,
+      "filename": "frame-019.500.png"
+    },
+    {
+      "time": 20,
+      "filename": "frame-020.000.png"
+    },
+    {
+      "time": 20.5,
+      "filename": "frame-020.500.png"
+    },
+    {
+      "time": 21,
+      "filename": "frame-021.000.png"
+    },
+    {
+      "time": 21.5,
+      "filename": "frame-021.500.png"
+    },
+    {
+      "time": 22,
+      "filename": "frame-022.000.png"
+    },
+    {
+      "time": 22.5,
+      "filename": "frame-022.500.png"
+    },
+    {
+      "time": 23,
+      "filename": "frame-023.000.png"
+    },
+    {
+      "time": 23.5,
+      "filename": "frame-023.500.png"
+    },
+    {
+      "time": 24,
+      "filename": "frame-024.000.png"
+    },
+    {
+      "time": 24.5,
+      "filename": "frame-024.500.png"
+    },
+    {
+      "time": 25,
+      "filename": "frame-025.000.png"
+    },
+    {
+      "time": 25.5,
+      "filename": "frame-025.500.png"
+    },
+    {
+      "time": 26,
+      "filename": "frame-026.000.png"
+    },
+    {
+      "time": 26.5,
+      "filename": "frame-026.500.png"
+    },
+    {
+      "time": 27,
+      "filename": "frame-027.000.png"
+    },
+    {
+      "time": 27.5,
+      "filename": "frame-027.500.png"
+    },
+    {
+      "time": 28,
+      "filename": "frame-028.000.png"
+    },
+    {
+      "time": 28.5,
+      "filename": "frame-028.500.png"
+    },
+    {
+      "time": 29,
+      "filename": "frame-029.000.png"
+    },
+    {
+      "time": 29.5,
+      "filename": "frame-029.500.png"
+    },
+    {
+      "time": 30,
+      "filename": "frame-030.000.png"
+    },
+    {
+      "time": 30.5,
+      "filename": "frame-030.500.png"
+    },
+    {
+      "time": 31,
+      "filename": "frame-031.000.png"
+    },
+    {
+      "time": 31.5,
+      "filename": "frame-031.500.png"
+    },
+    {
+      "time": 32,
+      "filename": "frame-032.000.png"
+    },
+    {
+      "time": 32.5,
+      "filename": "frame-032.500.png"
+    },
+    {
+      "time": 33,
+      "filename": "frame-033.000.png"
+    },
+    {
+      "time": 33.5,
+      "filename": "frame-033.500.png"
+    },
+    {
+      "time": 34,
+      "filename": "frame-034.000.png"
+    },
+    {
+      "time": 34.5,
+      "filename": "frame-034.500.png"
+    },
+    {
+      "time": 35,
+      "filename": "frame-035.000.png"
+    },
+    {
+      "time": 35.5,
+      "filename": "frame-035.500.png"
+    },
+    {
+      "time": 36,
+      "filename": "frame-036.000.png"
+    },
+    {
+      "time": 36.5,
+      "filename": "frame-036.500.png"
+    },
+    {
+      "time": 37,
+      "filename": "frame-037.000.png"
+    },
+    {
+      "time": 37.5,
+      "filename": "frame-037.500.png"
+    },
+    {
+      "time": 38,
+      "filename": "frame-038.000.png"
+    },
+    {
+      "time": 38.5,
+      "filename": "frame-038.500.png"
+    },
+    {
+      "time": 39,
+      "filename": "frame-039.000.png"
+    },
+    {
+      "time": 39.5,
+      "filename": "frame-039.500.png"
+    },
+    {
+      "time": 40,
+      "filename": "frame-040.000.png"
+    },
+    {
+      "time": 40.5,
+      "filename": "frame-040.500.png"
+    },
+    {
+      "time": 41,
+      "filename": "frame-041.000.png"
+    },
+    {
+      "time": 41.298300000000005,
+      "filename": "frame-041.298.png"
+    }
+  ]
+}

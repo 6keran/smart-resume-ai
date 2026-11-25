@@ -6,7 +6,7 @@ import { spawn } from 'node:child_process';
 const root = process.cwd();
 const originalEnv = { ...process.env };
 const runId = randomUUID();
-const dataDir = path.resolve(root, 'test-results', 'db');
+const dataDir = path.resolve(root, 'data', 'test_sandboxes');
 const runStem = `playwright-${runId}`;
 const databasePath = path.join(dataDir, `${runStem}.sqlite`);
 const storagePath = path.join(dataDir, `${runStem}.auth.json`);

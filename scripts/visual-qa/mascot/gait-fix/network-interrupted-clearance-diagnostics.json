@@ -1,0 +1,77 @@
+{
+  "title": "launcher is clear of visible controls on major pages at the top and bottom",
+  "project": "mobile-375x812",
+  "diagnostics": {
+    "consoleErrors": [
+      "Failed to load resource: net::ERR_NETWORK_CHANGED"
+    ],
+    "failedRequests": [
+      "GET http://127.0.0.1:3100/dashboard/applications?_rsc=j79Vj4yH5aoiafxS :: net::ERR_ABORTED",
+      "GET http://127.0.0.1:3100/register?_rsc=ei5oL2u6deBo0B0U :: net::ERR_NETWORK_CHANGED"
+    ],
+    "httpErrors": []
+  },
+  "pageState": {
+    "viewport": {
+      "width": 375,
+      "height": 812
+    },
+    "document": {
+      "width": 375,
+      "height": 1356
+    },
+    "horizontalOverflow": false,
+    "overflowElements": [
+      {
+        "tag": "div",
+        "className": "relative glass-card reference-panel p-5 sm:p-6 space-y-4 shadow-sm border border-[var(--border-color)] bg-[var(--bg-card",
+        "left": 16,
+        "right": 359,
+        "width": 343,
+        "scrollWidth": 354,
+        "clientWidth": 341
+      },
+      {
+        "tag": "div",
+        "className": "p-3.5 rounded-xl bg-[var(--bg-secondary)]/60 border border-[var(--border-color)] space-y-2 text-left",
+        "left": 37,
+        "right": 338,
+        "width": 301,
+        "scrollWidth": 333,
+        "clientWidth": 299
+      },
+      {
+        "tag": "div",
+        "className": "flex items-center gap-2",
+        "left": 52,
+        "right": 323,
+        "width": 271,
+        "scrollWidth": 319,
+        "clientWidth": 271
+      },
+      {
+        "tag": "label",
+        "className": "sr-only",
+        "left": 36,
+        "right": 37,
+        "width": 1,
+        "scrollWidth": 100,
+        "clientWidth": 1
+      },
+      {
+        "tag": "label",
+        "className": "sr-only",
+        "left": 36,
+        "right": 37,
+        "width": 1,
+        "scrollWidth": 57,
+        "clientWidth": 1
+      }
+    ],
+    "brokenImages": [],
+    "fonts": {
+      "status": "loaded",
+      "loaded": true
+    }
+  }
+}

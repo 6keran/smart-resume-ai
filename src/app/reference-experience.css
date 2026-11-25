@@ -1,0 +1,64 @@
+/* The recorded paper / ink / violet system, scoped to screen UI. */
+@media screen {
+  .reference-experience { width: 100%; min-width: 0; flex: 1; animation: reference-page-in 320ms ease-out; }
+  .reference-experience--workspace,
+  .reference-experience--records,
+  .reference-experience--operations { --reference-heading: clamp(2.15rem, 3.6vw, 3.65rem); }
+  .reference-experience :where(h1:not(header h1)) { text-wrap: balance; }
+  .reference-experience--workspace h1:not(header h1),
+  .reference-experience--records h1:not(header h1),
+  .reference-experience--operations h1:not(header h1) { font-size: var(--reference-heading); font-weight: 650; letter-spacing: -.055em; line-height: 1.06; }
+  .reference-experience--operations { --reference-heading: clamp(2rem, 3vw, 3rem); }
+  .reference-experience :where(h2, h3) { letter-spacing: -.035em; }
+  .reference-panel,
+  [data-reference-panel] { border-radius: 22px; border-color: var(--color-border-hairline); background-color: var(--bg-card); box-shadow: var(--shadow-card); }
+  .reference-panel { transition: border-color 180ms ease, box-shadow 180ms ease; }
+  .reference-panel:hover { border-color: var(--color-border); }
+  .reference-experience :where(input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']), textarea, select) { border-radius: 12px; accent-color: var(--accent); }
+  .reference-experience :where(input, textarea, select):focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+  .reference-experience :where([role='tablist']) { border-radius: 999px; }
+  .reference-experience :where([role='tab']) { transition: background-color 180ms ease, color 180ms ease; }
+  .reference-experience :where(table) { border-collapse: separate; border-spacing: 0; }
+  .reference-experience :where(th) { font-family: var(--font-geist-mono), monospace; font-size: 11px; font-weight: 500; letter-spacing: .06em; }
+  .reference-experience :where(tbody tr) { transition: background-color 160ms ease; }
+  .reference-experience :where(tbody tr:hover) { background: var(--accent-subtle); }
+  .reference-experience--auth { background: var(--color-bg); }
+  .reference-auth-story { padding: 2rem 0; }
+  .reference-auth-story h1 { font-size: clamp(3.5rem, 5.4vw, 5.5rem); font-weight: 650; line-height: .98; letter-spacing: -.06em; }
+  .reference-auth-story h1 em { display: block; font-family: var(--font-serif), Georgia, serif; font-weight: 400; color: var(--accent); }
+  .reference-auth-form { border-radius: 26px; padding: clamp(1.75rem, 4vw, 3rem); box-shadow: 0 28px 65px -35px rgb(34 17 255 / .2), var(--shadow-card); }
+  .reference-auth-form h2 { font-size: 2rem; font-weight: 650; letter-spacing: -.05em; }
+  .reference-auth-step { min-height: 76px; border-radius: 16px; background: transparent; border-color: var(--color-border-hairline); box-shadow: none; backdrop-filter: none; }
+  .reference-dashboard-intro { background: transparent; border: 0; box-shadow: none; padding-inline: 0; padding-bottom: 1.75rem; }
+  .reference-dashboard-stage { border-radius: 28px; box-shadow: 0 25px 60px -35px rgb(34 17 255 / .22); overflow: hidden; }
+  .reference-dashboard-stage > div:first-child { background: #eeebff; border-color: #dfd8fa; }
+  .resume-builder-page-container .resume-preview-viewport { background-color: #e9e5df; border-radius: 20px; }
+  .reference-interview-stage { padding: clamp(1.25rem, 3vw, 2rem); border: 1px solid #302b40; border-radius: 26px; background: radial-gradient(ellipse at 0 0, #251947, transparent 70%), #0c0b14; color: #f7f6f2; --text-primary: #f7f6f2; --text-secondary: #c3bace; --text-muted: #a398b4; --bg-primary: #12101c; --bg-card: #191522; --bg-secondary: #211a2e; --border-color: #3b314d; --accent: #b6a7ff; --input-bg: #191522; }
+  .reference-interview-stage .btn-primary-action { color: #0c0b14; background: #b6a7ff; }
+  .reference-workspace-heading { padding-block: 2rem; background: transparent; border-bottom: 1px solid var(--color-border-hairline); }
+  .reference-workspace-heading p { max-width: 44rem; line-height: 1.65; }
+  .reference-experience--workspace > :where(div) { min-width: 0; }
+  .reference-experience--operations .app-sidebar { background: #0c0b14; --text-primary: #f7f6f2; --text-secondary: #c4c2ce; --text-muted: #a19dad; --accent: #b6aaff; --bg-card: #191821; --bg-elevated: #24222e; --border-color: #302d3c; --glass-border: #302d3c; --glass-bg: #191821; }
+  .reference-experience--operations .app-sidebar a:hover { background-color: #24222e; }
+  .reference-experience--operations .app-sidebar button { color: #f7f6f2; }
+  @keyframes reference-page-in { from { opacity: .4; } to { opacity: 1; } }
+  @media (max-width: 767px) {
+    .reference-experience--workspace,
+    .reference-experience--records,
+    .reference-experience--operations { --reference-heading: clamp(2rem, 7.6vw, 2.85rem); }
+    .reference-workspace-heading { padding-block: 1.25rem; }
+    .reference-dashboard-intro { padding-top: .5rem; }
+    .reference-auth-form { border-radius: 22px; }
+    .reference-experience [role='tablist'] { max-width: 100%; overflow-x: auto; }
+  }
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .app-sidebar { display: none !important; }
+    .app-topbar button[aria-label='Open navigation menu'],
+    .app-topbar button[aria-label='Open mobile navigation menu'],
+    .app-topbar button[aria-label='Open admin navigation menu'] { display: grid !important; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .reference-experience { animation: none !important; }
+    .reference-experience :where(*), .reference-experience :where(*)::before, .reference-experience :where(*)::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+  }
+}

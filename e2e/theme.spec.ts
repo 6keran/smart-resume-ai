@@ -14,7 +14,7 @@ test('theme selector switches between light and dark', async ({ page }) => {
 test('reduced-motion preference is respected by the landing page', async ({ page }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
-  await expect(page.getByRole('heading', { name: /intelligent workspace for your entire career/i })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /build a resume for the job you want/i })).toBeVisible();
   const runningAnimations = await page.evaluate(() => document.getAnimations().filter((animation) => animation.playState === 'running').length);
   expect(runningAnimations).toBe(0);
 });

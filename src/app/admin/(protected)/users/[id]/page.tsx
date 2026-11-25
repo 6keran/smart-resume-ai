@@ -396,7 +396,7 @@ export default function AdminUserDetailPage() {
         <GlassCard className="p-4 text-left">
           <div className="flex items-center justify-between text-[var(--text-secondary)] text-[10px] font-bold uppercase tracking-wider mb-1">
             <span>Verified</span>
-            <BadgeCheck className="w-3.5 h-3.5 text-blue-600" />
+            <BadgeCheck className="w-3.5 h-3.5 text-[var(--accent)]" />
           </div>
           <div className="text-xl font-black text-emerald-400">
             {verifiedSkills.length}
@@ -761,7 +761,7 @@ export default function AdminUserDetailPage() {
 
       {/* Confirmation Modal */}
       {showDeleteModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20242B]/40 animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--text-primary)]/40 animate-fade-in">
           <div className="w-full max-w-lg rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)] shadow-2xl p-6 space-y-5 text-left">
             {/* Modal Header */}
             <div className="flex items-start justify-between gap-3 border-b border-[var(--border-color)] pb-4">
@@ -810,7 +810,7 @@ export default function AdminUserDetailPage() {
             ) : (
               <>
                 {/* Account Details Box */}
-                <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3">
+                <div className="reference-panel p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] space-y-3">
                   <div className="flex items-center justify-between text-xs">
                     <span className="text-[var(--text-secondary)]">Candidate Name:</span>
                     <span className="font-bold text-[var(--text-primary)]">{user.name}</span>
@@ -851,7 +851,7 @@ export default function AdminUserDetailPage() {
                 type="button"
                 onClick={() => setShowDeleteModal(false)}
                 disabled={isDeleting}
-                className="px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-xs font-semibold text-[var(--text-primary)] transition-all"
+                className="reference-panel px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-xs font-semibold text-[var(--text-primary)] transition-all"
               >
                 Cancel
               </button>
@@ -881,11 +881,11 @@ export default function AdminUserDetailPage() {
 
       {/* Edit User Modal */}
       {showEditModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20242B]/40 animate-fade-in">
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--text-primary)]/40 animate-fade-in">
           <div className="w-full max-w-lg rounded-2xl border border-[var(--border-color)] bg-[var(--bg-secondary)] shadow-2xl p-6 space-y-5 text-left">
             <div className="flex items-start justify-between gap-3 border-b border-[var(--border-color)] pb-4">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-blue-500/15 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/25">
+                <div className="w-10 h-10 rounded-xl bg-[var(--accent-subtle)]0/15 text-blue-400 flex items-center justify-center shrink-0 border border-blue-500/25">
                   <Edit2 className="w-5 h-5" />
                 </div>
                 <div>
@@ -990,7 +990,7 @@ export default function AdminUserDetailPage() {
                   type="button"
                   onClick={() => setShowEditModal(false)}
                   disabled={isEditing}
-                  className="px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-xs font-semibold text-[var(--text-primary)] transition-all"
+                  className="reference-panel px-4 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] hover:bg-[var(--bg-elevated)] text-xs font-semibold text-[var(--text-primary)] transition-all"
                 >
                   Cancel
                 </button>

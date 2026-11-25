@@ -28,7 +28,7 @@ test('AI Assistant opens, greets accurately, responds and can be dragged', async
   await expect(panel.getByText(/Alex/i)).toHaveCount(0);
 
   const dragHandle = panel.locator('[data-chat-drag="true"]');
-  const titleBox = await panel.getByRole('heading', { name: 'AI Assistant' }).boundingBox();
+  const titleBox = await panel.getByRole('heading', { name: 'Career Copilot' }).boundingBox();
   const panelBefore = await panel.boundingBox();
   const box = titleBox;
   expect(box).not.toBeNull();

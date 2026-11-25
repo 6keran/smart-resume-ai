@@ -65,7 +65,7 @@ export function AdminSidebar({ adminEmail, adminRole }: AdminSidebarProps) {
     <aside
       data-no-print="true"
       className={cn(
-        'hidden md:flex flex-col border-r border-[var(--border-color)] bg-[var(--bg-primary)] transition-all duration-300 relative z-30 shrink-0 h-screen sticky top-0 no-print',
+        'app-sidebar hidden md:flex flex-col border border-[var(--border-color)] transition-all duration-300 relative z-30 shrink-0 h-[calc(100vh-1.5rem)] sticky top-3 my-3 ml-3 rounded-[26px] overflow-hidden no-print',
         collapsed ? 'w-20' : 'w-64'
       )}
     >

@@ -62,7 +62,7 @@ export function Sidebar() {
     <aside
       data-no-print="true"
       className={cn(
-        'hidden md:flex flex-col glass-sidebar transition-[width] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] relative z-30 shrink-0 h-screen sticky top-0 no-print select-none',
+        'app-sidebar hidden md:flex flex-col glass-sidebar border border-[var(--border-color)] transition-[width] duration-250 ease-[cubic-bezier(0.16,1,0.3,1)] relative z-30 shrink-0 h-[calc(100vh-1.5rem)] sticky top-3 my-3 ml-3 rounded-[26px] overflow-hidden no-print select-none',
         collapsed ? 'w-[72px]' : 'w-64'
       )}
     >

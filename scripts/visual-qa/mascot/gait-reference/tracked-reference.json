@@ -1,0 +1,524 @@
+{
+  "frames": [
+    {
+      "time": 0.0,
+      "name": "frame-0.000.png",
+      "x": 94.0,
+      "y": 112.0,
+      "headWidth": 92,
+      "headHeight": 80
+    },
+    {
+      "time": 0.2667,
+      "name": "frame-0.267.png",
+      "x": 94.0,
+      "y": 133.0,
+      "headWidth": 96,
+      "headHeight": 118
+    },
+    {
+      "time": 0.5333,
+      "name": "frame-0.533.png",
+      "x": 93.0,
+      "y": 132.0,
+      "headWidth": 102,
+      "headHeight": 120
+    },
+    {
+      "time": 0.8,
+      "name": "frame-0.800.png",
+      "x": 93.0,
+      "y": 132.0,
+      "headWidth": 102,
+      "headHeight": 120
+    },
+    {
+      "time": 1.0667,
+      "name": "frame-1.067.png",
+      "x": 93.0,
+      "y": 132.0,
+      "headWidth": 102,
+      "headHeight": 120
+    },
+    {
+      "time": 1.3333,
+      "name": "frame-1.333.png",
+      "x": 93.0,
+      "y": 132.0,
+      "headWidth": 102,
+      "headHeight": 120
+    },
+    {
+      "time": 1.6,
+      "name": "frame-1.600.png",
+      "x": 94.0,
+      "y": 132.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 1.8667,
+      "name": "frame-1.867.png",
+      "x": 94.0,
+      "y": 132.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 2.1333,
+      "name": "frame-2.133.png",
+      "x": 95.0,
+      "y": 133.0,
+      "headWidth": 98,
+      "headHeight": 118
+    },
+    {
+      "time": 2.4,
+      "name": "frame-2.400.png",
+      "x": 95.0,
+      "y": 125.0,
+      "headWidth": 90,
+      "headHeight": 118
+    },
+    {
+      "time": 2.6667,
+      "name": "frame-2.667.png",
+      "x": 110.0,
+      "y": 132.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 2.9333,
+      "name": "frame-2.933.png",
+      "x": 223.0,
+      "y": 165.0,
+      "headWidth": 94,
+      "headHeight": 118
+    },
+    {
+      "time": 3.2,
+      "name": "frame-3.200.png",
+      "x": 361.0,
+      "y": 163.0,
+      "headWidth": 94,
+      "headHeight": 118
+    },
+    {
+      "time": 3.4667,
+      "name": "frame-3.467.png",
+      "x": 407.0,
+      "y": 154.0,
+      "headWidth": 94,
+      "headHeight": 120
+    },
+    {
+      "time": 3.7333,
+      "name": "frame-3.733.png",
+      "x": 481.0,
+      "y": 199.0,
+      "headWidth": 94,
+      "headHeight": 118
+    },
+    {
+      "time": 4.0,
+      "name": "frame-4.000.png",
+      "x": 454.0,
+      "y": 324.0,
+      "headWidth": 96,
+      "headHeight": 120
+    },
+    {
+      "time": 4.2667,
+      "name": "frame-4.267.png",
+      "x": 301.0,
+      "y": 436.0,
+      "headWidth": 94,
+      "headHeight": 120
+    },
+    {
+      "time": 4.5333,
+      "name": "frame-4.533.png",
+      "x": 114.0,
+      "y": 454.0,
+      "headWidth": 92,
+      "headHeight": 120
+    },
+    {
+      "time": 4.8,
+      "name": "frame-4.800.png",
+      "x": 54.0,
+      "y": 314.0,
+      "headWidth": 96,
+      "headHeight": 120
+    },
+    {
+      "time": 5.0667,
+      "name": "frame-5.067.png",
+      "x": 111.0,
+      "y": 230.0,
+      "headWidth": 94,
+      "headHeight": 120
+    },
+    {
+      "time": 5.3333,
+      "name": "frame-5.333.png",
+      "x": 179.0,
+      "y": 159.0,
+      "headWidth": 94,
+      "headHeight": 78
+    },
+    {
+      "time": 5.6,
+      "name": "frame-5.600.png",
+      "x": 228.0,
+      "y": 172.0,
+      "headWidth": 96,
+      "headHeight": 120
+    },
+    {
+      "time": 5.8667,
+      "name": "frame-5.867.png",
+      "x": 236.0,
+      "y": 160.0,
+      "headWidth": 92,
+      "headHeight": 120
+    },
+    {
+      "time": 6.1333,
+      "name": "frame-6.133.png",
+      "x": 237.0,
+      "y": 141.0,
+      "headWidth": 90,
+      "headHeight": 78
+    },
+    {
+      "time": 6.4,
+      "name": "frame-6.400.png",
+      "x": 236.0,
+      "y": 170.0,
+      "headWidth": 92,
+      "headHeight": 120
+    },
+    {
+      "time": 6.6667,
+      "name": "frame-6.667.png",
+      "x": 236.0,
+      "y": 160.0,
+      "headWidth": 92,
+      "headHeight": 120
+    },
+    {
+      "time": 6.9333,
+      "name": "frame-6.933.png",
+      "x": 236.0,
+      "y": 160.0,
+      "headWidth": 92,
+      "headHeight": 120
+    },
+    {
+      "time": 7.2,
+      "name": "frame-7.200.png",
+      "x": 236.0,
+      "y": 170.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 7.4667,
+      "name": "frame-7.467.png",
+      "x": 236.0,
+      "y": 170.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 7.7333,
+      "name": "frame-7.733.png",
+      "x": 236.0,
+      "y": 170.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 8.0,
+      "name": "frame-8.000.png",
+      "x": 236.0,
+      "y": 170.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 8.2667,
+      "name": "frame-8.267.png",
+      "x": 236.0,
+      "y": 170.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 8.5333,
+      "name": "frame-8.533.png",
+      "x": 236.0,
+      "y": 170.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 8.8,
+      "name": "frame-8.800.png",
+      "x": 236.0,
+      "y": 160.0,
+      "headWidth": 92,
+      "headHeight": 120
+    },
+    {
+      "time": 9.0667,
+      "name": "frame-9.067.png",
+      "x": 237.0,
+      "y": 141.0,
+      "headWidth": 90,
+      "headHeight": 78
+    },
+    {
+      "time": 9.3333,
+      "name": "frame-9.333.png",
+      "x": 246.0,
+      "y": 150.0,
+      "headWidth": 100,
+      "headHeight": 80
+    },
+    {
+      "time": 9.6,
+      "name": "frame-9.600.png",
+      "x": 377.0,
+      "y": 331.0,
+      "headWidth": 94,
+      "headHeight": 78
+    },
+    {
+      "time": 9.8667,
+      "name": "frame-9.867.png",
+      "x": 391.0,
+      "y": 443.0,
+      "headWidth": 94,
+      "headHeight": 118
+    },
+    {
+      "time": 10.1333,
+      "name": "frame-10.133.png",
+      "x": 393.0,
+      "y": 428.0,
+      "headWidth": 94,
+      "headHeight": 120
+    },
+    {
+      "time": 10.4,
+      "name": "frame-10.400.png",
+      "x": 392.0,
+      "y": 444.0,
+      "headWidth": 92,
+      "headHeight": 120
+    },
+    {
+      "time": 10.6667,
+      "name": "frame-10.667.png",
+      "x": 392.0,
+      "y": 444.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 10.9333,
+      "name": "frame-10.933.png",
+      "x": 392.0,
+      "y": 444.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 11.2,
+      "name": "frame-11.200.png",
+      "x": 392.0,
+      "y": 444.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 11.4667,
+      "name": "frame-11.467.png",
+      "x": 391.0,
+      "y": 444.0,
+      "headWidth": 94,
+      "headHeight": 120
+    },
+    {
+      "time": 11.7333,
+      "name": "frame-11.733.png",
+      "x": 392.0,
+      "y": 444.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 12.0,
+      "name": "frame-12.000.png",
+      "x": 391.0,
+      "y": 444.0,
+      "headWidth": 94,
+      "headHeight": 120
+    },
+    {
+      "time": 12.2667,
+      "name": "frame-12.267.png",
+      "x": 392.0,
+      "y": 415.0,
+      "headWidth": 92,
+      "headHeight": 78
+    },
+    {
+      "time": 12.5333,
+      "name": "frame-12.533.png",
+      "x": 378.0,
+      "y": 436.0,
+      "headWidth": 96,
+      "headHeight": 120
+    },
+    {
+      "time": 12.8,
+      "name": "frame-12.800.png",
+      "x": 67.0,
+      "y": 222.0,
+      "headWidth": 94,
+      "headHeight": 120
+    },
+    {
+      "time": 13.0667,
+      "name": "frame-13.067.png",
+      "x": 126.0,
+      "y": 146.0,
+      "headWidth": 96,
+      "headHeight": 120
+    },
+    {
+      "time": 13.3333,
+      "name": "frame-13.333.png",
+      "x": 441.0,
+      "y": 162.0,
+      "headWidth": 94,
+      "headHeight": 120
+    },
+    {
+      "time": 13.6,
+      "name": "frame-13.600.png",
+      "x": 507.0,
+      "y": 174.0,
+      "headWidth": 90,
+      "headHeight": 120
+    },
+    {
+      "time": 13.8667,
+      "name": "frame-13.867.png",
+      "x": 526.0,
+      "y": 226.0,
+      "headWidth": 96,
+      "headHeight": 120
+    },
+    {
+      "time": 14.1333,
+      "name": "frame-14.133.png",
+      "x": 532.0,
+      "y": 292.0,
+      "headWidth": 96,
+      "headHeight": 120
+    },
+    {
+      "time": 14.4,
+      "name": "frame-14.400.png",
+      "x": 361.0,
+      "y": 319.0,
+      "headWidth": 94,
+      "headHeight": 118
+    },
+    {
+      "time": 14.6667,
+      "name": "frame-14.667.png",
+      "x": 260.0,
+      "y": 277.0,
+      "headWidth": 92,
+      "headHeight": 118
+    },
+    {
+      "time": 14.9333,
+      "name": "frame-14.933.png",
+      "x": 259.0,
+      "y": 258.0,
+      "headWidth": 94,
+      "headHeight": 120
+    },
+    {
+      "time": 15.2,
+      "name": "frame-15.200.png",
+      "x": 258.0,
+      "y": 254.0,
+      "headWidth": 92,
+      "headHeight": 80
+    },
+    {
+      "time": 15.4667,
+      "name": "frame-15.467.png",
+      "x": 258.0,
+      "y": 254.0,
+      "headWidth": 92,
+      "headHeight": 80
+    },
+    {
+      "time": 15.7333,
+      "name": "frame-15.733.png",
+      "x": 258.0,
+      "y": 265.0,
+      "headWidth": 92,
+      "headHeight": 118
+    },
+    {
+      "time": 16.0,
+      "name": "frame-16.000.png",
+      "x": 259.0,
+      "y": 258.0,
+      "headWidth": 94,
+      "headHeight": 120
+    },
+    {
+      "time": 16.2667,
+      "name": "frame-16.267.png",
+      "x": 258.0,
+      "y": 274.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 16.5333,
+      "name": "frame-16.533.png",
+      "x": 258.0,
+      "y": 274.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 16.8,
+      "name": "frame-16.800.png",
+      "x": 258.0,
+      "y": 274.0,
+      "headWidth": 100,
+      "headHeight": 120
+    },
+    {
+      "time": 17.0667,
+      "name": "frame-17.067.png",
+      "x": 258.0,
+      "y": 274.0,
+      "headWidth": 100,
+      "headHeight": 120
+    }
+  ]
+}

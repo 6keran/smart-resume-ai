@@ -168,7 +168,7 @@ function LoginForm() {
         initial={{ opacity: 0, x: -20 }}
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="hidden lg:flex lg:col-span-7 flex-col justify-between space-y-7"
+        className="reference-auth-story hidden lg:flex lg:col-span-7 flex-col justify-between space-y-7"
       >
         {/* Brand Header */}
         <div className="space-y-4">
@@ -195,7 +195,7 @@ function LoginForm() {
               <span>CAREER WORKSPACE PLATFORM</span>
             </div>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black tracking-tight text-[var(--text-primary)] leading-[1.15]">
-              Structured Career Workspace & Verification Platform.
+              Your next opportunity. <em>Starts with your story.</em>
             </h1>
             <p className="text-sm sm:text-base text-[var(--text-secondary)] mt-3 leading-relaxed max-w-xl">
               Work on your resume, check it against a role, and explore job opportunities.
@@ -247,7 +247,7 @@ function LoginForm() {
         transition={{ duration: 0.5, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
         className="lg:col-span-5 w-full max-w-md mx-auto"
       >
-        <div className="rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-7 sm:p-9 shadow-xl relative overflow-hidden transition-all duration-300">
+        <div className="reference-auth-form reference-panel rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] p-7 sm:p-9 shadow-xl relative overflow-hidden transition-all duration-300">
           {/* Mobile brand header (shown only when left hero is stacked) */}
           <div className="lg:hidden flex items-center justify-center gap-2.5 mb-6 pb-4 border-b border-[var(--border-color)]">
             <div className="w-8 h-8 rounded-lg bg-[var(--accent)] flex items-center justify-center text-white shadow-sm">
@@ -435,12 +435,12 @@ function LoginForm() {
           role="dialog"
           aria-modal="true"
           aria-labelledby="forgot-password-title"
-          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#20242B]/40"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[var(--text-primary)]/40"
         >
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-2xl space-y-4"
+            className="reference-panel w-full max-w-md rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-2xl space-y-4"
           >
             <div className="flex items-center justify-between pb-3 border-b border-[var(--glass-border)]">
               <div className="flex items-center gap-2 text-[var(--accent)]">

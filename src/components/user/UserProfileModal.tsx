@@ -72,7 +72,7 @@ export function UserProfileModal() {
             initial="hidden"
             animate="visible"
             exit="exit"
-            className="fixed inset-0 bg-[#20242B]/40"
+            className="fixed inset-0 bg-[var(--text-primary)]/40"
           />
 
           {/* Modal Card */}

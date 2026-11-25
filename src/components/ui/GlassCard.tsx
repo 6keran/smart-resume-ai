@@ -63,8 +63,9 @@ export function GlassCard({
 
   return (
     <div
+      data-reference-panel="true"
       className={cn(
-        'relative rounded-2xl p-5 sm:p-6',
+        'relative rounded-[22px] p-5 sm:p-6',
         variantStyles[variant],
         glow && 'border-[var(--accent)]/40 shadow-[var(--shadow-glass-hover)]',
         className

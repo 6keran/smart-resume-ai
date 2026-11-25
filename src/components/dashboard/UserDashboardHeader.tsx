@@ -105,7 +105,7 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
     <>
       <header
         data-no-print="true"
-        className="sticky top-0 z-20 h-16 w-full border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/90 backdrop-blur-md flex items-center justify-between px-4 sm:px-6 lg:px-8 no-print shadow-xs"
+        className="app-topbar sticky top-3 z-20 h-[4.25rem] w-auto mx-3 sm:mx-4 border border-[var(--border-color)] flex items-center justify-between px-4 sm:px-6 no-print rounded-full"
       >
         {/* Left: Mobile Toggle & Page Breadcrumb */}
         <div className="flex items-center gap-3 min-w-0">
@@ -118,10 +118,10 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
           </button>
 
           <div className="flex flex-col min-w-0">
-            <div className="flex items-center gap-1.5 text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-wider">
-              <span>{section}</span>
-              <ChevronRight className="w-3 h-3 text-[var(--border-color)]" />
-              <span className="text-[var(--accent)] font-semibold">{page}</span>
+            <div className="flex min-w-0 items-center gap-1.5 text-[10px] text-[var(--text-muted)] font-mono uppercase tracking-wider">
+              <span className="hidden sm:inline">{section}</span>
+              <ChevronRight className="hidden sm:block w-3 h-3 text-[var(--border-color)]" />
+              <span className="text-[var(--accent)] font-semibold truncate">{page}</span>
             </div>
             <h1 className="text-base sm:text-lg font-bold text-[var(--text-primary)] tracking-tight truncate leading-tight">
               {page}
@@ -151,10 +151,11 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
           {/* Quick Action: New Resume with Ink Pill */}
           <Link
             href="/builder"
+            aria-label="Create Resume"
             className="btn-primary text-xs py-1.5 px-4 shadow-sm"
           >
             <Plus className="w-3.5 h-3.5" />
-            <span>Create Resume</span>
+            <span className="hidden sm:inline">Create Resume</span>
           </Link>
 
           {/* Theme Toggle */}
@@ -197,7 +198,7 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: 4, scale: 0.96 }}
                   transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-                  className="absolute right-0 mt-2 w-56 rounded-2xl bg-[var(--bg-card)]/95 backdrop-blur-xl border border-[var(--border-color)] shadow-xl py-2 z-50"
+                  className="absolute right-0 mt-2 w-56 rounded-[22px] bg-[var(--bg-card)] border border-[var(--border-color)] shadow-[var(--shadow-popover)] py-2 z-50"
                   onMouseLeave={() => setProfileDropdownOpen(false)}
                 >
                   <div className="px-4 py-2.5 border-b border-[var(--border-color)]">
@@ -256,7 +257,7 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
             transition={{ duration: 0.18 }}
-            className="fixed inset-0 z-50 md:hidden bg-black/60 backdrop-blur-sm flex"
+            className="fixed inset-0 z-50 lg:hidden bg-black/60 backdrop-blur-sm flex"
             onClick={(e) => {
               if (e.target === e.currentTarget) setMobileMenuOpen(false);
             }}

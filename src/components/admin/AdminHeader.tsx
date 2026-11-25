@@ -85,7 +85,7 @@ export function AdminHeader({ adminEmail, adminRole }: AdminHeaderProps) {
     <>
       <header
         data-no-print="true"
-        className="sticky top-0 z-20 h-16 w-full max-w-full border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/90 backdrop-blur-xl flex items-center justify-between px-3 sm:px-6 shadow-sm overflow-hidden no-print"
+        className="app-topbar sticky top-3 z-20 h-[4.25rem] w-auto mx-3 sm:mx-4 border border-[var(--border-color)] rounded-full flex items-center justify-between px-3 sm:px-6 overflow-hidden no-print"
       >
         {/* Left: Mobile Toggle & Page Title */}
         <div className="flex items-center gap-2 sm:gap-3 min-w-0 shrink">
@@ -160,7 +160,7 @@ export function AdminHeader({ adminEmail, adminRole }: AdminHeaderProps) {
 
       {/* Mobile Menu Drawer */}
       {mobileMenuOpen && (
-        <div className="fixed inset-0 z-50 md:hidden bg-black/60 backdrop-blur-sm animate-fade-in flex">
+        <div className="fixed inset-0 z-50 lg:hidden bg-black/60 backdrop-blur-sm animate-fade-in flex">
           <div className="w-72 max-w-[85vw] h-full bg-[var(--bg-secondary)] border-r border-[var(--border-color)] p-5 flex flex-col justify-between shadow-2xl">
             <div>
               <div className="flex items-center justify-between pb-4 border-b border-[var(--border-color)]">

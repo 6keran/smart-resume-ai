@@ -63,7 +63,7 @@ export function UserDashboardSidebar({ user }: UserDashboardSidebarProps) {
     <aside
       data-no-print="true"
       className={cn(
-        'hidden md:flex flex-col bg-[var(--bg-secondary)] border-r border-[var(--border-color)] transition-[width] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] relative z-30 shrink-0 h-screen sticky top-0 no-print select-none',
+        'app-sidebar hidden md:flex flex-col border border-[var(--border-color)] transition-[width] duration-200 ease-[cubic-bezier(0.16,1,0.3,1)] relative z-30 shrink-0 h-[calc(100vh-1.5rem)] sticky top-3 my-3 ml-3 rounded-[26px] no-print select-none overflow-hidden',
         collapsed ? 'w-20' : 'w-64'
       )}
     >
@@ -132,7 +132,7 @@ export function UserDashboardSidebar({ user }: UserDashboardSidebarProps) {
                   </span>
                 )}
                 {!collapsed && isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0 shadow-[0_0_6px_var(--accent)]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0" />
                 )}
               </Link>
             );
@@ -180,7 +180,7 @@ export function UserDashboardSidebar({ user }: UserDashboardSidebarProps) {
                   </span>
                 )}
                 {!collapsed && isActive && (
-                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0 shadow-[0_0_6px_var(--accent)]" />
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--accent)] shrink-0" />
                 )}
               </Link>
             );
@@ -189,7 +189,7 @@ export function UserDashboardSidebar({ user }: UserDashboardSidebarProps) {
       </div>
 
       {/* User Footer Profile & Appearance Toggle */}
-      <div className="p-3 border-t border-[var(--border-color)] bg-[var(--bg-secondary)] space-y-2">
+      <div className="p-3 border-t border-[var(--border-color)] bg-transparent space-y-2">
         {/* Appearance Row */}
         <div className={cn('flex items-center', collapsed ? 'justify-center' : 'justify-between px-1.5 py-0.5')}>
           {!collapsed && (

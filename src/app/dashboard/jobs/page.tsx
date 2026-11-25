@@ -117,7 +117,7 @@ export default function UserJobMatchesPage() {
             </Link>
             <Link
               href="/job-match"
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-[var(--accent)] text-xs font-semibold text-[var(--text-primary)] transition-all"
+              className="reference-panel inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] hover:border-[var(--accent)] text-xs font-semibold text-[var(--text-primary)] transition-all"
             >
               <Sparkles className="w-4 h-4 text-[var(--accent)]" />
               <span>Run Job Match Engine</span>

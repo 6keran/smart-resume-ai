@@ -173,18 +173,18 @@ export default function SkillVerificationPage() {
   };
 
   return (
-    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 text-[#20242B]">
+    <div className="min-h-screen py-8 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 text-[var(--text-primary)]">
       {/* Page Header */}
-      <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4 text-left shadow-sm">
+      <div className="reference-workspace-heading flex flex-col md:flex-row md:items-center justify-between gap-4 text-left">
         <div className="space-y-1.5">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-blue-50 border border-blue-200 text-xs font-semibold text-[#3157C8]">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[var(--accent-subtle)] border border-[var(--accent)]/20 text-xs font-semibold text-[var(--accent)]">
             <Award className="w-3.5 h-3.5" />
             <span>Technical Proficiency Verification</span>
           </div>
-          <h1 className="text-[28px] sm:text-[30px] font-bold text-[#20242B] tracking-tight">
+          <h1 className="text-[28px] sm:text-[30px] font-bold text-[var(--text-primary)] tracking-tight">
             Skill Assessments
           </h1>
-          <p className="text-[15px] text-[#626B78] leading-relaxed">
+          <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed">
             Test your proficiency across key technical topics and track your assessment results.
           </p>
         </div>
@@ -192,7 +192,7 @@ export default function SkillVerificationPage() {
         <button
           type="button"
           onClick={() => setIsAddModalOpen(true)}
-          className="px-5 py-2.5 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[14px] font-semibold shadow-sm inline-flex items-center gap-2 shrink-0 cursor-pointer"
+          className="px-5 py-2.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[14px] font-semibold shadow-sm inline-flex items-center gap-2 shrink-0 cursor-pointer"
         >
           <Plus className="w-4 h-4" />
           <span>Add Skill</span>
@@ -200,39 +200,39 @@ export default function SkillVerificationPage() {
       </div>
 
       {/* Expandable Assessment Instructions & Scoring Rules */}
-      <details className="group bg-white rounded-2xl border border-[#E5E8ED] p-5 shadow-sm text-left">
-        <summary className="font-bold text-[16px] text-[#20242B] cursor-pointer list-none flex items-center justify-between">
+      <details className="reference-panel group bg-white rounded-2xl border border-[var(--border-color)] p-5 shadow-sm text-left">
+        <summary className="font-bold text-[16px] text-[var(--text-primary)] cursor-pointer list-none flex items-center justify-between">
           <span className="flex items-center gap-2">
-            <ShieldCheck className="w-4 h-4 text-[#3157C8]" />
+            <ShieldCheck className="w-4 h-4 text-[var(--accent)]" />
             Assessment Instructions &amp; Scoring Rules
           </span>
-          <span className="text-[13px] text-[#3157C8] font-semibold group-open:hidden">View Rules</span>
+          <span className="text-[13px] text-[var(--accent)] font-semibold group-open:hidden">View Rules</span>
         </summary>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-[#E5E8ED]">
-          <div className="p-4 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-1">
-            <span className="text-[14px] font-bold text-[#20242B] flex items-center gap-1.5">
-              <Clock className="w-4 h-4 text-[#3157C8]" />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4 pt-4 border-t border-[var(--border-color)]">
+          <div className="p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-1">
+            <span className="text-[14px] font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+              <Clock className="w-4 h-4 text-[var(--accent)]" />
               Timed Questions
             </span>
-            <p className="text-[13px] text-[#626B78] leading-relaxed">
+            <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
               10 curated multiple-choice questions spanning syntax, debugging, and real-world architectures with 20 minutes limit.
             </p>
           </div>
-          <div className="p-4 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-1">
-            <span className="text-[14px] font-bold text-[#20242B] flex items-center gap-1.5">
+          <div className="p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-1">
+            <span className="text-[14px] font-bold text-[var(--text-primary)] flex items-center gap-1.5">
               <Award className="w-4 h-4 text-[#16845B]" />
               70% Passing Benchmark
             </span>
-            <p className="text-[13px] text-[#626B78] leading-relaxed">
+            <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
               Score at least 7 of 10 to demonstrate verified competency and receive an official credential.
             </p>
           </div>
-          <div className="p-4 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-1">
-            <span className="text-[14px] font-bold text-[#20242B] flex items-center gap-1.5">
-              <ShieldCheck className="w-4 h-4 text-[#3157C8]" />
+          <div className="p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-1">
+            <span className="text-[14px] font-bold text-[var(--text-primary)] flex items-center gap-1.5">
+              <ShieldCheck className="w-4 h-4 text-[var(--accent)]" />
               Verified Profile Record
             </span>
-            <p className="text-[13px] text-[#626B78] leading-relaxed">
+            <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
               Passed assessment scores and certificates automatically display on your public career profile.
             </p>
           </div>
@@ -240,14 +240,14 @@ export default function SkillVerificationPage() {
       </details>
 
       {/* Dual Tab Mode Switcher */}
-      <div className="flex items-center gap-2 p-1 rounded-lg bg-[#F6F7F9] border border-[#E5E8ED] self-start shadow-xs relative">
+      <div className="flex items-center gap-2 p-1 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] self-start shadow-xs relative">
         <button
           type="button"
           onClick={() => setActiveTab('skills')}
           className={`relative px-5 py-2 rounded-md text-[14px] font-semibold transition-colors cursor-pointer ${
             activeTab === 'skills'
-              ? 'text-[#3157C8]'
-              : 'text-[#626B78] hover:text-[#20242B]'
+              ? 'text-[var(--accent)]'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
           {activeTab === 'skills' && (
@@ -267,8 +267,8 @@ export default function SkillVerificationPage() {
           }}
           className={`relative px-5 py-2 rounded-md text-[14px] font-semibold transition-colors cursor-pointer inline-flex items-center gap-2 ${
             activeTab === 'roadmap'
-              ? 'text-[#3157C8]'
-              : 'text-[#626B78] hover:text-[#20242B]'
+              ? 'text-[var(--accent)]'
+              : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
           }`}
         >
           {activeTab === 'roadmap' && (
@@ -298,21 +298,21 @@ export default function SkillVerificationPage() {
           <div className="space-y-4 text-left">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-[20px] font-bold text-[#20242B]">My Skills</h2>
-                <p className="text-[14px] text-[#626B78]">
+                <h2 className="text-[20px] font-bold text-[var(--text-primary)]">My Skills</h2>
+                <p className="text-[14px] text-[var(--text-secondary)]">
                   Manage your claimed skills and launch technical assessments.
                 </p>
               </div>
-              <span className="text-[13px] font-semibold text-[#626B78]">
+              <span className="text-[13px] font-semibold text-[var(--text-secondary)]">
                 Total: {skills.length} skills
               </span>
             </div>
 
             {skills.length === 0 ? (
-              <div className="bg-white rounded-2xl border border-[#E5E8ED] p-8 text-center space-y-3 shadow-sm">
-                <Award className="w-10 h-10 text-[#626B78] mx-auto opacity-50" />
-                <p className="text-[16px] font-semibold text-[#20242B]">No skills added yet</p>
-                <p className="text-[14px] text-[#626B78]">
+              <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-8 text-center space-y-3 shadow-sm">
+                <Award className="w-10 h-10 text-[var(--text-secondary)] mx-auto opacity-50" />
+                <p className="text-[16px] font-semibold text-[var(--text-primary)]">No skills added yet</p>
+                <p className="text-[14px] text-[var(--text-secondary)]">
                   Add skills from the directory below to take assessments.
                 </p>
               </div>
@@ -325,7 +325,7 @@ export default function SkillVerificationPage() {
                     <motion.div
                       layout
                       key={userSkill.id}
-                      className="bg-white rounded-2xl border border-[#E5E8ED] hover:border-[#3157C8] hover:shadow-md transition-all p-5 flex flex-col justify-between space-y-4 shadow-sm"
+                      className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] hover:border-[var(--accent)] hover:shadow-md transition-all p-5 flex flex-col justify-between space-y-4 shadow-sm"
                     >
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
@@ -337,7 +337,7 @@ export default function SkillVerificationPage() {
                           <button
                             type="button"
                             onClick={() => setSkillToRemove(userSkill)}
-                            className="p-1 rounded text-[#626B78] hover:text-[#C43D43] transition-colors cursor-pointer"
+                            className="p-1 rounded text-[var(--text-secondary)] hover:text-[#C43D43] transition-colors cursor-pointer"
                             title="Remove skill"
                           >
                             <Trash2 className="w-4 h-4" />
@@ -345,12 +345,12 @@ export default function SkillVerificationPage() {
                         </div>
 
                         <div>
-                          <h3 className="text-[18px] font-bold text-[#20242B]">
+                          <h3 className="text-[18px] font-bold text-[var(--text-primary)]">
                             {userSkill.name} Assessment
                           </h3>
-                          <div className="flex items-center justify-between text-[13px] text-[#626B78] mt-1">
+                          <div className="flex items-center justify-between text-[13px] text-[var(--text-secondary)] mt-1">
                             <span>{userSkill.category}</span>
-                            <span className="px-2 py-0.5 rounded bg-[#F6F7F9] border border-[#E5E8ED] font-medium">
+                            <span className="px-2 py-0.5 rounded bg-[var(--bg-primary)] border border-[var(--border-color)] font-medium">
                               20 Mins · 10 Questions
                             </span>
                           </div>
@@ -359,15 +359,15 @@ export default function SkillVerificationPage() {
                         {/* Progress Bar / Score Indicator */}
                         <div className="space-y-1 pt-1">
                           <div className="flex items-center justify-between text-[13px]">
-                            <span className="text-[#626B78]">Proficiency</span>
-                            <span className="font-semibold text-[#20242B]">
+                            <span className="text-[var(--text-secondary)]">Proficiency</span>
+                            <span className="font-semibold text-[var(--text-primary)]">
                               {userSkill.score ? `${userSkill.score}/10 (${userSkill.score * 10}%)` : 'Not assessed yet'}
                             </span>
                           </div>
-                          <div className="w-full bg-[#E5E8ED] h-2 rounded-full overflow-hidden">
+                          <div className="w-full bg-[var(--border-color)] h-2 rounded-full overflow-hidden">
                             <div
                               className={`h-full rounded-full transition-all duration-500 ${
-                                isVerified ? 'bg-[#16845B]' : 'bg-[#3157C8]'
+                                isVerified ? 'bg-[#16845B]' : 'bg-[var(--accent)]'
                               }`}
                               style={{ width: `${userSkill.score ? userSkill.score * 10 : 0}%` }}
                             />
@@ -376,7 +376,7 @@ export default function SkillVerificationPage() {
 
                         {userSkill.verifiedDate && (
                           <div className="flex items-center justify-between text-[13px]">
-                            <span className="text-[#626B78]">Verified On</span>
+                            <span className="text-[var(--text-secondary)]">Verified On</span>
                             <span className="font-mono text-[#16845B]">
                               {userSkill.verifiedDate}
                             </span>
@@ -385,11 +385,11 @@ export default function SkillVerificationPage() {
                       </div>
 
                       {/* Card Actions */}
-                      <div className="pt-2 border-t border-[#E5E8ED]">
+                      <div className="pt-2 border-t border-[var(--border-color)]">
                         {isVerified && userSkill.certificateId ? (
                           <Link
                             href={`/skills/certificate/${userSkill.certificateId}`}
-                            className="px-4 py-2 rounded-lg border border-[#E5E8ED] bg-white hover:bg-[#F6F7F9] text-[#20242B] text-[14px] font-semibold w-full inline-flex items-center justify-center gap-1.5 cursor-pointer"
+                            className="reference-panel px-4 py-2 rounded-lg border border-[var(--border-color)] bg-white hover:bg-[var(--bg-primary)] text-[var(--text-primary)] text-[14px] font-semibold w-full inline-flex items-center justify-center gap-1.5 cursor-pointer"
                           >
                             <FileCheck className="w-4 h-4 text-[#16845B]" />
                             <span>View Certificate</span>
@@ -397,7 +397,7 @@ export default function SkillVerificationPage() {
                         ) : (
                           <Link
                             href={`/skills/assess/${encodeURIComponent(userSkill.name)}`}
-                            className="px-4 py-2.5 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[14px] font-semibold w-full inline-flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                            className="px-4 py-2.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[14px] font-semibold w-full inline-flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
                           >
                             <span>Start Assessment</span>
                             <ArrowRight className="w-4 h-4" />
@@ -412,12 +412,12 @@ export default function SkillVerificationPage() {
           </div>
 
           {/* ALL SUPPORTED SKILLS DIRECTORY */}
-          <div id="skills-directory" className="space-y-4 text-left pt-6 border-t border-[#E5E8ED]">
+          <div id="skills-directory" className="space-y-4 text-left pt-6 border-t border-[var(--border-color)]">
             <div>
-              <h2 className="text-[20px] font-bold text-[#20242B]">
+              <h2 className="text-[20px] font-bold text-[var(--text-primary)]">
                 Explore Supported Technical Assessments
               </h2>
-              <p className="text-[14px] text-[#626B78]">
+              <p className="text-[14px] text-[var(--text-secondary)]">
                 Smart Resume AI provides proctored assessments for 11 core industry skills. Select any skill to begin.
               </p>
             </div>
@@ -428,20 +428,20 @@ export default function SkillVerificationPage() {
                 return (
                   <div
                     key={sk.name}
-                    className="p-5 rounded-2xl border border-[#E5E8ED] bg-white hover:border-[#3157C8] hover:shadow-md shadow-sm flex flex-col justify-between gap-4 text-left transition-all"
+                    className="reference-panel p-5 rounded-2xl border border-[var(--border-color)] bg-white hover:border-[var(--accent)] hover:shadow-md shadow-sm flex flex-col justify-between gap-4 text-left transition-all"
                   >
                     <div className="space-y-2">
                       <div className="flex items-start justify-between gap-2">
                         <div>
-                          <h4 className="font-bold text-[18px] text-[#20242B]">{sk.name}</h4>
-                          <p className="text-[13px] text-[#626B78]">{sk.category}</p>
+                          <h4 className="font-bold text-[18px] text-[var(--text-primary)]">{sk.name}</h4>
+                          <p className="text-[13px] text-[var(--text-secondary)]">{sk.category}</p>
                         </div>
-                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-blue-50 text-[#3157C8] border border-blue-200">
+                        <span className="text-[11px] font-semibold px-2 py-0.5 rounded bg-[var(--accent-subtle)] text-[var(--accent)] border border-[var(--accent)]/20">
                           Intermediate
                         </span>
                       </div>
 
-                      <div className="flex items-center justify-between text-[13px] text-[#626B78] pt-1">
+                      <div className="flex items-center justify-between text-[13px] text-[var(--text-secondary)] pt-1">
                         <span className="flex items-center gap-1">
                           <Clock className="w-3.5 h-3.5" />
                           20 Mins
@@ -451,10 +451,10 @@ export default function SkillVerificationPage() {
                       </div>
                     </div>
 
-                    <div className="pt-2 border-t border-[#E5E8ED]">
+                    <div className="pt-2 border-t border-[var(--border-color)]">
                       <Link
                         href={`/skills/assess/${encodeURIComponent(sk.name)}`}
-                        className="px-4 py-2 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[13px] font-semibold w-full inline-flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
+                        className="px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[13px] font-semibold w-full inline-flex items-center justify-center gap-1.5 shadow-sm cursor-pointer"
                       >
                         <Award className="w-4 h-4" />
                         <span>Start Assessment</span>
@@ -478,7 +478,7 @@ export default function SkillVerificationPage() {
           className="space-y-6 text-left"
         >
           {/* Roadmap Controls Header */}
-          <div className="p-6 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+          <div className="reference-panel p-6 rounded-xl border border-[var(--border-color)] bg-[var(--bg-card)] flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div className="space-y-1">
               <span className="text-[10px] font-mono font-bold text-[var(--accent)] uppercase tracking-wider">
                 PERSONALIZED CURRICULUM
@@ -787,7 +787,7 @@ export default function SkillVerificationPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98, y: 8 }}
               transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-md rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-7 shadow-xl space-y-5 text-left relative overflow-hidden"
+              className="reference-panel w-full max-w-md rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-7 shadow-xl space-y-5 text-left relative overflow-hidden"
             >
               <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
                 <h3 className="text-base font-bold text-[var(--text-primary)]">Add Skill To Profile</h3>
@@ -889,7 +889,7 @@ export default function SkillVerificationPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.98, y: 8 }}
               transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              className="w-full max-w-sm rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-7 shadow-xl space-y-4 text-center relative overflow-hidden"
+              className="reference-panel w-full max-w-sm rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 sm:p-7 shadow-xl space-y-4 text-center relative overflow-hidden"
             >
               <div className="w-12 h-12 rounded-xl bg-rose-500/10 text-rose-500 mx-auto flex items-center justify-center border border-rose-500/20 shadow-xs">
                 <Trash2 className="w-5 h-5" />
@@ -938,7 +938,7 @@ export default function SkillVerificationPage() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.96 }}
             transition={{ duration: 0.2 }}
-            className="fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-xs font-medium bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-primary)]"
+            className="reference-panel fixed bottom-6 right-6 z-50 flex items-center gap-2.5 px-4 py-3 rounded-2xl shadow-xl border text-xs font-medium bg-[var(--bg-card)] border-[var(--border-color)] text-[var(--text-primary)]"
           >
             {toast.type === 'success' ? (
               <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />

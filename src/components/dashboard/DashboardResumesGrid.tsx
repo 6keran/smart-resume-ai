@@ -210,7 +210,7 @@ export default function DashboardResumesGrid({ initialResumes }: DashboardResume
   return (
     <div className="space-y-6 animate-fade-in text-left">
       {/* Page Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-[#E5E8ED] gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between pb-5 border-b border-[var(--border-color)] gap-4">
         <div>
           <h1 className="heading-page">My Resumes</h1>
           <p className="text-body-secondary mt-1">
@@ -246,8 +246,8 @@ export default function DashboardResumesGrid({ initialResumes }: DashboardResume
       )}
 
       {resumes.length === 0 ? (
-        <div className="rounded-2xl border border-[#E5E8ED] bg-white p-12 text-center shadow-sm">
-          <div className="w-14 h-14 rounded-2xl bg-[#F6F7F9] border border-[#E5E8ED] flex items-center justify-center mx-auto mb-4 text-[#626B78]">
+        <div className="reference-panel rounded-2xl border border-[var(--border-color)] bg-white p-12 text-center shadow-sm">
+          <div className="w-14 h-14 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-color)] flex items-center justify-center mx-auto mb-4 text-[var(--text-secondary)]">
             <FileText className="w-7 h-7" />
           </div>
           <h3 className="heading-card">No resumes saved yet</h3>
@@ -271,12 +271,12 @@ export default function DashboardResumesGrid({ initialResumes }: DashboardResume
                 key={r.id}
                 data-testid={`resume-card-${r.id}`}
                 className={`bg-white rounded-2xl border p-6 flex flex-col justify-between transition-all duration-200 hover:border-slate-300 shadow-sm ${
-                  r.isActive ? 'ring-2 ring-[#3157C8]/30 border-[#3157C8]' : 'border-[#E5E8ED]'
+                  r.isActive ? 'ring-2 ring-[var(--accent)]/30 border-[var(--accent)]' : 'border-[var(--border-color)]'
                 }`}
               >
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-3">
-                    <div className="w-11 h-11 rounded-xl bg-[#3157C8]/10 text-[#3157C8] flex items-center justify-center shrink-0 border border-[#3157C8]/20 shadow-xs">
+                    <div className="w-11 h-11 rounded-xl bg-[var(--accent)]/10 text-[var(--accent)] flex items-center justify-center shrink-0 border border-[var(--accent)]/20 shadow-xs">
                       <FileText className="w-5 h-5" />
                     </div>
                     <div className="flex items-center gap-1.5 flex-wrap justify-end">
@@ -286,40 +286,40 @@ export default function DashboardResumesGrid({ initialResumes }: DashboardResume
                           <span>Active</span>
                         </span>
                       )}
-                      <span className="uppercase text-[12px] font-bold px-2.5 py-0.5 rounded-full bg-[#F6F7F9] border border-[#E5E8ED] text-[#626B78]">
+                      <span className="uppercase text-[12px] font-bold px-2.5 py-0.5 rounded-full bg-[var(--bg-primary)] border border-[var(--border-color)] text-[var(--text-secondary)]">
                         {r.file_type || 'PDF'}
                       </span>
                     </div>
                   </div>
 
-                  <h3 className="text-base sm:text-lg font-bold text-[#20242B] break-words line-clamp-2">
+                  <h3 className="text-base sm:text-lg font-bold text-[var(--text-primary)] break-words line-clamp-2">
                     {r.filename}
                   </h3>
 
-                  <p className="text-[13px] text-[#626B78] mt-1.5 flex items-center gap-1.5">
+                  <p className="text-[13px] text-[var(--text-secondary)] mt-1.5 flex items-center gap-1.5">
                     <Clock className="w-3.5 h-3.5" />
                     <span>Uploaded {formatUploadDate(r.uploaded_at)}</span>
                   </p>
                 </div>
 
-                <div className="mt-6 pt-4 border-t border-[#E5E8ED]">
+                <div className="mt-6 pt-4 border-t border-[var(--border-color)]">
                   <div className="flex items-center justify-between mb-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-[13px] text-[#626B78]">
+                      <span className="text-[13px] text-[var(--text-secondary)]">
                         {r.analyses_count} {r.analyses_count === 1 ? 'Scan' : 'Scans'}
                       </span>
                       {r.versionsCount > 0 && (
-                        <span className="text-[12px] font-semibold px-2 py-0.5 rounded-full bg-[#3157C8]/10 text-[#3157C8] border border-[#3157C8]/20">
+                        <span className="text-[12px] font-semibold px-2 py-0.5 rounded-full bg-[var(--accent)]/10 text-[var(--accent)] border border-[var(--accent)]/20">
                           {r.versionsCount} {r.versionsCount === 1 ? 'Version' : 'Versions'}
                         </span>
                       )}
                     </div>
                     <div className="flex items-center gap-1.5">
-                      <span className="text-[13px] font-medium text-[#626B78]">ATS:</span>
+                      <span className="text-[13px] font-medium text-[var(--text-secondary)]">ATS:</span>
                       <span
                         className={`text-[15px] font-extrabold ${
                           !hasScore
-                            ? 'text-[#626B78]'
+                            ? 'text-[var(--text-secondary)]'
                             : (r.latestAtsScore ?? 0) >= 75
                             ? 'text-emerald-700'
                             : (r.latestAtsScore ?? 0) >= 60
@@ -356,7 +356,7 @@ export default function DashboardResumesGrid({ initialResumes }: DashboardResume
                     </Link>
                   </div>
 
-                  <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-[#E5E8ED] text-xs">
+                  <div className="flex items-center justify-between gap-2 mt-3 pt-3 border-t border-[var(--border-color)] text-xs">
                     <button
                       type="button"
                       onClick={() => {
@@ -364,10 +364,10 @@ export default function DashboardResumesGrid({ initialResumes }: DashboardResume
                         setResumeToRename(r);
                         setRenameInput(r.filename);
                       }}
-                      className="flex-1 py-1.5 px-2 rounded-lg border border-[#E5E8ED] hover:bg-[#F6F7F9] text-[#20242B] font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer"
+                      className="flex-1 py-1.5 px-2 rounded-lg border border-[var(--border-color)] hover:bg-[var(--bg-primary)] text-[var(--text-primary)] font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer"
                       title="Rename this resume (e.g. Google Resume, Amazon Resume)"
                     >
-                      <Edit3 className="w-3.5 h-3.5 text-[#626B78]" />
+                      <Edit3 className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
                       <span>Rename</span>
                     </button>
 
@@ -375,13 +375,13 @@ export default function DashboardResumesGrid({ initialResumes }: DashboardResume
                       type="button"
                       disabled={isDuplicatingId === r.id}
                       onClick={() => handleDuplicate(r)}
-                      className="flex-1 py-1.5 px-2 rounded-lg border border-[#E5E8ED] hover:bg-[#F6F7F9] text-[#20242B] font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
+                      className="flex-1 py-1.5 px-2 rounded-lg border border-[var(--border-color)] hover:bg-[var(--bg-primary)] text-[var(--text-primary)] font-medium transition-colors flex items-center justify-center gap-1 cursor-pointer disabled:opacity-50"
                       title="Duplicate this resume"
                     >
                       {isDuplicatingId === r.id ? (
                         <Loader2 className="w-3.5 h-3.5 animate-spin" />
                       ) : (
-                        <Copy className="w-3.5 h-3.5 text-[#626B78]" />
+                        <Copy className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
                       )}
                       <span>Duplicate</span>
                     </button>
@@ -414,16 +414,16 @@ export default function DashboardResumesGrid({ initialResumes }: DashboardResume
           aria-labelledby="remove-resume-modal-title"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4"
         >
-          <div className="w-full max-w-md rounded-2xl bg-white border border-[#E5E8ED] p-6 shadow-xl space-y-4">
+          <div className="reference-panel w-full max-w-md rounded-2xl bg-white border border-[var(--border-color)] p-6 shadow-xl space-y-4">
             <div className="flex items-start gap-3">
               <div className="w-10 h-10 rounded-full bg-rose-50 text-rose-600 border border-rose-200 flex items-center justify-center shrink-0">
                 <AlertTriangle className="w-5 h-5" />
               </div>
               <div>
-                <h2 id="remove-resume-modal-title" className="text-base font-bold text-[#20242B]">
+                <h2 id="remove-resume-modal-title" className="text-base font-bold text-[var(--text-primary)]">
                   Remove Saved Resume?
                 </h2>
-                <p className="text-xs text-[#626B78] mt-0.5">
+                <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                   This removes &quot;{resumeToDelete.filename}&quot; from your saved resumes. Past scan and application history remains intact.
                 </p>
               </div>
@@ -435,7 +435,7 @@ export default function DashboardResumesGrid({ initialResumes }: DashboardResume
               </p>
             )}
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E5E8ED]">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--border-color)]">
               <button
                 type="button"
                 onClick={() => {
@@ -479,25 +479,25 @@ export default function DashboardResumesGrid({ initialResumes }: DashboardResume
           aria-labelledby="rename-resume-modal-title"
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-xs p-4 animate-fade-in"
         >
-          <div className="w-full max-w-md rounded-2xl bg-white border border-[#E5E8ED] p-6 shadow-xl space-y-4">
-            <div className="flex items-center justify-between border-b border-[#E5E8ED] pb-3">
+          <div className="reference-panel w-full max-w-md rounded-2xl bg-white border border-[var(--border-color)] p-6 shadow-xl space-y-4">
+            <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
               <div className="flex items-center gap-2">
-                <Edit3 className="w-4 h-4 text-[#3157C8]" />
-                <h2 id="rename-resume-modal-title" className="text-base font-bold text-[#20242B]">
+                <Edit3 className="w-4 h-4 text-[var(--accent)]" />
+                <h2 id="rename-resume-modal-title" className="text-base font-bold text-[var(--text-primary)]">
                   Rename Resume
                 </h2>
               </div>
               <button
                 type="button"
                 onClick={() => setResumeToRename(null)}
-                className="text-[#626B78] hover:text-[#20242B] cursor-pointer"
+                className="text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
             <div className="space-y-2 text-xs">
-              <label className="block font-semibold text-[#20242B]">
+              <label className="block font-semibold text-[var(--text-primary)]">
                 Resume Name (e.g. Google Resume, Amazon Resume, Senior SWE)
               </label>
               <input
@@ -505,7 +505,7 @@ export default function DashboardResumesGrid({ initialResumes }: DashboardResume
                 value={renameInput}
                 onChange={(e) => setRenameInput(e.target.value)}
                 maxLength={100}
-                className="w-full px-3.5 py-2.5 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-xs text-[#20242B] focus:outline-none focus:border-[#3157C8]"
+                className="w-full px-3.5 py-2.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                 placeholder="Enter resume name..."
                 autoFocus
               />
@@ -517,7 +517,7 @@ export default function DashboardResumesGrid({ initialResumes }: DashboardResume
               </p>
             )}
 
-            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[#E5E8ED]">
+            <div className="flex items-center justify-end gap-2 pt-3 border-t border-[var(--border-color)]">
               <button
                 type="button"
                 onClick={() => setResumeToRename(null)}

@@ -269,9 +269,9 @@ export default function OnboardingPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-[#F6F7F9] text-[#20242B] flex items-center justify-center p-6">
-        <div className="flex items-center gap-3 text-sm text-[#626B78]">
-          <Loader2 className="w-4 h-4 animate-spin text-[#3157C8]" />
+      <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] flex items-center justify-center p-6">
+        <div className="flex items-center gap-3 text-sm text-[var(--text-secondary)]">
+          <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
           <span>Loading career setup...</span>
         </div>
       </div>
@@ -279,22 +279,22 @@ export default function OnboardingPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#F6F7F9] text-[#20242B]">
-      <header className="bg-[#FFFFFF] border-b border-[#E5E8ED]">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)]">
+      <header className="bg-[#FFFFFF] border-b border-[var(--border-color)]">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
-            <Link href="/dashboard" className="text-sm font-semibold text-[#20242B] hover:text-[#3157C8]">
+            <Link href="/dashboard" className="text-sm font-semibold text-[var(--text-primary)] hover:text-[var(--accent)]">
               Smart Resume AI
             </Link>
-            <span className="text-[#E5E8ED]">/</span>
-            <span className="text-sm text-[#626B78]">Personalized Career Setup</span>
+            <span className="text-[var(--border-color)]">/</span>
+            <span className="text-sm text-[var(--text-secondary)]">Personalized Career Setup</span>
           </div>
 
           <button
             type="button"
             onClick={handleSkip}
             disabled={isSaving}
-            className="px-3.5 py-2 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-xs font-semibold text-[#626B78] hover:text-[#20242B] hover:border-[#20242B]/30 transition-colors cursor-pointer disabled:opacity-50"
+            className="px-3.5 py-2 rounded-lg border border-[var(--border-color)] bg-[#FFFFFF] text-xs font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:border-[var(--text-primary)]/30 transition-colors cursor-pointer disabled:opacity-50"
           >
             Skip for now
           </button>
@@ -303,7 +303,7 @@ export default function OnboardingPage() {
 
       <main className="max-w-4xl mx-auto px-4 sm:px-6 py-8 space-y-6">
         {/* Stepper Header */}
-        <div className="bg-[#FFFFFF] border border-[#E5E8ED] rounded-xl p-5">
+        <div className="bg-[#FFFFFF] border border-[var(--border-color)] rounded-xl p-5">
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {[
               { id: 1, label: 'Step 1', title: 'Role & Preferences', icon: Target },
@@ -320,28 +320,28 @@ export default function OnboardingPage() {
                   onClick={() => setStep(item.id as 1 | 2 | 3)}
                   className={`flex items-center gap-3 p-3 rounded-lg border text-left transition-colors cursor-pointer ${
                     isActive
-                      ? 'border-[#3157C8] bg-[#3157C8]/5'
+                      ? 'border-[var(--accent)] bg-[var(--accent)]/5'
                       : isDone
-                      ? 'border-[#E5E8ED] bg-[#F6F7F9]'
-                      : 'border-[#E5E8ED] bg-[#FFFFFF]'
+                      ? 'border-[var(--border-color)] bg-[var(--bg-primary)]'
+                      : 'border-[var(--border-color)] bg-[#FFFFFF]'
                   }`}
                 >
                   <div
                     className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${
                       isActive
-                        ? 'bg-[#3157C8] text-white'
+                        ? 'bg-[var(--accent)] text-white'
                         : isDone
-                        ? 'bg-[#20242B] text-white'
-                        : 'bg-[#F6F7F9] text-[#626B78]'
+                        ? 'bg-[var(--text-primary)] text-white'
+                        : 'bg-[var(--bg-primary)] text-[var(--text-secondary)]'
                     }`}
                   >
                     {isDone ? <Check className="w-4 h-4" /> : <Icon className="w-4 h-4" />}
                   </div>
                   <div className="min-w-0">
-                    <div className="text-[11px] font-medium uppercase tracking-wide text-[#626B78]">
+                    <div className="text-[11px] font-medium uppercase tracking-wide text-[var(--text-secondary)]">
                       {item.label}
                     </div>
-                    <div className="text-sm font-semibold text-[#20242B] truncate">{item.title}</div>
+                    <div className="text-sm font-semibold text-[var(--text-primary)] truncate">{item.title}</div>
                   </div>
                 </button>
               );
@@ -361,16 +361,16 @@ export default function OnboardingPage() {
 
         {/* STEP 1 */}
         {step === 1 && (
-          <section className="bg-[#FFFFFF] border border-[#E5E8ED] rounded-xl p-6 space-y-6">
+          <section className="bg-[#FFFFFF] border border-[var(--border-color)] rounded-xl p-6 space-y-6">
             <div>
-              <h1 className="text-xl font-bold text-[#20242B]">What role are you aiming for?</h1>
-              <p className="text-sm text-[#626B78] mt-1">
+              <h1 className="text-xl font-bold text-[var(--text-primary)]">What role are you aiming for?</h1>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">
                 Leave this blank if you are still exploring — we never assign a default career track without your input.
               </p>
             </div>
 
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-[#20242B]">
+              <label className="block text-sm font-semibold text-[var(--text-primary)]">
                 Target Role (Optional)
               </label>
               <JobSearchAutocomplete
@@ -380,12 +380,12 @@ export default function OnboardingPage() {
                 onChange={setTargetRole}
                 onSelect={setTargetRole}
                 placeholder="Start typing a role (e.g. Mechanical Engineer, Data Analyst, HR Generalist)"
-                leadingIcon={<Briefcase className="w-4 h-4 text-[#626B78]" />}
+                leadingIcon={<Briefcase className="w-4 h-4 text-[var(--text-secondary)]" />}
                 inputClassName="w-full min-h-[44px] pl-10 pr-4 py-2.5 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-sm text-[#20242B] focus:outline-none focus:border-[#3157C8]"
               />
 
               <div className="pt-2">
-                <span className="block text-xs font-medium text-[#626B78] mb-2">
+                <span className="block text-xs font-medium text-[var(--text-secondary)] mb-2">
                   Curated tracks across engineering, analytics, business, and design:
                 </span>
                 <div className="flex flex-wrap gap-2">
@@ -398,8 +398,8 @@ export default function OnboardingPage() {
                         onClick={() => setTargetRole(selected ? '' : role.title)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors cursor-pointer ${
                           selected
-                            ? 'bg-[#3157C8] text-white border-[#3157C8]'
-                            : 'bg-[#F6F7F9] text-[#20242B] border-[#E5E8ED] hover:border-[#3157C8]'
+                            ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                            : 'bg-[var(--bg-primary)] text-[var(--text-primary)] border-[var(--border-color)] hover:border-[var(--accent)]'
                         }`}
                       >
                         {role.title}
@@ -410,9 +410,9 @@ export default function OnboardingPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2 border-t border-[#E5E8ED]">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-5 pt-2 border-t border-[var(--border-color)]">
               <div>
-                <label className="block text-sm font-semibold text-[#20242B] mb-2">Career Stage</label>
+                <label className="block text-sm font-semibold text-[var(--text-primary)] mb-2">Career Stage</label>
                 <div className="grid grid-cols-2 gap-2">
                   {[
                     { value: 'student', label: 'Student' },
@@ -426,8 +426,8 @@ export default function OnboardingPage() {
                       onClick={() => setExperienceBand(opt.value as any)}
                       className={`px-3 py-2 rounded-lg text-xs font-semibold border text-left cursor-pointer ${
                         experienceBand === opt.value
-                          ? 'border-[#3157C8] bg-[#3157C8]/8 text-[#3157C8]'
-                          : 'border-[#E5E8ED] bg-[#FFFFFF] text-[#20242B] hover:bg-[#F6F7F9]'
+                          ? 'border-[var(--accent)] bg-[var(--accent)]/8 text-[var(--accent)]'
+                          : 'border-[var(--border-color)] bg-[#FFFFFF] text-[var(--text-primary)] hover:bg-[var(--bg-primary)]'
                       }`}
                     >
                       {opt.label}
@@ -437,7 +437,7 @@ export default function OnboardingPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold text-[#20242B] mb-2">Work Mode Preference</label>
+                <label className="block text-sm font-semibold text-[var(--text-primary)] mb-2">Work Mode Preference</label>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
                   {[
                     { value: 'any', label: 'Any' },
@@ -451,8 +451,8 @@ export default function OnboardingPage() {
                       onClick={() => setWorkMode(opt.value as any)}
                       className={`px-3 py-2 rounded-lg text-xs font-semibold border text-center cursor-pointer ${
                         workMode === opt.value
-                          ? 'border-[#3157C8] bg-[#3157C8]/8 text-[#3157C8]'
-                          : 'border-[#E5E8ED] bg-[#FFFFFF] text-[#20242B] hover:bg-[#F6F7F9]'
+                          ? 'border-[var(--accent)] bg-[var(--accent)]/8 text-[var(--accent)]'
+                          : 'border-[var(--border-color)] bg-[#FFFFFF] text-[var(--text-primary)] hover:bg-[var(--bg-primary)]'
                       }`}
                     >
                       {opt.label}
@@ -464,7 +464,7 @@ export default function OnboardingPage() {
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <div>
-                <label className="block text-sm font-semibold text-[#20242B] mb-2">Opportunity Types</label>
+                <label className="block text-sm font-semibold text-[var(--text-primary)] mb-2">Opportunity Types</label>
                 <div className="flex flex-wrap gap-2">
                   {['Full-time', 'Internship', 'Contract'].map((jt) => {
                     const active = jobTypes.includes(jt);
@@ -475,8 +475,8 @@ export default function OnboardingPage() {
                         onClick={() => toggleJobType(jt)}
                         className={`px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer ${
                           active
-                            ? 'border-[#3157C8] bg-[#3157C8] text-white'
-                            : 'border-[#E5E8ED] bg-[#FFFFFF] text-[#626B78]'
+                            ? 'border-[var(--accent)] bg-[var(--accent)] text-white'
+                            : 'border-[var(--border-color)] bg-[#FFFFFF] text-[var(--text-secondary)]'
                         }`}
                       >
                         {jt}
@@ -487,7 +487,7 @@ export default function OnboardingPage() {
               </div>
 
               <div>
-                <label htmlFor="pref-locations" className="block text-sm font-semibold text-[#20242B] mb-2">
+                <label htmlFor="pref-locations" className="block text-sm font-semibold text-[var(--text-primary)] mb-2">
                   Preferred Locations (Optional)
                 </label>
                 <input
@@ -496,16 +496,16 @@ export default function OnboardingPage() {
                   value={preferredLocationsText}
                   onChange={(e) => setPreferredLocationsText(e.target.value)}
                   placeholder="e.g. Remote, Bangalore, New York"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-sm text-[#20242B] focus:outline-none focus:border-[#3157C8]"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border-color)] bg-[#FFFFFF] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-end pt-3 border-t border-[#E5E8ED]">
+            <div className="flex items-center justify-end pt-3 border-t border-[var(--border-color)]">
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#3157C8] hover:bg-[#2546A8] text-white text-sm font-semibold transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-semibold transition-colors cursor-pointer"
               >
                 <span>Continue to Resume or Background</span>
                 <ChevronRight className="w-4 h-4" />
@@ -516,10 +516,10 @@ export default function OnboardingPage() {
 
         {/* STEP 2 */}
         {step === 2 && (
-          <section className="bg-[#FFFFFF] border border-[#E5E8ED] rounded-xl p-6 space-y-6">
+          <section className="bg-[#FFFFFF] border border-[var(--border-color)] rounded-xl p-6 space-y-6">
             <div>
-              <h2 className="text-xl font-bold text-[#20242B]">Import your resume or enter core details</h2>
-              <p className="text-sm text-[#626B78] mt-1">
+              <h2 className="text-xl font-bold text-[var(--text-primary)]">Import your resume or enter core details</h2>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">
                 Uploaded files (up to 10 MB PDF, DOCX, or TXT) are parsed in memory only and never stored raw. Extracted items remain unconfirmed claims until Step 3.
               </p>
             </div>
@@ -530,8 +530,8 @@ export default function OnboardingPage() {
                 onClick={() => setEntryMode('resume')}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-semibold cursor-pointer ${
                   entryMode === 'resume'
-                    ? 'border-[#3157C8] bg-[#3157C8]/8 text-[#3157C8]'
-                    : 'border-[#E5E8ED] bg-[#FFFFFF] text-[#626B78]'
+                    ? 'border-[var(--accent)] bg-[var(--accent)]/8 text-[var(--accent)]'
+                    : 'border-[var(--border-color)] bg-[#FFFFFF] text-[var(--text-secondary)]'
                 }`}
               >
                 <FileUp className="w-4 h-4" />
@@ -542,8 +542,8 @@ export default function OnboardingPage() {
                 onClick={() => setEntryMode('manual')}
                 className={`flex items-center gap-2 px-4 py-2.5 rounded-lg border text-sm font-semibold cursor-pointer ${
                   entryMode === 'manual'
-                    ? 'border-[#3157C8] bg-[#3157C8]/8 text-[#3157C8]'
-                    : 'border-[#E5E8ED] bg-[#FFFFFF] text-[#626B78]'
+                    ? 'border-[var(--accent)] bg-[var(--accent)]/8 text-[var(--accent)]'
+                    : 'border-[var(--border-color)] bg-[#FFFFFF] text-[var(--text-secondary)]'
                 }`}
               >
                 <GraduationCap className="w-4 h-4" />
@@ -552,8 +552,8 @@ export default function OnboardingPage() {
             </div>
 
             {entryMode === 'resume' && (
-              <div className="p-6 rounded-xl border border-dashed border-[#E5E8ED] bg-[#F6F7F9] space-y-3">
-                <label className="block text-sm font-semibold text-[#20242B]">
+              <div className="p-6 rounded-xl border border-dashed border-[var(--border-color)] bg-[var(--bg-primary)] space-y-3">
+                <label className="block text-sm font-semibold text-[var(--text-primary)]">
                   Select PDF, DOCX, or TXT Resume (Max 10 MB)
                 </label>
                 <input
@@ -561,16 +561,16 @@ export default function OnboardingPage() {
                   accept=".pdf,.docx,.txt,application/pdf,application/vnd.openxmlformats-officedocument.wordprocessingml.document,text/plain"
                   disabled={isParsing}
                   onChange={(e) => handleResumeUpload(e.target.files?.[0] || null)}
-                  className="block w-full text-sm text-[#626B78] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-[#E5E8ED] file:text-xs file:font-semibold file:bg-[#FFFFFF] file:text-[#20242B] hover:file:border-[#3157C8] cursor-pointer"
+                  className="block w-full text-sm text-[var(--text-secondary)] file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border file:border-[var(--border-color)] file:text-xs file:font-semibold file:bg-[#FFFFFF] file:text-[var(--text-primary)] hover:file:border-[var(--accent)] cursor-pointer"
                 />
                 {isParsing && (
-                  <p className="flex items-center gap-2 text-xs text-[#3157C8] font-medium">
+                  <p className="flex items-center gap-2 text-xs text-[var(--accent)] font-medium">
                     <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     Extracting text and identifying claimed skills...
                   </p>
                 )}
                 {parsedFilename && !isParsing && (
-                  <p className="text-xs text-[#20242B]">
+                  <p className="text-xs text-[var(--text-primary)]">
                     Parsed <strong>{parsedFilename}</strong>. Review extracted items in Step 3.
                   </p>
                 )}
@@ -579,7 +579,7 @@ export default function OnboardingPage() {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 pt-2">
               <div>
-                <label className="block text-xs font-semibold text-[#626B78] uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1.5">
                   Institution / University (Optional)
                 </label>
                 <input
@@ -587,11 +587,11 @@ export default function OnboardingPage() {
                   value={institution}
                   onChange={(e) => setInstitution(e.target.value)}
                   placeholder="e.g. State University"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-sm text-[#20242B] focus:outline-none focus:border-[#3157C8]"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border-color)] bg-[#FFFFFF] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-[#626B78] uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1.5">
                   Degree / Credential (Optional)
                 </label>
                 <input
@@ -599,11 +599,11 @@ export default function OnboardingPage() {
                   value={degree}
                   onChange={(e) => setDegree(e.target.value)}
                   placeholder="e.g. B.S., B.Tech, MBA"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-sm text-[#20242B] focus:outline-none focus:border-[#3157C8]"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border-color)] bg-[#FFFFFF] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-[#626B78] uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1.5">
                   Field of Study / Discipline (Optional)
                 </label>
                 <input
@@ -611,11 +611,11 @@ export default function OnboardingPage() {
                   value={fieldOfStudy}
                   onChange={(e) => setFieldOfStudy(e.target.value)}
                   placeholder="e.g. Mechanical Engineering, Finance, Marketing"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-sm text-[#20242B] focus:outline-none focus:border-[#3157C8]"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border-color)] bg-[#FFFFFF] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                 />
               </div>
               <div>
-                <label className="block text-xs font-semibold text-[#626B78] uppercase tracking-wide mb-1.5">
+                <label className="block text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1.5">
                   Graduation Year (Optional)
                 </label>
                 <input
@@ -625,16 +625,16 @@ export default function OnboardingPage() {
                   value={graduationYear}
                   onChange={(e) => setGraduationYear(e.target.value)}
                   placeholder="e.g. 2026"
-                  className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-sm text-[#20242B] focus:outline-none focus:border-[#3157C8]"
+                  className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border-color)] bg-[#FFFFFF] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
                 />
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-3 border-t border-[#E5E8ED]">
+            <div className="flex items-center justify-between pt-3 border-t border-[var(--border-color)]">
               <button
                 type="button"
                 onClick={() => setStep(1)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-sm font-semibold text-[#626B78] hover:text-[#20242B] cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[var(--border-color)] bg-[#FFFFFF] text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span>Back</span>
@@ -642,7 +642,7 @@ export default function OnboardingPage() {
               <button
                 type="button"
                 onClick={() => setStep(3)}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#3157C8] hover:bg-[#2546A8] text-white text-sm font-semibold transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-semibold transition-colors cursor-pointer"
               >
                 <span>Review & Confirm Data</span>
                 <ChevronRight className="w-4 h-4" />
@@ -653,32 +653,32 @@ export default function OnboardingPage() {
 
         {/* STEP 3 */}
         {step === 3 && (
-          <section className="bg-[#FFFFFF] border border-[#E5E8ED] rounded-xl p-6 space-y-6">
+          <section className="bg-[#FFFFFF] border border-[var(--border-color)] rounded-xl p-6 space-y-6">
             <div>
-              <h2 className="text-xl font-bold text-[#20242B]">Confirm your career profile</h2>
-              <p className="text-sm text-[#626B78] mt-1">
+              <h2 className="text-xl font-bold text-[var(--text-primary)]">Confirm your career profile</h2>
+              <p className="text-sm text-[var(--text-secondary)] mt-1">
                 {parsedNotice ||
                   'Only checked skills will be saved as confirmed skills on your profile. Unchecked items will be discarded.'}
               </p>
             </div>
 
             {/* Summary Strip */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-sm">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm">
               <div>
-                <div className="text-xs font-medium text-[#626B78]">Target Role</div>
-                <div className="font-semibold text-[#20242B] mt-0.5">
+                <div className="text-xs font-medium text-[var(--text-secondary)]">Target Role</div>
+                <div className="font-semibold text-[var(--text-primary)] mt-0.5">
                   {targetRole.trim() || 'Goal not set'}
                 </div>
               </div>
               <div>
-                <div className="text-xs font-medium text-[#626B78]">Work Preferences</div>
-                <div className="font-semibold text-[#20242B] mt-0.5">
+                <div className="text-xs font-medium text-[var(--text-secondary)]">Work Preferences</div>
+                <div className="font-semibold text-[var(--text-primary)] mt-0.5">
                   {workMode.toUpperCase()} · {jobTypes.join(', ')}
                 </div>
               </div>
               <div>
-                <div className="text-xs font-medium text-[#626B78]">Education</div>
-                <div className="font-semibold text-[#20242B] mt-0.5">
+                <div className="text-xs font-medium text-[var(--text-secondary)]">Education</div>
+                <div className="font-semibold text-[var(--text-primary)] mt-0.5">
                   {degree || fieldOfStudy || institution
                     ? [degree, fieldOfStudy, institution].filter(Boolean).join(' · ')
                     : 'Not provided'}
@@ -688,7 +688,7 @@ export default function OnboardingPage() {
 
             {/* Add Skill with Autocomplete */}
             <div className="space-y-2">
-              <label className="block text-sm font-semibold text-[#20242B]">
+              <label className="block text-sm font-semibold text-[var(--text-primary)]">
                 Add or Verify Skills ({skillCandidates.filter((s) => s.selected).length} selected)
               </label>
               <div className="flex flex-row gap-2 items-center">
@@ -706,7 +706,7 @@ export default function OnboardingPage() {
                 <button
                   type="button"
                   onClick={() => handleAddSkill()}
-                  className="shrink-0 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg border border-[#3157C8] text-[#3157C8] bg-[#FFFFFF] hover:bg-[#3157C8]/5 text-sm font-semibold cursor-pointer"
+                  className="shrink-0 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg border border-[var(--accent)] text-[var(--accent)] bg-[#FFFFFF] hover:bg-[var(--accent)]/5 text-sm font-semibold cursor-pointer"
                 >
                   <Plus className="w-4 h-4" />
                   <span>Add Skill</span>
@@ -716,7 +716,7 @@ export default function OnboardingPage() {
 
             {/* Claimed vs Confirmed Toggle List */}
             {skillCandidates.length > 0 ? (
-              <div className="divide-y divide-[#E5E8ED] border border-[#E5E8ED] rounded-xl overflow-hidden">
+              <div className="divide-y divide-[var(--border-color)] border border-[var(--border-color)] rounded-xl overflow-hidden">
                 {skillCandidates.map((item) => (
                   <div
                     key={item.skillName}
@@ -727,14 +727,14 @@ export default function OnboardingPage() {
                         type="checkbox"
                         checked={item.selected}
                         onChange={() => toggleSkillCandidate(item.skillName)}
-                        className="w-4 h-4 rounded border-[#E5E8ED] text-[#3157C8]"
+                        className="w-4 h-4 rounded border-[var(--border-color)] text-[var(--accent)]"
                       />
-                      <span className="text-sm font-medium text-[#20242B] truncate">
+                      <span className="text-sm font-medium text-[var(--text-primary)] truncate">
                         {item.skillName}
                       </span>
                     </label>
                     <div className="flex items-center gap-2 shrink-0">
-                      <span className="text-[11px] px-2 py-0.5 rounded border border-[#E5E8ED] bg-[#F6F7F9] text-[#626B78]">
+                      <span className="text-[11px] px-2 py-0.5 rounded border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-secondary)]">
                         {item.source === 'resume_parsed' ? 'Claimed from resume' : 'User added'}
                       </span>
                       <button
@@ -744,7 +744,7 @@ export default function OnboardingPage() {
                           setSkillCandidates((prev) => prev.filter((s) => s.skillName !== item.skillName));
                           setRejectedSkills((rej) => (rej.includes(item.skillName) ? rej : [...rej, item.skillName]));
                         }}
-                        className="p-1 text-[#626B78] hover:text-red-600 cursor-pointer"
+                        className="p-1 text-[var(--text-secondary)] hover:text-red-600 cursor-pointer"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -753,17 +753,17 @@ export default function OnboardingPage() {
                 ))}
               </div>
             ) : (
-              <div className="p-5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] text-sm text-[#626B78]">
+              <div className="p-5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-secondary)]">
                 No skills listed yet. Add skills above or upload a resume in Step 2 — or save your goal now and add skills anytime in{' '}
-                <strong className="text-[#20242B]">My Career Data</strong>.
+                <strong className="text-[var(--text-primary)]">My Career Data</strong>.
               </div>
             )}
 
-            <div className="flex items-center justify-between pt-3 border-t border-[#E5E8ED]">
+            <div className="flex items-center justify-between pt-3 border-t border-[var(--border-color)]">
               <button
                 type="button"
                 onClick={() => setStep(2)}
-                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-sm font-semibold text-[#626B78] hover:text-[#20242B] cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg border border-[var(--border-color)] bg-[#FFFFFF] text-sm font-semibold text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
               >
                 <ChevronLeft className="w-4 h-4" />
                 <span>Back</span>
@@ -772,7 +772,7 @@ export default function OnboardingPage() {
                 type="button"
                 onClick={handleComplete}
                 disabled={isSaving}
-                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[#3157C8] hover:bg-[#2546A8] text-white text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50"
+                className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-semibold transition-colors cursor-pointer disabled:opacity-50"
               >
                 {isSaving ? (
                   <>

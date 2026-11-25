@@ -24,11 +24,11 @@ export default async function AdminProtectedLayout({
   }
 
   return (
-    <div className="flex w-full min-h-screen bg-[var(--bg-primary)]">
+    <div className="product-shell flex w-full min-h-screen bg-[var(--bg-primary)]">
       <AdminSidebar adminEmail={payload.email} adminRole={payload.role} />
       <div className="flex-1 flex flex-col min-w-0">
         <AdminHeader adminEmail={payload.email} adminRole={payload.role} />
-        <main className="flex-1 w-full">{children}</main>
+        <main className="flex-1 w-full min-w-0">{children}</main>
       </div>
     </div>
   );

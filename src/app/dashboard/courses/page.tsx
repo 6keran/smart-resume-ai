@@ -117,7 +117,7 @@ export default function UserCoursesPage() {
         );
       default:
         return (
-          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[#F6F7F9] text-[#626B78] border border-[#E5E8ED] text-[10px] font-semibold">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-md bg-[var(--bg-primary)] text-[var(--text-secondary)] border border-[var(--border-color)] text-[10px] font-semibold">
             <span>Not Started</span>
           </span>
         );
@@ -131,25 +131,25 @@ export default function UserCoursesPage() {
   return (
     <div className="space-y-6 animate-fade-in text-left">
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-7 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-sm">
+      <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 sm:p-7 flex flex-col lg:flex-row lg:items-center justify-between gap-4 shadow-sm">
         <div>
-          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[#20242B]">
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight text-[var(--text-primary)]">
             Learning Resources &amp; Study Checklists
           </h1>
-          <p className="text-xs sm:text-sm text-[#626B78] mt-1">
+          <p className="text-xs sm:text-sm text-[var(--text-secondary)] mt-1">
             Verified external documentation, skill roadmaps, and self-paced study checklists across all career domains.
           </p>
         </div>
 
         {/* Tab Switcher */}
-        <div className="flex flex-wrap items-center gap-1 p-1 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9]">
+        <div className="flex flex-wrap items-center gap-1 p-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)]">
           <button
             type="button"
             onClick={() => setActiveTab('role_resources')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer flex items-center gap-1.5 ${
               activeTab === 'role_resources'
-                ? 'bg-[#3157C8] text-white shadow-sm'
-                : 'text-[#626B78] hover:text-[#20242B]'
+                ? 'bg-[var(--accent)] text-white shadow-sm'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
             <Compass className="w-3.5 h-3.5" />
@@ -160,8 +160,8 @@ export default function UserCoursesPage() {
             onClick={() => setActiveTab('youtube')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold flex items-center gap-1.5 transition-all cursor-pointer ${
               activeTab === 'youtube'
-                ? 'bg-[#3157C8] text-white shadow-sm'
-                : 'text-[#626B78] hover:text-[#20242B]'
+                ? 'bg-[var(--accent)] text-white shadow-sm'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
             <YouTubeIcon className="w-3.5 h-3.5" />
@@ -172,8 +172,8 @@ export default function UserCoursesPage() {
             onClick={() => setActiveTab('courses')}
             className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-all cursor-pointer ${
               activeTab === 'courses'
-                ? 'bg-[#3157C8] text-white shadow-sm'
-                : 'text-[#626B78] hover:text-[#20242B]'
+                ? 'bg-[var(--accent)] text-white shadow-sm'
+                : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
             }`}
           >
             Self-Paced Checklists ({courses.length})
@@ -183,19 +183,19 @@ export default function UserCoursesPage() {
 
       {activeTab === 'role_resources' ? (
         <div className="space-y-6">
-          <div className="bg-white rounded-2xl border border-[#E5E8ED] p-5 space-y-4">
+          <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-5 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
               <div>
-                <h2 className="text-sm font-bold text-[#20242B]">
+                <h2 className="text-sm font-bold text-[var(--text-primary)]">
                   Browse Curated Role References
                 </h2>
-                <p className="text-xs text-[#626B78]">
+                <p className="text-xs text-[var(--text-secondary)]">
                   {userTargetRole
                     ? `Aligned with your current goal: ${userTargetRole}`
                     : 'Choose any role below to view verified official documentation, certifications, and core skills.'}
                 </p>
               </div>
-              <span className="text-[11px] font-semibold text-[#626B78]">
+              <span className="text-[11px] font-semibold text-[var(--text-secondary)]">
                 Domain: {activeRoleProfile.domain}
               </span>
             </div>
@@ -207,8 +207,8 @@ export default function UserCoursesPage() {
                   onClick={() => setSelectedRoleSlug(profile.slug)}
                   className={`px-3 py-1.5 rounded-lg text-xs font-semibold border transition-colors cursor-pointer ${
                     profile.slug === activeRoleProfile.slug
-                      ? 'bg-[#3157C8] text-white border-[#3157C8]'
-                      : 'bg-[#F6F7F9] text-[#20242B] border-[#E5E8ED] hover:border-[#3157C8]/40'
+                      ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                      : 'bg-[var(--bg-primary)] text-[var(--text-primary)] border-[var(--border-color)] hover:border-[var(--accent)]/40'
                   }`}
                 >
                   {profile.title}
@@ -221,15 +221,15 @@ export default function UserCoursesPage() {
             {activeRoleProfile.learningResources.map((res) => (
               <div
                 key={`${activeRoleProfile.slug}-${res.title}`}
-                className="p-5 rounded-2xl border border-[#E5E8ED] bg-white flex flex-col justify-between space-y-4 shadow-sm"
+                className="reference-panel p-5 rounded-2xl border border-[var(--border-color)] bg-white flex flex-col justify-between space-y-4 shadow-sm"
               >
                 <div className="space-y-2">
-                  <div className="flex items-center justify-between text-[11px] text-[#626B78]">
-                    <span className="font-semibold text-[#3157C8]">{res.provider}</span>
+                  <div className="flex items-center justify-between text-[11px] text-[var(--text-secondary)]">
+                    <span className="font-semibold text-[var(--accent)]">{res.provider}</span>
                     <span>Verified {res.lastVerified}</span>
                   </div>
-                  <h3 className="text-sm font-bold text-[#20242B] leading-snug">{res.title}</h3>
-                  <p className="text-xs text-[#626B78] capitalize">
+                  <h3 className="text-sm font-bold text-[var(--text-primary)] leading-snug">{res.title}</h3>
+                  <p className="text-xs text-[var(--text-secondary)] capitalize">
                     Type: {res.type.replace('_', ' ')}
                   </p>
                 </div>
@@ -238,7 +238,7 @@ export default function UserCoursesPage() {
                     href={res.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="w-full py-2 px-3 rounded-xl bg-[#3157C8] text-white font-semibold text-xs flex items-center justify-center gap-1.5 hover:opacity-95 transition-opacity"
+                    className="w-full py-2 px-3 rounded-xl bg-[var(--accent)] text-white font-semibold text-xs flex items-center justify-center gap-1.5 hover:opacity-95 transition-opacity"
                   >
                     <span>Open Official Reference</span>
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -293,7 +293,7 @@ export default function UserCoursesPage() {
                 {YOUTUBE_ROADMAPS[selectedSkill].resources.map((res) => (
                   <div
                     key={res.id}
-                    className="p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex flex-col justify-between space-y-4 shadow-sm hover:border-[var(--accent)] transition-all group"
+                    className="reference-panel p-5 rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] flex flex-col justify-between space-y-4 shadow-sm hover:border-[var(--accent)] transition-all group"
                   >
                     <div className="space-y-2.5">
                       <div className="flex items-center justify-between text-[10px]">
@@ -382,8 +382,8 @@ export default function UserCoursesPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          <div className="p-4 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-xs text-[#626B78]">
-            <strong className="text-[#20242B]">Self-paced study log:</strong> Track lesson milestones for technical prep topics below. For verified external references across Engineering, Data, Finance, Marketing, HR, and Design, open the <button type="button" onClick={() => setActiveTab('role_resources')} className="text-[#3157C8] font-semibold hover:underline cursor-pointer">Role References</button> tab.
+          <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-xs text-[var(--text-secondary)]">
+            <strong className="text-[var(--text-primary)]">Self-paced study log:</strong> Track lesson milestones for technical prep topics below. For verified external references across Engineering, Data, Finance, Marketing, HR, and Design, open the <button type="button" onClick={() => setActiveTab('role_resources')} className="text-[var(--accent)] font-semibold hover:underline cursor-pointer">Role References</button> tab.
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {courses.map((course) => {
@@ -393,7 +393,7 @@ export default function UserCoursesPage() {
               return (
                 <div
                   key={course.id}
-                  className="rounded-2xl border border-[#E5E8ED] bg-white p-5 sm:p-6 flex flex-col justify-between space-y-4 transition-all duration-200 hover:border-[#3157C8]/40 shadow-sm"
+                  className="reference-panel rounded-2xl border border-[var(--border-color)] bg-white p-5 sm:p-6 flex flex-col justify-between space-y-4 transition-all duration-200 hover:border-[var(--accent)]/40 shadow-sm"
                 >
                 <div>
                   <div className="flex items-start justify-between gap-3 mb-3">
@@ -450,7 +450,7 @@ export default function UserCoursesPage() {
                       <button
                         onClick={() => handleAdvanceLesson(course)}
                         disabled={isUpdating}
-                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[#3157C8] text-white text-xs font-semibold hover:opacity-95 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-95 disabled:opacity-50 transition-all cursor-pointer shadow-sm"
                       >
                         {isUpdating ? (
                           <Loader2 className="w-3.5 h-3.5 animate-spin" />

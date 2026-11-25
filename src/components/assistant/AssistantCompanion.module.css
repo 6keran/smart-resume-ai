@@ -1,0 +1,3 @@
+.character { display: block; overflow: visible; pointer-events: none; contain: layout style; }
+.character * { pointer-events: none; }
+@media (prefers-reduced-motion: reduce) { .character { transition: none; } }

@@ -142,7 +142,7 @@ export default function CareerReadinessHUD({
     quadrants.find((q) => q.key === activeQuadrantKey) || quadrants[0];
 
   return (
-    <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xs overflow-hidden transition-colors">
+    <div className="reference-dashboard-stage rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] shadow-xs overflow-hidden transition-colors">
       {/* ── Top HUD Status Strip ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/40">
         <div className="space-y-1">

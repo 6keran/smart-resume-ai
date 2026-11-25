@@ -1406,7 +1406,7 @@ function ResumeBuilderContent() {
   return (
     <div className="resume-builder-page-container min-h-screen py-6 sm:py-8 px-3 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-6 w-full max-w-full overflow-hidden">
       {/* Header */}
-      <div className="bg-white rounded-2xl border border-[#E5E8ED] p-5 sm:p-6 shadow-sm no-print">
+      <div className="reference-workspace-heading no-print">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="space-y-1">
             <h1 className="text-xl sm:text-2xl font-bold text-[var(--text-primary)] tracking-tight">
@@ -1670,7 +1670,7 @@ function ResumeBuilderContent() {
               className="btn-secondary btn-sm inline-flex items-center gap-1 text-xs cursor-pointer"
               title="Opt-in import from My Career Data without overwriting edits"
             >
-              <User className="w-3.5 h-3.5 text-[#3157C8]" />
+              <User className="w-3.5 h-3.5 text-[var(--accent)]" />
               <span className="hidden sm:inline">Import Profile</span>
             </button>
 
@@ -4904,7 +4904,7 @@ function ResumeBuilderContent() {
       {/* Target Job Specification Modal */}
       {showTargetJobModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="w-full max-w-xl rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
+          <div className="reference-panel w-full max-w-xl rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
               <div className="flex items-center gap-2">
                 <Target className="w-4 h-4 text-[var(--accent)]" />
@@ -4960,7 +4960,7 @@ function ResumeBuilderContent() {
       {/* Save Snapshot Modal */}
       {showSaveSnapshotModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="relative w-full max-w-md rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
+          <div className="reference-panel relative w-full max-w-md rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
               <div className="flex items-center gap-2">
                 <History className="w-4 h-4 text-[var(--accent)]" />
@@ -5031,7 +5031,7 @@ function ResumeBuilderContent() {
       {/* Version History Modal */}
       {showVersionsModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="relative w-full max-w-xl rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
+          <div className="reference-panel relative w-full max-w-xl rounded-xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4 max-h-[85vh] flex flex-col">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
               <div className="flex items-center gap-2">
                 <Clock className="w-4 h-4 text-[var(--accent)]" />
@@ -5140,7 +5140,7 @@ function ResumeBuilderContent() {
       {/* Remove Resume Confirmation Modal */}
       {showRemoveConfirmModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="relative w-full max-w-md rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
+          <div className="reference-panel relative w-full max-w-md rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-full bg-rose-500/10 text-rose-500 flex items-center justify-center shrink-0">
                 <AlertTriangle className="w-5 h-5" />
@@ -5199,7 +5199,7 @@ function ResumeBuilderContent() {
       {/* Upload Another Resume Modal */}
       {showUploadResumeModal && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4 animate-fade-in no-print">
-          <div className="relative w-full max-w-lg rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
+          <div className="reference-panel relative w-full max-w-lg rounded-2xl bg-[var(--bg-card)] border border-[var(--border-color)] p-6 shadow-2xl space-y-4">
             <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
               <div className="flex items-center gap-2">
                 <UploadCloud className="w-4 h-4 text-[var(--accent)]" />
@@ -5315,20 +5315,20 @@ function ResumeBuilderContent() {
           className="fixed inset-0 z-50 bg-black/40 flex items-center justify-center p-4"
           data-no-print="true"
         >
-          <div className="w-full max-w-lg rounded-2xl bg-white border border-[#E5E8ED] shadow-2xl p-6 space-y-4 text-left max-h-[85vh] overflow-y-auto">
-            <div className="flex items-center justify-between gap-2 pb-3 border-b border-[#E5E8ED]">
+          <div className="reference-panel w-full max-w-lg rounded-2xl bg-white border border-[var(--border-color)] shadow-2xl p-6 space-y-4 text-left max-h-[85vh] overflow-y-auto">
+            <div className="flex items-center justify-between gap-2 pb-3 border-b border-[var(--border-color)]">
               <div>
-                <h3 className="text-base font-bold text-[#20242B]">
+                <h3 className="text-base font-bold text-[var(--text-primary)]">
                   Import from My Career Data
                 </h3>
-                <p className="text-xs text-[#626B78]">
+                <p className="text-xs text-[var(--text-secondary)]">
                   Preview confirmed profile details before merging. Nothing overwrites existing fields silently.
                 </p>
               </div>
               <button
                 type="button"
                 onClick={() => setShowImportProfileModal(false)}
-                className="p-1.5 rounded-lg text-[#626B78] hover:text-[#20242B] cursor-pointer"
+                className="p-1.5 rounded-lg text-[var(--text-secondary)] hover:text-[var(--text-primary)] cursor-pointer"
                 aria-label="Close modal"
               >
                 <X className="w-4 h-4" />
@@ -5337,8 +5337,8 @@ function ResumeBuilderContent() {
 
             {isLoadingImportProfile ? (
               <div className="py-10 text-center space-y-2">
-                <Loader2 className="w-6 h-6 animate-spin text-[#3157C8] mx-auto" />
-                <p className="text-xs text-[#626B78]">Loading saved profile &amp; confirmed skills...</p>
+                <Loader2 className="w-6 h-6 animate-spin text-[var(--accent)] mx-auto" />
+                <p className="text-xs text-[var(--text-secondary)]">Loading saved profile &amp; confirmed skills...</p>
               </div>
             ) : importProfileError ? (
               <div className="p-4 rounded-xl bg-rose-50 border border-rose-200 text-xs text-rose-700">
@@ -5347,21 +5347,21 @@ function ResumeBuilderContent() {
             ) : importProfileData ? (
               <div className="space-y-4 text-xs">
                 {/* Personal & Target Role */}
-                <label className="flex items-start gap-2.5 p-3 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] cursor-pointer">
+                <label className="flex items-start gap-2.5 p-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] cursor-pointer">
                   <input
                     type="checkbox"
                     checked={includePersonalImport}
                     onChange={(e) => setIncludePersonalImport(e.target.checked)}
-                    className="mt-0.5 accent-[#3157C8]"
+                    className="mt-0.5 accent-[var(--accent)]"
                   />
                   <div className="space-y-0.5">
-                    <span className="font-bold text-[#20242B] block">
+                    <span className="font-bold text-[var(--text-primary)] block">
                       Contact &amp; Target Headline (empty fields only)
                     </span>
-                    <span className="text-[#626B78] block">
+                    <span className="text-[var(--text-secondary)] block">
                       Name: {importProfileData.account?.name || 'Not set'} • Email: {importProfileData.account?.email || 'Not set'}
                     </span>
-                    <span className="text-[#626B78] block">
+                    <span className="text-[var(--text-secondary)] block">
                       Headline: {importProfileData.goalSet && importProfileData.targetRole ? importProfileData.targetRole : 'Goal not set'}
                     </span>
                   </div>
@@ -5369,16 +5369,16 @@ function ResumeBuilderContent() {
 
                 {/* Education */}
                 {importProfileData.profile && (importProfileData.profile.institution || importProfileData.profile.degree) && (
-                  <label className="flex items-start gap-2.5 p-3 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] cursor-pointer">
+                  <label className="flex items-start gap-2.5 p-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] cursor-pointer">
                     <input
                       type="checkbox"
                       checked={includeEducationImport}
                       onChange={(e) => setIncludeEducationImport(e.target.checked)}
-                      className="mt-0.5 accent-[#3157C8]"
+                      className="mt-0.5 accent-[var(--accent)]"
                     />
                     <div className="space-y-0.5">
-                      <span className="font-bold text-[#20242B] block">Education Record</span>
-                      <span className="text-[#626B78] block">
+                      <span className="font-bold text-[var(--text-primary)] block">Education Record</span>
+                      <span className="text-[var(--text-secondary)] block">
                         {[
                           importProfileData.profile.degree,
                           importProfileData.profile.fieldOfStudy,
@@ -5395,15 +5395,15 @@ function ResumeBuilderContent() {
                 {/* Skills Selection */}
                 <div className="space-y-2">
                   <div className="flex items-center justify-between">
-                    <span className="font-bold text-[#20242B]">
+                    <span className="font-bold text-[var(--text-primary)]">
                       Skills ({selectedImportSkills.length} selected)
                     </span>
-                    <span className="text-[11px] text-[#626B78]">
+                    <span className="text-[11px] text-[var(--text-secondary)]">
                       Verified &amp; confirmed pre-selected; claimed require opt-in
                     </span>
                   </div>
                   {importProfileData.skills.length === 0 ? (
-                    <p className="text-[#626B78] p-3 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED]">
+                    <p className="text-[var(--text-secondary)] p-3 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)]">
                       No saved skills in your career profile yet.
                     </p>
                   ) : (
@@ -5417,7 +5417,7 @@ function ResumeBuilderContent() {
                         return (
                           <label
                             key={skill.id}
-                            className="flex items-center justify-between gap-2 p-2 rounded-lg border border-[#E5E8ED] bg-white cursor-pointer"
+                            className="flex items-center justify-between gap-2 p-2 rounded-lg border border-[var(--border-color)] bg-white cursor-pointer"
                           >
                             <span className="flex items-center gap-2">
                               <input
@@ -5430,16 +5430,16 @@ function ResumeBuilderContent() {
                                       : prev.filter((item) => item !== skill.name)
                                   );
                                 }}
-                                className="accent-[#3157C8]"
+                                className="accent-[var(--accent)]"
                               />
-                              <span className="font-medium text-[#20242B]">{skill.name}</span>
+                              <span className="font-medium text-[var(--text-primary)]">{skill.name}</span>
                             </span>
                             <span
                               className={`px-2 py-0.5 rounded text-[10px] font-semibold border ${
                                 skill.status === 'verified'
                                   ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
                                   : isConfirmed
-                                    ? 'bg-[#F6F7F9] text-[#3157C8] border-[#3157C8]/25'
+                                    ? 'bg-[var(--bg-primary)] text-[var(--accent)] border-[var(--accent)]/25'
                                     : 'bg-amber-50 text-amber-700 border-amber-200'
                               }`}
                             >
@@ -5456,25 +5456,25 @@ function ResumeBuilderContent() {
                   )}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-[#E5E8ED]">
+                <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-[var(--border-color)]">
                   <button
                     type="button"
                     onClick={() => setShowImportProfileModal(false)}
-                    className="px-3.5 py-2 rounded-xl border border-[#E5E8ED] bg-white text-[#20242B] text-xs font-semibold cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl border border-[var(--border-color)] bg-white text-[var(--text-primary)] text-xs font-semibold cursor-pointer"
                   >
                     Cancel
                   </button>
                   <button
                     type="button"
                     onClick={() => handleApplyProfileImport('fill_empty')}
-                    className="px-3.5 py-2 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[#20242B] text-xs font-semibold hover:border-[#3157C8]/40 cursor-pointer"
+                    className="px-3.5 py-2 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-xs font-semibold hover:border-[var(--accent)]/40 cursor-pointer"
                   >
                     Fill Empty Fields Only
                   </button>
                   <button
                     type="button"
                     onClick={() => handleApplyProfileImport('merge')}
-                    className="px-4 py-2 rounded-xl bg-[#3157C8] text-white text-xs font-semibold hover:opacity-95 cursor-pointer"
+                    className="px-4 py-2 rounded-xl bg-[var(--accent)] text-white text-xs font-semibold hover:opacity-95 cursor-pointer"
                   >
                     Merge Into Resume
                   </button>

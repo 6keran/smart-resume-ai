@@ -50,7 +50,7 @@ export default function DashboardResumeDeck({
 
   if (!activeResume) {
     return (
-      <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-xs space-y-4">
+      <div className="reference-panel rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-xs space-y-4">
         <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
           <h3 className="text-sm font-bold text-[var(--text-primary)] flex items-center gap-2">
             <FileText className="w-4 h-4 text-[var(--accent)]" />
@@ -93,7 +93,7 @@ export default function DashboardResumeDeck({
   const strokeDashoffset = circumference - (Math.max(0, Math.min(100, score)) / 100) * circumference;
 
   return (
-    <div className="rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-xs space-y-4">
+    <div className="reference-panel rounded-2xl border border-[var(--border-color)] bg-[var(--bg-card)] p-6 shadow-xs space-y-4">
       {/* ── Header ── */}
       <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-3">
         <div className="flex items-center gap-2">

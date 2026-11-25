@@ -212,18 +212,18 @@ export default function AtsScorePage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F6F7F9] py-10 px-4 sm:px-6 lg:px-8 text-[#20242B]">
+    <div className="min-h-screen bg-[var(--bg-primary)] py-10 px-4 sm:px-6 lg:px-8 text-[var(--text-primary)]">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* ── Page Header ── */}
-        <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 shadow-sm text-left space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-blue-50 border border-blue-200 text-xs font-semibold text-[#3157C8]">
+        <div className="reference-workspace-heading text-left space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-md bg-[var(--accent-subtle)] border border-[var(--accent)]/20 text-xs font-semibold text-[var(--accent)]">
             <ShieldCheck className="w-3.5 h-3.5" />
             <span>Dedicated ATS Evaluation Engine</span>
           </div>
-          <h1 className="text-[28px] sm:text-[30px] font-bold tracking-tight text-[#20242B]">
+          <h1 className="text-[28px] sm:text-[30px] font-bold tracking-tight text-[var(--text-primary)]">
             ATS Resume Score
           </h1>
-          <p className="text-[15px] text-[#626B78] max-w-2xl leading-relaxed">
+          <p className="text-[15px] text-[var(--text-secondary)] max-w-2xl leading-relaxed">
             Evaluate your resume against enterprise applicant tracking systems. Detect missing keywords, verify clean formatting, and receive clear, actionable steps to increase your interview callback rate.
           </p>
         </div>
@@ -231,10 +231,10 @@ export default function AtsScorePage() {
         {/* ── Upload & Input Section ── */}
         {!analysis && (
           <div className="space-y-6">
-            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 space-y-6 text-left shadow-sm">
+            <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 sm:p-8 space-y-6 text-left shadow-sm">
               {/* Tab Selector */}
-              <div className="flex items-center justify-between border-b border-[#E5E8ED] pb-4">
-                <div role="tablist" aria-label="Resume input mode" className="flex items-center gap-2 p-1 rounded-lg bg-[#F6F7F9] border border-[#E5E8ED] relative">
+              <div className="flex items-center justify-between border-b border-[var(--border-color)] pb-4">
+                <div role="tablist" aria-label="Resume input mode" className="flex items-center gap-2 p-1 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] relative">
                   <button
                     role="tab"
                     aria-selected={activeTab === 'upload'}
@@ -242,8 +242,8 @@ export default function AtsScorePage() {
                     onClick={() => { setActiveTab('upload'); setErrorMessage(null); }}
                     className={`px-4 py-2 rounded-md text-[14px] font-semibold transition-colors cursor-pointer relative z-10 ${
                       activeTab === 'upload'
-                        ? 'text-[#3157C8]'
-                        : 'text-[#626B78] hover:text-[#20242B]'
+                        ? 'text-[var(--accent)]'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                     }`}
                   >
                     {activeTab === 'upload' && (
@@ -262,8 +262,8 @@ export default function AtsScorePage() {
                     onClick={() => { setActiveTab('paste'); setErrorMessage(null); }}
                     className={`px-4 py-2 rounded-md text-[14px] font-semibold transition-colors cursor-pointer relative z-10 ${
                       activeTab === 'paste'
-                        ? 'text-[#3157C8]'
-                        : 'text-[#626B78] hover:text-[#20242B]'
+                        ? 'text-[var(--accent)]'
+                        : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)]'
                     }`}
                   >
                     {activeTab === 'paste' && (
@@ -276,7 +276,7 @@ export default function AtsScorePage() {
                     Paste Text
                   </button>
                 </div>
-                <span className="text-[13px] text-[#626B78] hidden sm:inline">Supported: PDF, DOCX, TXT (Max 10MB)</span>
+                <span className="text-[13px] text-[var(--text-secondary)] hidden sm:inline">Supported: PDF, DOCX, TXT (Max 10MB)</span>
               </div>
 
               {/* Upload Drop Zone / Paste Area */}
@@ -313,33 +313,33 @@ export default function AtsScorePage() {
                           onDragLeave={handleDragLeave}
                           onDrop={handleDrop}
                           onClick={() => fileInputRef.current?.click()}
-                          className={`border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[#3157C8] ${
+                          className={`border-2 border-dashed rounded-2xl p-8 sm:p-12 text-center cursor-pointer transition-all focus:outline-none focus-visible:ring-2 focus-visible:ring-[var(--accent)] ${
                             isDragging
-                              ? 'border-[#3157C8] bg-blue-50/50 scale-[1.01]'
-                              : 'border-[#E5E8ED] bg-[#F6F7F9] hover:border-[#3157C8] hover:bg-white'
+                              ? 'border-[var(--accent)] bg-blue-50/50 scale-[1.01]'
+                              : 'border-[var(--border-color)] bg-[var(--bg-primary)] hover:border-[var(--accent)] hover:bg-white'
                           }`}
                         >
-                          <div className="w-14 h-14 rounded-xl bg-blue-50 border border-blue-200 text-[#3157C8] flex items-center justify-center mx-auto mb-3 shadow-xs">
+                          <div className="w-14 h-14 rounded-xl bg-[var(--accent-subtle)] border border-[var(--accent)]/20 text-[var(--accent)] flex items-center justify-center mx-auto mb-3 shadow-xs">
                             <UploadCloud className="w-7 h-7" />
                           </div>
-                          <p className="text-[16px] font-semibold text-[#20242B]">
+                          <p className="text-[16px] font-semibold text-[var(--text-primary)]">
                             Click to upload or drag and drop your resume
                           </p>
-                          <p className="text-[14px] text-[#626B78] mt-1">
+                          <p className="text-[14px] text-[var(--text-secondary)] mt-1">
                             Accepts standard PDF, DOCX, or plain text resumes
                           </p>
                         </div>
                       ) : (
-                        <div className="p-4 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] flex items-center justify-between">
+                        <div className="p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] flex items-center justify-between">
                           <div className="flex items-center gap-3 min-w-0">
-                            <div className="w-11 h-11 rounded-lg bg-blue-50 text-[#3157C8] flex items-center justify-center shrink-0 border border-blue-200">
+                            <div className="w-11 h-11 rounded-lg bg-[var(--accent-subtle)] text-[var(--accent)] flex items-center justify-center shrink-0 border border-[var(--accent)]/20">
                               <FileText className="w-5 h-5" />
                             </div>
                             <div className="min-w-0">
-                              <p className="text-[15px] font-bold text-[#20242B] truncate">
+                              <p className="text-[15px] font-bold text-[var(--text-primary)] truncate">
                                 {selectedFile.name}
                               </p>
-                              <p className="text-[13px] text-[#626B78]">
+                              <p className="text-[13px] text-[var(--text-secondary)]">
                                 {(selectedFile.size / 1024).toFixed(1)} KB • {selectedFile.name.split('.').pop()?.toUpperCase()}
                               </p>
                             </div>
@@ -347,7 +347,7 @@ export default function AtsScorePage() {
                           <button
                             type="button"
                             onClick={clearSelection}
-                            className="p-2 rounded-lg text-[#626B78] hover:text-[#C43D43] hover:bg-red-50 transition-colors cursor-pointer"
+                            className="p-2 rounded-lg text-[var(--text-secondary)] hover:text-[#C43D43] hover:bg-red-50 transition-colors cursor-pointer"
                             aria-label="Remove selected file"
                           >
                             <X className="w-4 h-4" />
@@ -367,7 +367,7 @@ export default function AtsScorePage() {
                         onChange={(e) => setPastedText(e.target.value)}
                         placeholder="Paste your raw resume text here (experience, summary, skills, and education)..."
                         aria-label="Paste resume text"
-                        className="w-full p-4 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] text-[14px] font-mono text-[#20242B] placeholder:text-[#626B78] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[#3157C8]"
+                        className="reference-panel w-full p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] text-[14px] font-mono text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:bg-white focus:outline-none focus:ring-2 focus:ring-[var(--accent)]"
                       />
                     </div>
                   )}
@@ -379,7 +379,7 @@ export default function AtsScorePage() {
                 <button
                   type="button"
                   onClick={() => setShowJobContext(!showJobContext)}
-                  className="inline-flex items-center gap-2 text-[14px] font-semibold text-[#3157C8] hover:underline cursor-pointer"
+                  className="inline-flex items-center gap-2 text-[14px] font-semibold text-[var(--accent)] hover:underline cursor-pointer"
                 >
                   <Target className="w-4 h-4" />
                   <span>{showJobContext ? 'Hide Target Job Context' : 'Add Target Job Description (Optional for Role-Specific Match)'}</span>
@@ -387,10 +387,10 @@ export default function AtsScorePage() {
                 </button>
 
                 {showJobContext && (
-                  <div className="mt-3 p-4 rounded-xl border border-[#E5E8ED] bg-[#F6F7F9] space-y-3 text-[14px]">
+                  <div className="mt-3 p-4 rounded-xl border border-[var(--border-color)] bg-[var(--bg-primary)] space-y-3 text-[14px]">
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                       <div>
-                        <label htmlFor="ats-target-job-title" className="block font-semibold text-[#20242B] mb-1">
+                        <label htmlFor="ats-target-job-title" className="block font-semibold text-[var(--text-primary)] mb-1">
                           Target Job Title
                         </label>
                         <input
@@ -399,11 +399,11 @@ export default function AtsScorePage() {
                           value={jobTitle}
                           onChange={(e) => setJobTitle(e.target.value)}
                           placeholder="e.g. Full Stack Developer"
-                          className="w-full h-10 px-3 rounded-lg border border-[#E5E8ED] bg-white text-[14px] text-[#20242B] placeholder:text-[#626B78] focus:outline-none focus:border-[#3157C8]"
+                          className="w-full h-10 px-3 rounded-lg border border-[var(--border-color)] bg-white text-[14px] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
                         />
                       </div>
                       <div>
-                        <label htmlFor="ats-target-company" className="block font-semibold text-[#20242B] mb-1">
+                        <label htmlFor="ats-target-company" className="block font-semibold text-[var(--text-primary)] mb-1">
                           Target Company
                         </label>
                         <input
@@ -412,12 +412,12 @@ export default function AtsScorePage() {
                           value={company}
                           onChange={(e) => setCompany(e.target.value)}
                           placeholder="e.g. Acme Tech"
-                          className="w-full h-10 px-3 rounded-lg border border-[#E5E8ED] bg-white text-[14px] text-[#20242B] placeholder:text-[#626B78] focus:outline-none focus:border-[#3157C8]"
+                          className="w-full h-10 px-3 rounded-lg border border-[var(--border-color)] bg-white text-[14px] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
                         />
                       </div>
                     </div>
                     <div>
-                      <label htmlFor="ats-job-description" className="block font-semibold text-[#20242B] mb-1">
+                      <label htmlFor="ats-job-description" className="block font-semibold text-[var(--text-primary)] mb-1">
                         Job Description
                       </label>
                       <textarea
@@ -426,7 +426,7 @@ export default function AtsScorePage() {
                         value={jobDescription}
                         onChange={(e) => setJobDescription(e.target.value)}
                         placeholder="Paste required skills and qualifications from the target job posting..."
-                        className="w-full p-3 rounded-lg border border-[#E5E8ED] bg-white text-[14px] text-[#20242B] placeholder:text-[#626B78] focus:outline-none focus:border-[#3157C8]"
+                        className="w-full p-3 rounded-lg border border-[var(--border-color)] bg-white text-[14px] text-[var(--text-primary)] placeholder:text-[var(--text-secondary)] focus:outline-none focus:border-[var(--accent)]"
                       />
                     </div>
                   </div>
@@ -452,7 +452,7 @@ export default function AtsScorePage() {
 
               {/* Action Button */}
               <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-                <div className="text-[14px] text-[#626B78] flex items-center gap-2">
+                <div className="text-[14px] text-[var(--text-secondary)] flex items-center gap-2">
                   <CheckCircle2 className="w-4 h-4 text-[#16845B]" />
                   <span>Real-time semantic ATS scoring</span>
                 </div>
@@ -461,7 +461,7 @@ export default function AtsScorePage() {
                   type="button"
                   onClick={handleAnalyze}
                   disabled={isAnalyzing || (activeTab === 'upload' ? !selectedFile : !pastedText.trim())}
-                  className="px-6 py-2.5 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[15px] font-semibold transition-all inline-flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
+                  className="px-6 py-2.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[15px] font-semibold transition-all inline-flex items-center justify-center gap-2 shadow-sm disabled:opacity-50 cursor-pointer"
                 >
                   {isAnalyzing ? (
                     <>
@@ -480,13 +480,13 @@ export default function AtsScorePage() {
             </div>
 
             {/* Disclaimer Accordion */}
-            <details className="group bg-white rounded-xl border border-[#E5E8ED] p-4 text-[13px] text-[#626B78] shadow-xs">
-              <summary className="font-medium text-[#20242B] cursor-pointer list-none flex items-center justify-between">
+            <details className="reference-panel group bg-white rounded-xl border border-[var(--border-color)] p-4 text-[13px] text-[var(--text-secondary)] shadow-xs">
+              <summary className="font-medium text-[var(--text-primary)] cursor-pointer list-none flex items-center justify-between">
                 <span className="flex items-center gap-2">
-                  <Info className="w-4 h-4 text-[#3157C8]" />
+                  <Info className="w-4 h-4 text-[var(--accent)]" />
                   How ATS Scoring Works &amp; Disclaimer
                 </span>
-                <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180 text-[#626B78]" />
+                <ChevronDown className="w-4 h-4 transition-transform group-open:rotate-180 text-[var(--text-secondary)]" />
               </summary>
               <p className="mt-3 leading-relaxed">
                 The ATS Score is an algorithmic compatibility estimate calculated from your resume content, section balance, formatting parseability, and target job keywords. It models modern ATS engines like Workday, Greenhouse, and Lever. It is not an official score from any commercial ATS vendor and does not guarantee interview callbacks.
@@ -505,20 +505,20 @@ export default function AtsScorePage() {
             className="space-y-6"
           >
             {/* Top Navigation Bar */}
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-[#E5E8ED] bg-white shadow-xs">
+            <div className="reference-panel flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-xl border border-[var(--border-color)] bg-white shadow-xs">
               <div className="flex items-center gap-2">
                 <FileCheck2 className="w-5 h-5 text-[#16845B]" />
-                <span className="text-[14px] font-bold text-[#20242B]">
+                <span className="text-[14px] font-bold text-[var(--text-primary)]">
                   Analysis Complete: {selectedFile ? selectedFile.name : 'Pasted Resume Text'}
                 </span>
-                <span className="text-[13px] text-[#626B78]">
+                <span className="text-[13px] text-[var(--text-secondary)]">
                   • {new Date(analysis.analyzedAt || Date.now()).toLocaleDateString()}
                 </span>
               </div>
               <button
                 type="button"
                 onClick={resetAnalysis}
-                className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[#3157C8] hover:underline cursor-pointer"
+                className="inline-flex items-center gap-1.5 text-[14px] font-semibold text-[var(--accent)] hover:underline cursor-pointer"
               >
                 <RefreshCw className="w-3.5 h-3.5" />
                 <span>Analyze Another Resume</span>
@@ -526,14 +526,14 @@ export default function AtsScorePage() {
             </div>
 
             {/* 1. TOP SUMMARY CARD (Hero Score Banner with ONE Main Action) */}
-            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 space-y-6 shadow-sm text-left">
+            <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 sm:p-8 space-y-6 shadow-sm text-left">
               <div className="grid grid-cols-1 md:grid-cols-12 gap-6 items-center">
                 {/* Left: Overall Score Dial */}
-                <div className="md:col-span-4 flex flex-col items-center justify-center p-6 rounded-2xl bg-[#F6F7F9] border border-[#E5E8ED] text-center">
+                <div className="md:col-span-4 flex flex-col items-center justify-center p-6 rounded-2xl bg-[var(--bg-primary)] border border-[var(--border-color)] text-center">
                   <div className="mb-3">
                     <ScoreRing score={analysis.overallAtsScore} size={130} strokeWidth={9} />
                   </div>
-                  <span className="text-[14px] font-bold tracking-wide text-[#20242B] uppercase">
+                  <span className="text-[14px] font-bold tracking-wide text-[var(--text-primary)] uppercase">
                     Overall ATS Score
                   </span>
                   <div className="mt-2">
@@ -544,35 +544,35 @@ export default function AtsScorePage() {
                 {/* Right: Summary & ONE Primary Action */}
                 <div className="md:col-span-8 space-y-4">
                   <div>
-                    <h2 className="text-[22px] font-bold text-[#20242B]">
+                    <h2 className="text-[22px] font-bold text-[var(--text-primary)]">
                       {analysis.overallAtsScore >= 75
                         ? 'High ATS Compatibility • Recruiter Ready'
                         : analysis.overallAtsScore >= 50
                         ? 'Moderate ATS Compatibility • Needs Optimization'
                         : 'Low ATS Compatibility • Critical Action Required'}
                     </h2>
-                    <p className="text-[15px] text-[#626B78] mt-1.5 leading-relaxed">
+                    <p className="text-[15px] text-[var(--text-secondary)] mt-1.5 leading-relaxed">
                       {analysis.summaryFeedback || 'Your resume has been processed by automated recruitment heuristics across keyword density, section structure, and formatting.'}
                     </p>
                   </div>
 
                   {/* 4 Clean Sub-Score Metrics */}
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-1">
-                    <div className="p-3.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED]">
-                      <span className="text-[13px] font-semibold text-[#626B78] block">Keywords</span>
-                      <span className="text-[20px] font-bold text-[#20242B]">{analysis.keywordMatchScore}%</span>
+                    <div className="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)]">
+                      <span className="text-[13px] font-semibold text-[var(--text-secondary)] block">Keywords</span>
+                      <span className="text-[20px] font-bold text-[var(--text-primary)]">{analysis.keywordMatchScore}%</span>
                     </div>
-                    <div className="p-3.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED]">
-                      <span className="text-[13px] font-semibold text-[#626B78] block">Formatting</span>
-                      <span className="text-[20px] font-bold text-[#20242B]">{analysis.formattingScore}%</span>
+                    <div className="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)]">
+                      <span className="text-[13px] font-semibold text-[var(--text-secondary)] block">Formatting</span>
+                      <span className="text-[20px] font-bold text-[var(--text-primary)]">{analysis.formattingScore}%</span>
                     </div>
-                    <div className="p-3.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED]">
-                      <span className="text-[13px] font-semibold text-[#626B78] block">Content</span>
-                      <span className="text-[20px] font-bold text-[#20242B]">{analysis.contentScore}%</span>
+                    <div className="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)]">
+                      <span className="text-[13px] font-semibold text-[var(--text-secondary)] block">Content</span>
+                      <span className="text-[20px] font-bold text-[var(--text-primary)]">{analysis.contentScore}%</span>
                     </div>
-                    <div className="p-3.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED]">
-                      <span className="text-[13px] font-semibold text-[#626B78] block">Structure</span>
-                      <span className="text-[20px] font-bold text-[#20242B]">{analysis.sectionScore}%</span>
+                    <div className="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)]">
+                      <span className="text-[13px] font-semibold text-[var(--text-secondary)] block">Structure</span>
+                      <span className="text-[20px] font-bold text-[var(--text-primary)]">{analysis.sectionScore}%</span>
                     </div>
                   </div>
 
@@ -580,7 +580,7 @@ export default function AtsScorePage() {
                   <div className="pt-2 flex flex-wrap items-center gap-4">
                     <Link
                       href="/improver"
-                      className="px-6 py-2.5 rounded-lg bg-[#3157C8] hover:bg-[#2447AB] text-white text-[15px] font-semibold transition-all inline-flex items-center gap-2 shadow-sm"
+                      className="px-6 py-2.5 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-[15px] font-semibold transition-all inline-flex items-center gap-2 shadow-sm"
                     >
                       <Wand2 className="w-4 h-4" />
                       <span>Improve Resume with AI</span>
@@ -588,9 +588,9 @@ export default function AtsScorePage() {
                     </Link>
                     <Link
                       href="/builder"
-                      className="px-4 py-2.5 rounded-lg border border-[#E5E8ED] bg-white hover:bg-[#F6F7F9] text-[#20242B] text-[15px] font-semibold transition-all inline-flex items-center gap-2"
+                      className="reference-panel px-4 py-2.5 rounded-lg border border-[var(--border-color)] bg-white hover:bg-[var(--bg-primary)] text-[var(--text-primary)] text-[15px] font-semibold transition-all inline-flex items-center gap-2"
                     >
-                      <FileEdit className="w-4 h-4 text-[#3157C8]" />
+                      <FileEdit className="w-4 h-4 text-[var(--accent)]" />
                       <span>Open in Builder</span>
                     </Link>
                   </div>
@@ -602,11 +602,11 @@ export default function AtsScorePage() {
             <AtsExplainabilityBreakdown analysis={analysis} />
 
             {/* 2. KEY PROBLEMS & FORMATTING DEFECTS */}
-            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 space-y-4 text-left shadow-sm">
-              <div className="flex items-center justify-between pb-3 border-b border-[#E5E8ED]">
+            <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 sm:p-8 space-y-4 text-left shadow-sm">
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
                 <div className="flex items-center gap-2.5">
                   <AlertCircle className="w-5 h-5 text-[#C43D43]" />
-                  <h3 className="text-[18px] font-bold text-[#20242B]">
+                  <h3 className="text-[18px] font-bold text-[var(--text-primary)]">
                     Key Problems &amp; Parseability Weaknesses
                   </h3>
                 </div>
@@ -618,9 +618,9 @@ export default function AtsScorePage() {
               {analysis.weaknesses && analysis.weaknesses.length > 0 ? (
                 <div className="space-y-3">
                   {analysis.weaknesses.map((w, idx) => (
-                    <div key={idx} className="p-4 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-1.5">
+                    <div key={idx} className="p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-[15px] text-[#20242B]">{w.whatIsWrong}</span>
+                        <span className="font-bold text-[15px] text-[var(--text-primary)]">{w.whatIsWrong}</span>
                         <span className={`text-[12px] font-bold uppercase px-2.5 py-0.5 rounded-md ${
                           w.severity === 'high'
                             ? 'bg-red-50 text-[#C43D43] border border-red-200'
@@ -629,7 +629,7 @@ export default function AtsScorePage() {
                           {w.severity} priority
                         </span>
                       </div>
-                      <p className="text-[14px] text-[#626B78] leading-relaxed">
+                      <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
                         {w.howToImprove}
                       </p>
                     </div>
@@ -646,11 +646,11 @@ export default function AtsScorePage() {
             {/* 3. MISSING & MATCHED KEYWORDS (2 Clean Cards) */}
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-left">
               {/* Missing High-Impact Keywords */}
-              <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm">
-                <div className="flex items-center justify-between pb-3 border-b border-[#E5E8ED]">
+              <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-4 shadow-sm">
+                <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
                   <div className="flex items-center gap-2">
                     <AlertTriangle className="w-5 h-5 text-[#A96812]" />
-                    <h3 className="text-[18px] font-bold text-[#20242B]">
+                    <h3 className="text-[18px] font-bold text-[var(--text-primary)]">
                       Missing Keywords
                     </h3>
                   </div>
@@ -659,7 +659,7 @@ export default function AtsScorePage() {
                   </span>
                 </div>
 
-                <p className="text-[14px] text-[#626B78] leading-relaxed">
+                <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
                   Add these missing terms to bullet points where you have authentic experience to boost keyword density.
                 </p>
 
@@ -682,11 +682,11 @@ export default function AtsScorePage() {
               </div>
 
               {/* Matched Skills */}
-              <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 space-y-4 shadow-sm">
-                <div className="flex items-center justify-between pb-3 border-b border-[#E5E8ED]">
+              <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 space-y-4 shadow-sm">
+                <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
                   <div className="flex items-center gap-2">
                     <CheckCircle2 className="w-5 h-5 text-[#16845B]" />
-                    <h3 className="text-[18px] font-bold text-[#20242B]">
+                    <h3 className="text-[18px] font-bold text-[var(--text-primary)]">
                       Detected Skills
                     </h3>
                   </div>
@@ -695,7 +695,7 @@ export default function AtsScorePage() {
                   </span>
                 </div>
 
-                <p className="text-[14px] text-[#626B78] leading-relaxed">
+                <p className="text-[14px] text-[var(--text-secondary)] leading-relaxed">
                   These verified skills and technologies were successfully indexed by the ATS parser.
                 </p>
 
@@ -712,21 +712,21 @@ export default function AtsScorePage() {
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[14px] text-[#626B78] italic">No standard technical keywords recognized.</p>
+                  <p className="text-[14px] text-[var(--text-secondary)] italic">No standard technical keywords recognized.</p>
                 )}
               </div>
             </div>
 
             {/* 4. TOP RECOMMENDATIONS */}
-            <div className="bg-white rounded-2xl border border-[#E5E8ED] p-6 sm:p-8 space-y-4 text-left shadow-sm">
-              <div className="flex items-center justify-between pb-3 border-b border-[#E5E8ED]">
+            <div className="reference-panel bg-white rounded-2xl border border-[var(--border-color)] p-6 sm:p-8 space-y-4 text-left shadow-sm">
+              <div className="flex items-center justify-between pb-3 border-b border-[var(--border-color)]">
                 <div className="flex items-center gap-2.5">
-                  <Wand2 className="w-5 h-5 text-[#3157C8]" />
-                  <h3 className="text-[18px] font-bold text-[#20242B]">
+                  <Wand2 className="w-5 h-5 text-[var(--accent)]" />
+                  <h3 className="text-[18px] font-bold text-[var(--text-primary)]">
                     Top Recommendations
                   </h3>
                 </div>
-                <span className="text-[13px] text-[#3157C8] font-semibold">
+                <span className="text-[13px] text-[var(--accent)] font-semibold">
                   {analysis.topSuggestions?.length || 0} Action Items
                 </span>
               </div>
@@ -736,67 +736,67 @@ export default function AtsScorePage() {
                   {analysis.topSuggestions.map((sug, idx) => (
                     <div
                       key={idx}
-                      className="p-4 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-2 text-left"
+                      className="p-4 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-2 text-left"
                     >
                       <div className="flex items-center justify-between">
                         <div className="flex items-center gap-2.5">
-                          <span className="w-6 h-6 rounded-full bg-blue-100 text-[#3157C8] flex items-center justify-center font-bold text-[12px]">
+                          <span className="w-6 h-6 rounded-full bg-blue-100 text-[var(--accent)] flex items-center justify-center font-bold text-[12px]">
                             {sug.rank || idx + 1}
                           </span>
-                          <span className="font-bold text-[16px] text-[#20242B]">
+                          <span className="font-bold text-[16px] text-[var(--text-primary)]">
                             {sug.section}: {sug.whatNeedsImprovement}
                           </span>
                         </div>
                         <span className={`text-[12px] font-semibold px-2.5 py-0.5 rounded-md ${
                           sug.priority === 'High'
                             ? 'bg-red-50 text-[#C43D43] border border-red-200'
-                            : 'bg-blue-50 text-[#3157C8] border border-blue-200'
+                            : 'bg-blue-50 text-[var(--accent)] border border-blue-200'
                         }`}>
                           {sug.priority} Priority
                         </span>
                       </div>
-                      <p className="text-[15px] text-[#626B78] leading-relaxed pl-8">
+                      <p className="text-[15px] text-[var(--text-secondary)] leading-relaxed pl-8">
                         {sug.howToImprove}
                       </p>
                     </div>
                   ))}
                 </div>
               ) : (
-                <p className="text-[15px] text-[#626B78]">No prioritized suggestions returned for this document.</p>
+                <p className="text-[15px] text-[var(--text-secondary)]">No prioritized suggestions returned for this document.</p>
               )}
             </div>
 
             {/* 5. Progressive Disclosure: Verified Strengths & Document Diagnostics */}
-            <details className="group bg-white rounded-2xl border border-[#E5E8ED] p-6 shadow-sm text-left">
-              <summary className="font-bold text-[17px] text-[#20242B] cursor-pointer list-none flex items-center justify-between">
+            <details className="reference-panel group bg-white rounded-2xl border border-[var(--border-color)] p-6 shadow-sm text-left">
+              <summary className="font-bold text-[17px] text-[var(--text-primary)] cursor-pointer list-none flex items-center justify-between">
                 <span className="flex items-center gap-2">
                   <CheckCircle2 className="w-5 h-5 text-[#16845B]" />
                   Verified Strengths &amp; Detailed Parser Heuristics ({analysis.strengths?.length || 0})
                 </span>
-                <ChevronDown className="w-5 h-5 transition-transform group-open:rotate-180 text-[#626B78]" />
+                <ChevronDown className="w-5 h-5 transition-transform group-open:rotate-180 text-[var(--text-secondary)]" />
               </summary>
-              <div className="mt-4 pt-4 border-t border-[#E5E8ED] space-y-4">
-                <div className="flex items-center gap-2 text-[14px] text-[#626B78]">
-                  <Info className="w-4 h-4 text-[#3157C8] shrink-0" />
-                  <span>Word Count: <strong className="text-[#20242B]">{analysis.wordCount} words</strong> (optimal range for 1-2 page resumes is 450–900 words).</span>
+              <div className="mt-4 pt-4 border-t border-[var(--border-color)] space-y-4">
+                <div className="flex items-center gap-2 text-[14px] text-[var(--text-secondary)]">
+                  <Info className="w-4 h-4 text-[var(--accent)] shrink-0" />
+                  <span>Word Count: <strong className="text-[var(--text-primary)]">{analysis.wordCount} words</strong> (optimal range for 1-2 page resumes is 450–900 words).</span>
                 </div>
 
                 {analysis.strengths && analysis.strengths.length > 0 ? (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {analysis.strengths.map((str, idx) => (
-                      <div key={idx} className="p-3.5 rounded-xl bg-[#F6F7F9] border border-[#E5E8ED] space-y-1">
-                        <span className="font-bold text-[14px] text-[#20242B] flex items-center gap-1.5">
+                      <div key={idx} className="p-3.5 rounded-xl bg-[var(--bg-primary)] border border-[var(--border-color)] space-y-1">
+                        <span className="font-bold text-[14px] text-[var(--text-primary)] flex items-center gap-1.5">
                           <CheckCircle2 className="w-4 h-4 text-[#16845B] shrink-0" />
                           {str.title}
                         </span>
-                        <p className="text-[13px] text-[#626B78] leading-relaxed">
+                        <p className="text-[13px] text-[var(--text-secondary)] leading-relaxed">
                           {str.description}
                         </p>
                       </div>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[14px] text-[#626B78] italic">No specific strengths recorded.</p>
+                  <p className="text-[14px] text-[var(--text-secondary)] italic">No specific strengths recorded.</p>
                 )}
               </div>
             </details>

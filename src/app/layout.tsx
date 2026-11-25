@@ -1,8 +1,9 @@
 import type { Metadata, Viewport } from 'next';
-import { Geist, Geist_Mono, Newsreader } from 'next/font/google';
+import { Geist_Mono, Inter, Newsreader } from 'next/font/google';
 import Script from 'next/script';
 import { MotionConfig } from 'framer-motion';
 import './globals.css';
+import './reference-experience.css';
 import { ThemeProvider } from '@/context/ThemeContext';
 import { ResumeProvider } from '@/context/ResumeContext';
 import { CareerProvider } from '@/context/CareerContext';
@@ -11,9 +12,10 @@ import { Header } from '@/components/layout/Header';
 import { UserProvider } from '@/components/user/UserContext';
 import { CareerChatbot } from '@/components/chat/CareerChatbot';
 
-const geistSans = Geist({
-  variable: '--font-geist-sans',
+const inter = Inter({
+  variable: '--font-inter',
   subsets: ['latin'],
+  display: 'swap',
 });
 
 const geistMono = Geist_Mono({
@@ -64,8 +66,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" className={`${geistSans.variable} ${geistMono.variable} ${newsreader.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
-      <body className="min-h-screen flex bg-[var(--bg-primary)] text-[var(--text-primary)] antialiased font-sans transition-colors duration-250" suppressHydrationWarning>
+    <html lang="en" className={`${inter.variable} ${geistMono.variable} ${newsreader.variable}`} data-scroll-behavior="smooth" suppressHydrationWarning>
+      <body className="min-h-screen flex bg-[var(--color-bg)] text-[var(--color-text)] antialiased font-sans" suppressHydrationWarning>
         <Script
           id="smart-resume-theme-init"
           src="/theme-init.js"
@@ -76,11 +78,11 @@ export default function RootLayout({
             <ResumeProvider>
               <CareerProvider>
                 <UserProvider>
-                  <div className="flex w-full min-h-screen relative z-[1]">
+                  <div className="product-shell flex w-full min-h-screen relative z-[1]">
                     <Sidebar />
                     <div className="flex-1 flex flex-col min-w-0">
                       <Header />
-                      <main className="flex-1 w-full">{children}</main>
+                      <main className="flex-1 w-full min-w-0">{children}</main>
                     </div>
                   </div>
                   <CareerChatbot />

@@ -64,7 +64,7 @@ export const Button = React.forwardRef<HTMLButtonElement, ButtonProps>(
       variantClasses[variant],
       sizeClasses[size],
       roundedClasses[rounded],
-      glow && 'shadow-[0_0_20px_rgba(79,131,241,0.45)]',
+      glow && 'shadow-[var(--shadow-marketing)]',
       isLoading && 'opacity-80 pointer-events-none',
       className
     );

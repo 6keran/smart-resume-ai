@@ -474,7 +474,7 @@ export default function ProjectMentorPage() {
     <PageTransition>
       <div className="min-h-screen pb-16 bg-[var(--bg-primary)] text-[var(--text-primary)]">
         {/* Header Hero */}
-        <div className="border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/50 backdrop-blur-md">
+        <div className="reference-workspace-heading">
           <div className="max-w-7xl mx-auto px-4 sm:px-8 py-6">
             <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
               <div>
@@ -610,14 +610,14 @@ export default function ProjectMentorPage() {
                   <p className="mt-1">{recsError}</p>
                 </div>
               ) : recommendations.length === 0 ? (
-                <GlassCard className="p-10 text-center max-w-xl mx-auto rounded-xl space-y-4 bg-white border border-[#E5E8ED]">
-                  <div className="w-12 h-12 rounded-xl bg-[#F6F7F9] text-[#3157C8] flex items-center justify-center mx-auto border border-[#E5E8ED]">
+                <GlassCard className="reference-panel p-10 text-center max-w-xl mx-auto rounded-xl space-y-4 bg-white border border-[var(--border-color)]">
+                  <div className="w-12 h-12 rounded-xl bg-[var(--bg-primary)] text-[var(--accent)] flex items-center justify-center mx-auto border border-[var(--border-color)]">
                     <Compass className="w-6 h-6" />
                   </div>
-                  <h3 className="text-lg font-bold text-[#20242B]">
+                  <h3 className="text-lg font-bold text-[var(--text-primary)]">
                     Set your career goal to unlock project blueprints
                   </h3>
-                  <p className="text-sm text-[#626B78] leading-relaxed">
+                  <p className="text-sm text-[var(--text-secondary)] leading-relaxed">
                     Choose a target role first so recommendations match the real tools, deliverables, and skill gaps employers look for in your field.
                   </p>
                   <div className="flex flex-wrap items-center justify-center gap-3 pt-1">

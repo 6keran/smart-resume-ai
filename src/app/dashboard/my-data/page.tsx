@@ -249,8 +249,8 @@ export default function MyCareerDataPage() {
 
   if (isLoading) {
     return (
-      <div className="p-8 flex items-center gap-3 text-sm text-[#626B78] bg-[#F6F7F9] min-h-screen">
-        <Loader2 className="w-4 h-4 animate-spin text-[#3157C8]" />
+      <div className="p-8 flex items-center gap-3 text-sm text-[var(--text-secondary)] bg-[var(--bg-primary)] min-h-screen">
+        <Loader2 className="w-4 h-4 animate-spin text-[var(--accent)]" />
         <span>Loading My Career Data...</span>
       </div>
     );
@@ -265,24 +265,24 @@ export default function MyCareerDataPage() {
   });
 
   return (
-    <div className="min-h-screen bg-[#F6F7F9] text-[#20242B] p-4 sm:p-8">
+    <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] p-4 sm:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Page Header */}
-        <div className="bg-[#FFFFFF] border border-[#E5E8ED] rounded-xl p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="reference-panel bg-[#FFFFFF] border border-[var(--border-color)] rounded-xl p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div>
-            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[#3157C8]">
+            <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
               <Database className="w-3.5 h-3.5" />
               <span>Data Transparency & Control</span>
             </div>
-            <h1 className="text-2xl font-bold text-[#20242B] mt-1">My Career Data</h1>
-            <p className="text-sm text-[#626B78] mt-1">
+            <h1 className="text-2xl font-bold text-[var(--text-primary)] mt-1">My Career Data</h1>
+            <p className="text-sm text-[var(--text-secondary)] mt-1">
               Inspect, confirm, edit, export, or clear the goal, profile, and skill records powering your personalized path.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2 shrink-0">
             <Link
               href="/onboarding"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-xs font-semibold text-[#20242B] hover:border-[#3157C8]"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--border-color)] bg-[#FFFFFF] text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--accent)]"
             >
               <RefreshCw className="w-3.5 h-3.5" />
               <span>Re-run Setup</span>
@@ -290,25 +290,25 @@ export default function MyCareerDataPage() {
             <button
               type="button"
               onClick={handleExportProfileData}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E5E8ED] bg-[#F6F7F9] hover:bg-white text-xs font-semibold text-[#20242B] hover:border-[#3157C8] cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] hover:bg-white text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] cursor-pointer"
               title="Export academic profile, goals and preferences"
             >
-              <Download className="w-3.5 h-3.5 text-[#626B78]" />
+              <Download className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
               <span>Export Profile</span>
             </button>
             <button
               type="button"
               onClick={handleExportResumeData}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[#E5E8ED] bg-[#F6F7F9] hover:bg-white text-xs font-semibold text-[#20242B] hover:border-[#3157C8] cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg border border-[var(--border-color)] bg-[var(--bg-primary)] hover:bg-white text-xs font-semibold text-[var(--text-primary)] hover:border-[var(--accent)] cursor-pointer"
               title="Export active resume JSON draft"
             >
-              <Download className="w-3.5 h-3.5 text-[#626B78]" />
+              <Download className="w-3.5 h-3.5 text-[var(--text-secondary)]" />
               <span>Export Resume</span>
             </button>
             <a
               href="/api/user/my-data/export"
               download="smart-resume-career-data.json"
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[#3157C8] hover:bg-[#2546A8] text-white text-xs font-semibold"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold"
               title="Export full consolidated career snapshot"
             >
               <Download className="w-3.5 h-3.5" />
@@ -336,8 +336,8 @@ export default function MyCareerDataPage() {
         </div>
 
         {message && (
-          <div className="p-3.5 rounded-xl border border-[#3157C8]/30 bg-[#FFFFFF] text-sm text-[#20242B] flex items-center gap-2">
-            <Check className="w-4 h-4 text-[#3157C8]" />
+          <div className="p-3.5 rounded-xl border border-[var(--accent)]/30 bg-[#FFFFFF] text-sm text-[var(--text-primary)] flex items-center gap-2">
+            <Check className="w-4 h-4 text-[var(--accent)]" />
             <span>{message}</span>
           </div>
         )}
@@ -350,13 +350,13 @@ export default function MyCareerDataPage() {
         )}
 
         {/* 1. Career Goal & Preferences */}
-        <section className="bg-[#FFFFFF] border border-[#E5E8ED] rounded-xl p-6 space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[#E5E8ED] pb-4">
+        <section className="bg-[#FFFFFF] border border-[var(--border-color)] rounded-xl p-6 space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 border-b border-[var(--border-color)] pb-4">
             <div>
-              <h2 className="text-base font-bold text-[#20242B]">Career Goal & Preferences</h2>
-              <p className="text-xs text-[#626B78] mt-0.5">
+              <h2 className="text-base font-bold text-[var(--text-primary)]">Career Goal & Preferences</h2>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                 Current Status:{' '}
-                <strong className="text-[#20242B]">
+                <strong className="text-[var(--text-primary)]">
                   {snapshot?.goalSet && snapshot.targetRole ? snapshot.targetRole : 'Goal not set'}
                 </strong>
               </p>
@@ -366,7 +366,7 @@ export default function MyCareerDataPage() {
                 type="button"
                 onClick={() => handleSaveProfile(true)}
                 disabled={isSaving}
-                className="text-xs font-semibold text-[#626B78] hover:text-red-600 cursor-pointer self-start"
+                className="text-xs font-semibold text-[var(--text-secondary)] hover:text-red-600 cursor-pointer self-start"
               >
                 Clear target role
               </button>
@@ -375,7 +375,7 @@ export default function MyCareerDataPage() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-xs font-semibold text-[#626B78] uppercase tracking-wide mb-1.5">
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1.5">
                 Target Role
               </label>
               <JobSearchAutocomplete
@@ -385,13 +385,13 @@ export default function MyCareerDataPage() {
                 onChange={setTargetRole}
                 onSelect={setTargetRole}
                 placeholder="Type a role or leave blank (Goal not set)"
-                leadingIcon={<Briefcase className="w-4 h-4 text-[#626B78]" />}
+                leadingIcon={<Briefcase className="w-4 h-4 text-[var(--text-secondary)]" />}
                 inputClassName="w-full min-h-[42px] pl-10 pr-3.5 py-2 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-sm text-[#20242B] focus:outline-none focus:border-[#3157C8]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#626B78] uppercase tracking-wide mb-1.5">
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1.5">
                 Preferred Locations
               </label>
               <input
@@ -399,18 +399,18 @@ export default function MyCareerDataPage() {
                 value={preferredLocationsText}
                 onChange={(e) => setPreferredLocationsText(e.target.value)}
                 placeholder="e.g. Remote, Bangalore, London"
-                className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-sm text-[#20242B] focus:outline-none focus:border-[#3157C8]"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border-color)] bg-[#FFFFFF] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               />
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#626B78] uppercase tracking-wide mb-1.5">
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1.5">
                 Work Mode
               </label>
               <select
                 value={workMode}
                 onChange={(e) => setWorkMode(e.target.value as any)}
-                className="w-full px-3.5 py-2.5 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-sm text-[#20242B] focus:outline-none focus:border-[#3157C8]"
+                className="w-full px-3.5 py-2.5 rounded-lg border border-[var(--border-color)] bg-[#FFFFFF] text-sm text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
               >
                 <option value="any">Any</option>
                 <option value="remote">Remote</option>
@@ -420,7 +420,7 @@ export default function MyCareerDataPage() {
             </div>
 
             <div>
-              <label className="block text-xs font-semibold text-[#626B78] uppercase tracking-wide mb-1.5">
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] uppercase tracking-wide mb-1.5">
                 Opportunity Types
               </label>
               <div className="flex flex-wrap gap-2 pt-1">
@@ -441,8 +441,8 @@ export default function MyCareerDataPage() {
                       }
                       className={`px-3 py-1.5 rounded-lg text-xs font-semibold border cursor-pointer ${
                         active
-                          ? 'bg-[#3157C8] text-white border-[#3157C8]'
-                          : 'bg-[#F6F7F9] text-[#626B78] border-[#E5E8ED]'
+                          ? 'bg-[var(--accent)] text-white border-[var(--accent)]'
+                          : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border-[var(--border-color)]'
                       }`}
                     >
                       {jt}
@@ -455,39 +455,39 @@ export default function MyCareerDataPage() {
 
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 pt-2">
             <div>
-              <label className="block text-xs font-semibold text-[#626B78] mb-1">Institution</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Institution</label>
               <input
                 type="text"
                 value={institution}
                 onChange={(e) => setInstitution(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#E5E8ED] text-sm text-[#20242B]"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--border-color)] text-sm text-[var(--text-primary)]"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#626B78] mb-1">Degree</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Degree</label>
               <input
                 type="text"
                 value={degree}
                 onChange={(e) => setDegree(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#E5E8ED] text-sm text-[#20242B]"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--border-color)] text-sm text-[var(--text-primary)]"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#626B78] mb-1">Field of Study</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Field of Study</label>
               <input
                 type="text"
                 value={fieldOfStudy}
                 onChange={(e) => setFieldOfStudy(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#E5E8ED] text-sm text-[#20242B]"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--border-color)] text-sm text-[var(--text-primary)]"
               />
             </div>
             <div>
-              <label className="block text-xs font-semibold text-[#626B78] mb-1">Graduation Year</label>
+              <label className="block text-xs font-semibold text-[var(--text-secondary)] mb-1">Graduation Year</label>
               <input
                 type="number"
                 value={graduationYear}
                 onChange={(e) => setGraduationYear(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#E5E8ED] text-sm text-[#20242B]"
+                className="w-full px-3 py-2 rounded-lg border border-[var(--border-color)] text-sm text-[var(--text-primary)]"
               />
             </div>
           </div>
@@ -497,7 +497,7 @@ export default function MyCareerDataPage() {
               type="button"
               onClick={() => handleSaveProfile(false)}
               disabled={isSaving}
-              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#3157C8] hover:bg-[#2546A8] text-white text-sm font-semibold cursor-pointer disabled:opacity-50"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-sm font-semibold cursor-pointer disabled:opacity-50"
             >
               {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <Check className="w-4 h-4" />}
               <span>Save Career Profile</span>
@@ -506,11 +506,11 @@ export default function MyCareerDataPage() {
         </section>
 
         {/* 2. Skills Provenance Manager */}
-        <section className="bg-[#FFFFFF] border border-[#E5E8ED] rounded-xl p-6 space-y-5">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#E5E8ED] pb-4">
+        <section className="bg-[#FFFFFF] border border-[var(--border-color)] rounded-xl p-6 space-y-5">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[var(--border-color)] pb-4">
             <div>
-              <h2 className="text-base font-bold text-[#20242B]">Skills & Provenance ({skills.length})</h2>
-              <p className="text-xs text-[#626B78] mt-0.5">
+              <h2 className="text-base font-bold text-[var(--text-primary)]">Skills & Provenance ({skills.length})</h2>
+              <p className="text-xs text-[var(--text-secondary)] mt-0.5">
                 Skills show whether they are assessment-verified, user-confirmed, or unconfirmed claims parsed from a resume.
               </p>
             </div>
@@ -527,8 +527,8 @@ export default function MyCareerDataPage() {
                   onClick={() => setSkillFilter(tab.id as any)}
                   className={`px-3 py-1 rounded-lg text-xs font-semibold border cursor-pointer ${
                     skillFilter === tab.id
-                      ? 'bg-[#20242B] text-white border-[#20242B]'
-                      : 'bg-[#F6F7F9] text-[#626B78] border-[#E5E8ED]'
+                      ? 'bg-[var(--text-primary)] text-white border-[var(--text-primary)]'
+                      : 'bg-[var(--bg-primary)] text-[var(--text-secondary)] border-[var(--border-color)]'
                   }`}
                 >
                   {tab.label}
@@ -553,7 +553,7 @@ export default function MyCareerDataPage() {
               type="button"
               onClick={() => newSkill.trim() && handleSkillAction('addSkill', { skillName: newSkill.trim() })}
               disabled={isSaving || !newSkill.trim()}
-              className="shrink-0 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg border border-[#3157C8] text-[#3157C8] bg-[#FFFFFF] hover:bg-[#3157C8]/5 text-sm font-semibold cursor-pointer disabled:opacity-50"
+              className="shrink-0 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg border border-[var(--accent)] text-[var(--accent)] bg-[#FFFFFF] hover:bg-[var(--accent)]/5 text-sm font-semibold cursor-pointer disabled:opacity-50"
             >
               <Plus className="w-4 h-4" />
               <span>Add Skill</span>
@@ -561,11 +561,11 @@ export default function MyCareerDataPage() {
           </div>
 
           {filteredSkills.length === 0 ? (
-            <div className="p-5 rounded-lg bg-[#F6F7F9] border border-[#E5E8ED] text-sm text-[#626B78]">
+            <div className="p-5 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)] text-sm text-[var(--text-secondary)]">
               No skills match this filter yet.
             </div>
           ) : (
-            <div className="divide-y divide-[#E5E8ED] border border-[#E5E8ED] rounded-lg overflow-hidden">
+            <div className="divide-y divide-[var(--border-color)] border border-[var(--border-color)] rounded-lg overflow-hidden">
               {filteredSkills.map((skill) => {
                 const isVerified = skill.status === 'verified';
                 const isConfirmed = isVerified || Boolean(skill.confirmedAt);
@@ -575,18 +575,18 @@ export default function MyCareerDataPage() {
                     className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 px-4 py-3 bg-[#FFFFFF]"
                   >
                     <div className="min-w-0">
-                      <div className="text-sm font-semibold text-[#20242B]">{skill.name}</div>
-                      <div className="text-xs text-[#626B78] mt-0.5">
+                      <div className="text-sm font-semibold text-[var(--text-primary)]">{skill.name}</div>
+                      <div className="text-xs text-[var(--text-secondary)] mt-0.5">
                         Source: {skill.source || 'user_added'} · Category: {skill.category}
                       </div>
                     </div>
                     <div className="flex items-center gap-2 shrink-0">
                       {isVerified ? (
-                        <span className="px-2.5 py-1 rounded border border-[#3157C8]/30 bg-[#3157C8]/10 text-[#3157C8] text-xs font-semibold">
+                        <span className="px-2.5 py-1 rounded border border-[var(--accent)]/30 bg-[var(--accent)]/10 text-[var(--accent)] text-xs font-semibold">
                           Verified{skill.score ? ` (${skill.score}%)` : ''}
                         </span>
                       ) : isConfirmed ? (
-                        <span className="px-2.5 py-1 rounded border border-[#E5E8ED] bg-[#F6F7F9] text-[#20242B] text-xs font-medium">
+                        <span className="px-2.5 py-1 rounded border border-[var(--border-color)] bg-[var(--bg-primary)] text-[var(--text-primary)] text-xs font-medium">
                           Confirmed
                         </span>
                       ) : (
@@ -598,7 +598,7 @@ export default function MyCareerDataPage() {
                             type="button"
                             onClick={() => handleSkillAction('confirmSkill', { skill: skill.id })}
                             disabled={isSaving}
-                            className="px-2.5 py-1 rounded bg-[#3157C8] text-white text-xs font-semibold cursor-pointer"
+                            className="px-2.5 py-1 rounded bg-[var(--accent)] text-white text-xs font-semibold cursor-pointer"
                           >
                             Confirm
                           </button>
@@ -609,7 +609,7 @@ export default function MyCareerDataPage() {
                         onClick={() => handleSkillAction('deleteSkill', { skill: skill.id })}
                         disabled={isSaving}
                         aria-label={`Remove ${skill.name}`}
-                        className="p-1.5 text-[#626B78] hover:text-red-600 cursor-pointer"
+                        className="p-1.5 text-[var(--text-secondary)] hover:text-red-600 cursor-pointer"
                       >
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -623,33 +623,33 @@ export default function MyCareerDataPage() {
 
         {/* 3. Resumes & Certificates Summary + Clear Data */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <section className="bg-[#FFFFFF] border border-[#E5E8ED] rounded-xl p-6 space-y-4">
-            <h2 className="text-base font-bold text-[#20242B]">Connected Records</h2>
+          <section className="bg-[#FFFFFF] border border-[var(--border-color)] rounded-xl p-6 space-y-4">
+            <h2 className="text-base font-bold text-[var(--text-primary)]">Connected Records</h2>
             <div className="space-y-3 text-sm">
-              <div className="flex items-center justify-between p-3 rounded-lg bg-[#F6F7F9] border border-[#E5E8ED]">
-                <span className="flex items-center gap-2 font-medium text-[#20242B]">
-                  <FileText className="w-4 h-4 text-[#3157C8]" />
+              <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)]">
+                <span className="flex items-center gap-2 font-medium text-[var(--text-primary)]">
+                  <FileText className="w-4 h-4 text-[var(--accent)]" />
                   Saved Resumes ({snapshot?.resumes?.length || 0})
                 </span>
-                <Link href="/dashboard/resumes" className="text-xs font-semibold text-[#3157C8] hover:underline">
+                <Link href="/dashboard/resumes" className="text-xs font-semibold text-[var(--accent)] hover:underline">
                   Manage
                 </Link>
               </div>
-              <div className="flex items-center justify-between p-3 rounded-lg bg-[#F6F7F9] border border-[#E5E8ED]">
-                <span className="flex items-center gap-2 font-medium text-[#20242B]">
-                  <Award className="w-4 h-4 text-[#3157C8]" />
+              <div className="flex items-center justify-between p-3 rounded-lg bg-[var(--bg-primary)] border border-[var(--border-color)]">
+                <span className="flex items-center gap-2 font-medium text-[var(--text-primary)]">
+                  <Award className="w-4 h-4 text-[var(--accent)]" />
                   Verified Certificates ({snapshot?.certificates?.length || 0})
                 </span>
-                <Link href="/dashboard/certificates" className="text-xs font-semibold text-[#3157C8] hover:underline">
+                <Link href="/dashboard/certificates" className="text-xs font-semibold text-[var(--accent)] hover:underline">
                   View
                 </Link>
               </div>
             </div>
           </section>
 
-          <section className="bg-[#FFFFFF] border border-[#E5E8ED] rounded-xl p-6 space-y-4">
-            <h2 className="text-base font-bold text-[#20242B]">Reset Career Path Data</h2>
-            <p className="text-xs text-[#626B78]">
+          <section className="bg-[#FFFFFF] border border-[var(--border-color)] rounded-xl p-6 space-y-4">
+            <h2 className="text-base font-bold text-[var(--text-primary)]">Reset Career Path Data</h2>
+            <p className="text-xs text-[var(--text-secondary)]">
               Clears your saved target role, onboarding state, roadmap progress, and unverified skills. Your login account, resumes, and assessment certificates are preserved.
             </p>
             {!showClearConfirm ? (
@@ -662,8 +662,8 @@ export default function MyCareerDataPage() {
                 <span>Clear Career Data</span>
               </button>
             ) : (
-              <div className="p-4 rounded-lg border border-red-200 bg-[#F6F7F9] space-y-3">
-                <label className="block text-xs font-semibold text-[#20242B]">
+              <div className="p-4 rounded-lg border border-red-200 bg-[var(--bg-primary)] space-y-3">
+                <label className="block text-xs font-semibold text-[var(--text-primary)]">
                   Type <code>CLEAR</code> to confirm:
                 </label>
                 <input
@@ -671,7 +671,7 @@ export default function MyCareerDataPage() {
                   value={clearText}
                   onChange={(e) => setClearText(e.target.value)}
                   placeholder="CLEAR"
-                  className="w-full px-3 py-2 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-sm"
+                  className="w-full px-3 py-2 rounded-lg border border-[var(--border-color)] bg-[#FFFFFF] text-sm"
                 />
                 <div className="flex items-center gap-2">
                   <button
@@ -688,7 +688,7 @@ export default function MyCareerDataPage() {
                       setShowClearConfirm(false);
                       setClearText('');
                     }}
-                    className="px-3.5 py-1.5 rounded-lg border border-[#E5E8ED] bg-[#FFFFFF] text-xs font-semibold text-[#626B78] cursor-pointer"
+                    className="px-3.5 py-1.5 rounded-lg border border-[var(--border-color)] bg-[#FFFFFF] text-xs font-semibold text-[var(--text-secondary)] cursor-pointer"
                   >
                     Cancel
                   </button>
