@@ -458,7 +458,7 @@ export default function AdminAssessmentsWorkspace() {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-3 shrink-0 max-w-full">
           {activeTab === 'questions' && (
             <button
               onClick={handleOpenAddQuestion}

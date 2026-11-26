@@ -7343,25 +7343,25 @@ export async function updateRoadmapStep(
   completed: boolean
 ) {
   const db = getDb();
-  const row = (await db
-    .prepare('SELECT * FROM user_learning_roadmaps WHERE id = ? AND user_id = ?')
-    .get(roadmapId, userId)) as any;
-
-  if (!row) return { success: false, error: 'Roadmap not found.' };
-
   try {
-    const data = JSON.parse(row.roadmap_data);
-    if (data.milestones && data.milestones[milestoneIndex]?.steps?.[stepIndex]) {
-      data.milestones[milestoneIndex].steps[stepIndex].completed = completed;
-    }
-    const now = new Date().toISOString();
-    await db
-      .prepare('UPDATE user_learning_roadmaps SET roadmap_data = ?, updated_at = ? WHERE id = ?')
-      .run(JSON.stringify(data), now, roadmapId);
+    return await db.transaction(async (tx) => {
+      // SQLite transactions take a write lock. PostgreSQL needs to lock this row before reading the JSON.
+      const row = await tx
+        .prepare(`SELECT * FROM user_learning_roadmaps WHERE id = ? AND user_id = ?${tx.isPostgres ? ' FOR UPDATE' : ''}`)
+        .get(roadmapId, userId);
+      if (!row) return { success: false as const, error: 'Roadmap not found.' };
 
-    return { success: true, roadmap: { ...row, roadmap_data: data, updated_at: now } };
+      const data = JSON.parse(row.roadmap_data);
+      const step = data.milestones?.[milestoneIndex]?.steps?.[stepIndex];
+      if (!step) return { success: false as const, error: 'Roadmap step not found.' };
+      step.completed = completed;
+      const now = new Date().toISOString();
+      await tx.prepare('UPDATE user_learning_roadmaps SET roadmap_data = ?, updated_at = ? WHERE id = ? AND user_id = ?')
+        .run(JSON.stringify(data), now, roadmapId, userId);
+      return { success: true as const, roadmap: { ...row, roadmap_data: data, updated_at: now } };
+    });
   } catch (err: any) {
-    return { success: false, error: err?.message || 'Failed to update step.' };
+    return { success: false as const, error: err?.message || 'Failed to update step.' };
   }
 }
 

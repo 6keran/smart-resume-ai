@@ -24,7 +24,7 @@ async function ready(page: Page, route = '/dashboard', navigate = true) {
   await expect(launcher.locator('svg')).toHaveAttribute('data-active', reduced ? '0' : '1');
   await expect.poll(() => page.evaluate(() => document.getAnimations().filter((animation) => animation.playState === 'running' && animation.effect?.getTiming().iterations !== Infinity).length)).toBe(0);
   await expect(page.locator('[data-assistant-mode="collapsed"]')).toHaveAttribute('data-placement-ready', 'true');
-  await expect.poll(async () => Math.round((await launcher.boundingBox())?.width || 0)).toBe(page.viewportSize()!.width < 640 ? 72 : 80);
+  await expect.poll(async () => Math.round((await launcher.boundingBox())?.width || 0)).toBe(page.viewportSize()!.width < 640 ? 72 : 88);
   return launcher;
 }
 async function capture(page: Page, label: string, name: string) {
@@ -146,7 +146,7 @@ for (const mode of ['read', 'write']) test(`blocked greeting storage (${mode}) s
   expect(diagnostics.consoleErrors).toEqual([]);
 });
 
-test('launcher keyboard/pointer movement persists and panel dragging still works', async ({ page, diagnostics }, info) => {
+test('launcher keeps manual movement on the page, resets on reload and preserves panel dragging', async ({ page, diagnostics }, info) => {
   await viewports(page, info, async () => {
     const launcher = await ready(page);
     const bubble = page.getByRole('button', { name: 'Dismiss assistant greeting' });
@@ -155,7 +155,7 @@ test('launcher keyboard/pointer movement persists and panel dragging still works
     await expect(page.locator('[data-assistant-mode="collapsed"]')).toHaveAttribute('data-placement-ready', 'true');
     const before = (await launcher.boundingBox())!;
     await launcher.press('ArrowLeft'); await launcher.press('ArrowUp');
-    // The larger full-body pet may settle away from a page control after a keyboard nudge.
+    // Keyboard movement stays at the exact location selected by the user.
     await expect(page.locator('[data-assistant-mode="collapsed"]')).toHaveAttribute('data-placement-ready', 'true');
     const moved = (await launcher.boundingBox())!;
     expect(Math.hypot(moved.x - before.x, moved.y - before.y)).toBeGreaterThan(0);
@@ -166,8 +166,9 @@ test('launcher keyboard/pointer movement persists and panel dragging still works
     expect(Math.round(saved.y)).toBe(Math.round(moved.y));
     await page.reload({ waitUntil: 'domcontentloaded' });
     await ready(page);
-    await expect.poll(async () => Math.round((await launcher.boundingBox())!.x)).toBe(Math.round(moved.x));
-    await expect.poll(async () => Math.round((await launcher.boundingBox())!.y)).toBe(Math.round(moved.y));
+    await expect.poll(async () => Math.round((await launcher.boundingBox())!.x)).toBe(Math.round(before.x));
+    await expect.poll(async () => Math.round((await launcher.boundingBox())!.y)).toBe(Math.round(before.y));
+    expect(await page.evaluate(() => localStorage.getItem('sra_ai_launcher_pos'))).toBeNull();
     const start = (await launcher.boundingBox())!;
     await page.mouse.move(start.x + 28, start.y + 28); await page.mouse.down();
     await page.mouse.move(start.x - 20, start.y - 20, { steps: 8 }); await page.mouse.up();
@@ -191,7 +192,10 @@ test('abort and retry keep existing message handling', async ({ page, diagnostic
     await page.route('**/api/chat', async (route) => {
       calls++;
       if (calls === 1) await route.fulfill({ status: 502, json: { message: 'Temporary local test failure' } });
-      else if (calls === 2) await route.fulfill({ json: { reply: 'Review the resume facts you provided.', provider: 'Local browser test' } });
+      else if (calls === 2) {
+        expect(route.request().postDataJSON().history).toEqual([]);
+        await route.fulfill({ json: { reply: 'Review the resume facts you provided.', provider: 'Local browser test' } });
+      }
       else {
         await new Promise((resolve) => setTimeout(resolve, 800));
         await route.fulfill({ json: { reply: 'This canceled answer must not appear.' } }).catch(() => {});

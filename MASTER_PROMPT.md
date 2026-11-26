@@ -15,7 +15,7 @@ Smart Resume AI helps students, freshers and job seekers do one loop:
 1. Choose a target job role and build a resume for it (12 templates, A4 PDF).
 2. Check it with the ATS checker and analyzer (deterministic scores, honest feedback).
 3. Improve it with AI (rewrites, tailoring to a job description) WITHOUT inventing facts.
-4. Close skill gaps with a role-based roadmap: projects, certifications, courses.
+4. Close skill gaps with a role-based roadmap of projects and genuine external courses and certifications. Distinguish recommendations, work in progress and user-confirmed external completions. Only actual completed external certifications belong on a résumé.
 5. Find jobs through the job portal (real sources only).
 6. Prepare for interviews for the target role.
 7. Ask one AI Assistant about resumes, jobs, interviews and careers.
@@ -51,7 +51,7 @@ maintenance mode (fix bugs and security only). Do not delete any feature.
 - Job providers (ALL KEPT, I decided to keep both API and scraping sources): Adzuna and Jooble (APIs); LinkedIn and Naukri (scraping,
   src/server/services/jobs/providers/). Never remove LinkedIn or Naukri without my explicit written approval.
 - Known open problems: in-memory rate limiter (src/lib/rateLimit.ts) does not work on Vercel; anonymous ATS limit keyed on a
-  client cookie; proctoring frames in an in-memory Map; public certificate verification is login-only; no CSP;
+  client cookie; proctoring frames in an in-memory Map; legacy internal certificate generation, storage and public lookup conflict with the external-recommendation product scope; no CSP;
   Postgres migration for the career-path tables written but NOT run; remaining test failures are listed in AGENT_LOG.md.
 
 ---
@@ -174,7 +174,7 @@ C1. RATE LIMITING (PLAN-FIRST). Replace the in-memory limiter with a DB-backed o
     Do not trust a client-supplied x-forwarded-for outside Vercel. Test: rotating the cookie does not reset the limit.
 C2. PROCTORING (PLAN-FIRST). Frames live in an in-memory Map (broken on serverless). Compare options with trade-offs before coding.
     Add a payload size limit and data-URL check, fix the ownership check when session.user_id is empty, keep the consent flow, state retention.
-C3. ENDPOINT HARDENING. Decide with me whether certificate verification is public (minimal fields, rate limited). CSP in report-only mode first.
+C3. ENDPOINT HARDENING. Review the impact of retiring the legacy internal credential writers and public lookups, and obtain separate approval before changing routes, data, security or UI. Maintain assessment ownership and skill results independently. CSP in report-only mode first.
     Remove debug logs that print auth details. Add in-handler auth checks to resume/improve, resume/tailor, jobs, nlp-search, suggestions.
     Report every caller of the synchronous verifyAdminToken (it skips the DB check on Postgres). Return 404 (not 403) for resources the user does not own;
     use crypto-random resource IDs for new records.

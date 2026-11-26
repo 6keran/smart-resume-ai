@@ -10,6 +10,7 @@ import {
   isClientDraftResumeId,
 } from '@/types/resume';
 import { INITIAL_RESUME_DATA } from '@/lib/initialData';
+import { useUserProfile } from '@/components/user/UserContext';
 
 const INITIAL_TARGET_JOB: TargetJobContext = {
   title: '',
@@ -136,6 +137,8 @@ interface ResumeContextType {
 const ResumeContext = createContext<ResumeContextType | undefined>(undefined);
 
 export function ResumeProvider({ children }: { children: React.ReactNode }) {
+  const { user, loading: sessionLoading } = useUserProfile();
+  const userId = user?.id;
   const [resumeData, setResumeData] = useState<ResumeData>(INITIAL_RESUME_DATA);
   const [activeResumeId, setActiveResumeId] = useState<string | null>(null);
   const [targetJob, setTargetJob] = useState<TargetJobContext>(INITIAL_TARGET_JOB);
@@ -359,6 +362,7 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
 
   // Rehydrate authoritative active resume and saved resumes list from server on page load
   const rehydrateResume = useCallback(async () => {
+    if (sessionLoading) return;
     setIsRehydrating(true);
     setSaveError(null);
     let loadedFromServer = false;
@@ -366,40 +370,44 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
     let serverResumes: any[] = [];
 
     try {
-      const [activeRes, listRes] = await Promise.allSettled([
-        fetch('/api/user/resumes?active=true', { cache: 'no-store' }),
-        fetch('/api/user/resumes', { cache: 'no-store' }),
-      ]);
+      if (userId) {
+        const [activeRes, listRes] = await Promise.allSettled([
+          fetch('/api/user/resumes?active=true', { cache: 'no-store' }),
+          fetch('/api/user/resumes', { cache: 'no-store' }),
+        ]);
 
-      if (listRes.status === 'fulfilled' && listRes.value.ok) {
-        isAuthenticated = true;
-        const listData = await listRes.value.json().catch(() => ({}));
-        serverResumes = listData.resumes || [];
-        setUserResumes(serverResumes);
-      } else if (listRes.status === 'fulfilled' && listRes.value.status === 401) {
-        setUserResumes([]);
-      }
-
-      if (activeRes.status === 'fulfilled' && activeRes.value.ok) {
-        isAuthenticated = true;
-        const data = await activeRes.value.json().catch(() => ({}));
-        if (data.resume) {
-          const nextData = data.resume.resumeData
-            ? normalizeLoadedResumeData(data.resume.resumeData, data.resume.id)
-            : buildStubResumeData(data.resume);
-          setResumeData(nextData);
-          setActiveResumeId(data.resume.id);
-          setHistory([nextData]);
-          setHistoryIndex(0);
-          loadedFromServer = true;
-          setSaveState('saved');
-          setHasUnsavedChanges(false);
-          hasUserEditedRef.current = false;
-          setLastSavedAt(data.resume.uploaded_at || new Date().toISOString());
-          try {
-            localStorage.setItem('sra_resume_data', JSON.stringify(nextData));
-          } catch {}
+        if (listRes.status === 'fulfilled' && listRes.value.ok) {
+          isAuthenticated = true;
+          const listData = await listRes.value.json().catch(() => ({}));
+          serverResumes = listData.resumes || [];
+          setUserResumes(serverResumes);
+        } else if (listRes.status === 'fulfilled' && listRes.value.status === 401) {
+          setUserResumes([]);
         }
+
+        if (activeRes.status === 'fulfilled' && activeRes.value.ok) {
+          isAuthenticated = true;
+          const data = await activeRes.value.json().catch(() => ({}));
+          if (data.resume) {
+            const nextData = data.resume.resumeData
+              ? normalizeLoadedResumeData(data.resume.resumeData, data.resume.id)
+              : buildStubResumeData(data.resume);
+            setResumeData(nextData);
+            setActiveResumeId(data.resume.id);
+            setHistory([nextData]);
+            setHistoryIndex(0);
+            loadedFromServer = true;
+            setSaveState('saved');
+            setHasUnsavedChanges(false);
+            hasUserEditedRef.current = false;
+            setLastSavedAt(data.resume.uploaded_at || new Date().toISOString());
+            try {
+              localStorage.setItem('sra_resume_data', JSON.stringify(nextData));
+            } catch {}
+          }
+        }
+      } else {
+        setUserResumes([]);
       }
     } catch (err) {
       console.warn('Network issue rehydrating active resume from server:', err);
@@ -461,7 +469,7 @@ export function ResumeProvider({ children }: { children: React.ReactNode }) {
 
     setIsLoaded(true);
     setIsRehydrating(false);
-  }, []);
+  }, [userId, sessionLoading]);
 
   // Switch active resume to selected saved resume
   const switchActiveResume = useCallback(

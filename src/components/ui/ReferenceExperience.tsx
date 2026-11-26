@@ -22,11 +22,16 @@ export function ReferenceExperience({ children }: { children: ReactNode }) {
     const revealed = new WeakSet<Element>();
     const tracked = new Set<HTMLElement>();
     const animations = new Set<Animation>();
+    const pending = new Set<HTMLElement>();
+    let scanFrame = 0;
     const reset = () => {
       observer?.disconnect();
       animations.forEach((animation) => animation.cancel());
       animations.clear();
       tracked.clear();
+      pending.clear();
+      cancelAnimationFrame(scanFrame);
+      scanFrame = 0;
     };
     const start = () => {
       reset();
@@ -43,14 +48,18 @@ export function ReferenceExperience({ children }: { children: ReactNode }) {
           animations.add(animation);
           animation.onfinish = () => animations.delete(animation);
           revealed.add(item);
+          tracked.delete(item);
           observer?.unobserve(item);
         });
       }, { threshold: 0.06 });
-      scan();
+      scan(element);
     };
-    const scan = () => {
+    const scan = (subtree: HTMLElement) => {
       if (!observer || preference.matches) return;
-      element.querySelectorAll<HTMLElement>('h1, .reference-panel, [data-reference-panel]').forEach((item) => {
+      const selector = 'h1, .reference-panel, [data-reference-panel]';
+      const candidates = Array.from(subtree.querySelectorAll<HTMLElement>(selector));
+      if (subtree.matches(selector)) candidates.unshift(subtree);
+      candidates.forEach((item) => {
         if (item.matches('input, textarea, select, button') || revealed.has(item) || tracked.has(item) || item.closest('[role="dialog"], .a4-sheet, .resume-preview-viewport, [data-resume-document], .reference-panel .reference-panel')) return;
         // Transform only small content surfaces: never ancestors of fixed/sticky controls.
         if (item.querySelector('.fixed, .sticky, [role="dialog"]')) return;
@@ -59,7 +68,18 @@ export function ReferenceExperience({ children }: { children: ReactNode }) {
       });
     };
     start();
-    const mutations = new MutationObserver(scan);
+    const mutations = new MutationObserver((records) => {
+      if (!observer || preference.matches) return;
+      records.forEach((record) => record.addedNodes.forEach((node) => {
+        if (node instanceof HTMLElement) pending.add(node);
+      }));
+      if (!pending.size || scanFrame) return;
+      scanFrame = requestAnimationFrame(() => {
+        scanFrame = 0;
+        pending.forEach((subtree) => { if (subtree.isConnected) scan(subtree); });
+        pending.clear();
+      });
+    });
     mutations.observe(element, { childList: true, subtree: true });
     preference.addEventListener('change', start);
     return () => {

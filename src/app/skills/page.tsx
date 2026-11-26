@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -33,7 +33,9 @@ export default function SkillVerificationPage() {
   const [activeTab, setActiveTab] = useState<'skills' | 'roadmap'>('skills');
   const [roadmapData, setRoadmapData] = useState<any>(null);
   const [isLoadingRoadmap, setIsLoadingRoadmap] = useState(false);
-  const [targetRoadmapRole, setTargetRoadmapRole] = useState('Full Stack Developer');
+  const [targetRoadmapRole, setTargetRoadmapRole] = useState('');
+  const [savingStep, setSavingStep] = useState(false);
+  const roadmapRequest = useRef<AbortController | null>(null);
 
   const [isAddModalOpen, setIsAddModalOpen] = useState(false);
   const [skillToRemove, setSkillToRemove] = useState<UserSkill | null>(null);
@@ -48,67 +50,57 @@ export default function SkillVerificationPage() {
     }
   }, [toast]);
 
-  // Handle URL query or hash params on mount (e.g., ?tab=roadmap or #roadmap)
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const searchParams = new URLSearchParams(window.location.search);
-      const tabParam = searchParams.get('tab');
-      const hashParam = window.location.hash;
-      if (tabParam === 'roadmap' || hashParam === '#roadmap') {
-        setActiveTab('roadmap');
-        loadRoadmap();
-      }
-    }
-  }, []);
-
-  // Load roadmap when switching to roadmap tab
-  const loadRoadmap = async (role?: string) => {
+  const loadRoadmap = useCallback(async (role?: string) => {
+    roadmapRequest.current?.abort();
+    const controller = new AbortController();
+    roadmapRequest.current = controller;
     setIsLoadingRoadmap(true);
     try {
       const url = role
         ? `/api/career/roadmap?targetRole=${encodeURIComponent(role)}`
         : '/api/career/roadmap';
-      const res = await fetch(url);
-      if (res.ok) {
-        const data = await res.json();
-        if (data.roadmap) {
-          setRoadmapData(data.roadmap);
-          if (data.roadmap.target_role) {
-            setTargetRoadmapRole(data.roadmap.target_role);
-          }
-        }
-      }
-    } catch (err) {
-      console.error('Failed to load roadmap', err);
+      const res = await fetch(url, { signal: controller.signal });
+      if (!res.ok) throw new Error('Roadmap unavailable');
+      const data = await res.json();
+      if (controller.signal.aborted) return;
+      setRoadmapData(data.roadmap);
+      setTargetRoadmapRole(data.roadmap?.target_role || '');
+    } catch {
+      if (!controller.signal.aborted) setToast({ type: 'error', message: 'Couldn’t load that roadmap. Try selecting the role again.' });
     } finally {
-      setIsLoadingRoadmap(false);
+      if (!controller.signal.aborted) setIsLoadingRoadmap(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('tab') === 'roadmap' || window.location.hash === '#roadmap') {
+      setActiveTab('roadmap');
+      void loadRoadmap();
+    }
+    return () => roadmapRequest.current?.abort();
+  }, [loadRoadmap]);
 
   const handleToggleStep = async (milestoneIdx: number, stepIdx: number, currentCompleted: boolean) => {
-    if (!roadmapData) return;
-    const newCompleted = !currentCompleted;
-
-    // Optimistic UI update
-    const updated = JSON.parse(JSON.stringify(roadmapData));
-    if (updated.roadmap_data?.milestones?.[milestoneIdx]?.steps?.[stepIdx]) {
-      updated.roadmap_data.milestones[milestoneIdx].steps[stepIdx].completed = newCompleted;
-      setRoadmapData(updated);
-    }
-
+    if (!roadmapData || savingStep) return;
+    setSavingStep(true);
     try {
-      await fetch('/api/career/roadmap', {
+      const response = await fetch('/api/career/roadmap', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           roadmapId: roadmapData.id,
           milestoneIndex: milestoneIdx,
           stepIndex: stepIdx,
-          completed: newCompleted,
+          completed: !currentCompleted,
         }),
       });
-    } catch (err) {
-      console.error('Failed to update step', err);
+      const data = await response.json();
+      if (!response.ok || !data.success || data.roadmap?.id !== roadmapData.id) throw new Error('Step update failed');
+      setRoadmapData((current: typeof roadmapData) => current?.id === data.roadmap.id ? data.roadmap : current);
+    } catch {
+      setToast({ type: 'error', message: 'Couldn’t save your progress. Try checking the step again.' });
+    } finally {
+      setSavingStep(false);
     }
   };
 
@@ -484,7 +476,7 @@ export default function SkillVerificationPage() {
                 PERSONALIZED CURRICULUM
               </span>
               <h2 className="text-xl font-extrabold text-[var(--text-primary)]">
-                10-Week Roadmap for {targetRoadmapRole}
+                {targetRoadmapRole ? `10-Week Roadmap for ${targetRoadmapRole}` : 'Learning Roadmap'}
               </h2>
               <p className="text-xs text-[var(--text-secondary)]">
                 Weekly milestones mapped to verified YouTube masterclasses and proctored certification checkpoints.
@@ -503,10 +495,7 @@ export default function SkillVerificationPage() {
                 <button
                   key={role}
                   type="button"
-                  onClick={() => {
-                    setTargetRoadmapRole(role);
-                    loadRoadmap(role);
-                  }}
+                  onClick={() => loadRoadmap(role)}
                   className={`relative px-3 py-1 rounded-lg text-[10px] font-medium transition-colors border cursor-pointer ${
                     targetRoadmapRole === role
                       ? 'border-[var(--accent)]/30 font-bold text-[var(--accent)]'
@@ -591,6 +580,9 @@ export default function SkillVerificationPage() {
                               <button
                                 type="button"
                                 onClick={() => handleToggleStep(mIdx, sIdx, isDone)}
+                                aria-label={step.title}
+                                aria-pressed={isDone}
+                                disabled={savingStep}
                                 className={`mt-0.5 w-5 h-5 rounded-lg border flex items-center justify-center transition-colors shrink-0 cursor-pointer ${
                                   isDone
                                     ? 'bg-emerald-500 border-emerald-500 text-white'
@@ -934,6 +926,7 @@ export default function SkillVerificationPage() {
       <AnimatePresence>
         {toast && (
           <motion.div
+            role={toast.type === 'error' ? 'alert' : 'status'}
             initial={{ opacity: 0, y: 12, scale: 0.96 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 12, scale: 0.96 }}

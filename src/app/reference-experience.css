@@ -38,6 +38,12 @@
   .reference-workspace-heading { padding-block: 2rem; background: transparent; border-bottom: 1px solid var(--color-border-hairline); }
   .reference-workspace-heading p { max-width: 44rem; line-height: 1.65; }
   .reference-experience--workspace > :where(div) { min-width: 0; }
+  .product-shell { min-height: 100dvh; }
+  .product-page { min-width: 0; }
+  .app-sidebar { max-height: calc(100dvh - 1.5rem); }
+  .app-navigation-drawer { max-height: 100dvh; overflow-y: auto; overscroll-behavior: contain; }
+  .reference-experience :where(.grid, .flex):not(.a4-sheet *, #resume-a4-document *, .resume-preview-viewport *) > :where(div, section, article, form) { min-width: 0; }
+  .reference-experience :where(.reference-panel, [data-reference-panel], .glass-card):not(.a4-sheet *, #resume-a4-document *, .resume-preview-viewport *) { overflow-wrap: anywhere; }
   .reference-experience--operations .app-sidebar { background: #0c0b14; --text-primary: #f7f6f2; --text-secondary: #c4c2ce; --text-muted: #a19dad; --accent: #b6aaff; --bg-card: #191821; --bg-elevated: #24222e; --border-color: #302d3c; --glass-border: #302d3c; --glass-bg: #191821; }
   .reference-experience--operations .app-sidebar a:hover { background-color: #24222e; }
   .reference-experience--operations .app-sidebar button { color: #f7f6f2; }
@@ -50,6 +56,18 @@
     .reference-dashboard-intro { padding-top: .5rem; }
     .reference-auth-form { border-radius: 22px; }
     .reference-experience [role='tablist'] { max-width: 100%; overflow-x: auto; }
+  }
+  @media (max-width: 639px) {
+    .reference-experience :where(input:not([type='checkbox']):not([type='radio']):not([type='range']):not([type='file']), select, textarea):not(#resume-a4-document *) { font-size: 16px; min-height: 44px; max-width: 100%; }
+    .app-topbar button, .app-topbar a, .app-navigation-drawer button, .app-navigation-drawer a { min-height: 44px; }
+    .dashboard-topbar, .admin-topbar { height: auto; min-height: 68px; flex-wrap: wrap; gap: 8px; padding-block: 10px; border-radius: 22px; }
+    .dashboard-topbar > div:first-child, .admin-topbar > div:first-child { flex: 1 1 100%; }
+    .dashboard-topbar > div:last-child, .admin-topbar > div:last-child { margin-left: auto; }
+  }
+  @media (min-width: 1024px) and (max-width: 1279px) {
+    .dashboard-topbar > div:first-child { flex: 1; }
+    .dashboard-topbar-search { display: none; }
+    .product-page .lg\:grid-cols-4:not(.a4-sheet *, #resume-a4-document *, .resume-preview-viewport *) { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   }
   @media (min-width: 768px) and (max-width: 1023px) {
     .app-sidebar { display: none !important; }

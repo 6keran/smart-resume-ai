@@ -7,6 +7,35 @@ test.use({ storageState: process.env.E2E_STORAGE_STATE_PATH });
 
 type ApiResult = { status: number; body: any };
 
+test('roadmap progress survives concurrent saves and a failed checkbox can be retried', async ({ page }) => {
+  const password = 'Study-plan-2026!';
+  const registration = await page.request.post('/api/auth/register', { data: {
+    fullName: 'Roadmap Student', email: `roadmap-${crypto.randomUUID()}@example.invalid`, password, confirmPassword: password,
+  } });
+  expect(registration.ok()).toBe(true);
+  const url = '/api/career/roadmap';
+  const roadmapUrl = url + '?targetRole=Frontend%20Developer';
+  const { roadmap } = await (await page.request.get(roadmapUrl)).json();
+  const step = (stepIndex: number, completed: boolean) => ({ roadmapId: roadmap.id, milestoneIndex: 0, stepIndex, completed });
+  const saves = await Promise.all([0, 1].map((index) => page.request.patch(url, { data: step(index, true) })));
+  expect(saves.map((response) => response.status())).toEqual([200, 200]);
+  const stored = await (await page.request.get(roadmapUrl)).json();
+  expect(stored.roadmap.roadmap_data.milestones[0].steps.slice(0, 2).map((item: { completed: boolean }) => item.completed)).toEqual([true, true]);
+  expect((await page.request.patch(url, { data: step(999, true) })).status()).toBe(400);
+
+  await page.goto('/skills?tab=roadmap');
+  const checkbox = page.getByRole('button', { name: roadmap.roadmap_data.milestones[0].steps[0].title, exact: true }).first();
+  await expect(checkbox).toHaveAttribute('aria-pressed', 'true');
+  await page.route('**/api/career/roadmap', (route) => route.fulfill({ status: 503, json: { message: 'Save unavailable' } }), { times: 1 });
+  await checkbox.click();
+  await expect(page.getByRole('alert').filter({ hasText: 'Couldn’t save your progress' })).toBeVisible();
+  await expect(checkbox).toHaveAttribute('aria-pressed', 'true');
+  await checkbox.click();
+  await expect(checkbox).toHaveAttribute('aria-pressed', 'false');
+  await page.reload();
+  await expect(checkbox).toHaveAttribute('aria-pressed', 'false');
+});
+
 async function api(page: Page, url: string, method: 'GET' | 'POST' | 'PUT' | 'PATCH' = 'GET', body?: unknown): Promise<ApiResult> {
   return page.evaluate(async ({ requestUrl, requestMethod, requestBody }) => {
     const response = await fetch(requestUrl, {

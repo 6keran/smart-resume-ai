@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useCallback, useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion';
 import { usePathname } from 'next/navigation';
 import Link from 'next/link';
@@ -19,10 +19,12 @@ import {
   X,
 } from 'lucide-react';
 import { useResume } from '@/context/ResumeContext';
+import { buildChatRequestBody, MAX_CHAT_MESSAGE_LENGTH } from '@/lib/chatRequest';
 import { useUserProfile } from '@/components/user/UserContext';
 import { FeedbackButtons } from '@/components/feedback/FeedbackButtons';
 import { AssistantCompanion } from '@/components/assistant/AssistantCompanion';
 import type { CompanionDrag } from '@/components/assistant/companionMotion';
+import { isAssistantExcludedRoute } from './assistantVisibility';
 import { advanceCompanionDrag, createCompanionDrag, followCompanionPosition } from '@/components/assistant/companionLocomotion';
 import { clampCompanionPosition, safeCompanionPosition } from '@/components/assistant/companionPlacement';
 import { useAssistantPresentation } from './useAssistantPresentation';
@@ -295,8 +297,8 @@ function TypingIndicator({ reducedMotion, paused }: { reducedMotion: boolean | n
 const STORAGE_KEY = 'sra_ai_launcher_pos';
 const PANEL_STORAGE_KEY = 'sra_ai_panel_pos';
 const MARGIN = 16;
-const DEFAULT_LAUNCHER_WIDTH = 80;
-const DEFAULT_LAUNCHER_HEIGHT = 104;
+const DEFAULT_LAUNCHER_WIDTH = 88;
+const DEFAULT_LAUNCHER_HEIGHT = DEFAULT_LAUNCHER_WIDTH * 1.3;
 const PANEL_WIDTH = 420;
 const PANEL_HEIGHT = 700;
 const PANEL_MARGIN = 8;
@@ -344,7 +346,7 @@ function clampPanelPosition(x: number, y: number, width: number, height: number)
   };
 }
 
-export function CareerChatbot() {
+export function CareerChatbot({ onReady }: { onReady?: () => void } = {}) {
   const pathname = usePathname();
   const { user, loading, refreshUser } = useUserProfile();
 
@@ -354,7 +356,7 @@ export function CareerChatbot() {
       id: 'welcome',
       role: 'assistant',
       content:
-        'Hello! I am your AI Assistant. I can help tailor your resume, prepare for interviews, plan your job search, and build career skills. What are you working toward?',
+        'Hello! I am your AI Assistant. Ask me to review a resume bullet, practice an interview question or plan your job search.',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
     },
   ]);
@@ -377,15 +379,19 @@ export function CareerChatbot() {
   const [isClient, setIsClient] = useState(false);
   const prefersReduced = useReducedMotion();
 
-  const messagesEndRef = useRef<HTMLDivElement>(null);
   const messageScrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const textareaRef = inputRef;
+  const mountComposer = useCallback((node: HTMLTextAreaElement | null) => {
+    inputRef.current = node;
+    node?.focus({ preventScroll: true });
+  }, []);
   const launcherRef = useRef<HTMLDivElement>(null);
   const launcherPositionRef = useRef<{ x: number; y: number } | null>(null);
   const launcherTargetRef = useRef<{ x: number; y: number } | null>(null);
   const launcherLastFrameRef = useRef(0);
   const launcherFrameRef = useRef<number | null>(null);
+  const placementReadyRef = useRef(false);
   const suppressLauncherClickRef = useRef(false);
   const companionDragRef = useRef<CompanionDrag>(createCompanionDrag());
   const panelRef = useRef<HTMLDivElement>(null);
@@ -394,6 +400,7 @@ export function CareerChatbot() {
   const pendingPanelPositionRef = useRef<PanelPosition | null>(null);
   const panelDragFrameRef = useRef<number | null>(null);
   const panelDragStartRef = useRef<PanelDragStart | null>(null);
+  const endPanelDragRef = useRef<(() => void) | null>(null);
   const pointerStartRef = useRef<{
     pointerId: number;
     startX: number;
@@ -427,15 +434,10 @@ export function CareerChatbot() {
   useEffect(() => {
     if (careerProfile && messages.length === 1 && messages[0].id === 'welcome') {
       const targetRole = (careerProfile.targetRole || '').trim();
-      const institution = (careerProfile.studentProfile?.institution || '').trim();
-      const readinessScore = careerProfile.metrics?.readinessScore;
-      const rolePart = targetRole
-        ? `I'm tracking your target role as **${targetRole}**${institution ? ` at **${institution}**` : ''}`
-        : institution
-          ? `Connected to your **${institution}** profile`
-          : `Set your target career role anytime to personalize my guidance`;
-      const readinessPart = typeof readinessScore === 'number' && readinessScore > 0 ? ` (${readinessScore}% career ready)` : '';
-      const greeting = `Hello ${careerProfile.name || 'there'}! I am your AI Assistant. ${rolePart}${readinessPart}. How can I assist your career launch today?`;
+      const suggestion = targetRole
+        ? `Ask me to tailor a resume bullet for **${targetRole}** or practice an interview question for that role.`
+        : 'Ask me to review a resume bullet, practice an interview question or plan your job search.';
+      const greeting = `Hello ${careerProfile.name || 'there'}! I am your AI Assistant. ${suggestion}`;
       if (messages[0].content !== greeting) {
         setMessages([
           {
@@ -464,7 +466,7 @@ export function CareerChatbot() {
       {
         id: 'ats-1',
         category: 'ats',
-        text: ats?.atsScore
+        text: typeof ats?.atsScore === 'number'
           ? `What should I fix first to improve my ${ats.atsScore}% ATS score?`
           : `How should I prepare my resume for an ATS review for ${displayTarget}?`,
       },
@@ -623,21 +625,13 @@ export function CareerChatbot() {
   };
 
   // Strict route visibility rules: hide completely on auth, legal, admin, and assessment interface pages
-  const isExcludedRoute = Boolean(
-    pathname?.startsWith('/login') ||
-    pathname?.startsWith('/register') ||
-    pathname?.startsWith('/forgot-password') ||
-    pathname?.startsWith('/reset-password') ||
-    pathname?.startsWith('/admin') ||
-    pathname?.startsWith('/skills/assess') ||
-    pathname?.startsWith('/skills/certificate') ||
-    pathname?.startsWith('/assessment') ||
-    pathname?.startsWith('/assessments') ||
-    pathname === '/privacy' ||
-    pathname === '/terms'
-  );
+  const isExcludedRoute = isAssistantExcludedRoute(pathname);
 
   const welcomeOnly = messages.length === 1 && messages[0].id.startsWith('welcome');
+  const mountTranscript = useCallback((node: HTMLDivElement | null) => {
+    messageScrollRef.current = node;
+    if (node && !welcomeOnly) node.scrollTop = node.scrollHeight;
+  }, [welcomeOnly]);
   const latestAssistantId = [...messages].reverse().find((message) => message.role === 'assistant')?.id;
   const presentation = useAssistantPresentation({
     enabled: Boolean(user) && !loading && !isExcludedRoute && isClient,
@@ -654,9 +648,35 @@ export function CareerChatbot() {
   });
   const mascotPaused = presentation.blocked || isDragging || isPanelDragging || showClearConfirm || Boolean(pathname?.startsWith('/dev/style-guide'));
 
-  // Keep only the companion's small hit target clear of page controls, including after scrolling.
+  // A new page starts at its default corner. Conversation/panel state stays intact.
+  useEffect(() => {
+    placementReadyRef.current = false;
+    if (launcherFrameRef.current !== null) window.cancelAnimationFrame(launcherFrameRef.current);
+    launcherFrameRef.current = null;
+    const pointer = pointerStartRef.current;
+    pointerStartRef.current = null;
+    if (pointer && launcherRef.current?.hasPointerCapture(pointer.pointerId)) {
+      launcherRef.current.releasePointerCapture(pointer.pointerId);
+    }
+    launcherPositionRef.current = launcherTargetRef.current = null;
+    companionDragRef.current = createCompanionDrag();
+    setIsDragging(false);
+    setPetHovered(false);
+    setPosition(null);
+    if (launcherRef.current) {
+      Object.assign(launcherRef.current.style, { left: 'auto', top: 'auto', right: 'calc(1.5rem + env(safe-area-inset-right, 0px))', bottom: 'calc(1.5rem + env(safe-area-inset-bottom, 0px))' });
+    }
+    try { localStorage.removeItem(STORAGE_KEY); } catch { /* Optional placement storage. */ }
+  }, [pathname]);
+
+  // Choose a clear spot once per page, then pin it. Scrolling/content animation
+  // must never move the companion away from the user's chosen position.
   useEffect(() => {
     if (!isClient || !user || isOpen || isDragging || isExcludedRoute || presentation.blocked) return;
+    if (placementReadyRef.current) {
+      launcherRef.current?.setAttribute('data-placement-ready', 'true');
+      return;
+    }
     let frame = 0;
     launcherRef.current?.setAttribute('data-placement-ready', 'false');
     const scan = () => {
@@ -670,31 +690,13 @@ export function CareerChatbot() {
         return;
       }
       const next = safeCompanionPosition(launcher);
-      if (Math.abs(next.x - rect.left) < 1 && Math.abs(next.y - rect.top) < 1) {
-        launcher.dataset.placementReady = 'true';
-        return;
-      }
+      placementReadyRef.current = true;
+      launcher.dataset.placementReady = 'true';
       launcherPositionRef.current = next;
       setPosition(next);
-      try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* Optional placement storage. */ }
     };
-    const schedule = () => { launcherRef.current?.setAttribute('data-placement-ready', 'false'); if (!frame) frame = requestAnimationFrame(scan); };
-    const timer = setTimeout(schedule, 240);
-    const observer = new ResizeObserver(schedule);
-    const layoutObserver = new MutationObserver((records) => {
-      if (records.some((record) => !(record.target instanceof Element && record.target.closest('[data-assistant-mode], [data-nimbus-greeting]')))) schedule();
-    });
-    layoutObserver.observe(document.body, { subtree: true, childList: true, attributes: true, attributeFilter: ['style', 'class', 'hidden'] });
-    const main = document.querySelector('main');
-    if (main) observer.observe(main);
-    window.addEventListener('scroll', schedule, { passive: true, capture: true });
-    window.addEventListener('resize', schedule);
-    document.addEventListener('animationend', schedule, true);
-    document.addEventListener('transitionend', schedule, true);
-    document.fonts.addEventListener('loadingdone', schedule);
-    window.visualViewport?.addEventListener('resize', schedule);
-    window.visualViewport?.addEventListener('scroll', schedule);
-    return () => { clearTimeout(timer); cancelAnimationFrame(frame); observer.disconnect(); layoutObserver.disconnect(); document.removeEventListener('animationend', schedule, true); document.removeEventListener('transitionend', schedule, true); document.fonts.removeEventListener('loadingdone', schedule); window.removeEventListener('scroll', schedule, true); window.removeEventListener('resize', schedule); window.visualViewport?.removeEventListener('resize', schedule); window.visualViewport?.removeEventListener('scroll', schedule); };
+    const timer = setTimeout(() => { frame = requestAnimationFrame(scan); }, 240);
+    return () => { clearTimeout(timer); cancelAnimationFrame(frame); };
   }, [isClient, user, isOpen, isDragging, isExcludedRoute, pathname, presentation.blocked, position]);
 
   // Close and dismiss chat immediately on logout, session expiry, or navigating to excluded routes
@@ -705,19 +707,10 @@ export function CareerChatbot() {
     }
   }, [user, isExcludedRoute]);
 
-  // Safely restore persisted launcher and panel positions on client mount
+  // Restore only the panel. A reload/new page resets the companion, not chat history.
   useEffect(() => {
     setIsClient(true);
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        if (Number.isFinite(parsed?.x) && Number.isFinite(parsed?.y)) {
-          const clampedX = clamp(parsed.x, MARGIN, Math.max(MARGIN, window.innerWidth - DEFAULT_LAUNCHER_WIDTH - MARGIN));
-          const clampedY = clamp(parsed.y, MARGIN, Math.max(MARGIN, window.innerHeight - DEFAULT_LAUNCHER_HEIGHT - MARGIN));
-          setPosition({ x: clampedX, y: clampedY });
-        }
-      }
       const savedPanel = localStorage.getItem(PANEL_STORAGE_KEY);
       if (savedPanel) {
         const parsedPanel = JSON.parse(savedPanel);
@@ -761,14 +754,17 @@ export function CareerChatbot() {
 
     window.addEventListener('resize', handleViewportChange);
     window.addEventListener('orientationchange', handleViewportChange);
+    window.visualViewport?.addEventListener('resize', handleViewportChange);
     return () => {
       window.removeEventListener('resize', handleViewportChange);
       window.removeEventListener('orientationchange', handleViewportChange);
+      window.visualViewport?.removeEventListener('resize', handleViewportChange);
     };
   }, [isFullScreen, panelPosition]);
 
   useEffect(() => {
     return () => {
+      abortControllerRef.current?.abort();
       if (launcherFrameRef.current !== null) window.cancelAnimationFrame(launcherFrameRef.current);
       if (panelDragFrameRef.current !== null) {
         window.cancelAnimationFrame(panelDragFrameRef.current);
@@ -777,15 +773,18 @@ export function CareerChatbot() {
   }, []);
 
   useEffect(() => {
-    if (isOpen) {
-      if (welcomeOnly) messageScrollRef.current?.scrollTo({ top: 0, behavior: 'auto' });
-      else messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      inputRef.current?.focus();
-    }
-  }, [isOpen, messages, chatLoading, isFullScreen, welcomeOnly]);
+    const transcript = messageScrollRef.current;
+    if (!isOpen || !transcript) return;
+    transcript.scrollTo({
+      top: welcomeOnly ? 0 : transcript.scrollHeight,
+      behavior: welcomeOnly || prefersReduced ? 'instant' : 'smooth',
+    });
+    if (document.activeElement === document.body) inputRef.current?.focus({ preventScroll: true });
+  }, [isOpen, messages, chatLoading, isFullScreen, welcomeOnly, prefersReduced]);
 
   // Support programmatic opening of chat with optional contextual prompt
   useEffect(() => {
+    if (loading || !user || isExcludedRoute) return;
     const handleOpenChat = (e: Event) => {
       const customEvent = e as CustomEvent<{ prompt?: string }>;
       setIsOpen(true);
@@ -796,7 +795,11 @@ export function CareerChatbot() {
 
     window.addEventListener('sra:open-chat', handleOpenChat);
     return () => window.removeEventListener('sra:open-chat', handleOpenChat);
-  }, []);
+  }, [loading, user, isExcludedRoute]);
+  // Replay any user open request queued while this component's bundle was loading.
+  useEffect(() => { onReady?.(); }, [onReady]);
+
+  useEffect(() => () => endPanelDragRef.current?.(), [isOpen, isFullScreen, isExcludedRoute]);
 
   // Handle Escape key to exit full screen or close chat
   useEffect(() => {
@@ -831,14 +834,11 @@ export function CareerChatbot() {
 
   const toggleFullScreen = () => {
     setIsFullScreen((prev) => !prev);
-    setTimeout(() => {
-      messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-      inputRef.current?.focus();
-    }, 60);
   };
 
   const handleResetPosition = (e?: React.MouseEvent | React.KeyboardEvent) => {
     e?.stopPropagation();
+    placementReadyRef.current = false;
     setPosition(null);
     launcherPositionRef.current = null;
     setPanelPosition(null);
@@ -940,6 +940,7 @@ export function CareerChatbot() {
     companionDragRef.current = { ...companionDragRef.current, speed: 0, velocityX: 0, velocityY: 0, lastMovedAt: 0, facingTravel: 0 };
     const next = launcherPositionRef.current;
     if (next) {
+      placementReadyRef.current = true;
       setPosition(next);
       try { localStorage.setItem(STORAGE_KEY, JSON.stringify(next)); } catch { /* Optional placement storage. */ }
     }
@@ -1024,7 +1025,7 @@ export function CareerChatbot() {
   };
 
   const handlePanelPointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
-    if (isFullScreen || (e.pointerType === 'mouse' && e.button !== 0)) return;
+    if (isFullScreen || !e.isPrimary || panelDragStartRef.current || (e.pointerType === 'mouse' && e.button !== 0)) return;
 
     const target = e.target;
     if (
@@ -1048,13 +1049,16 @@ export function CareerChatbot() {
       moved: false,
     };
 
+    const header = e.currentTarget;
+    const pointerId = e.pointerId;
+    const previousUserSelect = document.body.style.userSelect;
     try {
-      e.currentTarget.setPointerCapture(e.pointerId);
+      header.setPointerCapture(pointerId);
     } catch {
       // Pointer capture is unavailable in a few embedded browsers
     }
 
-    const handleWindowPointerMove = (ev: PointerEvent) => {
+    const handlePanelPointerMove = (ev: PointerEvent) => {
       const dragStart = panelDragStartRef.current;
       if (!dragStart || dragStart.pointerId !== ev.pointerId) return;
 
@@ -1090,85 +1094,31 @@ export function CareerChatbot() {
       }
     };
 
-    const handleWindowPointerUp = (ev: PointerEvent) => {
-      const dragStart = panelDragStartRef.current;
-      if (!dragStart || dragStart.pointerId !== ev.pointerId) return;
-
-      window.removeEventListener('pointermove', handleWindowPointerMove);
-      window.removeEventListener('pointerup', handleWindowPointerUp);
-      window.removeEventListener('pointercancel', handleWindowPointerUp);
-
-      panelRef.current?.style.removeProperty('user-select');
-      document.body.style.removeProperty('user-select');
-      if (dragStart.moved) {
+    const finish = () => {
+      window.removeEventListener('pointermove', handlePanelPointerMove);
+      window.removeEventListener('pointerup', release);
+      window.removeEventListener('pointercancel', release);
+      window.removeEventListener('blur', finish);
+      header.removeEventListener('lostpointercapture', release);
+      if (header.hasPointerCapture?.(pointerId)) header.releasePointerCapture(pointerId);
+      if (panelDragStartRef.current?.moved) {
+        panelRef.current?.style.removeProperty('user-select');
+        document.body.style.userSelect = previousUserSelect;
         flushPendingPanelPosition();
       }
       panelDragStartRef.current = null;
+      endPanelDragRef.current = null;
       setIsPanelDragging(false);
     };
-
-    window.addEventListener('pointermove', handleWindowPointerMove, { passive: false });
-    window.addEventListener('pointerup', handleWindowPointerUp);
-    window.addEventListener('pointercancel', handleWindowPointerUp);
-  };
-
-  const handlePanelPointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
-    const dragStart = panelDragStartRef.current;
-    if (!dragStart || dragStart.pointerId !== e.pointerId) return;
-
-    const deltaX = e.clientX - dragStart.startX;
-    const deltaY = e.clientY - dragStart.startY;
-    const nextPosition = clampPanelPosition(
-      dragStart.x + deltaX,
-      dragStart.y + deltaY,
-      dragStart.width,
-      dragStart.height
-    );
-
-    if (!dragStart.moved) {
-      if (deltaX * deltaX + deltaY * deltaY <= 25) return;
-      dragStart.moved = true;
-      setIsPanelDragging(true);
-      setPanelPosition(nextPosition);
-      panelRef.current?.style.setProperty('user-select', 'none');
-      document.body.style.setProperty('user-select', 'none');
-    }
-
-    e.preventDefault();
-
-    pendingPanelPositionRef.current = nextPosition;
-    panelPositionRef.current = nextPosition;
-
-    if (panelDragFrameRef.current === null) {
-      panelDragFrameRef.current = window.requestAnimationFrame(() => {
-        panelDragFrameRef.current = null;
-        const pos = pendingPanelPositionRef.current;
-        if (pos) applyPanelPosition(pos);
-      });
-    }
-  };
-
-  const finishPanelDrag = (e: React.PointerEvent<HTMLDivElement>) => {
-    const dragStart = panelDragStartRef.current;
-    if (!dragStart || dragStart.pointerId !== e.pointerId) return;
-
-    try {
-      e.currentTarget?.releasePointerCapture?.(e.pointerId);
-    } catch {
-      // Ignore a pointer that was already released by the browser.
-    }
-
-    panelRef.current?.style.removeProperty('user-select');
-    document.body.style.removeProperty('user-select');
-    if (dragStart.moved) {
-      flushPendingPanelPosition();
-    }
-    panelDragStartRef.current = null;
-    setIsPanelDragging(false);
-  };
-
-  const cancelPanelDrag = (e: React.PointerEvent<HTMLDivElement>) => {
-    finishPanelDrag(e);
+    const release = (ev: PointerEvent) => {
+      if (ev.pointerId === pointerId) finish();
+    };
+    endPanelDragRef.current = finish;
+    window.addEventListener('pointermove', handlePanelPointerMove, { passive: false });
+    window.addEventListener('pointerup', release);
+    window.addEventListener('pointercancel', release);
+    window.addEventListener('blur', finish);
+    header.addEventListener('lostpointercapture', release);
   };
 
   const handleStopGeneration = () => {
@@ -1198,7 +1148,7 @@ export function CareerChatbot() {
   };
 
   const handleTextareaKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
-    if (e.key === 'Enter' && !e.shiftKey) {
+    if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing && e.nativeEvent.keyCode !== 229) {
       e.preventDefault();
       handleSend();
     }
@@ -1206,7 +1156,7 @@ export function CareerChatbot() {
 
   const handleSend = async (textToSend?: string) => {
     const text = (textToSend || input).trim();
-    if (!text || chatLoading) return;
+    if (!text || abortControllerRef.current) return;
 
     setError(null);
     setLastFailedMessage(null);
@@ -1251,31 +1201,26 @@ export function CareerChatbot() {
       })();
 
       const context = {
-        jobTitle: targetJob?.title || undefined,
-        company: targetJob?.company || undefined,
+        jobTitle: targetJob?.title?.slice(0, 160) || undefined,
+        company: targetJob?.company?.slice(0, 160) || undefined,
         jobDescription: targetJob?.description ? targetJob.description.substring(0, 500) : undefined,
-        resumeSnippet: resumeData?.summary || undefined,
-        currentPath: pathname || undefined,
+        resumeSnippet: resumeData?.summary?.slice(0, 750) || undefined,
+        currentPath: pathname?.slice(0, 120) || undefined,
         activeWorkflow,
       };
 
       // Exclude welcome/greeting messages so multi-turn starts with user
-      const history = messages
-        .filter((m) => !m.id.startsWith('welcome'))
-        .slice(-10)
-        .map((m) => ({ role: m.role, content: m.content }));
+      const previousMessages = isRetrying ? messages.slice(0, -1) : messages;
+      const history = previousMessages.filter((m) => !m.id.startsWith('welcome'));
 
       const res = await fetch('/api/chat', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          message: text,
-          history,
-          context,
-        }),
+        body: buildChatRequestBody(text, history, context),
         signal: controller.signal,
       });
 
+      if (controller.signal.aborted) return;
       if (res.status === 401) {
         // Session expired: immediately close chat and update session context
         setIsOpen(false);
@@ -1285,12 +1230,13 @@ export function CareerChatbot() {
       }
 
       const data = await res.json().catch(() => ({}));
+      if (controller.signal.aborted) return;
 
       if (!res.ok) {
         throw new Error(data.message || `Chat request failed with status ${res.status}`);
       }
 
-      if (!data.reply) {
+      if (typeof data.reply !== 'string' || !data.reply.trim()) {
         throw new Error('Received an empty answer from the AI model.');
       }
 
@@ -1314,12 +1260,18 @@ export function CareerChatbot() {
       setError(msg);
       setLastFailedMessage(text);
     } finally {
-      setChatLoading(false);
-      abortControllerRef.current = null;
+      if (abortControllerRef.current === controller) {
+        abortControllerRef.current = null;
+        setChatLoading(false);
+      }
     }
   };
 
   const handleReset = () => {
+    handleStopGeneration();
+    setInput('');
+    if (textareaRef.current) textareaRef.current.style.height = 'auto';
+    setCopiedMessageId(null);
     const greeting = careerProfile?.targetRole
       ? `Conversation reset. As your AI Assistant for **${careerProfile.targetRole}**, what career, resume, or interview question would you like to explore next?`
       : 'Conversation reset. What would you like help with in your career, resume, or job search?';
@@ -1366,8 +1318,8 @@ export function CareerChatbot() {
       };
     }
 
-    const launcherW = DEFAULT_LAUNCHER_WIDTH;
-    const launcherH = DEFAULT_LAUNCHER_HEIGHT;
+    const launcherW = window.innerWidth < 640 ? 72 : DEFAULT_LAUNCHER_WIDTH;
+    const launcherH = launcherW * 1.3;
     const style: React.CSSProperties = {};
 
     // Horizontal placement: check if launcher is in right half or left half of viewport
@@ -1411,7 +1363,7 @@ export function CareerChatbot() {
     };
 
   const assistantMode = isFullScreen ? 'expanded' : 'docked';
-  const showWelcomeTools = messages.length <= 2 && !chatLoading;
+  const showWelcomeTools = welcomeOnly && !chatLoading;
   const assistantInstitution = (careerProfile?.studentProfile?.institution || '').trim();
   const assistantTargetRole = (careerProfile?.targetRole || '').trim();
   const assistantSubtitle = assistantInstitution && assistantTargetRole
@@ -1422,6 +1374,7 @@ export function CareerChatbot() {
 
   return (
     <>
+      <span className={chatStyles.clearance} aria-hidden="true" />
       <AnimatePresence mode="wait">
         {/* Floating Draggable Launcher Trigger */}
         {!isOpen && !presentation.blocked && (
@@ -1459,10 +1412,12 @@ export function CareerChatbot() {
               }}
               onKeyDown={handleKeyDownLauncher}
               className={chatStyles.launcherButton}
+              aria-haspopup="dialog"
               aria-label="Open AI Assistant (Draggable, use arrow keys to reposition)"
-              title={position ? 'Career Copilot (Drag to move, Home key to reset)' : 'Career Copilot (Drag to reposition)'}
+              title="Open AI Assistant. Drag to move or press Home to reset."
             >
-              <AssistantCompanion state={presentation.state} size={80} hovered={petHovered} dragging={isDragging} dragRef={companionDragRef} paused={presentation.blocked || isPanelDragging || showClearConfirm} />
+              <AssistantCompanion state={presentation.state} size={DEFAULT_LAUNCHER_WIDTH} hovered={petHovered} dragging={isDragging} dragRef={companionDragRef} paused={presentation.blocked || isPanelDragging || showClearConfirm} />
+              <span className={chatStyles.launcherLabel}>AI Assistant</span>
             </button>
           </motion.div>
         )}
@@ -1517,9 +1472,6 @@ export function CareerChatbot() {
                     : 'cursor-grab touch-none',
               ].join(' ')}
               onPointerDown={handlePanelPointerDown}
-              onPointerMove={handlePanelPointerMove}
-              onPointerUp={finishPanelDrag}
-              onPointerCancel={cancelPanelDrag}
             >
               <div className={['mx-auto flex w-full items-center justify-between gap-3', isFullScreen ? 'max-w-3xl' : ''].join(' ')}>
                 <div className="flex min-w-0 items-center gap-3">
@@ -1641,7 +1593,7 @@ export function CareerChatbot() {
             </span>
             {/* Messages Body */}
             <div
-              ref={messageScrollRef}
+              ref={mountTranscript}
               className="min-h-0 flex-1 overflow-y-auto bg-bg px-4 py-5 sm:px-5"
               role="log"
               aria-live="polite"
@@ -1822,7 +1774,6 @@ export function CareerChatbot() {
                   </div>
                 )}
 
-                <div ref={messagesEndRef} />
               </div>
             </div>
 
@@ -1837,14 +1788,15 @@ export function CareerChatbot() {
                   className="flex items-end gap-2 rounded-card border border-border-input bg-bg p-2 focus-within:border-2 focus-within:border-accent"
                 >
                   <textarea
-                    ref={textareaRef}
+                    ref={mountComposer}
                     rows={1}
                     value={input}
                     onChange={handleTextareaChange}
                     onKeyDown={handleTextareaKeyDown}
                     placeholder="Ask about your resume, interviews, jobs, or career..."
-                    maxLength={2000}
+                    maxLength={MAX_CHAT_MESSAGE_LENGTH}
                     disabled={chatLoading}
+                    aria-label="Message the AI Assistant"
                     aria-describedby="chat-input-help"
                     style={{ outline: 'none' }}
                     className="min-h-11 max-h-[120px] flex-1 resize-none border-0 bg-transparent px-2 py-2 text-body-lg leading-relaxed text-text outline-none placeholder:text-text-tertiary disabled:opacity-50 sm:text-body"
@@ -1879,7 +1831,7 @@ export function CareerChatbot() {
       </AnimatePresence>
       {presentation.bubble && (
         <aside data-nimbus-greeting className={`${chatStyles.greeting} no-print`} style={presentation.bubblePosition} aria-label="AI Assistant greeting">
-          <p>Ask me about your resume, jobs or interviews.</p>
+          <p>Open chat for help with your resume, job search or interview prep.</p>
           <button type="button" onClick={presentation.dismissBubble} aria-label="Dismiss assistant greeting"><X className="h-4 w-4" aria-hidden="true" /></button>
         </aside>
       )}

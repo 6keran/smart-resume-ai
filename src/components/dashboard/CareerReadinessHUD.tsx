@@ -146,7 +146,7 @@ export default function CareerReadinessHUD({
       {/* ── Top HUD Status Strip ── */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-5 sm:p-6 border-b border-[var(--border-color)] bg-[var(--bg-secondary)]/40">
         <div className="space-y-1">
-          <div className="flex items-center gap-2 font-mono text-[11px] text-[var(--text-muted)] uppercase tracking-wider">
+          <div className="flex flex-wrap items-center gap-2 font-mono text-[11px] text-[var(--text-muted)] uppercase tracking-wider">
             <span className="w-2 h-2 rounded-full bg-[var(--accent)] animate-pulse" />
             <span className="font-bold text-[var(--text-primary)]">CAREER READINESS ENGINE</span>
             <span>{'//'}</span>
@@ -154,7 +154,7 @@ export default function CareerReadinessHUD({
               TARGET: {targetRole}
             </span>
           </div>
-          <div className="flex items-baseline gap-3 pt-0.5">
+          <div className="flex flex-wrap items-baseline gap-3 pt-0.5">
             <h2 className="text-xl sm:text-2xl font-extrabold tracking-tight text-[var(--text-primary)]">
               Overall Preparedness: <AnimatedCounter value={overallScore} />/100
             </h2>
@@ -182,7 +182,7 @@ export default function CareerReadinessHUD({
 
       {/* ── 4 Quadrant Interactive Cards Grid ── */}
       <div className="p-5 sm:p-6 space-y-6">
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3.5">
+        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3.5">
           {quadrants.map((q) => {
             const Icon = q.icon;
             const isActive = activeQuadrantKey === q.key;

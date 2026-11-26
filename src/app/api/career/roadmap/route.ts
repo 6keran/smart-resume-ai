@@ -106,7 +106,8 @@ export async function PATCH(req: Request) {
     const body = await req.json().catch(() => ({}));
     const { roadmapId, milestoneIndex, stepIndex, completed } = body;
 
-    if (!roadmapId || typeof milestoneIndex !== 'number' || typeof stepIndex !== 'number') {
+    if (typeof roadmapId !== 'string' || !roadmapId || !Number.isInteger(milestoneIndex) || milestoneIndex < 0 ||
+        !Number.isInteger(stepIndex) || stepIndex < 0 || typeof completed !== 'boolean') {
       return NextResponse.json({ message: 'Invalid roadmap step parameters.' }, { status: 400 });
     }
 
@@ -115,7 +116,7 @@ export async function PATCH(req: Request) {
       roadmapId,
       milestoneIndex,
       stepIndex,
-      Boolean(completed)
+      completed
     );
 
     if (!result.success) {

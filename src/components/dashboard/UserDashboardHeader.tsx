@@ -105,7 +105,7 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
     <>
       <header
         data-no-print="true"
-        className="app-topbar sticky top-3 z-20 h-[4.25rem] w-auto mx-3 sm:mx-4 border border-[var(--border-color)] flex items-center justify-between px-4 sm:px-6 no-print rounded-full"
+        className="app-topbar dashboard-topbar sticky top-3 z-20 h-[4.25rem] w-auto mx-3 sm:mx-4 border border-[var(--border-color)] flex items-center justify-between px-4 sm:px-6 no-print rounded-full"
       >
         {/* Left: Mobile Toggle & Page Breadcrumb */}
         <div className="flex items-center gap-3 min-w-0">
@@ -130,7 +130,7 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
         </div>
 
         {/* Center: Search Bar (Desktop) */}
-        <div className="hidden lg:flex items-center flex-1 max-w-md mx-6">
+        <div className="dashboard-topbar-search hidden xl:flex items-center flex-1 max-w-md mx-6">
           <form onSubmit={handleSearchSubmit} className="relative w-full">
             <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-[var(--text-muted)]" />
             <input
@@ -267,7 +267,7 @@ export function UserDashboardHeader({ user }: UserDashboardHeaderProps) {
               animate={{ x: 0 }}
               exit={{ x: -280 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="w-72 max-w-[85vw] h-full bg-[var(--bg-card)] border-r border-[var(--border-color)] p-4 flex flex-col justify-between shadow-2xl"
+              className="app-navigation-drawer w-72 max-w-[85vw] h-full bg-[var(--bg-card)] border-r border-[var(--border-color)] p-4 flex flex-col justify-between shadow-2xl"
             >
               <div>
                 <div className="flex items-center justify-between pb-3.5 border-b border-[var(--glass-border)]">

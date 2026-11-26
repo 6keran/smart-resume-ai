@@ -4764,7 +4764,7 @@ function ResumeBuilderContent() {
           {/* Zoom & Document Viewer Controls */}
           <div className="no-print w-full flex items-center justify-between mb-1 px-1 sm:px-2 gap-2 flex-wrap">
             {/* View Mode Segmented Controls */}
-            <div className="inline-flex items-center p-1 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-xs font-semibold relative">
+            <div className="flex flex-wrap items-center max-w-full min-w-0 p-1 rounded-xl bg-[var(--bg-secondary)] border border-[var(--border-color)] text-xs font-semibold relative">
               <button
                 type="button"
                 onClick={() => setPreviewTab('design')}

@@ -216,7 +216,7 @@ export function Header() {
         isOpen={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
         containerClassName="lg:hidden"
-        className="w-72 max-w-[85vw] p-5 flex flex-col justify-between"
+        className="app-navigation-drawer w-72 max-w-[85vw] p-5 flex flex-col justify-between"
       >
         <div>
           {/* Drawer Header - Text-only branding matching Sidebar */}

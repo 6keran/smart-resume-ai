@@ -1,3 +1,7 @@
-.character { display: block; overflow: visible; pointer-events: none; contain: layout style; }
+.surface { display: block; position: relative; width: var(--companion-size); height: calc(var(--companion-size) * 1.3); pointer-events: none; contain: layout style; }
+.character { display: block; position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+.surface:has(> .pixels[data-pixel-ready="1"]) .character { opacity: 0; }
 .character * { pointer-events: none; }
+.pixels { display: block; position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; image-rendering: crisp-edges; image-rendering: pixelated; }
+.pixels:not([data-pixel-ready="1"]) { opacity: 0; }
 @media (prefers-reduced-motion: reduce) { .character { transition: none; } }

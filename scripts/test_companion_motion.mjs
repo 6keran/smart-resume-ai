@@ -24,11 +24,17 @@ assert.notEqual(restWalk.leftHip, advancedWalk.leftHip);
 assert.notEqual(restWalk.leftArm, advancedWalk.leftArm);
 assert.deepEqual(restWalk, sampleCompanionPose('walking', 0, 1));
 checks++;
-for (const motion of ['greeting', 'answering', 'success', 'error', 'hover', 'settling']) {
+for (const motion of ['greeting', 'answering', 'success', 'error', 'settling']) {
   const finished = sampleCompanionPose(motion, MOTION_DURATION[motion] + 1);
   for (const key of Object.keys(REST_POSE).filter((key) => key !== 'breath' && key !== 'eyes')) assert.equal(finished[key], REST_POSE[key], `${motion} must settle`);
   checks++;
 }
+const hovered = sampleCompanionPose('hover', 250);
+const repeatedHover = sampleCompanionPose('hover', 250 + MOTION_DURATION.hover);
+for (const key of Object.keys(REST_POSE).filter((key) => key !== 'breath' && key !== 'eyes')) assert.equal(hovered[key], repeatedHover[key], 'Pointer hover must repeat smoothly');
+assert.ok(hovered.leftArm > 40 && hovered.rightArm < -40, 'Hover must engage both arms');
+assert.notEqual(hovered.leftHip, REST_POSE.leftHip, 'Hover must include a coordinated foot gesture');
+checks++;
 assert.notDeepEqual(staticCompanionPose('thinking'), staticCompanionPose('error'));
 assert.notDeepEqual(staticCompanionPose('success'), staticCompanionPose('idle'));
 checks++;

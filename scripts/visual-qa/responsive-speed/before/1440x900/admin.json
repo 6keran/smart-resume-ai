@@ -1,0 +1,1519 @@
+[
+  {
+    "route": "/admin/dashboard",
+    "top": {
+      "url": "/admin/dashboard",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 375835,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        },
+        {
+          "name": "page-826805343fc61489.js",
+          "bytes": 5922
+        },
+        {
+          "name": "7709-4f47c3c1ee3f529b.js",
+          "bytes": 116383
+        }
+      ],
+      "header": 68
+    },
+    "bottom": {
+      "url": "/admin/dashboard",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 375835,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        },
+        {
+          "name": "page-826805343fc61489.js",
+          "bytes": 5922
+        },
+        {
+          "name": "7709-4f47c3c1ee3f529b.js",
+          "bytes": 116383
+        }
+      ],
+      "header": 68
+    }
+  },
+  {
+    "route": "/admin/users",
+    "top": {
+      "url": "/admin/users",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 261210,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "page-fa546a2828e39f5c.js",
+          "bytes": 7680
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    },
+    "bottom": {
+      "url": "/admin/users",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 261210,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "page-fa546a2828e39f5c.js",
+          "bytes": 7680
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    }
+  },
+  {
+    "route": "/admin/resumes",
+    "top": {
+      "url": "/admin/resumes",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 257659,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "8367-5580e93dd9f6e12f.js",
+          "bytes": 3938
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        },
+        {
+          "name": "page-80aebdeb1a041f00.js",
+          "bytes": 191
+        }
+      ],
+      "header": 68
+    },
+    "bottom": {
+      "url": "/admin/resumes",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 257659,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "8367-5580e93dd9f6e12f.js",
+          "bytes": 3938
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        },
+        {
+          "name": "page-80aebdeb1a041f00.js",
+          "bytes": 191
+        }
+      ],
+      "header": 68
+    }
+  },
+  {
+    "route": "/admin/analyses",
+    "top": {
+      "url": "/admin/analyses",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 257659,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "8367-5580e93dd9f6e12f.js",
+          "bytes": 3938
+        },
+        {
+          "name": "page-cff6bbf62c33dc33.js",
+          "bytes": 191
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    },
+    "bottom": {
+      "url": "/admin/analyses",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 257659,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "8367-5580e93dd9f6e12f.js",
+          "bytes": 3938
+        },
+        {
+          "name": "page-cff6bbf62c33dc33.js",
+          "bytes": 191
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    }
+  },
+  {
+    "route": "/admin/jobs",
+    "top": {
+      "url": "/admin/jobs",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 257420,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "page-a254f9db912f961a.js",
+          "bytes": 3890
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    },
+    "bottom": {
+      "url": "/admin/jobs",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 257420,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "page-a254f9db912f961a.js",
+          "bytes": 3890
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    }
+  },
+  {
+    "route": "/admin/job-matches",
+    "top": {
+      "url": "/admin/job-matches",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 257382,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "page-c10d597edd661ba7.js",
+          "bytes": 3852
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    },
+    "bottom": {
+      "url": "/admin/job-matches",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 257382,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "page-c10d597edd661ba7.js",
+          "bytes": 3852
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    }
+  },
+  {
+    "route": "/admin/skills",
+    "top": {
+      "url": "/admin/skills",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 257504,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "page-cc0524aefac9b9cf.js",
+          "bytes": 3974
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    },
+    "bottom": {
+      "url": "/admin/skills",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 257504,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "page-cc0524aefac9b9cf.js",
+          "bytes": 3974
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    }
+  },
+  {
+    "route": "/admin/assessments",
+    "top": {
+      "url": "/admin/assessments",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 264540,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "4151-1e285a7276d0ae20.js",
+          "bytes": 2669
+        },
+        {
+          "name": "page-91120d79e0104bdb.js",
+          "bytes": 8341
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    },
+    "bottom": {
+      "url": "/admin/assessments",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 264540,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "4151-1e285a7276d0ae20.js",
+          "bytes": 2669
+        },
+        {
+          "name": "page-91120d79e0104bdb.js",
+          "bytes": 8341
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    }
+  },
+  {
+    "route": "/admin/proctoring",
+    "top": {
+      "url": "/admin/proctoring",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 261374,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "page-447155ac95deada3.js",
+          "bytes": 7844
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    },
+    "bottom": {
+      "url": "/admin/proctoring",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 261374,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "page-447155ac95deada3.js",
+          "bytes": 7844
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    }
+  },
+  {
+    "route": "/admin/feedback",
+    "top": {
+      "url": "/admin/feedback",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 258013,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "page-26e592276daf05a7.js",
+          "bytes": 4483
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    },
+    "bottom": {
+      "url": "/admin/feedback",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 258013,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "page-26e592276daf05a7.js",
+          "bytes": 4483
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    }
+  },
+  {
+    "route": "/admin/settings",
+    "top": {
+      "url": "/admin/settings",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 256040,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "page-e8b6943c383d610a.js",
+          "bytes": 2510
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    },
+    "bottom": {
+      "url": "/admin/settings",
+      "width": 1440,
+      "documentWidth": 1440,
+      "outside": [],
+      "scriptBytes": 256040,
+      "scripts": [
+        {
+          "name": "4bd1b696-8cd12253b448cc13.js",
+          "bytes": 64061
+        },
+        {
+          "name": "3794-fba3f76785a3c234.js",
+          "bytes": 67133
+        },
+        {
+          "name": "main-app-1c4e8f8675afa899.js",
+          "bytes": 529
+        },
+        {
+          "name": "422-4d5e14ec1b996439.js",
+          "bytes": 4247
+        },
+        {
+          "name": "3617-71fae4293d3e4534.js",
+          "bytes": 8995
+        },
+        {
+          "name": "708-3d7dce35e0ce034a.js",
+          "bytes": 45262
+        },
+        {
+          "name": "8841-0cb65f429b7659ce.js",
+          "bytes": 2476
+        },
+        {
+          "name": "7470-7260e97fb51ea784.js",
+          "bytes": 20027
+        },
+        {
+          "name": "5516-28e0fcb723ea54bc.js",
+          "bytes": 2339
+        },
+        {
+          "name": "1759-69238603362286d5.js",
+          "bytes": 7459
+        },
+        {
+          "name": "layout-bbcee8cc4a8ea698.js",
+          "bytes": 23978
+        },
+        {
+          "name": "template-3f254a596e76ce0a.js",
+          "bytes": 1119
+        },
+        {
+          "name": "page-e8b6943c383d610a.js",
+          "bytes": 2510
+        },
+        {
+          "name": "layout-fd9166357beed47d.js",
+          "bytes": 5905
+        }
+      ],
+      "header": 68
+    }
+  }
+]

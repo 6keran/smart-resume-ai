@@ -430,6 +430,14 @@ async function run() {
     // Should recommend setting career goal and uploading resume first
     assert.ok(result.recommendedNextActions.some((a) => a.title.includes('Goal') || a.title.includes('Role')));
     assert.ok(result.recommendedNextActions.some((a) => a.title.includes('Resume')));
+    assert.deepEqual(result.recommendedNextActions.map((a) => a.href), [
+      '/dashboard/profile', '/builder', '/skills?tab=roadmap', '/projects', '/interview-prep',
+    ]);
+    const withResume = { ...emptyContext, resume: { ...emptyContext.resume, hasResume: true } };
+    const atsAction = (context) => generateCareerIntelligence(context).recommendedNextActions.find((a) => a.href === '/analyzer');
+    assert.match(atsAction(withResume).description, /first ATS score/);
+    const withScore = { ...withResume, resume: { ...withResume.resume, latestAtsScore: 0 } };
+    assert.match(atsAction(withScore).description, /0\/100/);
   });
 
   // Test 6: Security and Injection Safeguards

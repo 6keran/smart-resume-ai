@@ -1,0 +1,1220 @@
+{
+  "comparisons": [
+    {
+      "size": "320x740",
+      "suite": "public",
+      "route": "/",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "public",
+      "route": "/login",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "public",
+      "route": "/register",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "public",
+      "route": "/faq",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "public",
+      "route": "/privacy",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "public",
+      "route": "/terms",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "public",
+      "route": "/ats-score",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/dashboard",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/builder",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/analyzer",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/improver",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/job-match",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/jobs",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/interview-prep",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/skills",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/projects",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/guidance",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/onboarding",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/dashboard/resumes",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/dashboard/analyses",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/dashboard/improvements",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/dashboard/jobs",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/dashboard/applications",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/dashboard/skills",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/dashboard/assessments",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/dashboard/certificates",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/dashboard/courses",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/dashboard/profile",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "member",
+      "route": "/dashboard/my-data",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "admin",
+      "route": "/admin/dashboard",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "admin",
+      "route": "/admin/users",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "admin",
+      "route": "/admin/resumes",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "admin",
+      "route": "/admin/analyses",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "admin",
+      "route": "/admin/jobs",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "admin",
+      "route": "/admin/job-matches",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "admin",
+      "route": "/admin/skills",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "admin",
+      "route": "/admin/assessments",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "admin",
+      "route": "/admin/proctoring",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "admin",
+      "route": "/admin/feedback",
+      "overflow": false
+    },
+    {
+      "size": "320x740",
+      "suite": "admin",
+      "route": "/admin/settings",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "public",
+      "route": "/",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "public",
+      "route": "/login",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "public",
+      "route": "/register",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "public",
+      "route": "/faq",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "public",
+      "route": "/privacy",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "public",
+      "route": "/terms",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "public",
+      "route": "/ats-score",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/dashboard",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/builder",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/analyzer",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/improver",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/job-match",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/jobs",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/interview-prep",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/skills",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/projects",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/guidance",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/onboarding",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/dashboard/resumes",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/dashboard/analyses",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/dashboard/improvements",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/dashboard/jobs",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/dashboard/applications",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/dashboard/skills",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/dashboard/assessments",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/dashboard/certificates",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/dashboard/courses",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/dashboard/profile",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "member",
+      "route": "/dashboard/my-data",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "admin",
+      "route": "/admin/dashboard",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "admin",
+      "route": "/admin/users",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "admin",
+      "route": "/admin/resumes",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "admin",
+      "route": "/admin/analyses",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "admin",
+      "route": "/admin/jobs",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "admin",
+      "route": "/admin/job-matches",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "admin",
+      "route": "/admin/skills",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "admin",
+      "route": "/admin/assessments",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "admin",
+      "route": "/admin/proctoring",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "admin",
+      "route": "/admin/feedback",
+      "overflow": false
+    },
+    {
+      "size": "375x812",
+      "suite": "admin",
+      "route": "/admin/settings",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "public",
+      "route": "/",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "public",
+      "route": "/login",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "public",
+      "route": "/register",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "public",
+      "route": "/faq",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "public",
+      "route": "/privacy",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "public",
+      "route": "/terms",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "public",
+      "route": "/ats-score",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/dashboard",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/builder",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/analyzer",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/improver",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/job-match",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/jobs",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/interview-prep",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/skills",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/projects",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/guidance",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/onboarding",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/dashboard/resumes",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/dashboard/analyses",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/dashboard/improvements",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/dashboard/jobs",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/dashboard/applications",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/dashboard/skills",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/dashboard/assessments",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/dashboard/certificates",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/dashboard/courses",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/dashboard/profile",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "member",
+      "route": "/dashboard/my-data",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "admin",
+      "route": "/admin/dashboard",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "admin",
+      "route": "/admin/users",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "admin",
+      "route": "/admin/resumes",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "admin",
+      "route": "/admin/analyses",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "admin",
+      "route": "/admin/jobs",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "admin",
+      "route": "/admin/job-matches",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "admin",
+      "route": "/admin/skills",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "admin",
+      "route": "/admin/assessments",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "admin",
+      "route": "/admin/proctoring",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "admin",
+      "route": "/admin/feedback",
+      "overflow": false
+    },
+    {
+      "size": "768x1024",
+      "suite": "admin",
+      "route": "/admin/settings",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "public",
+      "route": "/",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "public",
+      "route": "/login",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "public",
+      "route": "/register",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "public",
+      "route": "/faq",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "public",
+      "route": "/privacy",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "public",
+      "route": "/terms",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "public",
+      "route": "/ats-score",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/dashboard",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/builder",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/analyzer",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/improver",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/job-match",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/jobs",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/interview-prep",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/skills",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/projects",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/guidance",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/onboarding",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/dashboard/resumes",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/dashboard/analyses",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/dashboard/improvements",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/dashboard/jobs",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/dashboard/applications",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/dashboard/skills",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/dashboard/assessments",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/dashboard/certificates",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/dashboard/courses",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/dashboard/profile",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "member",
+      "route": "/dashboard/my-data",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "admin",
+      "route": "/admin/dashboard",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "admin",
+      "route": "/admin/users",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "admin",
+      "route": "/admin/resumes",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "admin",
+      "route": "/admin/analyses",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "admin",
+      "route": "/admin/jobs",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "admin",
+      "route": "/admin/job-matches",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "admin",
+      "route": "/admin/skills",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "admin",
+      "route": "/admin/assessments",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "admin",
+      "route": "/admin/proctoring",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "admin",
+      "route": "/admin/feedback",
+      "overflow": false
+    },
+    {
+      "size": "1024x768",
+      "suite": "admin",
+      "route": "/admin/settings",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "public",
+      "route": "/",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "public",
+      "route": "/login",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "public",
+      "route": "/register",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "public",
+      "route": "/faq",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "public",
+      "route": "/privacy",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "public",
+      "route": "/terms",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "public",
+      "route": "/ats-score",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/dashboard",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/builder",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/analyzer",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/improver",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/job-match",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/jobs",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/interview-prep",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/skills",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/projects",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/guidance",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/onboarding",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/dashboard/resumes",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/dashboard/analyses",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/dashboard/improvements",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/dashboard/jobs",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/dashboard/applications",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/dashboard/skills",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/dashboard/assessments",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/dashboard/certificates",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/dashboard/courses",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/dashboard/profile",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "member",
+      "route": "/dashboard/my-data",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "admin",
+      "route": "/admin/dashboard",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "admin",
+      "route": "/admin/users",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "admin",
+      "route": "/admin/resumes",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "admin",
+      "route": "/admin/analyses",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "admin",
+      "route": "/admin/jobs",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "admin",
+      "route": "/admin/job-matches",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "admin",
+      "route": "/admin/skills",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "admin",
+      "route": "/admin/assessments",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "admin",
+      "route": "/admin/proctoring",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "admin",
+      "route": "/admin/feedback",
+      "overflow": false
+    },
+    {
+      "size": "1440x900",
+      "suite": "admin",
+      "route": "/admin/settings",
+      "overflow": false
+    }
+  ],
+  "metrics": [
+    {
+      "route": "/",
+      "before": 299841,
+      "after": 283761,
+      "saved": 16080,
+      "percent": 5.36
+    },
+    {
+      "route": "/login",
+      "before": 268032,
+      "after": 251947,
+      "saved": 16085,
+      "percent": 6
+    }
+  ]
+}

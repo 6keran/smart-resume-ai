@@ -1,0 +1,84 @@
+ M AGENT_LOG.md
+ M e2e/assistant-companion.spec.ts
+ M e2e/assistant-mascot-chat.spec.ts
+ M scripts/visual-qa/mascot/batch-b/1366x768/answering.png
+ M scripts/visual-qa/mascot/batch-b/1366x768/copied.png
+ M scripts/visual-qa/mascot/batch-b/1366x768/first-visit-bubble.png
+ M scripts/visual-qa/mascot/batch-b/1366x768/launcher-analyzer.png
+ M scripts/visual-qa/mascot/batch-b/1366x768/launcher-builder.png
+ M scripts/visual-qa/mascot/batch-b/1366x768/launcher-dashboard.png
+ M scripts/visual-qa/mascot/batch-b/1366x768/launcher-jobs.png
+ M scripts/visual-qa/mascot/batch-b/1366x768/launcher-onboarding.png
+ M scripts/visual-qa/mascot/batch-b/1366x768/reduced-motion-answer.png
+ M scripts/visual-qa/mascot/batch-b/1366x768/thinking.png
+ M scripts/visual-qa/mascot/batch-b/1366x768/welcome.png
+ M scripts/visual-qa/mascot/batch-b/1440x900/answering.png
+ M scripts/visual-qa/mascot/batch-b/1440x900/copied.png
+ M scripts/visual-qa/mascot/batch-b/1440x900/first-visit-bubble.png
+ M scripts/visual-qa/mascot/batch-b/1440x900/launcher-analyzer.png
+ M scripts/visual-qa/mascot/batch-b/1440x900/launcher-builder.png
+ M scripts/visual-qa/mascot/batch-b/1440x900/launcher-dashboard.png
+ M scripts/visual-qa/mascot/batch-b/1440x900/launcher-jobs.png
+ M scripts/visual-qa/mascot/batch-b/1440x900/launcher-onboarding.png
+ M scripts/visual-qa/mascot/batch-b/1440x900/reduced-motion-answer.png
+ M scripts/visual-qa/mascot/batch-b/1440x900/thinking.png
+ M scripts/visual-qa/mascot/batch-b/1440x900/welcome.png
+ M scripts/visual-qa/mascot/batch-b/375x812/answering.png
+ M scripts/visual-qa/mascot/batch-b/375x812/copied.png
+ M scripts/visual-qa/mascot/batch-b/375x812/first-visit-bubble.png
+ M scripts/visual-qa/mascot/batch-b/375x812/launcher-analyzer.png
+ M scripts/visual-qa/mascot/batch-b/375x812/launcher-builder.png
+ M scripts/visual-qa/mascot/batch-b/375x812/launcher-dashboard.png
+ M scripts/visual-qa/mascot/batch-b/375x812/launcher-jobs.png
+ M scripts/visual-qa/mascot/batch-b/375x812/launcher-onboarding.png
+ M scripts/visual-qa/mascot/batch-b/375x812/reduced-motion-answer.png
+ M scripts/visual-qa/mascot/batch-b/375x812/thinking.png
+ M scripts/visual-qa/mascot/batch-b/375x812/welcome.png
+ M scripts/visual-qa/mascot/batch-b/768x1024/answering.png
+ M scripts/visual-qa/mascot/batch-b/768x1024/copied.png
+ M scripts/visual-qa/mascot/batch-b/768x1024/first-visit-bubble.png
+ M scripts/visual-qa/mascot/batch-b/768x1024/launcher-analyzer.png
+ M scripts/visual-qa/mascot/batch-b/768x1024/launcher-builder.png
+ M scripts/visual-qa/mascot/batch-b/768x1024/launcher-dashboard.png
+ M scripts/visual-qa/mascot/batch-b/768x1024/launcher-jobs.png
+ M scripts/visual-qa/mascot/batch-b/768x1024/launcher-onboarding.png
+ M scripts/visual-qa/mascot/batch-b/768x1024/reduced-motion-answer.png
+ M scripts/visual-qa/mascot/batch-b/768x1024/thinking.png
+ M scripts/visual-qa/mascot/batch-b/768x1024/welcome.png
+ M scripts/visual-qa/mascot/reference-robot/artwork-gallery.png
+ M scripts/visual-qa/mascot/reference-robot/desktop-1440x900/launcher.png
+ M scripts/visual-qa/mascot/reference-robot/desktop-1440x900/original-companion.png
+ M scripts/visual-qa/mascot/reference-robot/mobile-375x812/launcher.png
+ M scripts/visual-qa/mascot/reference-robot/mobile-375x812/original-companion.png
+ M scripts/visual-qa/mascot/reference-robot/tablet-768x1024/launcher.png
+ M scripts/visual-qa/mascot/reference-robot/tablet-768x1024/original-companion.png
+ M src/app/admin/(protected)/assessments/page.tsx
+ M src/app/admin/(protected)/proctoring/page.tsx
+ M src/app/admin/(protected)/skills/page.tsx
+ M src/app/builder/page.tsx
+ M src/app/dashboard/my-data/page.tsx
+ M src/app/layout.tsx
+ M src/app/reference-experience.css
+ M src/components/admin/AdminHeader.tsx
+ M src/components/assistant/ARTWORK.md
+ M src/components/assistant/AssistantCompanion.module.css
+ M src/components/assistant/AssistantCompanion.tsx
+ M src/components/assistant/companionPlacement.ts
+ M src/components/chat/CareerChatbot.module.css
+ M src/components/chat/CareerChatbot.tsx
+ M src/components/dashboard/CareerReadinessHUD.tsx
+ M src/components/dashboard/DashboardContent.tsx
+ M src/components/dashboard/UserDashboardHeader.tsx
+ M src/components/layout/Header.tsx
+ M src/components/ui/ReferenceExperience.tsx
+ M src/context/ResumeContext.tsx
+?? e2e/application-responsive.spec.ts
+?? e2e/assistant-loading.spec.ts
+?? e2e/assistant-pixels.spec.ts
+?? scripts/test_companion_pixels.mjs
+?? scripts/visual-qa/mascot/hover-fixed/
+?? scripts/visual-qa/mascot/pixel-companion/
+?? scripts/visual-qa/responsive-speed/
+?? src/components/assistant/companionPixels.ts
+?? src/components/chat/AssistantEntry.tsx
+?? src/components/chat/assistantVisibility.ts

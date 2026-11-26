@@ -1,0 +1,662 @@
+[
+  {
+    "Path": "package-lock.json",
+    "Hash": "521506C98A27C7332B15AC7D955234CA4968C7BC8AC9C25A570885B9CFA28C4E"
+  },
+  {
+    "Path": "package.json",
+    "Hash": "840878833EB143189CFEB887E6AA0CA04E7390D7178157BE74C31F935E7C85CA"
+  },
+  {
+    "Path": "src/app/api\\admin\\assessments\\attempts\\route.ts",
+    "Hash": "0DF1F471EA67EB58B48B2EEA3802ED5A759A25CB7EA940EFC0C3423BFC88F774"
+  },
+  {
+    "Path": "src/app/api\\admin\\assessments\\config\\route.ts",
+    "Hash": "CF8D8A6A7D9E50264A04E62FB65070D1B3B2FC095D84EDF8B0270868D9145614"
+  },
+  {
+    "Path": "src/app/api\\admin\\auth\\login\\route.ts",
+    "Hash": "835AC94305D59605029F3173AE70C3BAB24257B0D03EDB26843ED022D98F0BE3"
+  },
+  {
+    "Path": "src/app/api\\admin\\auth\\logout\\route.ts",
+    "Hash": "4DBD261DB9DA78F4A180212ACEFCEFD65D1040A061CAF858FCD2418CBA989E98"
+  },
+  {
+    "Path": "src/app/api\\admin\\auth\\me\\route.ts",
+    "Hash": "2C1C78FAFF550027E745E69D2501A192FA0345EA8A26704B35A9C779EE233487"
+  },
+  {
+    "Path": "src/app/api\\admin\\feedback\\route.ts",
+    "Hash": "901FD2BF184C29872B3DE7AA0526F4E8BB30A16E0E8130148F6A3573D2C0C8C1"
+  },
+  {
+    "Path": "src/app/api\\admin\\proctoring\\route.ts",
+    "Hash": "5C3AF703ADC8947616F068D5D07D549FC34B06E02B9DA749206E2EC3C0EC8412"
+  },
+  {
+    "Path": "src/app/api\\admin\\questions\\route.ts",
+    "Hash": "51960ED0F013016DF452D5364562426BFC5A021FB3405BC56EA3FC4ECD28AAC6"
+  },
+  {
+    "Path": "src/app/api\\admin\\records\\route.ts",
+    "Hash": "235228E06A9C8281B7A0D6F8AC2E53C14380A8B9A8D62F7AAC130F1F4830C04A"
+  },
+  {
+    "Path": "src/app/api\\admin\\skills\\route.ts",
+    "Hash": "4266DF821F4CDB13320634C454EAD04272964C9CEFAC37ACBD2515C299E00557"
+  },
+  {
+    "Path": "src/app/api\\admin\\stats\\route.ts",
+    "Hash": "91D0617F6FD7FC28D3E6C5FB107622E24147B82F73F07D7A550316944393BFC1"
+  },
+  {
+    "Path": "src/app/api\\admin\\users\\[id]\\route.ts",
+    "Hash": "F5CC3F4D36C7203E3A680F6EE3C33E3E088F8C3253DF015F00CAA6EE0FAD57EF"
+  },
+  {
+    "Path": "src/app/api\\admin\\users\\route.ts",
+    "Hash": "440ACFE7165047A972B5B939DFC32AE04055D3B7A26B91CB929C58C51689FF04"
+  },
+  {
+    "Path": "src/app/api\\assessments\\start\\route.ts",
+    "Hash": "915155D6C52462F8111271B96F1931722926BF30005E63FBF0C4499511C38F75"
+  },
+  {
+    "Path": "src/app/api\\assessments\\submit\\route.ts",
+    "Hash": "FB2BFFCB0095637D4B0FFA04DF8684E16A15185FF0453FE7EF444A4B3F83EA11"
+  },
+  {
+    "Path": "src/app/api\\auth\\login\\route.ts",
+    "Hash": "EAE955EC9DF66D5B1681D0BD544C2D29A893DEE55886643771034D086CB302AA"
+  },
+  {
+    "Path": "src/app/api\\auth\\logout\\route.ts",
+    "Hash": "52EE5D2E575E5757A63498EB0FC2DE8B6BC2210F1BF75CFCF9F16621FA69915E"
+  },
+  {
+    "Path": "src/app/api\\auth\\me\\route.ts",
+    "Hash": "DA62775DA54ACC311B3A21B8CBC7E9C435A23B95AD000F7A563FF72F009A14E4"
+  },
+  {
+    "Path": "src/app/api\\auth\\register\\route.ts",
+    "Hash": "891C9C8811203E4684349346EC5D566C8D2737939E5921CF281BA8F63B39E43E"
+  },
+  {
+    "Path": "src/app/api\\career\\actions\\route.ts",
+    "Hash": "9283CE547DFE6A5ACFE2E0621D089712F62F8453DBF195883F4D495C00631B2E"
+  },
+  {
+    "Path": "src/app/api\\career\\interview\\route.ts",
+    "Hash": "9C95A8C7772447F1609AF9FED1C1112B416997709A44E904D0F3ADA7A39EBCC1"
+  },
+  {
+    "Path": "src/app/api\\career\\profile\\route.ts",
+    "Hash": "C8D30EF3E2F69005CB9CB2A857F36CE21163A6EC0BEB3E998AE8028B6362EF3D"
+  },
+  {
+    "Path": "src/app/api\\career\\projects\\[id]\\export\\route.ts",
+    "Hash": "952431E716317F9F574F45BBBAD5D8CAE7121EAE9214B157BD44E4BCACC71661"
+  },
+  {
+    "Path": "src/app/api\\career\\projects\\[id]\\mentor\\route.ts",
+    "Hash": "92774A178849059C793883B270020F2B420135E390908EFE38F262C5BEACA714"
+  },
+  {
+    "Path": "src/app/api\\career\\projects\\[id]\\route.ts",
+    "Hash": "57A23357D48CAAD4BFC64DEC96968F211547685099BA6F0CCB2B6DCE7C7E74B5"
+  },
+  {
+    "Path": "src/app/api\\career\\projects\\recommendations\\route.ts",
+    "Hash": "49787246BE50FDFE1585B4BDF301EC4F32D439E3D0338B60EF4A3B35EFAB5D64"
+  },
+  {
+    "Path": "src/app/api\\career\\projects\\route.ts",
+    "Hash": "E035152A6B7941AAA9200BBCA12E3253C43696CFD57169F5378D0973DF089627"
+  },
+  {
+    "Path": "src/app/api\\career\\roadmap\\progress\\route.ts",
+    "Hash": "5A24C840770A912A1651ABB176E207F9FDC1B77CD04E6444A5963818135AA5F5"
+  },
+  {
+    "Path": "src/app/api\\career\\roadmap\\route.ts",
+    "Hash": "DCD87C115F7C37597CD348B2B0FEC9CBFC0ABF36B206655EE81CA7BF045EF875"
+  },
+  {
+    "Path": "src/app/api\\career\\skill-gap\\route.ts",
+    "Hash": "5444E38C02889391B5AABAB4C2B9BBC035AE3A85689DF2B55F20C6D9406E30CD"
+  },
+  {
+    "Path": "src/app/api\\certificates\\route.ts",
+    "Hash": "0069CE7C108F34831C5417F55A281BF122E01D2BDE9DE2C3B9307825095CFE36"
+  },
+  {
+    "Path": "src/app/api\\chat\\route.ts",
+    "Hash": "55E8B00DF07948A80DE341D0E9290A2AE62AB236A8A0C3873AA4F7481DE176B0"
+  },
+  {
+    "Path": "src/app/api\\dashboard\\route.ts",
+    "Hash": "8281D42DCF1FD9FD8761CB9D993CD75FAD242B5DF69484FC390D39EDEAA990FF"
+  },
+  {
+    "Path": "src/app/api\\feedback\\route.ts",
+    "Hash": "6EA643CAA02A37F951EA2EB8C8F11D285CF06E542E7DC4F72E38F60940C499B9"
+  },
+  {
+    "Path": "src/app/api\\job\\match\\route.ts",
+    "Hash": "5CA32F2EB9EE7F37FB6EB27FE97E8BA8EE70A16ACB398E09A37A05E8A806801A"
+  },
+  {
+    "Path": "src/app/api\\jobs\\nlp-search\\route.ts",
+    "Hash": "0ADC42073EA521C28E651F8AD407AB6E971FB015F4754C5B61D791ABE657A905"
+  },
+  {
+    "Path": "src/app/api\\jobs\\route.ts",
+    "Hash": "01329C47345902687D1F5CFAEDC5FA6EA7C8E642B0FD6DA6F3E0E0F1BCF846C4"
+  },
+  {
+    "Path": "src/app/api\\jobs\\search\\route.ts",
+    "Hash": "74BE791EEFDBD4637AF713B5A0904215CA8C44D4FB137D7CFC36C2430CDA1D20"
+  },
+  {
+    "Path": "src/app/api\\jobs\\suggestions\\route.ts",
+    "Hash": "904E08B83AE9FA6090E556D8AE96B3B4C422ADC839951EA422CD607730652224"
+  },
+  {
+    "Path": "src/app/api\\onboarding\\complete\\route.ts",
+    "Hash": "BEA51CE31AA0191E8B3BE9FD3EFB75407C64A7481CA9BC83F8F6E6BC557E87BD"
+  },
+  {
+    "Path": "src/app/api\\onboarding\\parse-resume\\route.ts",
+    "Hash": "DAE76F652A197DE55223F08EDBAAC2BFC4E3B6F51C925E816F7980812FED5BAA"
+  },
+  {
+    "Path": "src/app/api\\onboarding\\route.ts",
+    "Hash": "139FF8AA50B734646113BC831649A365BE370190CC15D03F630AD42E4DE9BB2C"
+  },
+  {
+    "Path": "src/app/api\\onboarding\\skip\\route.ts",
+    "Hash": "54BBF6CCED39DB922E61A2446BCF8D8BA43944088421AF4DC700FC1EF2E09A34"
+  },
+  {
+    "Path": "src/app/api\\proctoring\\frame\\route.ts",
+    "Hash": "DB1D919D7C5450831FC987C2FE1150914F3511E2369A8AA6480C1064DABE35C3"
+  },
+  {
+    "Path": "src/app/api\\proctoring\\heartbeat\\route.ts",
+    "Hash": "0BBFDD528BD244044754C30636B13478312729FA5FB703D0C2998E197FB6A987"
+  },
+  {
+    "Path": "src/app/api\\proctoring\\session\\route.ts",
+    "Hash": "A44B339C6B3021EDD1D75174DE028B920277CCE7E39375EF3E2AF9E005DB38FF"
+  },
+  {
+    "Path": "src/app/api\\proctoring\\signal\\route.ts",
+    "Hash": "0D30913AF2CB6A9A1B08EAFB7115B687056EEAAD9399D352FD07751924E09C8A"
+  },
+  {
+    "Path": "src/app/api\\resume\\analyze\\route.ts",
+    "Hash": "71F680189051C83D8E856E543BAD34BB6B90FFA850BE3DF4DDD248CEF387DD8B"
+  },
+  {
+    "Path": "src/app/api\\resume\\improve\\route.ts",
+    "Hash": "D5BE94A71D87D0808CCBDBC248F8B817C36FAA48BBAA92E85BE34E718D166B6E"
+  },
+  {
+    "Path": "src/app/api\\resume\\tailor\\route.ts",
+    "Hash": "1BBCB93F086A6805E58E3A59705E83D812B077A8E94A8C4374BC7346C1219CC2"
+  },
+  {
+    "Path": "src/app/api\\skills\\route.ts",
+    "Hash": "4ABEE0E50420867A76E985D62C2ECEFDA8ACF471295FA50AC34DC1381D30EB24"
+  },
+  {
+    "Path": "src/app/api\\student\\context\\route.ts",
+    "Hash": "0AB2161C6AAC85742D83CF4853F318D4B8E105AC2B2CBF0C27544528222AF79B"
+  },
+  {
+    "Path": "src/app/api\\student\\profile\\route.ts",
+    "Hash": "B7DF748F9221ADEE2C2E02DB1D8012320FC9288E5C83AFA57AF7F7C46B34E5C9"
+  },
+  {
+    "Path": "src/app/api\\student\\readiness-history\\route.ts",
+    "Hash": "53A800845B34DAFE45692313115D7E7D1A299C34C054EF7096E942370A128D3D"
+  },
+  {
+    "Path": "src/app/api\\student\\readiness\\route.ts",
+    "Hash": "3342D91FF8D2922F1CC8AC0010886BAF94A913C8BB135A34D91D87AF3A05C58E"
+  },
+  {
+    "Path": "src/app/api\\user\\analyses\\[id]\\route.ts",
+    "Hash": "522B21777BD6BF223A35A16229DBD2278F9882DB9C8626972FDF0DEB6A3E5F09"
+  },
+  {
+    "Path": "src/app/api\\user\\analyses\\route.ts",
+    "Hash": "FE9802B39E61E98744DD53C1516FEDC3F1F59C740E6983731C770ADCE709E30A"
+  },
+  {
+    "Path": "src/app/api\\user\\applications\\apply\\route.ts",
+    "Hash": "B5C0B5B37EE1B404E277401884C2F0957BAD691365DCF35F652586067ED2C69E"
+  },
+  {
+    "Path": "src/app/api\\user\\applications\\confirm\\route.ts",
+    "Hash": "21AE5A2873686A112E2DCD07C1DEE0FC5AA1B45D36DFBE8045C5F517D3CF4BA4"
+  },
+  {
+    "Path": "src/app/api\\user\\applications\\route.ts",
+    "Hash": "DD47B1C17F7D8C72B60005DF86876CEEB630D9466BC471EF47D7BF2B34051A5D"
+  },
+  {
+    "Path": "src/app/api\\user\\assessments\\route.ts",
+    "Hash": "5D9E1C26282D90EB880000217C9A908DD4F74ED8D8188C0B8F9386B62141F26A"
+  },
+  {
+    "Path": "src/app/api\\user\\certificates\\route.ts",
+    "Hash": "8EAD9EEA98CAC534EEE4FF85F11C5E5994ED1DE6241127579F544E1D8A0F4C9C"
+  },
+  {
+    "Path": "src/app/api\\user\\courses\\route.ts",
+    "Hash": "0E70FBA733568DB7EA9760B339FA85C487B11F2E8DCB8C5E34B3B539A373C006"
+  },
+  {
+    "Path": "src/app/api\\user\\dashboard\\route.ts",
+    "Hash": "BEF260567D8E64F81E2D706E0E7CB1A9FA11474D41084EAB8B1735EE603673ED"
+  },
+  {
+    "Path": "src/app/api\\user\\improvements\\route.ts",
+    "Hash": "032BE7154B3DE3F01E16AB2D554E0DAFEEF59AC4BC488B9D0E3F10EB5578484B"
+  },
+  {
+    "Path": "src/app/api\\user\\jobs\\route.ts",
+    "Hash": "A0E13A1E11B60E7A7A4E1AB2ADE3D4467D5DF40BB44A3B0263711D5E522D562F"
+  },
+  {
+    "Path": "src/app/api\\user\\my-data\\export\\route.ts",
+    "Hash": "C89123154C13D8EFAE2754DFC712A0E4DC443557A5DEA747DBD3EDA447E10A79"
+  },
+  {
+    "Path": "src/app/api\\user\\my-data\\route.ts",
+    "Hash": "A55BCA25B2DA3C81FBC3C0ABB1AB4339E717CD8B858B89E08598E88705EE7461"
+  },
+  {
+    "Path": "src/app/api\\user\\profile\\route.ts",
+    "Hash": "00A98BE50C56109497DEF44D68E7E7BE6A6C5174958558A58BD62B1D7ECE6129"
+  },
+  {
+    "Path": "src/app/api\\user\\resumes\\route.ts",
+    "Hash": "B06A5AED8EAB0D7B706E9C854C342FB9396A663A55ED14A27FDA870705498CD4"
+  },
+  {
+    "Path": "src/app/api\\user\\resumes\\versions\\restore\\route.ts",
+    "Hash": "9583A45D7CFE86F7C36A91B46F2362E7074E1A5B2B288F147964935ACDCE03D6"
+  },
+  {
+    "Path": "src/app/api\\user\\resumes\\versions\\route.ts",
+    "Hash": "20640AD223EBF202E768B825CA5C4580AE4979442DFCE9058EB39BBEA2C1583F"
+  },
+  {
+    "Path": "src/app/api\\user\\skills\\[id]\\route.ts",
+    "Hash": "9BF44FD43CF05DA1C2A3AA279820B682209CA275EE0342993574154BD8965DE6"
+  },
+  {
+    "Path": "src/app/api\\user\\skills\\route.ts",
+    "Hash": "491008ABAD8DB0FE3D12BB96B7DFFD571123ED4591F6C17FAD7E496144F3D8DE"
+  },
+  {
+    "Path": "src/app/globals.css",
+    "Hash": "BA837D0785C528C3DA397F50B9D7C2FA1D6889754453E36823BE9B9EC4DA64E1"
+  },
+  {
+    "Path": "src/app/layout.tsx",
+    "Hash": "59331C43E064881A0D2ECD10B72A1A33D9DE6FD1EBBDEE182E7D92F38967BFFF"
+  },
+  {
+    "Path": "src/components/assistant/CompanionArtwork.tsx",
+    "Hash": "615D85BDC7CEFF7A3A689391E533D1F815058582063DBF54DD0D184BA3AF554C"
+  },
+  {
+    "Path": "src/components/assistant/companionLocomotion.ts",
+    "Hash": "AF73AEF485EBADA6C6D6516BC8B00296F58E73461244549FD48FC7608CE30A74"
+  },
+  {
+    "Path": "src/components/assistant/companionRig.ts",
+    "Hash": "86AC4F6FDB4BF3596475B05EF417DBC04D6957ACFA77EDAA6AFF5112A0408A99"
+  },
+  {
+    "Path": "src/components/resume\\ResumeComparisonView.tsx",
+    "Hash": "EEF735AC19C6B370421834A9C99E8BB113B429BF7E0EBA6A8F21B60094AFE563"
+  },
+  {
+    "Path": "src/context\\CareerContext.tsx",
+    "Hash": "99C26EC9AEB8AC8A332DDD0434172337459B95C7348F80AAE1D1906371B1FFF3"
+  },
+  {
+    "Path": "src/context\\ResumeContext.tsx",
+    "Hash": "7DB7B87A1BC1F68CB8C5B49475D4F065A5527595D9A5177AD313B0ACCA8F4902"
+  },
+  {
+    "Path": "src/context\\ThemeContext.tsx",
+    "Hash": "59B04BA6DE6D9EC901FDFB2AE80072308D2A21D73E20397EF4B3D002179FFA79"
+  },
+  {
+    "Path": "src/lib\\analytics\\index.ts",
+    "Hash": "9699D3E12D485146B921B136A0BDB56E88EA836B0DFBC7FA0D1E0BFE91083D88"
+  },
+  {
+    "Path": "src/lib\\career\\companyData.ts",
+    "Hash": "6A5C4896E460A48715A177775AFF26F350358906A314FD6B65AEA70467397583"
+  },
+  {
+    "Path": "src/lib\\career\\roleProfiles.ts",
+    "Hash": "B1A591C4889EE7EAD160E1E4DDEF892B3F1A9E469A303A8D2F51DA5561708709"
+  },
+  {
+    "Path": "src/lib\\db\\index.ts",
+    "Hash": "BF4296138D3A12CFD5C9DC9CE831A81983FA3B59BE1178E6EFB1C2086F3250A3"
+  },
+  {
+    "Path": "src/lib\\db\\seedQuestions.ts",
+    "Hash": "36D45B4AD47CA6952DB6A1C66B53121DAB71C2239CF528CCFFD688669E776524"
+  },
+  {
+    "Path": "src/lib\\extractResumeText.ts",
+    "Hash": "19FB55ED28D1EC7E304AD101B4282F94E425FD0571CBA91F3773238309E09FE7"
+  },
+  {
+    "Path": "src/lib\\gemini.ts",
+    "Hash": "5F82100F30E1CF61EA7296402D47B7F9C0F119F3F9FCD3675909073A861A328F"
+  },
+  {
+    "Path": "src/lib\\initialData.ts",
+    "Hash": "602912275EF50918E26A8BC08FFA038187CA9FE5E01FA37DE3C4A05190F87228"
+  },
+  {
+    "Path": "src/lib\\jobs\\cache.ts",
+    "Hash": "86DB337A1932B688283A3F8A997B65FAFA06C04C7F10BF30EF61CCDE4C14160A"
+  },
+  {
+    "Path": "src/lib\\jobs\\dedupe.ts",
+    "Hash": "BD0B1DEF6FF7C8EF42BF3B3CC52DA2CF1544CE95DC807F9DF08F0EDFB45C0C8F"
+  },
+  {
+    "Path": "src/lib\\jobs\\filters.ts",
+    "Hash": "5AEF180D3B8635EA64C632A6FEEADAD8E4809A4AA9BF5EBD56C5A591104CC73D"
+  },
+  {
+    "Path": "src/lib\\jobs\\naukriSearchUrl.ts",
+    "Hash": "9FECE993886125904037449AA898EECA59F20A363DEC8FB1249D1BCD5BA699EB"
+  },
+  {
+    "Path": "src/lib\\jobs\\normalize.ts",
+    "Hash": "CDB3E8AB482AE8BF9ADE79E3F4DDF46E7B9E45D6F67A2B2F0DCD012969294BC4"
+  },
+  {
+    "Path": "src/lib\\jobs\\providers\\adzuna.ts",
+    "Hash": "934A35C9C6E41D0752F77917FEEB53BB0FBB961BDEB2A9B1F994019B2B75D855"
+  },
+  {
+    "Path": "src/lib\\jobs\\providers\\index.ts",
+    "Hash": "93A40F4B865EBEBA027BE54DA149E9B5CBE673FC3BD2872D033CF50DF8EF55B9"
+  },
+  {
+    "Path": "src/lib\\jobs\\providers\\jooble.ts",
+    "Hash": "140E890388137D37BD32CA455F31FC47C3313653B2CB00147763BDDE6E4E5216"
+  },
+  {
+    "Path": "src/lib\\jobs\\providers\\linkedin.ts",
+    "Hash": "38B74A4A0C672F5C60D3C1AB249AEFB47002E8A4B1E6BABFD289768DBA6EC9E0"
+  },
+  {
+    "Path": "src/lib\\jobs\\providers\\naukri.ts",
+    "Hash": "BF866F22330DB2ABA272C1C78DC7287D7A1F0608089B36365D46FA31567CF156"
+  },
+  {
+    "Path": "src/lib\\jobs\\ranking.ts",
+    "Hash": "F7B386045627216B0A993B5833F262151ABF23D17667DD02263A28EA90E2E8BF"
+  },
+  {
+    "Path": "src/lib\\jobs\\search.ts",
+    "Hash": "7D61A51F1DBFF752F3A0CE3ED2EF68135C503CF7C98729FD566AB35EB2F671B0"
+  },
+  {
+    "Path": "src/lib\\jobs\\searchQuery.ts",
+    "Hash": "5E0AF8797515395D9F80A9D1653112EC4BE01B4A5932756AFFAB9EE90D9FD049"
+  },
+  {
+    "Path": "src/lib\\jobs\\types.ts",
+    "Hash": "5366D02CA2B0156141ECE78E981C97507F97B9375B6B9D705729F2D8139A040C"
+  },
+  {
+    "Path": "src/lib\\landingPageData.server.ts",
+    "Hash": "294DB76ADCBD391F91198197D69AB95D12317535AA51F76A0D12767F8401337D"
+  },
+  {
+    "Path": "src/lib\\learning\\youtubeResources.ts",
+    "Hash": "6492CC8F97B56D990C058382F24876284F6E447CE5515BC7EBB126032D5C6C03"
+  },
+  {
+    "Path": "src/lib\\mockData.ts",
+    "Hash": "C090A2C591DF9BBFB0AC7998C238D223CA884452C0AC3DBC4A7A3FF1D98E46ED"
+  },
+  {
+    "Path": "src/lib\\motion.ts",
+    "Hash": "617BEAECEC279B0B1BC07C5CB0C7DA97892596AD0D26FE225DD371BE287FD848"
+  },
+  {
+    "Path": "src/lib\\rateLimit.ts",
+    "Hash": "ED26C8DFA14C751B7AFD6EA6DF910118804E8F5C3DC648F9E2E91CE6095AC9CE"
+  },
+  {
+    "Path": "src/lib\\resumeValidator.ts",
+    "Hash": "32B29FA75781F89C9C7850808E220C4DBB36679F783F49AB395AA61248207CC4"
+  },
+  {
+    "Path": "src/lib\\sampleResume.ts",
+    "Hash": "D1AAB2CE738DB91C4095353C84DA376F1DEEF317474414CE4123516EEE720B26"
+  },
+  {
+    "Path": "src/lib\\sessionAuth.ts",
+    "Hash": "09353743E5FED955CE0E304630E08223FCA26B5F807A77F797790A451324CB59"
+  },
+  {
+    "Path": "src/lib\\templates.ts",
+    "Hash": "4651297A85309B64986C1729779A5C4A333DA5AF9AEBE732ABC8836865B7FD11"
+  },
+  {
+    "Path": "src/lib\\userSession.ts",
+    "Hash": "A4117F9C7C4C56A5FB3BBCE9CD51E0A7C2EB4C732FF367B07B1EE6E69CB68355"
+  },
+  {
+    "Path": "src/lib\\utils.ts",
+    "Hash": "406992CF9D3BF0E0D4466A637819BAC4618476F3322A0F113305E0EE32A28F44"
+  },
+  {
+    "Path": "src/lib\\visitor.ts",
+    "Hash": "61FEF2861788D24E4C1C8ED4B57763820D32E640B0BB433F5D03F863DBF02721"
+  },
+  {
+    "Path": "src/server\\auth\\adminSession.ts",
+    "Hash": "837D85D15591310B6A055B731BC25AD02E6B3C129B886881B4662D75BAE692CC"
+  },
+  {
+    "Path": "src/server\\auth\\index.ts",
+    "Hash": "EFE87163A6F62C7054BD3887C9BE0EC023A8403C3EFF2EF50528BE67BBD67075"
+  },
+  {
+    "Path": "src/server\\auth\\userSession.ts",
+    "Hash": "660B1EB9571B86A6508E4D3E75866CDABFE91B984DB1D555FB585869346D322F"
+  },
+  {
+    "Path": "src/server\\auth\\visitor.ts",
+    "Hash": "AC34079F23F3AAAA722D57BC4EE1121354C237229B884B40B80E3A15CCC7FE0E"
+  },
+  {
+    "Path": "src/server\\db\\adapter.ts",
+    "Hash": "CE47B1925B4B462CC31096981B79791D3B37D447F8AF0B769F1E5DA71D2AABF6"
+  },
+  {
+    "Path": "src/server\\db\\index.ts",
+    "Hash": "D0554CC4FCBFDA2B562787F4506D7D804E30FD37670B36EBE4B890FA86E2775A"
+  },
+  {
+    "Path": "src/server\\db\\seedQuestions.ts",
+    "Hash": "DA8B70854692564D1A8E61C6B33FCC0F36C06CD5CA9059CC9FB3839301FFFF1A"
+  },
+  {
+    "Path": "src/server\\index.ts",
+    "Hash": "175264FEFFD04B59843B75D8DBBB6BBBCBC0E3C14BF78E7792145CC418E1DCDC"
+  },
+  {
+    "Path": "src/server\\prompts\\careerAssistant.ts",
+    "Hash": "696983D2F6BA260EED6A505DAECBD258FE0F620DD8142DB9A540AF6D25D4CE1E"
+  },
+  {
+    "Path": "src/server\\prompts\\careerRoadmap.ts",
+    "Hash": "7BEB0E9AC852A36F28A1E6A25EFB8775A4B872D1BE4CBEE035B4FFD85B7CC5EA"
+  },
+  {
+    "Path": "src/server\\prompts\\index.ts",
+    "Hash": "FB872159B092B00EB1C2E591523D786B4D41906BF3ACDC554E07EC9BDA21FB38"
+  },
+  {
+    "Path": "src/server\\prompts\\interviewCoach.ts",
+    "Hash": "A936FFDFA45154E6EDB371F9BD32E219947674A6B6359AE7871ECB754F99A91C"
+  },
+  {
+    "Path": "src/server\\prompts\\jobMatcher.ts",
+    "Hash": "8B607E32BFD116741F704CE8AA832C548406C09C0DF63EFCAD6EDB43125B1885"
+  },
+  {
+    "Path": "src/server\\prompts\\projectMentor.ts",
+    "Hash": "67DB96F1C96250D8D5BD12BB33561E90D43E99B79A7CF02761D432CA0516F581"
+  },
+  {
+    "Path": "src/server\\prompts\\resumeAnalyzer.ts",
+    "Hash": "CCAD5660C42EC99503F53E6B314EBDBB5A2626CF92323B98F2361CFB9F2A8BBC"
+  },
+  {
+    "Path": "src/server\\prompts\\resumeImprover.ts",
+    "Hash": "1D27350491B26EDB60FC10273A11A7BD7D19370AC15ED50F1A31EB3EEF50C216"
+  },
+  {
+    "Path": "src/server\\prompts\\sharedUtils.ts",
+    "Hash": "E9EC4AB977F9386038B9562D31B66AE0F7238CAB4D1CBCC5C78E939426DCA2F1"
+  },
+  {
+    "Path": "src/server\\prompts\\skillGapAnalyzer.ts",
+    "Hash": "6234D5706C25198184480F075240F6EA26FD65B21E585B6C5BAE9237CB574AFF"
+  },
+  {
+    "Path": "src/server\\services\\careerActionEngine.ts",
+    "Hash": "A07E1F4D21FE8C76C95F4350384C16027804E8B0A094940EED7C2BF30CA2F60F"
+  },
+  {
+    "Path": "src/server\\services\\careerIntelligence.ts",
+    "Hash": "10ADE022422094D36858FF11EFC3EFDDEB997CA108B645069C409DAA07CA3DB2"
+  },
+  {
+    "Path": "src/server\\services\\careerIntelligenceEngine.ts",
+    "Hash": "1AEE0DB195096CCA0B7A6DC5D8BC882E39CDFAC227224142ABC30C62E4E32F6C"
+  },
+  {
+    "Path": "src/server\\services\\chatSafety.ts",
+    "Hash": "A2A3B4B4CAD029FDA3C750553FC78D2534B66A02E8FCFC1BC9DD73C3B756D774"
+  },
+  {
+    "Path": "src/server\\services\\deterministicAtsEngine.ts",
+    "Hash": "F1ECC4BE87472F55F1A8C15253CB1F91219E84053B5056024F9317E052CE8251"
+  },
+  {
+    "Path": "src/server\\services\\extractResumeText.ts",
+    "Hash": "B859FE1A287F2BA3BC29ECDA5C04603430774D9B87E1795ABCC75EB556246B2E"
+  },
+  {
+    "Path": "src/server\\services\\gemini.ts",
+    "Hash": "F9BB5B2BE5A2B8040399F2E090B26BF8C409DA7DBD509543C060E051B6061F35"
+  },
+  {
+    "Path": "src/server\\services\\index.ts",
+    "Hash": "60C59D197EA0ECF24610B44B0F10EFA4BF01967AE1637DEF2998D38F4F6CFCE9"
+  },
+  {
+    "Path": "src/server\\services\\jobs\\cache.ts",
+    "Hash": "CC51913349352C13B37241CDAFE060FCEA73DFF89B267227D2882B66BB5E6E2B"
+  },
+  {
+    "Path": "src/server\\services\\jobs\\dedupe.ts",
+    "Hash": "A40C99D9E7DDA659E44C72802AFF39268D69502A6BD6C15CD652F2B0183831D7"
+  },
+  {
+    "Path": "src/server\\services\\jobs\\filters.ts",
+    "Hash": "ABABDC52631A0641C9D4238985AEC63729A10D0E5DDEBB7E0978D7A9980153D5"
+  },
+  {
+    "Path": "src/server\\services\\jobs\\normalize.ts",
+    "Hash": "9E8EB04A7FCB923C279BA531C856366602E61908FF6173DC63F2B9A676403AE5"
+  },
+  {
+    "Path": "src/server\\services\\jobs\\providers\\adzuna.ts",
+    "Hash": "6E8BF6A0829E0B9BDC816D205EBF822554762A0A1F03A1F12CB8D898A7653413"
+  },
+  {
+    "Path": "src/server\\services\\jobs\\providers\\index.ts",
+    "Hash": "93A40F4B865EBEBA027BE54DA149E9B5CBE673FC3BD2872D033CF50DF8EF55B9"
+  },
+  {
+    "Path": "src/server\\services\\jobs\\providers\\jooble.ts",
+    "Hash": "E84802B3E03DAA4EA4B04EFCEE152D65205708C9345CAF096A2E02FA68809D18"
+  },
+  {
+    "Path": "src/server\\services\\jobs\\providers\\linkedin.ts",
+    "Hash": "19F7C37CA6E78E455DE1519FE7481DE813B07D9C7456C067F7EE163313FFE6D4"
+  },
+  {
+    "Path": "src/server\\services\\jobs\\providers\\naukri.ts",
+    "Hash": "D222F1B0ADD738C41D324D4C6FA9F4850FB27FD9761AEBB5500C201D3EDE15C7"
+  },
+  {
+    "Path": "src/server\\services\\jobs\\providers\\naukriCooldown.ts",
+    "Hash": "0CB9FEBBC5D23C46C7A0795D180D94790560181A78360C8C5551F45AF7BC564D"
+  },
+  {
+    "Path": "src/server\\services\\jobs\\ranking.ts",
+    "Hash": "8DD362AF4864418DBF5E76799896314F8E049CD3F932E490CC4AE85D41097621"
+  },
+  {
+    "Path": "src/server\\services\\jobs\\search.ts",
+    "Hash": "049C78591F6114E4B7A39D06C553C35B38B32121B645DB627364847807960C67"
+  },
+  {
+    "Path": "src/server\\services\\jobs\\searchQuery.ts",
+    "Hash": "EFBB9935538D8F7E85ADF090EE424578BCD5D58739BB1B44BA662131DD5CF61A"
+  },
+  {
+    "Path": "src/server\\services\\jobs\\suggestions.ts",
+    "Hash": "E286929631B4645C102C7CB3F1AEE3BDE23913395773412F9EEE468EF7A8CC90"
+  },
+  {
+    "Path": "src/server\\services\\jobs\\types.ts",
+    "Hash": "200912442617609DBFAB0B5156BB798A0CA1A1250FD3F9ACE5956B1815E125D4"
+  },
+  {
+    "Path": "src/server\\services\\parseResumeToData.ts",
+    "Hash": "12788B44C069F105DEC7E832C6EBC4F253616075B310FF3F45AA4DD97ACF0622"
+  },
+  {
+    "Path": "src/server\\services\\projectMentor.ts",
+    "Hash": "F9995A7A43A152BDD5574C88211E6F3ED49D2483E27FE32A0DD9630D8FCBBC78"
+  },
+  {
+    "Path": "src/server\\services\\resumeIntelligence.ts",
+    "Hash": "FAF8276E3E9D40EC0339BC2EFD1EA4BDF38444331F27E6F0CD54BA5DA9F9A4FD"
+  },
+  {
+    "Path": "src/server\\services\\resumeValidator.ts",
+    "Hash": "E7B86CCF55116A6896292375BDA5512E2A31E6F179A7F3684C769E58FA202C9C"
+  },
+  {
+    "Path": "src/server\\services\\unifiedStudentContext.ts",
+    "Hash": "8D09358E7F4577EFB73F6DAAF9B5AF541ABCC1C8F37A67A3B7B2E4DAB93A503E"
+  }
+]
