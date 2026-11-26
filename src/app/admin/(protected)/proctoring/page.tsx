@@ -666,9 +666,9 @@ export default function AdminProctoringPage() {
             </h3>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex flex-wrap items-center gap-2 min-w-0">
             {/* Severity Filter */}
-            <div className="flex items-center gap-1 p-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-xs">
+            <div className="flex flex-wrap items-center gap-1 max-w-full p-1 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-xs">
               {(['all', 'violation', 'warning', 'info'] as const).map((sev) => (
                 <button
                   key={sev}
@@ -690,7 +690,7 @@ export default function AdminProctoringPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search event type or user..."
-              className="px-3 py-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
+              className="w-full sm:w-56 min-w-0 px-3 py-1.5 rounded-xl border border-[var(--border-color)] bg-[var(--bg-secondary)] text-xs text-[var(--text-primary)] focus:outline-none focus:border-[var(--accent)]"
             />
           </div>
         </div>

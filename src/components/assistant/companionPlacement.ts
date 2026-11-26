@@ -26,7 +26,7 @@ export function safeCompanionPosition(element: HTMLElement): Point {
   const anchorY = Number.isFinite(storedY) ? storedY : rect.top - (height - rect.height) / 2;
   const current = clampCompanionPosition(anchorX, anchorY, width, height, element);
   const bounds = companionBounds(width, height, element);
-  // Read layout once per scroll/resize batch; the animation loop never scans the page.
+  // Read layout only for initial page placement; scrolling never rescans controls.
   const obstacles: Box[] = Array.from(document.querySelectorAll<HTMLElement>('button, a[href], input, textarea, select, [role="button"]'))
     .filter((control) => !control.closest('[data-assistant-mode], [data-nimbus-greeting], nextjs-portal'))
     .flatMap((control) => {
@@ -38,10 +38,16 @@ export function safeCompanionPosition(element: HTMLElement): Point {
   const free = (point: Point) => !obstacles.some((box) => point.x < box.right && point.x + width > box.left && point.y < box.bottom && point.y + height > box.top);
   if (free(current)) return current;
   const candidates: Point[] = [];
-  const xs = [current.x, bounds.maxX, bounds.minX];
-  for (let x = bounds.minX; x <= bounds.maxX; x += width + 8) xs.push(x);
-  const ys = [current.y, bounds.maxY, bounds.minY];
-  for (let y = bounds.maxY; y >= bounds.minY; y -= height / 2 + 8) ys.push(y);
+  const xs = new Set([current.x, bounds.maxX, bounds.minX]);
+  const ys = new Set([current.y, bounds.maxY, bounds.minY]);
+  // Search exact control edges as well as the coarse grid: a larger companion can
+  // fit a narrow gap that grid samples miss. Layout is still read only once above.
+  for (const box of obstacles) {
+    for (const x of [box.left - width, box.right]) xs.add(Math.min(bounds.maxX, Math.max(bounds.minX, x)));
+    for (const y of [box.top - height, box.bottom]) ys.add(Math.min(bounds.maxY, Math.max(bounds.minY, y)));
+  }
+  for (let x = bounds.minX; x <= bounds.maxX; x += width + 8) xs.add(x);
+  for (let y = bounds.maxY; y >= bounds.minY; y -= height / 2 + 8) ys.add(y);
   for (const x of xs) for (const y of ys) candidates.push({ x, y });
   candidates.sort((a, b) => Math.hypot(a.x - current.x, a.y - current.y) - Math.hypot(b.x - current.x, b.y - current.y));
   return candidates.find(free) || current;

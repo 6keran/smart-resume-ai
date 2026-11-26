@@ -268,7 +268,7 @@ export default function MyCareerDataPage() {
     <div className="min-h-screen bg-[var(--bg-primary)] text-[var(--text-primary)] p-4 sm:p-8">
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Page Header */}
-        <div className="reference-panel bg-[#FFFFFF] border border-[var(--border-color)] rounded-xl p-6 flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+        <div className="reference-panel bg-[#FFFFFF] border border-[var(--border-color)] rounded-xl p-4 sm:p-6 flex flex-col xl:flex-row xl:items-center justify-between gap-4">
           <div>
             <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-[var(--accent)]">
               <Database className="w-3.5 h-3.5" />

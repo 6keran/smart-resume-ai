@@ -202,7 +202,7 @@ export function DashboardContent({ user, data, actionPlan, unifiedContext }: Das
                 Set your target role or upload a resume to review and confirm your personalized career roadmap.
               </p>
             </div>
-            <div className="flex items-center gap-2.5 shrink-0">
+            <div className="flex flex-wrap items-center gap-2.5 max-w-full shrink-0">
               <Link
                 href="/onboarding"
                 className="px-4 py-2 rounded-lg bg-[var(--accent)] hover:bg-[var(--accent-hover)] text-white text-xs font-semibold transition-colors"

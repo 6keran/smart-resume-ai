@@ -63,7 +63,10 @@ const tracks: Record<CompanionMotion, Keyframe[]> = {
     [.64, { headR: 5, brow: 2, smile: -.6, rightElbow: 18 }], [.82, { headR: 2, smile: .3 }], [1, {}],
   ],
   limited: [[0, { eyes: .8, smile: .5 }], [1, { eyes: .8, smile: .5 }]],
-  hover: [[0, {}], [.28, { headR: -6, lookY: -1, rightArm: -30, rightElbow: 25, smile: 1.4 }], [.65, { headR: -4, rightArm: -24, rightElbow: 20, smile: 1.3 }], [1, {}]],
+  // A pointer-driven open-arm step, repeating only while the user hovers.
+  hover: [[0, {}], [.16, { bodyY: 1.2, headR: -3, leftArm: 48, rightArm: -48, leftElbow: -12, rightElbow: 12, leftHip: -14, leftKnee: 18, leftFoot: -4, smile: 1.4 }],
+    [.38, { bodyY: -1.5, bodyR: 1.5, leftArm: 58, rightArm: -58, leftHip: -10, leftKnee: 14, leftFoot: -4, smile: 1.4 }],
+    [.62, { bodyY: 1, bodyR: -1.5, leftArm: 38, rightArm: -38, rightHip: 14, rightKnee: -18, rightFoot: 4, smile: 1.4 }], [.82, {}], [1, {}]],
   settling: [[0, { bodyY: 2, leftKnee: 7, rightKnee: -7, leftArm: 14, rightArm: -14 }], [.4, { bodyY: -1, headR: -2 }], [1, {}]],
   walking: [[0, {}], [1, {}]], // Foot trajectories are solved below rather than independently keyframed.
 };
@@ -106,7 +109,7 @@ export function sampleWalkingPose(phase: number, direction: 1 | -1 = 1): Compani
 
 export function sampleCompanionPose(motion: CompanionMotion, elapsed: number, phase = 0, direction: 1 | -1 = 1): CompanionPose {
   if (motion === 'walking') return sampleWalkingPose(phase, direction);
-  const loops = motion === 'idle' || motion === 'thinking' || motion === 'limited';
+  const loops = motion === 'idle' || motion === 'thinking' || motion === 'limited' || motion === 'hover';
   const progress = loops
     ? (elapsed % MOTION_DURATION[motion]) / MOTION_DURATION[motion]
     : Math.min(1, elapsed / MOTION_DURATION[motion]);

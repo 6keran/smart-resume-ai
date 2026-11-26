@@ -836,7 +836,7 @@ function deriveRecommendedNextActions(
     actions.push({
       title: 'Set Target Career Goal',
       description: 'Define your desired role and target industry to unlock tailored roadmaps and ATS alignment.',
-      href: '/profile',
+      href: '/dashboard/profile',
       priority: 'high',
       actionText: 'Set Target Role',
       category: 'job'
@@ -853,10 +853,13 @@ function deriveRecommendedNextActions(
       actionText: 'Build Resume',
       category: 'resume'
     });
-  } else if ((context.resume.latestAtsScore || 0) < 70) {
+  } else if (context.resume.latestAtsScore == null || context.resume.latestAtsScore < 70) {
+    const score = context.resume.latestAtsScore;
     actions.push({
-      title: 'Optimize ATS Resume Score',
-      description: `Current ATS score is ${context.resume.latestAtsScore ?? 0}/100. Resolve formatting and missing keyword warnings.`,
+      title: score == null ? 'Check Your Resume’s ATS Score' : 'Optimize ATS Resume Score',
+      description: score == null
+        ? 'Scan your resume to see its first ATS score and suggested improvements.'
+        : `Current ATS score is ${score}/100. Resolve formatting and missing keyword warnings.`,
       href: '/analyzer',
       priority: 'high',
       actionText: 'Run ATS Audit',
@@ -870,7 +873,7 @@ function deriveRecommendedNextActions(
     actions.push({
       title: `Bridge Skill Gap: ${topGap}`,
       description: `Master ${topGap} to satisfy a critical requirement for ${gaps.targetRole}.`,
-      href: '/career/skills',
+      href: '/skills?tab=roadmap',
       priority: 'high',
       actionText: 'Start Learning',
       category: 'skill'
@@ -882,7 +885,7 @@ function deriveRecommendedNextActions(
     actions.push({
       title: 'Start a Guided Portfolio Project',
       description: `Build a production-grade portfolio project tailored to ${gaps.targetRole}.`,
-      href: '/career/projects',
+      href: '/projects',
       priority: 'medium',
       actionText: 'Browse Projects',
       category: 'project'
@@ -894,7 +897,7 @@ function deriveRecommendedNextActions(
     actions.push({
       title: 'Practice Mock Interview',
       description: `Complete a 5-question technical and STAR-method mock interview for ${gaps.targetRole}.`,
-      href: '/career/interview',
+      href: '/interview-prep',
       priority: 'medium',
       actionText: 'Start Interview',
       category: 'interview'

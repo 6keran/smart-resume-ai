@@ -10,7 +10,7 @@ import { CareerProvider } from '@/context/CareerContext';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Header } from '@/components/layout/Header';
 import { UserProvider } from '@/components/user/UserContext';
-import { CareerChatbot } from '@/components/chat/CareerChatbot';
+import { AssistantEntry } from '@/components/chat/AssistantEntry';
 
 const inter = Inter({
   variable: '--font-inter',
@@ -75,9 +75,9 @@ export default function RootLayout({
         />
         <ThemeProvider>
           <MotionConfig reducedMotion="user">
-            <ResumeProvider>
-              <CareerProvider>
-                <UserProvider>
+            <UserProvider>
+              <ResumeProvider>
+                <CareerProvider>
                   <div className="product-shell flex w-full min-h-screen relative z-[1]">
                     <Sidebar />
                     <div className="flex-1 flex flex-col min-w-0">
@@ -85,10 +85,10 @@ export default function RootLayout({
                       <main className="flex-1 w-full min-w-0">{children}</main>
                     </div>
                   </div>
-                  <CareerChatbot />
-                </UserProvider>
-              </CareerProvider>
-            </ResumeProvider>
+                  <AssistantEntry />
+                </CareerProvider>
+              </ResumeProvider>
+            </UserProvider>
           </MotionConfig>
         </ThemeProvider>
       </body>

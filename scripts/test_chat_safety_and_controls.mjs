@@ -28,6 +28,7 @@ const {
   ChatConcurrencyGate,
   MAX_CHAT_MESSAGE_LENGTH,
 } = await import('../src/server/services/chatSafety.ts');
+const { buildChatRequestBody, MAX_CHAT_REQUEST_BYTES } = await import('../src/lib/chatRequest.ts');
 
 console.log('================================================================');
 console.log('SMART RESUME AI: CHAT SECURITY, CONTROLS & SAFETY TEST SUITE');
@@ -63,6 +64,21 @@ test('Rejects non-object or invalid payload', () => {
 test('Rejects empty or whitespace-only messages', () => {
   assert.strictEqual(sanitizeChatPayload({ message: '' }).error, 'empty');
   assert.strictEqual(sanitizeChatPayload({ message: '   ' }).error, 'empty');
+});
+
+test('Long follow-ups fit the API history and UTF-8 byte limits', () => {
+  for (const sample of ['Resume', '職務経験', '"\n']) {
+    const turns = Array.from({ length: 12 }, (_, i) => ({
+      role: i % 2 ? 'assistant' : 'user',
+      content: `Turn ${i}: ${sample.repeat(2100)}`,
+    }));
+    const body = buildChatRequestBody(sample.repeat(2000).slice(0, 2000), turns, { currentPath: '/builder' });
+    assert.ok(Buffer.byteLength(body) <= MAX_CHAT_REQUEST_BYTES);
+    const { payload, error } = sanitizeChatPayload(JSON.parse(body));
+    assert.ok(payload, error);
+    assert.ok(payload.history.at(-1).content.startsWith('Turn 11:'));
+    assert.equal(turns.length, 12);
+  }
 });
 
 test('Rejects messages exceeding MAX_CHAT_MESSAGE_LENGTH (2000 chars)', () => {
@@ -176,5 +192,52 @@ test('Concurrency gate prevents simultaneous generation for same user', () => {
 });
 
 console.log('\n================================================================');
+// Exercise the HTTP handler with a local provider that observes a disconnected client.
+const originalLoader = Module._load;
+const originalKey = process.env.GEMINI_API_KEY;
+const disconnected = new AbortController();
+let providerCalls = 0;
+let providerSawAbort = false;
+class LocalChatProvider {
+  models = {
+    async generateContent({ config }) {
+      providerCalls++;
+      if (providerCalls === 1) {
+        disconnected.abort();
+        providerSawAbort = config.abortSignal?.aborted === true;
+        throw new Error('Client disconnected');
+      }
+      return { text: 'Here is your next resume review.' };
+    },
+  };
+}
+try {
+  Module._load = function (id, ...args) {
+    if (id === '@google/genai') return { GoogleGenAI: LocalChatProvider };
+    if (id === '@/lib/userSession') return { getUserFromRequest: async () => ({ id: 'local-chat-cancellation' }) };
+    if (id === '@/server/services/unifiedStudentContext') return { buildUnifiedStudentContext: async () => null };
+    if (id === '@/server/services/gemini') return { CANDIDATE_GEMINI_MODELS: ['first', 'second'] };
+    return originalLoader.call(this, id, ...args);
+  };
+  process.env.GEMINI_API_KEY = 'local-provider-test';
+  const { POST } = await import('../src/app/api/chat/route.ts');
+  const request = (signal) => new Request('http://localhost/api/chat', {
+    method: 'POST', signal, body: JSON.stringify({ message: 'Please review my resume.' }),
+  });
+  const canceled = await POST(request(disconnected.signal));
+  const callsAfterCancel = providerCalls;
+  const next = await POST(request());
+  test('Disconnecting stops provider retries and releases the account for its next message', () => {
+    assert.equal(providerSawAbort, true);
+    assert.equal(canceled.status, 499);
+    assert.equal(callsAfterCancel, 1);
+    assert.equal(next.status, 200);
+    assert.equal(providerCalls, 2);
+  });
+} finally {
+  Module._load = originalLoader;
+  if (originalKey === undefined) delete process.env.GEMINI_API_KEY;
+  else process.env.GEMINI_API_KEY = originalKey;
+}
 console.log(`TOTAL PASSED: ${passedTests} / ${totalTests}`);
 console.log('================================================================');

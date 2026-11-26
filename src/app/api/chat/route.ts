@@ -28,14 +28,6 @@ import {
 
 const REQUEST_TIMEOUT_MS = 20_000;
 
-async function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-  let timer: NodeJS.Timeout;
-  const timeoutPromise = new Promise<never>((_, reject) => {
-    timer = setTimeout(() => reject(new Error('AI request timed out.')), timeoutMs);
-  });
-  return Promise.race([promise, timeoutPromise]).finally(() => clearTimeout(timer));
-}
-
 /**
  * Builds the comprehensive system instruction for the Smart Resume AI Assistant
  * with deep profile grounding, strict prompt-injection defenses, and 8 core guidance capabilities.
@@ -229,19 +221,18 @@ export async function POST(req: Request) {
     let isQuotaError = false;
 
     for (const modelName of CANDIDATE_GEMINI_MODELS) {
+      if (req.signal.aborted) return new Response(null, { status: 499 });
       try {
-        const response = await withTimeout(
-          ai.models.generateContent({
-            model: modelName,
-            contents,
-            config: {
-              systemInstruction,
-              temperature: 0.5,
-              maxOutputTokens: 900,
-            },
-          }),
-          REQUEST_TIMEOUT_MS
-        );
+        const response = await ai.models.generateContent({
+          model: modelName,
+          contents,
+          config: {
+            systemInstruction,
+            temperature: 0.5,
+            maxOutputTokens: 900,
+            abortSignal: AbortSignal.any([req.signal, AbortSignal.timeout(REQUEST_TIMEOUT_MS)]),
+          },
+        });
 
         if (response && response.text) {
           let cleaned = response.text.replace(/\u0000/g, '').trim();
@@ -255,6 +246,7 @@ export async function POST(req: Request) {
           }
         }
       } catch (err: any) {
+        if (req.signal.aborted) return new Response(null, { status: 499 });
         lastError = err;
         const errMsg = String(err?.message || err);
         console.warn(`[Chat API] Gemini request failed for ${modelName}.`);

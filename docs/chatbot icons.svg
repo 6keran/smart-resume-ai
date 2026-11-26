@@ -1,0 +1,310 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" font-family="'Courier New', monospace">
+  <defs>
+    <!-- Background gradient -->
+    <radialGradient id="bgGrad" cx="50%" cy="50%" r="70%">
+      <stop offset="0%" stop-color="#1a1a2e"/>
+      <stop offset="100%" stop-color="#0a0a12"/>
+    </radialGradient>
+
+    <!-- Glow effects -->
+    <filter id="glowGreen">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glowCyan">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glowPurple">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+    <filter id="glowOrange">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge>
+        <feMergeNode in="blur"/>
+        <feMergeNode in="SourceGraphic"/>
+      </feMerge>
+    </filter>
+
+    <!-- Terminal scanline pattern -->
+    <pattern id="scanlines" width="4" height="4" patternUnits="userSpaceOnUse">
+      <rect width="4" height="2" fill="rgba(0,0,0,0.15)"/>
+    </pattern>
+  </defs>
+
+  <!-- Background -->
+  <rect width="800" height="600" fill="url(#bgGrad)"/>
+  <rect width="800" height="600" fill="url(#scanlines)" opacity="0.3"/>
+
+  <!-- Title -->
+  <text x="400" y="40" text-anchor="middle" fill="#00ff88" font-size="18" font-weight="bold" filter="url(#glowGreen)">// CODEX_PETS: DEVELOPER EDITION //</text>
+  <line x1="100" y1="50" x2="700" y2="50" stroke="#00ff88" stroke-width="0.5" opacity="0.4"/>
+
+  <!-- ==================== PET 1: BINARY CAT ==================== -->
+  <g transform="translate(130, 160)">
+    <!-- Glow aura -->
+    <circle cx="0" cy="0" r="55" fill="none" stroke="#00ff88" stroke-width="0.5" opacity="0.15"/>
+
+    <!-- Body -->
+    <rect x="-30" y="-10" width="60" height="50" rx="8" fill="#0d2818" stroke="#00ff88" stroke-width="1.5"/>
+
+    <!-- Terminal header -->
+    <rect x="-25" y="-20" width="50" height="15" rx="3" fill="#00ff88" opacity="0.15"/>
+    <text x="-15" y="-10" fill="#00ff88" font-size="7">● ● ●</text>
+
+    <!-- Cat ears -->
+    <polygon points="-25,-20 -35,-40 -15,-25" fill="#0d2818" stroke="#00ff88" stroke-width="1.5"/>
+    <polygon points="25,-20 35,-40 15,-25" fill="#0d2818" stroke="#00ff88" stroke-width="1.5"/>
+
+    <!-- Inner ear -->
+    <polygon points="-26,-22 -32,-35 -18,-26" fill="#00ff88" opacity="0.3"/>
+    <polygon points="26,-22 32,-35 18,-26" fill="#00ff88" opacity="0.3"/>
+
+    <!-- Eyes -->
+    <ellipse cx="-12" cy="5" rx="7" ry="8" fill="#00ff88" filter="url(#glowGreen)"/>
+    <ellipse cx="12" cy="5" rx="7" ry="8" fill="#00ff88" filter="url(#glowGreen)"/>
+    <ellipse cx="-12" cy="5" rx="3" ry="7" fill="#0a0a12"/>
+    <ellipse cx="12" cy="5" rx="3" ry="7" fill="#0a0a12"/>
+    <circle cx="-10" cy="3" r="2" fill="white" opacity="0.8"/>
+    <circle cx="14" cy="3" r="2" fill="white" opacity="0.8"/>
+
+    <!-- Nose -->
+    <polygon points="0,14 -4,18 4,18" fill="#00ff88" opacity="0.6"/>
+
+    <!-- Whiskers -->
+    <line x1="-30" y1="15" x2="-50" y2="12" stroke="#00ff88" stroke-width="0.8" opacity="0.5"/>
+    <line x1="-30" y1="18" x2="-50" y2="20" stroke="#00ff88" stroke-width="0.8" opacity="0.5"/>
+    <line x1="30" y1="15" x2="50" y2="12" stroke="#00ff88" stroke-width="0.8" opacity="0.5"/>
+    <line x1="30" y1="18" x2="50" y2="20" stroke="#00ff88" stroke-width="0.8" opacity="0.5"/>
+
+    <!-- Code lines on body -->
+    <text x="-20" y="30" fill="#00ff88" font-size="5" opacity="0.4">&gt; meow()</text>
+    <text x="-20" y="38" fill="#00ff88" font-size="5" opacity="0.3">  // 0xCAT</text>
+
+    <!-- Tail -->
+    <path d="M30,25 Q55,20 50,0 Q48,-10 55,-15" fill="none" stroke="#00ff88" stroke-width="2" stroke-linecap="round"/>
+    <circle cx="55" cy="-15" r="3" fill="#00ff88" opacity="0.6"/>
+
+    <!-- Label -->
+    <text x="0" y="75" text-anchor="middle" fill="#00ff88" font-size="9" opacity="0.7">BINARY_CAT</text>
+  </g>
+
+  <!-- ==================== PET 2: GIT PENGUIN ==================== -->
+  <g transform="translate(330, 155)">
+    <!-- Glow aura -->
+    <circle cx="0" cy="0" r="55" fill="none" stroke="#00ccff" stroke-width="0.5" opacity="0.15"/>
+
+    <!-- Body -->
+    <ellipse cx="0" cy="15" rx="35" ry="40" fill="#0a1a2e" stroke="#00ccff" stroke-width="1.5"/>
+
+    <!-- Belly -->
+    <ellipse cx="0" cy="20" rx="22" ry="28" fill="#0d2840" stroke="#00ccff" stroke-width="0.8" opacity="0.6"/>
+
+    <!-- Head -->
+    <circle cx="0" cy="-15" r="25" fill="#0a1a2e" stroke="#00ccff" stroke-width="1.5"/>
+
+    <!-- Eyes -->
+    <circle cx="-10" cy="-18" r="7" fill="#00ccff" filter="url(#glowCyan)"/>
+    <circle cx="10" cy="-18" r="7" fill="#00ccff" filter="url(#glowCyan)"/>
+    <circle cx="-10" cy="-18" r="3" fill="#0a0a12"/>
+    <circle cx="10" cy="-18" r="3" fill="#0a0a12"/>
+    <circle cx="-9" cy="-20" r="1.5" fill="white" opacity="0.9"/>
+    <circle cx="11" cy="-20" r="1.5" fill="white" opacity="0.9"/>
+
+    <!-- Beak -->
+    <polygon points="0,-8 -6,-2 6,-2" fill="#ff6600" stroke="#ff6600" stroke-width="0.5"/>
+
+    <!-- Git branch icon on belly -->
+    <circle cx="-8" cy="15" r="3" fill="none" stroke="#00ccff" stroke-width="1"/>
+    <circle cx="-8" cy="30" r="3" fill="none" stroke="#00ccff" stroke-width="1"/>
+    <circle cx="8" cy="22" r="3" fill="none" stroke="#00ccff" stroke-width="1"/>
+    <line x1="-8" y1="18" x2="-8" y2="27" stroke="#00ccff" stroke-width="1"/>
+    <line x1="-5" y1="15" x2="5" y2="22" stroke="#00ccff" stroke-width="1"/>
+
+    <!-- Flippers -->
+    <path d="M-35,5 Q-45,15 -40,35" fill="none" stroke="#00ccff" stroke-width="2" stroke-linecap="round"/>
+    <path d="M35,5 Q45,15 40,35" fill="none" stroke="#00ccff" stroke-width="2" stroke-linecap="round"/>
+
+    <!-- Feet -->
+    <ellipse cx="-12" cy="55" rx="10" ry="4" fill="#00ccff" opacity="0.4"/>
+    <ellipse cx="12" cy="55" rx="10" ry="4" fill="#00ccff" opacity="0.4"/>
+
+    <!-- Label -->
+    <text x="0" y="80" text-anchor="middle" fill="#00ccff" font-size="9" opacity="0.7">GIT_PENGUIN</text>
+  </g>
+
+  <!-- ==================== PET 3: BUG HUNTER ==================== -->
+  <g transform="translate(530, 160)">
+    <!-- Glow aura -->
+    <circle cx="0" cy="0" r="55" fill="none" stroke="#cc44ff" stroke-width="0.5" opacity="0.15"/>
+
+    <!-- Body (spider-like) -->
+    <ellipse cx="0" cy="10" rx="28" ry="22" fill="#1a0a2e" stroke="#cc44ff" stroke-width="1.5"/>
+
+    <!-- Head -->
+    <circle cx="0" cy="-12" r="18" fill="#1a0a2e" stroke="#cc44ff" stroke-width="1.5"/>
+
+    <!-- Multiple eyes (spider) -->
+    <circle cx="-8" cy="-16" r="5" fill="#cc44ff" filter="url(#glowPurple)"/>
+    <circle cx="8" cy="-16" r="5" fill="#cc44ff" filter="url(#glowPurple)"/>
+    <circle cx="-4" cy="-8" r="3" fill="#cc44ff" opacity="0.7"/>
+    <circle cx="4" cy="-8" r="3" fill="#cc44ff" opacity="0.7"/>
+    <circle cx="-12" cy="-10" r="2.5" fill="#cc44ff" opacity="0.5"/>
+    <circle cx="12" cy="-10" r="2.5" fill="#cc44ff" opacity="0.5"/>
+
+    <!-- Pupils -->
+    <circle cx="-8" cy="-16" r="2" fill="#0a0a12"/>
+    <circle cx="8" cy="-16" r="2" fill="#0a0a12"/>
+
+    <!-- Bug icon on body -->
+    <text x="-12" y="15" fill="#cc44ff" font-size="10" opacity="0.6">🐛</text>
+
+    <!-- Legs -->
+    <path d="M-25,0 Q-40,-10 -45,5" fill="none" stroke="#cc44ff" stroke-width="1.5" opacity="0.7"/>
+    <path d="M-25,10 Q-42,10 -48,20" fill="none" stroke="#cc44ff" stroke-width="1.5" opacity="0.7"/>
+    <path d="M-23,20 Q-38,25 -42,38" fill="none" stroke="#cc44ff" stroke-width="1.5" opacity="0.7"/>
+    <path d="M25,0 Q40,-10 45,5" fill="none" stroke="#cc44ff" stroke-width="1.5" opacity="0.7"/>
+    <path d="M25,10 Q42,10 48,20" fill="none" stroke="#cc44ff" stroke-width="1.5" opacity="0.7"/>
+    <path d="M23,20 Q38,25 42,38" fill="none" stroke="#cc44ff" stroke-width="1.5" opacity="0.7"/>
+
+    <!-- Antennae -->
+    <path d="M-8,-28 Q-15,-45 -20,-48" fill="none" stroke="#cc44ff" stroke-width="1.5" stroke-linecap="round"/>
+    <path d="M8,-28 Q15,-45 20,-48" fill="none" stroke="#cc44ff" stroke-width="1.5" stroke-linecap="round"/>
+    <circle cx="-20" cy="-48" r="2.5" fill="#cc44ff" filter="url(#glowPurple)"/>
+    <circle cx="20" cy="-48" r="2.5" fill="#cc44ff" filter="url(#glowPurple)"/>
+
+    <!-- Label -->
+    <text x="0" y="75" text-anchor="middle" fill="#cc44ff" font-size="9" opacity="0.7">BUG_HUNTER</text>
+  </g>
+
+  <!-- ==================== PET 4: COFFEE BOT ==================== -->
+  <g transform="translate(130, 370)">
+    <!-- Glow aura -->
+    <circle cx="0" cy="0" r="55" fill="none" stroke="#ffaa00" stroke-width="0.5" opacity="0.15"/>
+
+    <!-- Body (coffee mug shape) -->
+    <rect x="-25" y="-15" width="50" height="45" rx="5" fill="#1a1200" stroke="#ffaa00" stroke-width="1.5"/>
+
+    <!-- Handle -->
+    <path d="M25,-5 Q45,-5 45,15 Q45,30 25,30" fill="none" stroke="#ffaa00" stroke-width="2.5"/>
+
+    <!-- Steam -->
+    <path d="M-10,-20 Q-15,-30 -8,-40" fill="none" stroke="#ffaa00" stroke-width="1" opacity="0.4"/>
+    <path d="M0,-22 Q5,-35 -2,-45" fill="none" stroke="#ffaa00" stroke-width="1" opacity="0.4"/>
+    <path d="M10,-20 Q15,-30 8,-40" fill="none" stroke="#ffaa00" stroke-width="1" opacity="0.4"/>
+
+    <!-- Eyes -->
+    <rect x="-15" y="-5" width="10" height="8" rx="2" fill="#ffaa00" filter="url(#glowOrange)" opacity="0.8"/>
+    <rect x="5" y="-5" width="10" height="8" rx="2" fill="#ffaa00" filter="url(#glowOrange)" opacity="0.8"/>
+    <rect x="-13" y="-4" width="4" height="6" rx="1" fill="#0a0a12"/>
+    <rect x="7" y="-4" width="4" height="6" rx="1" fill="#0a0a12"/>
+
+    <!-- Caffeine molecule -->
+    <text x="-8" y="20" fill="#ffaa00" font-size="6" opacity="0.6">C₈H₁₀N₄O₂</text>
+
+    <!-- Alert bubble -->
+    <rect x="30" y="-40" width="35" height="18" rx="3" fill="#ffaa00" opacity="0.2" stroke="#ffaa00" stroke-width="0.8"/>
+    <text x="36" y="-28" fill="#ffaa00" font-size="6">! sleep</text>
+
+    <!-- Label -->
+    <text x="0" y="70" text-anchor="middle" fill="#ffaa00" font-size="9" opacity="0.7">COFFEE_BOT</text>
+  </g>
+
+  <!-- ==================== PET 5: NULL POINTER ==================== -->
+  <g transform="translate(330, 370)">
+    <!-- Glow aura -->
+    <circle cx="0" cy="0" r="55" fill="none" stroke="#ff3366" stroke-width="0.5" opacity="0.15"/>
+
+    <!-- Body (ghost-like) -->
+    <path d="M-25,-15 Q-25,-40 0,-40 Q25,-40 25,-15 L25,30 Q20,25 15,30 Q10,25 5,30 Q0,25 -5,30 Q-10,25 -15,30 Q-20,25 -25,30 Z" fill="#1a0a0f" stroke="#ff3366" stroke-width="1.5"/>
+
+    <!-- Eyes (X eyes - null reference) -->
+    <line x1="-14" y1="-20" x2="-6" y2="-12" stroke="#ff3366" stroke-width="2.5" stroke-linecap="round" filter="url(#glowOrange)"/>
+    <line x1="-6" y1="-20" x2="-14" y2="-12" stroke="#ff3366" stroke-width="2.5" stroke-linecap="round" filter="url(#glowOrange)"/>
+    <line x1="6" y1="-20" x2="14" y2="-12" stroke="#ff3366" stroke-width="2.5" stroke-linecap="round" filter="url(#glowOrange)"/>
+    <line x1="14" y1="-20" x2="6" y2="-12" stroke="#ff3366" stroke-width="2.5" stroke-linecap="round" filter="url(#glowOrange)"/>
+
+    <!-- Mouth -->
+    <ellipse cx="0" cy="-2" rx="5" ry="3" fill="#ff3366" opacity="0.4"/>
+
+    <!-- Null pointer text on body -->
+    <text x="-18" y="15" fill="#ff3366" font-size="6" opacity="0.5">0x0000</text>
+    <text x="-18" y="23" fill="#ff3366" font-size="6" opacity="0.4">nullptr</text>
+
+    <!-- Warning symbols -->
+    <text x="-40" y="-30" fill="#ff3366" font-size="10" opacity="0.3">⚠️</text>
+    <text x="32" y="-25" fill="#ff3366" font-size="8" opacity="0.2">⚠️</text>
+
+    <!-- Label -->
+    <text x="0" y="70" text-anchor="middle" fill="#ff3366" font-size="9" opacity="0.7">NULL_POINTER</text>
+  </g>
+
+  <!-- ==================== PET 6: QUANTUM QUBIT ==================== -->
+  <g transform="translate(530, 370)">
+    <!-- Glow aura -->
+    <circle cx="0" cy="0" r="55" fill="none" stroke="#00ffcc" stroke-width="0.5" opacity="0.15"/>
+
+    <!-- Orbital rings -->
+    <ellipse cx="0" cy="0" rx="35" ry="15" fill="none" stroke="#00ffcc" stroke-width="1" opacity="0.4" transform="rotate(30)"/>
+    <ellipse cx="0" cy="0" rx="35" ry="15" fill="none" stroke="#00ffcc" stroke-width="1" opacity="0.4" transform="rotate(-30)"/>
+    <ellipse cx="0" cy="0" rx="35" ry="15" fill="none" stroke="#00ffcc" stroke-width="1" opacity="0.4" transform="rotate(90)"/>
+
+    <!-- Core -->
+    <circle cx="0" cy="0" r="16" fill="#0a2e28" stroke="#00ffcc" stroke-width="1.5"/>
+
+    <!-- Eyes -->
+    <circle cx="-6" cy="-4" r="4" fill="#00ffcc" filter="url(#glowCyan)"/>
+    <circle cx="6" cy="-4" r="4" fill="#00ffcc" filter="url(#glowCyan)"/>
+    <circle cx="-6" cy="-4" r="1.5" fill="#0a0a12"/>
+    <circle cx="6" cy="-4" r="1.5" fill="#0a0a12"/>
+
+    <!-- Smile -->
+    <path d="M-5,5 Q0,10 5,5" fill="none" stroke="#00ffcc" stroke-width="1.2" opacity="0.7"/>
+
+    <!-- Superposition symbols -->
+    <text x="-40" y="-35" fill="#00ffcc" font-size="7" opacity="0.4">|0⟩</text>
+    <text x="32" y="-38" fill="#00ffcc" font-size="7" opacity="0.4">|1⟩</text>
+    <text x="-45" y="40" fill="#00ffcc" font-size="6" opacity="0.3">H|ψ⟩</text>
+
+    <!-- Particles -->
+    <circle cx="-30" cy="-25" r="2" fill="#00ffcc" opacity="0.5">
+      <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="28" cy="-30" r="1.5" fill="#00ffcc" opacity="0.4">
+      <animate attributeName="opacity" values="0.4;0.9;0.4" dur="2s" repeatCount="indefinite"/>
+    </circle>
+    <circle cx="35" cy="25" r="1.8" fill="#00ffcc" opacity="0.3">
+      <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1.8s" repeatCount="indefinite"/>
+    </circle>
+
+    <!-- Label -->
+    <text x="0" y="70" text-anchor="middle" fill="#00ffcc" font-size="9" opacity="0.7">QUBIT_AI</text>
+  </g>
+
+  <!-- Bottom decorative line -->
+  <line x1="100" y1="480" x2="700" y2="480" stroke="#00ff88" stroke-width="0.5" opacity="0.3"/>
+
+  <!-- Footer text -->
+  <text x="400" y="500" text-anchor="middle" fill="#00ff88" font-size="10" opacity="0.4">$ sudo apt-get install codex-pets --dev-theme</text>
+
+  <!-- Blinking cursor -->
+  <rect x="400" y="508" width="6" height="12" fill="#00ff88" opacity="0.6">
+    <animate attributeName="opacity" values="0.6;0;0.6" dur="1s" repeatCount="indefinite"/>
+  </rect>
+
+  <!-- Corner decorations -->
+  <text x="15" y="590" fill="#00ff88" font-size="8" opacity="0.2">v2.4.1</text>
+  <text x="740" y="590" fill="#00ff88" font-size="8" opacity="0.2">[dev]</text>
+  <text x="15" y="20" fill="#00ff88" font-size="7" opacity="0.15">// EOF</text>
+  <text x="720" y="20" fill="#00ff88" font-size="7" opacity="0.15">// EOF</text>
+</svg>

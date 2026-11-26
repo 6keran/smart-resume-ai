@@ -1,9 +1,6 @@
 import 'server-only';
-
-export const MAX_CHAT_REQUEST_BYTES = 16_000;
-export const MAX_CHAT_MESSAGE_LENGTH = 2_000;
-export const MAX_CHAT_HISTORY_MESSAGES = 10;
-export const MAX_CHAT_HISTORY_CHARACTERS = 8_000;
+import { MAX_CHAT_MESSAGE_LENGTH, MAX_CHAT_HISTORY_MESSAGES, MAX_CHAT_HISTORY_CHARACTERS } from '@/lib/chatRequest';
+export { MAX_CHAT_REQUEST_BYTES, MAX_CHAT_MESSAGE_LENGTH, MAX_CHAT_HISTORY_MESSAGES, MAX_CHAT_HISTORY_CHARACTERS } from '@/lib/chatRequest';
 export const MAX_CHAT_CONTEXT_CHARACTERS = 1_800;
 
 export interface SafeChatMessage {

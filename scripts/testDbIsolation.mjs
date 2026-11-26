@@ -24,19 +24,7 @@ export function setupTestDb(testSuiteName = 'test_suite') {
     };
   }
 
-  if (!fs.existsSync(sandboxDir)) {
-    fs.mkdirSync(sandboxDir, { recursive: true });
-  } else {
-    // Clean up any stale sandbox databases from prior runs
-    try {
-      const files = fs.readdirSync(sandboxDir);
-      for (const file of files) {
-        try {
-          fs.unlinkSync(path.join(sandboxDir, file));
-        } catch {}
-      }
-    } catch {}
-  }
+  fs.mkdirSync(sandboxDir, { recursive: true });
 
   const baseDb = path.join(dataDir, 'smart_resume.db');
   const safeName = testSuiteName.replace(/[^a-zA-Z0-9_-]/g, '_');
@@ -55,6 +43,11 @@ export function setupTestDb(testSuiteName = 'test_suite') {
   process.env.SQLITE_PATH = isolatedDbPath;
   process.env.STAGING_DB_PATH = isolatedDbPath;
 
+  const removeRunFiles = () => {
+    for (const suffix of ['', '-wal', '-shm', '-journal']) {
+      try { fs.rmSync(isolatedDbPath + suffix, { force: true }); } catch {}
+    }
+  };
   const cleanup = async () => {
     try {
       const dbModule = await import('../src/server/db/index.ts').catch(() => null);
@@ -62,20 +55,11 @@ export function setupTestDb(testSuiteName = 'test_suite') {
         await dbModule.closeDb();
       }
     } catch {}
-    try {
-      if (fs.existsSync(isolatedDbPath)) {
-        fs.unlinkSync(isolatedDbPath);
-      }
-      for (const suffix of ['-wal', '-shm', '-journal']) {
-        const sidecar = isolatedDbPath + suffix;
-        if (fs.existsSync(sidecar)) {
-          try { fs.unlinkSync(sidecar); } catch {}
-        }
-      }
-    } catch {}
+    removeRunFiles();
   };
 
-  process.on('exit', cleanup);
+  process.once('beforeExit', cleanup);
+  process.once('exit', removeRunFiles);
   return { isolatedDbPath, cleanup };
 }
 

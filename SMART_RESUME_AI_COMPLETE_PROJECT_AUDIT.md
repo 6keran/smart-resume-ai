@@ -11,9 +11,22 @@
 **Target Hosting:** Vercel (Serverless Edge & Lambdas)  
 **Target Database:** Neon PostgreSQL (Serverless Branch with PgBouncer Pooling)  
 **Audit Mode:** Read-Only Static and Dynamic Inspection (Zero source code modifications executed during audit)  
-**Overall Readiness Verdict:** **READY FOR STAGING VALIDATION** (Test-harness findings remediated and 100% verified)
+**Historical readiness verdict, 7 November 2026** — ready for staging validation on the revision identified above. The current learning-product findings are recorded below.
 
 ---
+
+## Phase 0 product correction · 26 November 2026
+
+Smart Resume AI recommends external courses and certifications from genuine providers. **Recommended**, **In progress** and **Completed** describe distinct states. Only a certification the user confirms they actually completed with an external provider is eligible for a résumé. The platform has no role issuing, generating, awarding, storing or publicly verifying certificates. Provider prices, names, credentials and user completion require evidence.
+
+| Current finding | Consequence and disposition for subsequent phases |
+| --- | --- |
+| **Active legacy credentialing.** Assessment submission writes `certificates`, a code in `user_skills` and audit metadata. The client creates a second code, stores it in `sra_certs` and can substitute it into the result link. Dashboard, skill and assessment pages display these as earned qualifications. Public HTML and JSON lookups disclose holder and score. | Treat the credential writers, displays, printing and lookups as legacy retirement candidates. Grade and retain assessments independently. Review dependencies, old links, exports and historical data before authorizing any change. [Exact files, routes and tables](docs/LEARNING_PHASE_0_AUDIT.md#legacy-certificate-dependencies-and-impact) |
+| **Assessment ownership.** A finished attempt returns its saved result before the service checks the requester. | Highest security priority. Verify owner binding for every result path and downstream proctoring update under a separately approved change. [Ownership finding](docs/LEARNING_PHASE_0_AUDIT.md#recommended-priorities) |
+| **Recommendations and résumé claims.** Four of 12 certification mentions lack a URL. Several other links lead to general catalogs or learning resources. The guidance UI skips the in-progress state, and the résumé builder assigns new certification entries the year `2024`. | Admit only dated, provider-backed offerings. Record explicit start and completion, allow only confirmed external completions into a chosen résumé, and leave unknown dates and prices unfilled. No offering or price was newly verified. [Provider and résumé audit](docs/LEARNING_PHASE_0_AUDIT.md#external-recommendations-and-completed-qualifications) |
+| **Course catalog and progress.** SQLite and PostgreSQL seed six and five checklists respectively. The aggregate progress endpoint accepts fractional counts and can retain a stale completion date. | Review adapter consistency, write concurrency and accurate progress without treating a checklist or skill score as an external qualification. [Catalog and progress findings](docs/LEARNING_PHASE_0_AUDIT.md#findings-from-the-source-review) |
+
+Phase 0 service evidence remains **74/74** account deletion, **5/5** career-path security and **24/24** database/versioning, each on its own fresh SQLite sandbox. There are no outstanding Phase 0 database suites. The earlier Phase 0 production build generated **90/90** pages, public Playwright passed **52/52**, templates **63/63**, and ATS determinism **7/7** top-level checks with two optional live HTTP comparisons skipped. Provider availability, live credential exposure, installed row counts and PostgreSQL execution were outside this read-only amendment. Phase 1 awaits approval. [Consolidated results and evidence](docs/LEARNING_PROGRESS.md)
 
 ## 1. Executive Summary
 
@@ -139,7 +152,7 @@ Every route verified via Next.js production compilation:
 | 47 | `/api/career/projects/recommendations` | Dynamic (Route) | User Auth Required | PASS |
 | 48 | `/api/career/roadmap` | Dynamic (Route) | User Auth Required | PASS |
 | 49 | `/api/career/skill-gap` | Dynamic (Route) | User Auth Required | PASS |
-| 50 | `/api/certificates` | Dynamic (Route) | User Auth Required | PASS |
+| 50 | `/api/certificates` | Dynamic (Route) | Public GET in the current proxy | Active legacy verification, outside product scope |
 | 51 | `/api/chat` | Dynamic (Route) | User Auth Required | PASS |
 | 52 | `/api/dashboard` | Dynamic (Route) | User Auth Required | PASS |
 | 53 | `/api/feedback` | Dynamic (Route) | User Auth Required | PASS |
@@ -166,7 +179,7 @@ Every route verified via Next.js production compilation:
 | 74 | `/api/user/applications/apply` | Dynamic (Route) | User Auth Required | PASS |
 | 75 | `/api/user/applications/confirm` | Dynamic (Route) | User Auth Required | PASS |
 | 76 | `/api/user/assessments` | Dynamic (Route) | User Auth Required | PASS |
-| 77 | `/api/user/certificates` | Dynamic (Route) | User Auth Required | PASS |
+| 77 | `/api/user/certificates` | Dynamic (Route) | User-route proxy, session-scoped list, separate code lookup in the handler | Active legacy dependency |
 | 78 | `/api/user/courses` | Dynamic (Route) | User Auth Required | PASS |
 | 79 | `/api/user/dashboard` | Dynamic (Route) | User Auth Required | PASS |
 | 80 | `/api/user/improvements` | Dynamic (Route) | User Auth Required | PASS |
@@ -192,7 +205,7 @@ Every route verified via Next.js production compilation:
 | **ATS Analysis Engine** | **PASS** | Deterministic heuristics when Gemini unset/exhausted; scores formatting, keywords, sections. |
 | **Document Validation Gate** | **PASS** | Rejects invoices, certificates, and code files (HTTP 422); never generates ATS score for non-resumes. |
 | **Job Tailoring Workflow** | **PASS** | Role-specific keyword matching; avoids inventing false credentials. |
-| **Skill Assessment Engine** | **PASS** | Questions served from catalog; answers scored; certificates issued on $\ge 70\%$ pass. |
+| **Skill Assessment Engine** | **Open ownership and product findings** | The existing skill assessment grades stored question snapshots against a configurable threshold. Its internal credential side effects conflict with the approved product scope. |
 | **Interview Preparation** | **PASS** | Technical and behavioral evaluation with grounded rubric feedback. |
 | **Guided Projects & Mentor** | **PASS** | Generates 10-part specification and 8-step milestones; prompts protected against injection. |
 | **Job Search & Discovery** | **PASS** | Spelling correction, location alias mapping, query pool deduplication, and pagination. |
@@ -219,7 +232,7 @@ Inspection of all 53 API routes confirms:
 - **Canonical Tables**: 31 canonical tables defined identically in SQLite ([`src/server/db/index.ts`](file:///d:/projects/builder-github/src/server/db/index.ts)) and PostgreSQL ([`scripts/init_postgres_schema.mjs`](file:///d:/projects/builder-github/scripts/init_postgres_schema.mjs)).
 - **Dialect Translation**: `toPostgresSql()` in `adapter.ts` converts SQLite `?` placeholders to PostgreSQL `$1..$n`, translates `INSERT OR IGNORE` to `ON CONFLICT DO NOTHING`, and casts `AVG()` to numeric for `ROUND()`.
 - **Connection Pooling**: Serverless PostgreSQL pool defaults to 5 connections per container, with 10s idle timeout and 10s connection timeout.
-- **Data Isolation**: All private student queries contain `WHERE user_id = ?` clauses.
+- **Data isolation update, 26 November.** The completed-assessment submission branch returns before its owner check. The current Phase 0 audit records this exception and the affected handler.
 - **Migration Idempotency**: `scripts/init_postgres_schema.mjs` runs `CREATE TABLE IF NOT EXISTS` and `CREATE INDEX IF NOT EXISTS`. Consecutive runs produce 0 duplicate records and 0 errors.
 
 ---
@@ -239,7 +252,7 @@ Inspection of all 53 API routes confirms:
 ## 8. Security Audit
 
 - **OWASP Top 10 Assessment**:
-  - **A01: Broken Access Control**: Mitigated via row-level `WHERE user_id = ?` checks. User B cannot access User A data.
+  - **A01 access control update, 26 November.** The isolated career-path suite passed its five checks. Assessment result ownership remains open on a separate path. [Assessment finding](docs/LEARNING_PHASE_0_AUDIT.md#recommended-priorities)
   - **A02: Cryptographic Failures**: Session tokens use HMAC-SHA256 with Web Crypto API. Password hashes use scrypt with 16-byte random salt.
   - **A03: Injection**: All SQL queries use prepared statements with parameterized placeholders.
   - **A04: Insecure Design**: Startup security hook ([`src/instrumentation.ts`](file:///d:/projects/builder-github/src/instrumentation.ts)) halts server if `ADMIN_SESSION_SECRET` is under 32 characters in production.
@@ -356,9 +369,9 @@ Visual inspection executed via Playwright Chromium at 5 distinct viewports:
 
 ---
 
-## 15. Final Production-Readiness Decision
+## 15. Historical production-readiness decision · 7 November 2026
 
-# **FINAL AUDIT DECISION: 100% READY FOR STAGING DEPLOYMENT**
+The following staging decision records the 7 November audit. The 26 November Phase 0 review identified open security and product-scope findings and did not reassess release readiness.
 
 - **Codebase Status**: Clean, strictly typed (0 TypeScript errors), zero lint errors, and 100% buildable (85/85 routes).
 - **Security Posture**: Fail-closed guards, row-level tenant isolation, and cryptographic tokens verified.

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useRef } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import Link from 'next/link';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
@@ -28,6 +28,11 @@ import { AtsExplainabilityBreakdown } from '@/components/ats/AtsExplainabilityBr
 
 export default function AtsScorePage() {
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
 
   const [activeTab, setActiveTab] = useState<'upload' | 'paste'>('upload');
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -239,6 +244,7 @@ export default function AtsScorePage() {
                     role="tab"
                     aria-selected={activeTab === 'upload'}
                     type="button"
+                    disabled={!mounted}
                     onClick={() => { setActiveTab('upload'); setErrorMessage(null); }}
                     className={`px-4 py-2 rounded-md text-[14px] font-semibold transition-colors cursor-pointer relative z-10 ${
                       activeTab === 'upload'
@@ -259,6 +265,7 @@ export default function AtsScorePage() {
                     role="tab"
                     aria-selected={activeTab === 'paste'}
                     type="button"
+                    disabled={!mounted}
                     onClick={() => { setActiveTab('paste'); setErrorMessage(null); }}
                     className={`px-4 py-2 rounded-md text-[14px] font-semibold transition-colors cursor-pointer relative z-10 ${
                       activeTab === 'paste'

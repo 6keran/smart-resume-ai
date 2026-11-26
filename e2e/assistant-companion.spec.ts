@@ -10,6 +10,7 @@ async function ready(page: import('@playwright/test').Page) {
   await page.goto('/dashboard', { waitUntil: 'domcontentloaded' });
   const button = page.getByRole('button', { name: /open ai assistant/i });
   await expect(button).toBeVisible();
+  await expect(button.locator('canvas')).toHaveAttribute('data-pixel-ready', '1');
   await expect(pet(page)).toHaveAttribute('data-active', '1');
   await expect(page.locator('[data-assistant-mode="collapsed"]')).toHaveAttribute('data-placement-ready', 'true');
   return button;
@@ -56,7 +57,7 @@ test('full-body rig moves, turns with actual dragging, settles, and keeps the ne
   expect(settled.y).toBeGreaterThanOrEqual(16);
   expect(settled.x + settled.width).toBeLessThanOrEqual(page.viewportSize()!.width - 15);
   expect(settled.y + settled.height).toBeLessThanOrEqual(page.viewportSize()!.height - 15);
-  const folder = path.join(process.cwd(), 'scripts/visual-qa/mascot/reference-robot', info.project.name);
+  const folder = path.join(process.cwd(), 'scripts/visual-qa/mascot/pixel-companion', info.project.name);
   await mkdir(folder, { recursive: true });
   await button.screenshot({ path: path.join(folder, 'original-companion.png'), animations: 'allow', caret: 'initial' });
   await page.screenshot({ path: path.join(folder, 'launcher.png'), animations: 'allow', caret: 'initial' });
@@ -130,6 +131,8 @@ test('real touch dragging clamps at the viewport edge without opening chat', asy
   await touch('touchEnd', 0, 0);
   await expect(chat(page)).toHaveCount(0);
   await expect(button).toBeVisible();
+  await expect(page.locator('[data-assistant-mode="collapsed"]')).toHaveAttribute('data-placement-ready', 'true');
+  await expect(pet(page)).toHaveAttribute('data-motion', 'idle');
   const end = (await button.boundingBox())!;
   expect(end.x).toBeGreaterThanOrEqual(15); expect(end.y).toBeGreaterThanOrEqual(15);
   await page.touchscreen.tap(end.x + end.width / 2, end.y + end.height / 2);
@@ -161,10 +164,13 @@ test('captures original artwork poses from real assistant lifecycle events', asy
   test.skip(info.project.name !== 'desktop-1440x900', 'One enlarged artwork gallery is sufficient; responsive behavior is covered on every project.');
   await context.grantPermissions(['clipboard-read', 'clipboard-write']);
   const button = await ready(page);
-  const poses: Array<{ label: string; svg: string }> = [];
+  const poses: Array<{ label: string; image: string }> = [];
   const capture = async (label: string) => {
-    const svg = await pet(page).evaluate((element) => element.outerHTML);
-    poses.push({ label, svg: svg.replace(/companion-[A-Za-z0-9_-]+-(head|body)/g, (_, material) => `${label.replace(/\s/g, '')}-${material}`) });
+    const canvas = button.locator('canvas');
+    const frame = Number(await canvas.getAttribute('data-pixel-frame'));
+    await expect.poll(async () => Number(await canvas.getAttribute('data-pixel-frame'))).toBeGreaterThan(frame);
+    const image = await canvas.evaluate((element) => (element as HTMLCanvasElement).toDataURL());
+    poses.push({ label, image });
   };
   await capture('Idle');
   const box = (await button.boundingBox())!;
@@ -203,8 +209,8 @@ test('captures original artwork poses from real assistant lifecycle events', asy
   await capture('Error');
   const gallery = await context.newPage();
   await gallery.setViewportSize({ width: 660, height: 570 });
-  await gallery.setContent(`<html><style>body{margin:0;padding:24px;background:#f6f7f9;color:#20242b;font:14px 'Segoe UI',sans-serif}h1{font-size:18px;margin:0 0 16px;font-weight:600}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.pose{display:grid;justify-items:center;background:white;border:1px solid #e5e8ed;border-radius:12px;padding:8px}.pose svg{width:152px;height:198px;display:block}.pose p{margin:0 0 4px}</style><body><h1>Smart Resume AI · reference robot</h1><div class="grid">${poses.map(({ label, svg }) => `<div class="pose">${svg}<p>${label}</p></div>`).join('')}</div></body></html>`);
-  const folder = path.join(process.cwd(), 'scripts/visual-qa/mascot/reference-robot');
+  await gallery.setContent(`<html><style>body{margin:0;padding:24px;background:#f6f7f9;color:#20242b;font:14px 'Segoe UI',sans-serif}h1{font-size:18px;margin:0 0 16px;font-weight:600}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:12px}.pose{display:grid;justify-items:center;background:white;border:1px solid #e5e8ed;border-radius:12px;padding:8px}.pose img{width:152px;height:198px;display:block;image-rendering:pixelated}.pose p{margin:0 0 4px}</style><body><h1>Smart Resume AI · pixel robot</h1><div class="grid">${poses.map(({ label, image }) => `<div class="pose"><img src="${image}" alt="${label}"/><p>${label}</p></div>`).join('')}</div></body></html>`);
+  const folder = path.join(process.cwd(), 'scripts/visual-qa/mascot/pixel-companion');
   await mkdir(folder, { recursive: true });
   await gallery.screenshot({ path: path.join(folder, 'artwork-gallery.png'), caret: 'initial' });
   await gallery.close();
