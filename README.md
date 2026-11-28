@@ -1,172 +1,219 @@
 # Smart Resume AI
 
-Smart Resume AI is a unified, full-stack Next.js application delivering AI-powered resume building, ATS evaluation, deterministic scoring, career intelligence, job matching, and proctored skill assessments.
+**Build a resume for the job you want. Know how it will be read.**
+
+Smart Resume AI is a web platform that helps students, freshers and job seekers choose a target role, build a role-specific resume, check it with a repeatable ATS score, improve it with AI, close skill gaps, find jobs and prepare for interviews, with an AI Assistant that answers questions using the user's own saved data.
+
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+
+> Status: active development. Some features are complete, some are in progress. See [Current status](#current-status) for an honest overview.
 
 ---
 
-## Architecture Overview
+## Contents
 
-The project is structured as a full-stack Next.js 16 application with React 19, Tailwind CSS v4, and integrated App Router API endpoints backed by SQLite.
+- [Features](#features)
+- [How the ATS score works](#how-the-ats-score-works)
+- [Tech stack](#tech-stack)
+- [Architecture](#architecture)
+- [Getting started](#getting-started)
+- [Environment variables](#environment-variables)
+- [Testing](#testing)
+- [Project structure](#project-structure)
+- [Security and privacy](#security-and-privacy)
+- [Current status](#current-status)
+- [Contributing](#contributing)
+- [Team](#team)
+- [License](#license)
+
+---
+
+## Features
+
+| Area | What it does |
+|---|---|
+| **Resume builder** | Multiple resumes per user, a guided step-by-step form, 17 A4 layouts, live preview, version history with restore, and PDF export with selectable text |
+| **ATS checker and analyzer** | Repeatable score with a breakdown (keywords, content, formatting, sections), missing keywords and suggestions. A public ATS check works without an account (limited scans) |
+| **Resume improver** | AI rewriting and tailoring to a job description, designed to preserve your facts; you accept, edit or reject every suggestion |
+| **Job match and discovery** | Compare a resume with a role or job description; search several job sources; save jobs and track applications manually (the app never applies for you) |
+| **Role roadmaps** | Curated roadmaps for nine roles with skill gaps, suggested projects and learning resources |
+| **Skills assessments** | Timed multiple-choice assessments with optional camera proctoring and a skill status per user |
+| **Project Mentor** | Guided portfolio projects with milestones and mentor hints |
+| **Interview preparation** | Role-based questions, answers and feedback |
+| **AI Assistant** | A chat assistant grounded in your profile, resume, skills and goals; it stays on career topics and says when data is missing |
+| **My Career Data** | See, export and delete the data the platform stores about you |
+| **Admin console** | User, question, assessment, proctoring and feedback management for administrators |
+| **Learning discovery (in progress)** | Recommends external courses and certifications. Smart Resume AI does **not** issue, generate or verify certificates |
+
+---
+
+## How the ATS score works
+
+The score is produced by fixed rules, not by a language model, so the same resume always gets the same score.
 
 ```
-builder-github/
-├── src/
-│   ├── app/                      # Next.js App Router (Pages, Layouts & API Route Handlers)
-│   │   ├── (auth)/               # Authentication routes (/login, /register)
-│   │   ├── admin/                # Admin portal (/admin/dashboard, users, analytics, settings)
-│   │   ├── api/                  # Serverless API routes
-│   │   │   ├── admin/            # Admin endpoints (users, stats, records, config)
-│   │   │   ├── auth/             # Authentication & session endpoints (/login, /register, /me)
-│   │   │   ├── career/           # Career intelligence, roadmaps, project mentor endpoints
-│   │   │   ├── chat/             # AI Assistant contextual chat endpoint
-│   │   │   ├── jobs/             # Job search, suggestions, and NLP matching
-│   │   │   ├── onboarding/       # Student onboarding and resume parsing
-│   │   │   ├── proctoring/       # Assessment proctoring and anti-tamper signals
-│   │   │   ├── resume/           # ATS scoring, improvement, and tailoring endpoints
-│   │   │   ├── student/          # Unified student context & readiness history
-│   │   │   └── user/             # User data, resumes, versions, skills, applications
-│   │   ├── builder/              # Interactive resume builder & template customizer
-│   │   ├── dashboard/            # Authenticated student career command center & profile
-│   │   ├── job-match/            # Job matching & tailoring interface
-│   │   ├── jobs/                 # Role search & market intelligence
-│   │   ├── ats-score/            # Deterministic ATS resume analyzer & scorer
-│   │   ├── analyzer/             # Comprehensive resume analyzer
-│   │   ├── improver/             # Resume improver workspace
-│   │   ├── onboarding/           # Student onboarding workflow
-│   │   ├── projects/             # Career project portfolio & mentorship
-│   │   ├── skills/               # Skill assessment and verification platform
-│   │   ├── globals.css           # Global Tailwind CSS and design tokens
-│   │   └── layout.tsx            # Root HTML layout with ThemeProvider and Contexts
-│   │
-│   ├── components/               # React client and server components
-│   │   ├── builder/              # Resume builder modules, stage forms, preview & templates
-│   │   │   ├── templates/        # 12 ATS-compliant resume templates
-│   │   │   └── A4ResumeDocument  # Pixel-accurate A4 print and export layout engine
-│   │   ├── chat/                 # AI Assistant floating chatbot interface
-│   │   ├── dashboard/            # Command center widgets, readiness quadrants, milestones
-│   │   ├── jobs/                 # Job search filters, autocomplete, and match cards
-│   │   ├── ui/                   # Shared UI primitives (buttons, modals, cards, inputs)
-│   │   └── Navigation.tsx        # Responsive navigation bar
-│   │
-│   ├── context/                  # React state providers
-│   │   ├── AuthContext.tsx       # Authentication state & session lifecycle
-│   │   ├── ResumeContext.tsx     # Active resume state, versions, autosave, deletion
-│   │   └── ThemeContext.tsx      # Light/Dark theme switching with system detection
-│   │
-│   ├── server/                   # Server-side business logic and database access
-│   │   ├── db/                   # Database connection (SQLite with WAL mode) and schema
-│   │   └── services/             # Core server logic
-│   │       ├── careerIntelligence.ts       # Unified student context & career advice
-│   │       ├── deterministicAtsEngine.ts   # Deterministic ATS scoring engine
-│   │       ├── careerActionEngine.ts       # Milestone and action recommendation engine
-│   │       ├── projectMentor.ts            # Career project generation and mentoring
-│   │       ├── parseResumeToData.ts        # Resume text parsing and schema mapping
-│   │       ├── extractResumeText.ts        # PDF/DOCX multi-format text extraction
-│   │       └── jobs/                       # Job dataset repository and role suggestions
-│   │
-│   ├── lib/                      # Client & shared utility functions
-│   ├── types/                    # Shared TypeScript interfaces & types
-│   └── proxy.ts                  # Security proxy: rate limiting, auth cookies, headers
-│
-├── e2e/                          # Playwright end-to-end browser regression test suites
-│   ├── authenticated.spec.ts     # Core authenticated session flows
-│   ├── builder.spec.ts           # Resume builder workflow
-│   ├── career-command-center.spec.ts # Readiness quadrants & timeline filtering
-│   ├── career-workflow.spec.ts   # End-to-end multi-step student journey
-│   ├── dashboard.spec.ts         # Student command center verification
-│   ├── job-role-autocomplete.spec.ts # Autocomplete regression tests
-│   ├── jobs-authenticated.spec.ts    # Authenticated job search
-│   ├── landing.spec.ts           # Public landing page and navigation
-│   ├── public-routes.spec.ts     # Anonymous access & redirect protection
-│   ├── personalized-career-path.spec.ts # Multi-viewport career path flows
-│   ├── resume-removal.spec.ts    # Resume deletion (active & non-active) regression
-│   ├── responsive-navigation.spec.ts # Viewport navigation & menus
-│   └── theme.spec.ts             # Light/Dark mode and reduced-motion tests
-│
-├── data/                         # Local SQLite database file (smart_resume.db)
-├── scripts/                      # Test runners, verification scripts, and migration utilities
-├── public/                       # Static public assets
-├── next.config.ts                # Next.js build and proxy configuration
-├── playwright.config.ts          # Playwright multi-viewport testing configuration
-├── tsconfig.json                 # TypeScript compiler configuration
-└── package.json                  # Dependencies and execution scripts
+Overall = round(0.35 x Keywords + 0.25 x Content + 0.25 x Formatting + 0.15 x Sections)
 ```
 
----
+- The generative AI (Google Gemini) writes suggestions and explanations only. It never sets or changes the number.
+- Input text is normalized first (line endings, quotes, dashes, spacing), so formatting noise does not change the result.
+- Regression tests check repeatability across runs, restarts and AI failures.
 
-## Tech Stack
-
-- **Framework**: Next.js 16 (App Router)
-- **UI & Components**: React 19, Lucide React, Framer Motion, Recharts
-- **Styling**: Tailwind CSS v4 (Strict light-theme design system: `#FFFFFF`, `#F6F7F9`, `#20242B`, `#626B78`, `#3157C8`, `#E5E8ED`)
-- **Database**: SQLite with WAL mode (`better-sqlite3` / `node:sqlite`) with parameterized SQL
-- **AI & ATS Engines**: Google GenAI SDK (`@google/genai`) with Deterministic Local Fallbacks
-- **Document Processing**: `pdf-parse`, `mammoth` (DOCX extraction)
-- **Testing**: Playwright multi-device/multi-viewport test framework (`mobile-375x812`, `mobile-390x844`, `tablet-768x1024`, `desktop-1440x900`)
+The score is guidance, not a guarantee of how any employer's system reads a resume. Accuracy work (heading-based section detection, domain-aware skills, evidence-based keyword scoring) is ongoing; see [Current status](#current-status).
 
 ---
 
-## Getting Started
+## Tech stack
 
-### 1. Install Dependencies
+| Layer | Technology |
+|---|---|
+| Framework | Next.js 16 (App Router), React 19, TypeScript |
+| Styling | Tailwind CSS 4 |
+| Database | SQLite (local development), PostgreSQL on Neon (staging and production) through one adapter |
+| AI | Google Gemini via `@google/genai` |
+| Document processing | `pdf-parse`, `mammoth` |
+| Testing | Playwright, plus Node and `tsx` test scripts |
+| Hosting | Vercel |
+
+---
+
+## Architecture
+
+```
+Browser (React UI)
+      |  HTTPS + httpOnly session cookie
+      v
+Edge proxy (src/proxy.ts)   session and role checks, rate limits, security headers
+      |
+      v
+Next.js route handlers (src/app/api)  ->  Services (src/server/services)
+                                              |            |
+                                              v            v
+                                    DB adapter           External services
+                                (SQLite / PostgreSQL)    (Gemini, job and course sources)
+```
+
+There is no separate backend server: the API lives in the Next.js app.
+
+---
+
+## Getting started
+
+### Prerequisites
+
+- Node.js 20.9 or newer (Node 22 recommended) and npm
+- Git
+
+### Install and run
+
 ```bash
+git clone https://github.com/6keran/smart-resume-ai.git
+cd smart-resume-ai
 npm install
-```
-
-### 2. Run the Development Server
-```bash
+cp .env.example .env.local      # then edit .env.local (see below)
 npm run dev
 ```
-The application will be accessible at:
-- Web Application: [http://localhost:3000](http://localhost:3000)
-- Resume Builder: [http://localhost:3000/builder](http://localhost:3000/builder)
-- Command Center: [http://localhost:3000/dashboard](http://localhost:3000/dashboard)
-- ATS Analyzer: [http://localhost:3000/ats-score](http://localhost:3000/ats-score)
-- Job Search: [http://localhost:3000/jobs](http://localhost:3000/jobs)
-- Admin Portal: [http://localhost:3000/admin](http://localhost:3000/admin)
 
-### 3. Production Build
+Open http://localhost:3000. In development the app creates a local SQLite database automatically; you do not need PostgreSQL to try it.
+
+### Remote PostgreSQL (staging or production)
+
+Tables are **not** created automatically on PostgreSQL. A schema script does it:
+
 ```bash
-npm run build
-npm start
+npm run db:init:postgres
+```
+
+The script has a safety gate and will refuse to run until you explicitly confirm the target. Read `scripts/init_postgres_schema.mjs` first, take a backup (for example a Neon branch) and never run it against a database you have not checked. Schema changes live in `scripts/migrations/`.
+
+---
+
+## Environment variables
+
+Copy `.env.example` to `.env.local`. **Never commit real values.** The file lists the names; the most important ones are:
+
+| Name | Purpose |
+|---|---|
+| `DATABASE_URL` | PostgreSQL connection string (staging and production) |
+| `ADMIN_SESSION_SECRET` | Secret used to sign sessions; at least 32 characters in production |
+| `GEMINI_API_KEY` | Google Gemini API key. Without it, AI features fall back to deterministic answers where available |
+
+Job and learning provider credentials, if used, are also environment variables.
+
+---
+
+## Testing
+
+```bash
+npx tsc --noEmit            # type check
+npm run lint                # lint
+npm run build               # production build
+npm run test:e2e:public     # browser tests for public pages (Playwright)
+npm test                    # full Playwright suite
+```
+
+Many service, security and workflow tests are Node scripts named in `package.json` (for example `npm run test:security`, `test:proxy`, `test:templates`, `test:career`, `test:jobs`). Some scripts need a running server; the live suite runner `scripts/run_live_e2e_isolated.mjs` starts an isolated one.
+
+Rules for tests: use synthetic data only, use a fresh disposable database (never your real one), and do not run tests while `npm run dev` is using the same build folder.
+
+---
+
+## Project structure
+
+```
+src/
+  app/            pages and API route handlers (App Router)
+  components/     UI components, resume templates, landing sections
+  context/        React contexts (resume, career, theme)
+  lib/            shared helpers and curated data
+  server/
+    db/           database adapter and data access
+    services/     ATS engine, text extraction, career intelligence, jobs, chat safety
+    prompts/      AI prompt builders
+  proxy.ts        edge proxy: authentication, authorization, rate limits
+scripts/          tests, database scripts and migrations
+e2e/              Playwright specifications
+docs/             design system and project documents
 ```
 
 ---
 
-## Verification & Testing Suites
+## Security and privacy
 
-### TypeScript & Linting
-```bash
-npx tsc --noEmit
-npm run lint
-```
+- Passwords are hashed with scrypt and a per-user salt and compared in constant time.
+- Sessions use signed tokens in httpOnly cookies (`secure` in production, `sameSite=lax`).
+- Student requests are scoped to the signed-in user, with explicit ownership checks; admin routes are separate and role-protected.
+- SQL is parameterised. Uploaded resumes are limited to 10 MB, checked by file signature, processed in memory and not stored.
+- Camera frames from proctoring are not saved to the database.
+- Users can export and delete their career data.
 
-### End-to-End Tests (Playwright)
-```bash
-# Run all public and responsive route tests (52 tests across 4 viewports)
-npm run test:e2e:public
+Found a vulnerability? Please read [SECURITY.md](SECURITY.md) and report it privately.
 
-# Run resume removal regression tests
-node scripts/run-playwright.mjs e2e/resume-removal.spec.ts
+---
 
-# Run job-role autocomplete regression tests
-node scripts/run-playwright.mjs e2e/job-role-autocomplete.spec.ts
+## Current status
 
-# Run personalized career path regression tests
-node scripts/run-playwright.mjs e2e/personalized-career-path.spec.ts
+Honest summary (details are in `docs/`):
 
-# Run core authenticated suites
-node scripts/run-playwright.mjs e2e/authenticated.spec.ts e2e/dashboard.spec.ts e2e/builder.spec.ts e2e/jobs-authenticated.spec.ts
+- **Working:** resume builder and templates, ATS check and analyzer, improver, job match, role roadmaps, assistant, My Career Data, admin console.
+- **In progress:** accuracy improvements to the ATS engine for non-software resumes and keyword stuffing; external course and certification discovery (offline foundation built, no live provider enabled); legacy internal certificate retirement.
+- **Known limitations:** ATS scores are guidance only; some job sources are unofficial and may be unavailable; AI features depend on Gemini quota; rate limiting and live proctoring need hardening for serverless hosting; PDF export uses the browser print function.
+- **Removed:** the Application Assistant module.
 
-# Run career command center & end-to-end student journey
-node scripts/run-playwright.mjs e2e/career-workflow.spec.ts e2e/career-command-center.spec.ts
-```
+---
 
-### Specialized Verification Scripts
-```bash
-npm run test:auth          # Authentication security and session isolation
-npm run test:admin         # Admin role authorization regression
-npm run test:templates     # Production resume template registry tests
-npm run test:gemini        # Gemini service resilience & deterministic fallback
-npm run test:isolation     # Session and data boundary isolation
-```
+## Contributing
+
+Contributions are welcome. Please read [CONTRIBUTING.md](CONTRIBUTING.md) and the [Code of Conduct](CODE_OF_CONDUCT.md) first.
+
+---
+
+## Disclaimer
+
+Smart Resume AI is an independent project. It is not affiliated with, endorsed by or sponsored by any course provider, job board or certification body mentioned in the app. All trademarks belong to their owners. The platform recommends external learning options and does not issue, generate or verify certificates.
+
+---
+
+## License
+
+Released under the [MIT License](LICENSE).
